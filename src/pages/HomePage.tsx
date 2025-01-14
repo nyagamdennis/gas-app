@@ -6,7 +6,7 @@ import LeftNav from "../components/ui/LeftNav"
 import Products from "../components/Products"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { selectIsAuthenticated } from "../features/auths/authSlice"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Login from "../components/Login"
 import ShortCuts from "../components/ShortCuts"
 import { fetchSalesTeamManagement, getSalesTeamManagementStatus, selectAllSalesTeamManagement } from "../features/salesTeam/salesTeamManagementSlice"
@@ -39,6 +39,17 @@ const Transition = React.forwardRef(function Transition(
 
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  // Detect small screens (e.g., width < 600px)
+  const isSmallScreen = useMediaQuery("(max-width:600px)");
+
+  useEffect(() => {
+    if (isSmallScreen) {
+      // Redirect to a different page for small screens
+      navigate("/admins");
+    }
+  }, [isSmallScreen, navigate]);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));

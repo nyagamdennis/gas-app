@@ -120,6 +120,7 @@ export const addNewCylinders = createAsyncThunk(
 export const addAnotherCylinder = createAsyncThunk(
     "cylinders/addAnotherCylinder",
     async ({dat, id}: {dat: any; id:string}) => {
+        console.log('data ', dat)
         const response = await axios.post(`${apiUrl}/addanothercylinder/${id}/`, dat);
         return response.data;
     }

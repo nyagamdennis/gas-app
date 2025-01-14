@@ -18,7 +18,11 @@ import { addNewProduct, fetchOtherProducts, selectAllOtherProducts } from '../fe
 import FormattedAmount from '../components/FormattedAmount';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import axios from 'axios';
-import Cookies from "cookies-js"
+import Cookies from "cookies-js";
+import "react-toastify/dist/ReactToastify.css";
+import getApiUrl from '../getApiUrl';
+import { toast, ToastContainer } from 'react-toastify';
+
 
 
 const Transition = React.forwardRef(function Transition(
@@ -70,10 +74,14 @@ const Store = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [gasType, setGasType] = useState<string>("");
-    const [retailSellingPrice, setRetailSellingPrice] = useState<number>(0);
-    const [retailRefillingPrice, setRetailRefillingPrice] = useState<number>(0);
-    const [wholeSaleSellingPrice, setWholeSellingPrice] = useState<number>(0);
-    const [wholeSaleRefillingPrice, setWholeRefillingPrice] = useState<number>(0);
+    const [minRetailSellingPrice, setMinRetailSellingPrice] = useState<number>(0);
+    const [minRetailRefillingPrice, setMinRetailRefillingPrice] = useState<number>(0);
+    const [minWholeSaleSellingPrice, setMinWholeSellingPrice] = useState<number>(0);
+    const [minWholeSaleRefillingPrice, setMinWholeRefillingPrice] = useState<number>(0);
+    const [maxRetailSellingPrice, setMaxRetailSellingPrice] = useState<number>(0);
+    const [maxRetailRefillingPrice, setMaxRetailRefillingPrice] = useState<number>(0);
+    const [maxWholeSaleSellingPrice, setMaxWholeSellingPrice] = useState<number>(0);
+    const [maxWholeSaleRefillingPrice, setMaxWholeRefillingPrice] = useState<number>(0);
     const [cylinderWeight, setCylinderWeight] = useState<number>(0);
     const [gasEmpties, setGasEmpties] = useState<number>(0);
     const [gasFilled, setGasFilled] = useState<number>(0);
@@ -89,10 +97,14 @@ const Store = () => {
     const [anotherCylinderWeight, setAnotherCylinderWeight] = useState<number>();
     const [anotherCylinderFilled, setAnotherCylinderFilled] = useState<number>();
     const [anotherCylinderEmpties, setAnotherCylinderEmpties] = useState<number>();
-    const [anotherCylinderWholeSaleSelling, setAnotherCylinderWholeSaleSelling] = useState<number>();
-    const [anotherCylinderWholeSaleRefill, setAnotherCylinderWholeSaleRefill] = useState<number>();
-    const [anotherCylinderRetailRefill, setAnotherCylinderRetailRefill] = useState<number>();
-    const [anotherCylinderRetailSelling, setAnotherCylinderRetailSelling] = useState<number>();
+    const [anotherCylinderMinWholeSaleSelling, setAnotherCylinderMinWholeSaleSelling] = useState<number>();
+    const [anotherCylinderMinWholeSaleRefill, setAnotherCylinderMinWholeSaleRefill] = useState<number>();
+    const [anotherCylinderMinRetailRefill, setAnotherCylinderMinRetailRefill] = useState<number>();
+    const [anotherCylinderMinRetailSelling, setAnotherCylinderMinRetailSelling] = useState<number>();
+    const [anotherCylinderMaxWholeSaleSelling, setAnotherCylinderMaxWholeSaleSelling] = useState<number>();
+    const [anotherCylinderMaxWholeSaleRefill, setAnotherCylinderMaxWholeSaleRefill] = useState<number>();
+    const [anotherCylinderMaxRetailRefill, setAnotherCylinderMaxRetailRefill] = useState<number>();
+    const [anotherCylinderMaxRetailSelling, setAnotherCylinderMaxRetailSelling] = useState<number>();
     const [anotherCylinderSpoiled, setAnotherCylinderSpoiled] = useState<number>();
     const [anotherCylinderId, setAnotherCylinderId] = useState<string>("");
     const [anotherCylinderName, setAnotherCylinderName] = useState<string>("");
@@ -124,6 +136,7 @@ const Store = () => {
     const handleCustomerLocationInput = (e: any) => setCustomerLocation(e.target.value)
     const handleSelectedProduct = (e: any) => setSelectedProduct(e.target.value)
 
+    const apiUrl = getApiUrl();
     useEffect(() => {
         dispatch(fetchStore())
     }, [dispatch])
@@ -132,7 +145,7 @@ const Store = () => {
         dispatch(fetchOtherProducts())
     }, [dispatch])
 
-    const handleOpenDeleteCylinderData = (id:string, cylinderWeightId:string, cylinderName: string, cylinderWeight: string) => {
+    const handleOpenDeleteCylinderData = (id: string, cylinderWeightId: string, cylinderName: string, cylinderWeight: string) => {
         setDeleteCylinderDataName(cylinderName);
         setDeleteCylinderDataWeight(cylinderWeight);
         setDeleteCylinderDataWeightId(cylinderWeightId);
@@ -146,7 +159,7 @@ const Store = () => {
     }
 
 
-    const handleOpenUpdateCylinderData = (id:string, cylindersName: string, dataRest:any) => {
+    const handleOpenUpdateCylinderData = (id: string, cylindersName: string, dataRest: any) => {
         setUpdateCylinderDataName(cylindersName);
         setUpdateCylinderData(dataRest);
         setUpdateCylinderDataWeight(dataRest?.weight?.weight)
@@ -163,43 +176,43 @@ const Store = () => {
     const handleCloseUpdateCylinderData = () => {
         setOpenUpdateCylinderData(false);
     }
-    
+
     const handleUpdateCylinderDataWeightInputChange = (e: any) => {
         setUpdateCylinderDataWeight(e.target.value)
     }
 
 
-    
+
     const handleUpdateCylinderDataFilledInputChange = (e: any) => {
         setUpdateCylinderDataFilled(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataEmptiesInputChange = (e: any) => {
         setUpdateCylinderDataEmpties(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataWholeSaleSellingInputChange = (e: any) => {
         setUpdateCylinderDataWholesaleSelling(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataWholeSaleRefillInputChange = (e: any) => {
         setUpdateCylinderDataWholesaleRefill(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataRetailSellingInputChange = (e: any) => {
         setUpdateCylinderDataRetailSelling(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataRetailRefillInputChange = (e: any) => {
         setUpdateCylinderDataRetailRefill(e.target.value)
     }
 
-    
+
     const handleUpdateCylinderDataSpoiledInputChange = (e: any) => {
         setUpdateCylinderDataSpoiled(e.target.value)
     }
@@ -220,23 +233,42 @@ const Store = () => {
     }
 
 
-    const handleAnotherCylinderWholesaleSellingInputChange = (e: any) => {
-        setAnotherCylinderWholeSaleSelling(e.target.value)
+    const handleAnotherCylinderMinWholesaleSellingInputChange = (e: any) => {
+        setAnotherCylinderMinWholeSaleSelling(e.target.value)
     }
 
 
-    const handleAnotherCylinderWholesaleRefillingInputChange = (e: any) => {
-        setAnotherCylinderWholeSaleRefill(e.target.value)
+    const handleAnotherCylinderMinWholesaleRefillingInputChange = (e: any) => {
+        setAnotherCylinderMinWholeSaleRefill(e.target.value)
     }
 
 
-    const handleAnotherCylinderRetailRefillInputChange = (e: any) => {
-        setAnotherCylinderRetailRefill(e.target.value)
+    const handleAnotherCylinderMinRetailRefillInputChange = (e: any) => {
+        setAnotherCylinderMinRetailRefill(e.target.value)
     }
 
 
-    const handleAnotherCylinderRetailSellingInputChange = (e: any) => {
-        setAnotherCylinderRetailSelling(e.target.value)
+    const handleAnotherCylinderMinRetailSellingInputChange = (e: any) => {
+        setAnotherCylinderMinRetailSelling(e.target.value)
+    }
+
+    const handleAnotherCylinderMaxWholesaleSellingInputChange = (e: any) => {
+        setAnotherCylinderMaxWholeSaleSelling(e.target.value)
+    }
+
+
+    const handleAnotherCylinderMaxWholesaleRefillingInputChange = (e: any) => {
+        setAnotherCylinderMaxWholeSaleRefill(e.target.value)
+    }
+
+
+    const handleAnotherCylinderMaxRetailRefillInputChange = (e: any) => {
+        setAnotherCylinderMaxRetailRefill(e.target.value)
+    }
+
+
+    const handleAnotherCylinderMaxRetailSellingInputChange = (e: any) => {
+        setAnotherCylinderMaxRetailSelling(e.target.value)
     }
 
     const handleAnotherCylinderSpoiledInputChange = (e: any) => {
@@ -244,7 +276,7 @@ const Store = () => {
     }
 
 
-    const handleOpenAddAnotherCylinder = (id:string, cylinderName: string) => {
+    const handleOpenAddAnotherCylinder = (id: string, cylinderName: string) => {
         setAnotherCylinderId(id);
         setAnotherCylinderName(cylinderName);
         setOpenAddAnotherCylinder(true);
@@ -253,14 +285,14 @@ const Store = () => {
     const handleCloseDeleteCylinder = () => {
         setOpenDeleteCylinder(false);
     }
-    const handleOpenDeleteCylinder = (id:string, cylinderDeleteName: string) => {
+    const handleOpenDeleteCylinder = (id: string, cylinderDeleteName: string) => {
         setDeleteCylinderName(cylinderDeleteName);
         setDeleteCylinderId(id);
         setOpenDeleteCylinder(true);
     }
 
     const handleDeleteCylinder = () => {
-        dispatch(deleteCylinder({id:deleteCylinderId}))
+        dispatch(deleteCylinder({ id: deleteCylinderId }))
     }
 
 
@@ -268,22 +300,31 @@ const Store = () => {
         setOpenAddAnotherCylinder(false);
     }
 
-    const handleAddAnotherCylinder = () => {
+    const handleAddAnotherCylinder = async () => {
         // setAnotherCylinderId(id);
         const formData = {
+            weight: anotherCylinderWeight,
             empties: anotherCylinderEmpties,
             filled: anotherCylinderFilled,
             spoiled: anotherCylinderSpoiled,
-            wholesale_selling_price: anotherCylinderWholeSaleSelling,
-            wholesale_refill_price: anotherCylinderWholeSaleRefill,
-            retail_selling_price: anotherCylinderRetailSelling,
-            retail_refill_price: anotherCylinderRetailRefill,
+            min_wholesale_selling_price: anotherCylinderMinWholeSaleSelling,
+            min_wholesale_refill_price: anotherCylinderMinWholeSaleRefill,
+            min_retail_selling_price: anotherCylinderMinRetailSelling,
+            min_retail_refill_price: anotherCylinderMinRetailRefill,
+
+            max_wholesale_selling_price: anotherCylinderMaxWholeSaleSelling,
+            max_wholesale_refill_price: anotherCylinderMaxWholeSaleRefill,
+            max_retail_selling_price: anotherCylinderMaxRetailSelling,
+            max_retail_refill_price: anotherCylinderMaxRetailRefill,
         }
-        dispatch(addAnotherCylinder({dat:formData, id: anotherCylinderId}))
+        try {
+            await dispatch(addAnotherCylinder({ dat: formData, id: anotherCylinderId })).unwrap()
+            toast.success('Added successfully.')
+        } catch (error) {
+            toast.error('an error occured, try again.')
+        }
+        
     }
-
-
-
 
     const openAssignDialogue = (empties: number, id: string) => {
         setSelectedEmpties(empties)
@@ -360,7 +401,7 @@ const Store = () => {
             }
 
             const response = await axios.post(
-                `http://127.0.0.1:8000/recordsales/`,
+                `${apiUrl}/recordsales/`,
                 formData,
                 {
                     headers: {
@@ -462,24 +503,48 @@ const Store = () => {
     }
 
 
-    const addNewCylinder = (e: any) => {
+    const addNewCylinder = async (e: any) => {
         e.preventDefault()
         const formData = {
             gas_type: gasType,
             weight: cylinderWeight,
-            wholesale_selling_price: wholeSaleSellingPrice,
-            wholesale_refil_price: wholeSaleRefillingPrice,
-            retail_selling_price: retailSellingPrice,
-            retail_refil_price: retailRefillingPrice,
+            min_wholesale_selling_price: minWholeSaleSellingPrice,
+            min_wholesale_refil_price: minWholeSaleRefillingPrice,
+            min_retail_selling_price: minRetailSellingPrice,
+            min_retail_refil_price: minRetailRefillingPrice,
+            max_wholesale_selling_price: maxWholeSaleSellingPrice,
+            max_wholesale_refil_price: maxWholeSaleRefillingPrice,
+            max_retail_selling_price: maxRetailSellingPrice,
+            max_retail_refil_price: maxRetailRefillingPrice,
             filled: gasFilled,
             empties: gasEmpties,
+            spoiled: gasSpoiled,
+        }
+        try {
+            await dispatch(addNewCylinders(formData)).unwrap()
+            setGasType('');
+            setCylinderWeight();
+            setMinWholeSellingPrice();
+            setMinWholeRefillingPrice();
+            setMinRetailSellingPrice();
+            setMinRetailRefillingPrice();
+            setMaxWholeSellingPrice();
+            setMaxWholeRefillingPrice();
+            setMaxRetailSellingPrice();
+            setMaxRetailRefillingPrice();
+            setGasFilled();
+            setGasEmpties();
+            setGasSpoiled();
+            toast.success("Cylinder recorded successfully!");
+        } catch (error) {
+            toast.error('An error occured, try again.')
         }
 
-        dispatch(addNewCylinders(formData))
+
         // console.log('Form data ', formData)
     }
 
-    const addOtherProducts = (e: any) => {
+    const addOtherProducts = async (e: any) => {
         e.preventDefault()
         const formData = {
             name: productName,
@@ -487,8 +552,13 @@ const Store = () => {
             retail_sales_price: productRetailPrice,
             quantity: productQuantity
         }
+        try {
+            await dispatch(addNewProduct(formData)).unwrap()
+        } catch (error) {
+            alert("failed to save, try again.")
+        }
 
-        dispatch(addNewProduct(formData))
+
     }
 
     const handleNameInputChange = (e: any) => {
@@ -518,27 +588,47 @@ const Store = () => {
     const handleGasWeightInputChange = (e: any) => {
         setCylinderWeight(e.target.value);
     };
+    // --------------------------------------------------
 
-    const handleWholeSaleSellingtInputChange = (e: any) => {
-        setWholeSellingPrice(e.target.value);
+    const handleMinWholeSaleSellingtInputChange = (e: any) => {
+        setMinWholeSellingPrice(e.target.value);
     };
 
 
-    const handleWholeSaleRefillingInputChange = (e: any) => {
-        setWholeRefillingPrice(e.target.value);
+    const handleMinWholeSaleRefillingInputChange = (e: any) => {
+        setMinWholeRefillingPrice(e.target.value);
     };
 
 
-    const handleRetailSalesInputChange = (e: any) => {
-        setRetailSellingPrice(e.target.value);
+    const handleMinRetailSalesInputChange = (e: any) => {
+        setMinRetailSellingPrice(e.target.value);
     };
 
 
-    const handleRetailFillingInputChange = (e: any) => {
-        setRetailRefillingPrice(e.target.value);
+    const handleMinRetailFillingInputChange = (e: any) => {
+        setMinRetailRefillingPrice(e.target.value);
+    };
+
+    const handleMaxWholeSaleSellingtInputChange = (e: any) => {
+        setMaxWholeSellingPrice(e.target.value);
     };
 
 
+    const handleMaxWholeSaleRefillingInputChange = (e: any) => {
+        setMaxWholeRefillingPrice(e.target.value);
+    };
+
+
+    const handleMaxRetailSalesInputChange = (e: any) => {
+        setMaxRetailSellingPrice(e.target.value);
+    };
+
+
+    const handleMaxRetailFillingInputChange = (e: any) => {
+        setMaxRetailRefillingPrice(e.target.value);
+    };
+
+    // ----------------------------------------------------
     const handleGasFilledInputChange = (e: any) => {
         setGasFilled(e.target.value);
     }
@@ -546,6 +636,11 @@ const Store = () => {
 
     const handleGasEmptiesInputChange = (e: any) => {
         setGasEmpties(e.target.value)
+    }
+
+
+    const handleSpoiledInputChange = (e: any) => {
+        setGasSpoiled(e.target.value)
     }
 
 
@@ -558,6 +653,7 @@ const Store = () => {
                 </div>
                 <div className=' w-full'>
                     <NavBar />
+                    <ToastContainer />
                     <div className='m-4'>
                         <div className='mb-4 flex border border-green-800 justify-between space-x-2 p-1 rounded-md'>
                             <div onClick={() => changectiveTab('cylinders')} className={`${activeTab === 'cylinders' ? 'bg-emerald-800' : ''}  w-full text-center cursor-pointer rounded-md`}>Cylinders</div>
@@ -649,17 +745,35 @@ const Store = () => {
                                                             <TableCell align="center">{cylinder.stores[0]?.empties || 0}</TableCell>
                                                             <TableCell align="center">{cylinder.stores[0]?.spoiled || 0}</TableCell>
                                                             <TableCell align="center">{cylinder.stores[0]?.filled + cylinder.stores[0]?.empties || 0}</TableCell>
-                                                            <TableCell align="center"><FormattedAmount amount={cylinder.stores[0]?.cylinder_details.wholesale_selling_price || 0} /></TableCell>
-                                                            <TableCell align="center"><FormattedAmount amount={cylinder.stores[0]?.cylinder_details.wholesale_refil_price || 0} /></TableCell>
-                                                            <TableCell align="center"><FormattedAmount amount={cylinder.stores[0]?.cylinder_details.retail_selling_price || 0} /></TableCell>
-                                                            <TableCell align="center"><FormattedAmount amount={cylinder.stores[0]?.cylinder_details.retail_refil_price || 0} /></TableCell>
+                                                            <TableCell align="center"><div className=' flex flex-col'>
+                                                                <span className=' flex flex-nowrap'>min - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.min_wholesale_selling_price || 0} /></span>
+                                                                <span className=' flex flex-nowrap'>max - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.max_wholesale_selling_price || 0} /></span>
+                                                            </div></TableCell>
+                                                            <TableCell align="center">
+                                                                <div className=' flex flex-col'>
+                                                                    <span className=' flex flex-nowrap'>min - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.min_wholesale_refil_price || 0} /></span>
+                                                                    <span className=' flex flex-nowrap'>max - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.max_wholesale_refil_price || 0} /></span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell align="center">
+                                                                <div className='flex flex-col'>
+                                                                    <span className='flex flex-nowrap'>min - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.min_retail_selling_price || 0} /></span>
+                                                                    <span className='flex flex-nowrap'>max - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.max_retail_selling_price || 0} /></span>
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell align="center">
+                                                                <div className='flex flex-col'>
+                                                                    <span className='flex flex-nowrap'>min - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.min_retail_refil_price || 0} /></span>
+                                                                    <span className='flex flex-nowrap'>max - <FormattedAmount amount={cylinder.stores[0]?.cylinder_details.max_retail_refil_price || 0} /></span>
+                                                                </div>
+                                                            </TableCell>
                                                             <TableCell align="center" className=''>
                                                                 {/* <button onClick={openAssignDialogue} className="bg-green-500 text-white px-2 py-1 rounded">Assign</button> */}
                                                                 <div className='flex space-x-1 flex-nowrap'>
                                                                     <button onClick={() => openAssignDialogue(cylinder.stores[0]?.empties || 0, cylinder.stores[0]?.id)} className="bg-green-500 text-white px-2 py-1 rounded">Refill</button>
                                                                     <button onClick={() => openSellDialogue(cylinder.stores[0]?.id)} className="bg-green-900 text-white px-2 py-1 rounded">Sell</button>
                                                                     <button onClick={() => handleOpenUpdateCylinderData(product.id, product.name, cylinder)} className="bg-blue-500 text-white px-2 py-1 rounded">Update</button>
-                                                                    <button onClick={() => handleOpenDeleteCylinderData(product.id, cylinder.weight.id, product.name, cylinder.weight.weight )} className="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+                                                                    <button onClick={() => handleOpenDeleteCylinderData(product.id, cylinder.weight.id, product.name, cylinder.weight.weight)} className="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
                                                                 </div>
 
                                                             </TableCell>
@@ -723,9 +837,11 @@ const Store = () => {
                                         <h5 className=' text-white text-sm font-semibold'>Add Other Products</h5>
                                     </div>
                                 </div>
-                                <form className={`bg-white shadow-lg rounded-lg p-6 w-full max-w-md ${activeForm === 'cylinders' ? 'block' : 'hidden'}`}>
-                                    {/* <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add Cylinder</h2> */}
-                                    <div className=' flex space-x-2 items-center'>
+                                <form
+                                    className={`bg-white shadow-lg rounded-lg p-6 w-full max-w-4xl space-y-4 ${activeForm === 'cylinders' ? 'block' : 'hidden'}`}
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {/* Column 1 */}
                                         <div>
                                             <div className="flex flex-col mb-4">
                                                 <label className="text-gray-700 font-semibold mb-2" htmlFor="cylinderType">Cylinder Type</label>
@@ -751,71 +867,9 @@ const Store = () => {
                                                 />
                                             </div>
                                             <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesalePrice">Wholesale Selling Price</label>
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="empties">Empties</label>
                                                 <input
-                                                    id="wholesalePrice"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={wholeSaleSellingPrice}
-                                                    onChange={handleWholeSaleSellingtInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesalePrice">Filled</label>
-                                                <input
-                                                    id="wholesalePrice"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={gasFilled}
-                                                    onChange={handleGasFilledInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailPrice">Retail Selling Price</label>
-                                                <input
-                                                    id="retailPrice"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={retailSellingPrice}
-                                                    onChange={handleRetailSalesInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesaleRefill">Wholesale Refilling Price</label>
-                                                <input
-                                                    id="wholesaleRefill"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={wholeSaleRefillingPrice}
-                                                    onChange={handleWholeSaleRefillingInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col mb-6">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailRefill">Retail Refilling Price</label>
-                                                <input
-                                                    id="retailRefill"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={retailRefillingPrice}
-                                                    onChange={handleRetailFillingInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col mb-6">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailRefill">Empties</label>
-                                                <input
-                                                    id="retailRefill"
+                                                    id="empties"
                                                     className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
                                                     type="number"
                                                     min={0}
@@ -824,8 +878,125 @@ const Store = () => {
                                                     placeholder="Enter empties"
                                                 />
                                             </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="spoiled">Spoiled</label>
+                                                <input
+                                                    id="spoiled"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={gasSpoiled}
+                                                    onChange={handleSpoiledInputChange}
+                                                    placeholder="Enter spoiled"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Column 2 */}
+                                        <div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="minRetailPrice">Min Retail Selling Price</label>
+                                                <input
+                                                    id="minRetailPrice"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={minRetailSellingPrice}
+                                                    onChange={handleMinRetailSalesInputChange}
+                                                    placeholder="Enter minimum price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="minWholesalePrice">Min Wholesale Selling Price</label>
+                                                <input
+                                                    id="minWholesalePrice"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={minWholeSaleSellingPrice}
+                                                    onChange={handleMinWholeSaleSellingtInputChange}
+                                                    placeholder="Enter price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="minWholesaleRefill">Min Wholesale Refilling Price</label>
+                                                <input
+                                                    id="MinWholesaleRefill"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={minWholeSaleRefillingPrice}
+                                                    onChange={handleMinWholeSaleRefillingInputChange}
+                                                    placeholder="Enter min price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="minRetailRefill">Min Retail Refilling Price</label>
+                                                <input
+                                                    id="minRetailRefill"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={minRetailRefillingPrice}
+                                                    onChange={handleMinRetailFillingInputChange}
+                                                    placeholder="Enter min price"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Column 3 */}
+                                        <div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailPrice">Max Retail Selling Price</label>
+                                                <input
+                                                    id="maxRetailPrice"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={maxRetailSellingPrice}
+                                                    onChange={handleMaxRetailSalesInputChange}
+                                                    placeholder="Enter max price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesalePrice">Max Wholesale Selling Price</label>
+                                                <input
+                                                    id="maxWholesalePrice"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={maxWholeSaleSellingPrice}
+                                                    onChange={handleMaxWholeSaleSellingtInputChange}
+                                                    placeholder="Enter max price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesaleRefill">Max Wholesale Refilling Price</label>
+                                                <input
+                                                    id="maxWholesaleRefill"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={maxWholeSaleRefillingPrice}
+                                                    onChange={handleMaxWholeSaleRefillingInputChange}
+                                                    placeholder="Enter max price"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailRefill">Max Retail Refilling Price</label>
+                                                <input
+                                                    id="maxRetailRefill"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={maxRetailRefillingPrice}
+                                                    onChange={handleMaxRetailFillingInputChange}
+                                                    placeholder="Enter max price"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
+
                                     <button
                                         onClick={addNewCylinder}
                                         type="submit"
@@ -834,7 +1005,6 @@ const Store = () => {
                                         Submit
                                     </button>
                                 </form>
-
 
                                 <form className={`bg-white shadow-lg rounded-lg p-6 w-full max-w-md ${activeForm === 'others' ? 'block' : 'hidden'}`}>
                                     {/* <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add Cylinder</h2> */}
@@ -1277,37 +1447,74 @@ const Store = () => {
 
                             <div>
                                 <div className="flex flex-col">
-                                    <label>wholesale selling price</label>
+                                    <label>Min wholesale selling price</label>
                                     <input
                                         type="number"
                                         className="px-2 border-solid outline-none border-gray-500 border-2"
                                         min={0}
-                                        value={anotherCylinderWholeSaleSelling}
-                                        onChange={handleAnotherCylinderWholesaleSellingInputChange}
+                                        value={anotherCylinderMinWholeSaleSelling}
+                                        onChange={handleAnotherCylinderMinWholesaleSellingInputChange}
                                     />
-                                    <label>wholesale refill price</label>
+                                    <label>min wholesale refill price</label>
                                     <input
                                         type="number"
                                         className="px-2 border-solid outline-none border-gray-500 border-2"
                                         min={0}
-                                        value={anotherCylinderWholeSaleRefill}
-                                        onChange={handleAnotherCylinderWholesaleRefillingInputChange}
+                                        value={anotherCylinderMinWholeSaleRefill}
+                                        onChange={handleAnotherCylinderMinWholesaleRefillingInputChange}
                                     />
-                                    <label>retail selling price</label>
+                                    <label>min retail selling price</label>
                                     <input
                                         type="number"
                                         className="px-2 border-solid outline-none border-gray-500 border-2"
                                         min={0}
-                                        value={anotherCylinderRetailSelling}
-                                        onChange={handleAnotherCylinderRetailSellingInputChange}
+                                        value={anotherCylinderMinRetailSelling}
+                                        onChange={handleAnotherCylinderMinRetailSellingInputChange}
                                     />
-                                    <label>retail refill price</label>
+                                    <label>Min retail refill price</label>
                                     <input
                                         type="number"
                                         className="px-2 border-solid outline-none border-gray-500 border-2"
                                         min={0}
-                                        value={anotherCylinderRetailRefill}
-                                        onChange={handleAnotherCylinderRetailRefillInputChange}
+                                        value={anotherCylinderMinRetailRefill}
+                                        onChange={handleAnotherCylinderMinRetailRefillInputChange}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex flex-col">
+                                    <label>max wholesale selling price</label>
+                                    <input
+                                        type="number"
+                                        className="px-2 border-solid outline-none border-gray-500 border-2"
+                                        min={0}
+                                        value={anotherCylinderMaxWholeSaleSelling}
+                                        onChange={handleAnotherCylinderMaxWholesaleSellingInputChange}
+                                    />
+                                    <label>max wholesale refill price</label>
+                                    <input
+                                        type="number"
+                                        className="px-2 border-solid outline-none border-gray-500 border-2"
+                                        min={0}
+                                        value={anotherCylinderMaxWholeSaleRefill}
+                                        onChange={handleAnotherCylinderMaxWholesaleRefillingInputChange}
+                                    />
+                                    <label>max retail selling price</label>
+                                    <input
+                                        type="number"
+                                        className="px-2 border-solid outline-none border-gray-500 border-2"
+                                        min={0}
+                                        value={anotherCylinderMaxRetailSelling}
+                                        onChange={handleAnotherCylinderMaxRetailSellingInputChange}
+                                    />
+                                    <label>max retail refill price</label>
+                                    <input
+                                        type="number"
+                                        className="px-2 border-solid outline-none border-gray-500 border-2"
+                                        min={0}
+                                        value={anotherCylinderMaxRetailRefill}
+                                        onChange={handleAnotherCylinderMaxRetailRefillInputChange}
                                     />
                                 </div>
                             </div>
@@ -1319,12 +1526,10 @@ const Store = () => {
                         Cancel
                     </Button>
                     <Button className=' !bg-green-600 !text-white' onClick={handleAddAnotherCylinder} autoFocus>
-                        Refill
+                        Add
                     </Button>
                 </DialogActions>
             </Dialog>
-
-
             <Dialog
                 fullScreen={fullScreen}
                 open={openDeleteCylinder}
