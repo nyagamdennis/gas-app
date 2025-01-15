@@ -60,6 +60,24 @@ const CollectCylinders = () => {
             .catch((error) => console.error("Error returning cylinders:", error));
     };
 
+    const handleReturnAllCylinders = () => {
+        const payload = assignedCylinders.map((cylinder) => ({ 
+            id: cylinder.id,
+            return_filled: true
+         }));
+
+        axios
+            .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
+                headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+            })
+            .then((response) => {
+                console.log(response.data.message);
+                setAssignedCylinders([]); // Clear table after return
+                alert("Cylinders returned successfully!");
+            })
+            .catch((error) => console.error("Error returning cylinders:", error));
+    };
+
     const handleSelectTeam = (team) => {
         setSelectedTeam(team);
     };
