@@ -22,7 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
     
 
     if (requiredRole && userRole !== requiredRole) {
-        return <Navigate to="/" />;
+        return <Navigate to="/unverified" />;
     }
 
     return <>{children}</>;

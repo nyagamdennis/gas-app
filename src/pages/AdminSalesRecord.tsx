@@ -5,11 +5,13 @@ import FormattedAmount from '../components/FormattedAmount'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 import { fetchSalesTeamData, selectAllSalesTeamData } from '../features/salesTeam/salesTeamDataSlice';
+import defaultProfile from "../components/media/default.png"
+import { fetchAdminSalesTeamData, selectAllAdminSalesTeamData, toggleVerification } from '../features/salesTeam/adminSalesTeamDataSlice';
 
 const AdminSalesRecord = () => {
     const dispatch = useAppDispatch();
     const myProfile = useAppSelector(selectMyProfile);
-    const allSalesData = useAppSelector(selectAllSalesTeamData);
+    const allSalesData = useAppSelector(selectAllAdminSalesTeamData);
 
     const [filteredSales, setFilteredSales] = useState([]);
     const [startDate, setStartDate] = useState(() => {
@@ -22,9 +24,10 @@ const AdminSalesRecord = () => {
     });
 
     useEffect(() => {
-        dispatch(fetchMyProfile());
-        dispatch(fetchSalesTeamData());
+        dispatch(fetchAdminSalesTeamData());
     }, [dispatch]);
+    console.log('data sales ', allSalesData)
+
 
     useEffect(() => {
         // Filter sales data by date range
@@ -34,24 +37,28 @@ const AdminSalesRecord = () => {
         });
         setFilteredSales(filtered);
     }, [allSalesData, startDate, endDate]);
+
+
+    const handleToggleVerification = async (salesId) => {
+        console.log("salesId:", salesId);
+        try {
+            await dispatch(toggleVerification(saleId)).unwrap();
+            alert('and this is called')
+        } catch (error) {
+            alert("error!", error)
+        }
+    }
+
+    
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Header */}
             <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
                 <div>
-                    <h1 className="text-3xl font-bold">{myProfile?.sales_team?.name || 'Sales Team'}</h1>
-                    <p className="mt-1 text-sm">Track your team's sales performance.</p>
+                    <p className="mt-1 text-xl">Track your team's sales performance.</p>
                 </div>
-                <Link to="/myprofile" className="flex items-center space-y-2 flex-col">
-                    <img
-                        src={myProfile?.profile_image || defaultProfile}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <span className="text-white text-sm">
-                        {myProfile?.first_name} {myProfile?.last_name}
-                    </span>
-                </Link>
+
             </div>
 
             {/* Filter Section */}
@@ -92,7 +99,7 @@ const AdminSalesRecord = () => {
                         >
                             {/* Salesperson */}
                             <h3 className="text-lg font-semibold text-blue-600">
-                                Salesperson: {sale.sales_person}
+                                Salesperson: {sale?.sales_person.first_name} {sale?.sales_person.last_name}
                             </h3>
 
                             {/* Customer */}
@@ -139,6 +146,13 @@ const AdminSalesRecord = () => {
                                 <div>
                                     <p className=' text-red-900 text-xl'>payment not verified.</p>
                                 </div>}
+                            <button
+                                onClick={() => handleToggleVerification(sale.id)}
+                                className={`px-4 py-2 rounded ${sale.admin_payment_verified ? "bg-red-500" : "bg-green-500"
+                                    } text-white`}
+                            >
+                                {sale.admin_payment_verified ? "Unverify" : "Verify"}
+                            </button>
 
                             {/* Timestamp */}
                             <p className="mt-2 text-sm text-gray-500">

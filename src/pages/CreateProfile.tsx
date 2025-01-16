@@ -5,6 +5,8 @@ import { createMyProfile, fetchMyProfile, selectMyProfile } from "../features/em
 import { Link, useNavigate } from "react-router-dom";
 import bluetick from "../components/media/bluetick.png";
 import defaultProfile from "../components/media/default.png";
+import Cookies from "cookies-js";
+import { logout } from "../features/auths/authSlice";
 
 const CreateProfile = () => {
     const dispatch = useAppDispatch();
@@ -101,6 +103,12 @@ const CreateProfile = () => {
         }
     };
 
+    const handleLogout = () => {
+        // @ts-ignore
+        dispatch(logout())
+        navigate('/login')
+      }
+    
     return (
         <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
             {/* Header */}
@@ -109,9 +117,17 @@ const CreateProfile = () => {
                     <h1 className="text-3xl font-bold">Create Profile</h1>
                     <p className="mt-1 text-sm">Complete your profile information.</p>
                 </div>
-                <Link to="/sales" className="text-white underline">
-                    Back to Sales
-                </Link>
+                <div className="flex items-center space-x-4">
+                    <Link to="/sales" className="text-white underline">
+                        Back to Sales
+                    </Link>
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                    >
+                        Logout
+                    </button>
+                </div>
             </div>
 
             {/* Content */}

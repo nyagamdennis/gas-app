@@ -61,13 +61,10 @@ const CollectCylinders = () => {
     };
 
     const handleReturnAllCylinders = () => {
-        const payload = assignedCylinders.map((cylinder) => ({ 
-            id: cylinder.id,
-            return_filled: true
-         }));
+        const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }));
 
         axios
-            .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
+            .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
                 headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
             })
             .then((response) => {
@@ -77,6 +74,8 @@ const CollectCylinders = () => {
             })
             .catch((error) => console.error("Error returning cylinders:", error));
     };
+
+   
 
     const handleSelectTeam = (team) => {
         setSelectedTeam(team);
@@ -181,7 +180,7 @@ const CollectCylinders = () => {
                     <div className="mt-6 text-center flex space-x-2">
                         <button
                             className="bg-red-500 text-white px-6 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                            onClick={handleReturnCylinders}
+                            onClick={handleReturnAllCylinders}
                         >
                             Return all Cylinders
                         </button>

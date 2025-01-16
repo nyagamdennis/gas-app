@@ -16,6 +16,7 @@ import assignsReducer from "../features/assigns/assignsSlice";
 import myProfileReducer from "../features/employees/myProfileSlice";
 import salesTeamDataReducer from "../features/salesTeam/salesTeamDataSlice";
 import assignedOtherProductsReducer from "../features/product/assignedOtherProductsSlice";
+import adminSalesTeamDataReducer from "../features/salesTeam/adminSalesTeamDataSlice";
 
 export const store = configureStore({
   reducer: {
@@ -36,6 +37,7 @@ export const store = configureStore({
     myProfile: myProfileReducer,
     salesTeamData: salesTeamDataReducer,
     assignedOtherProducts: assignedOtherProductsReducer,
+    adminSalesTeamData: adminSalesTeamDataReducer,
 
   },
 })

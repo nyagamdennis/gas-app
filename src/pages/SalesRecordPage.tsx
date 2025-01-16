@@ -45,7 +45,7 @@ const SalesRecordPage = () => {
           } else if (has_employee_profile && !is_verified) {
             console.log("is not verified");
             navigate("/unverified", {
-              
+
               state: { message: "Your profile is not verified. Please contact the admin." },
             });
           } else if (!has_employee_profile) {
@@ -78,6 +78,7 @@ const SalesRecordPage = () => {
           />
           <span className="text-white text-sm">{myProfile.first_name} {myProfile.last_name}</span>
         </Link>
+        <button>logout</button>
       </div>
       <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link to="/salesteamcylinders" className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-30 ease-in-out">
@@ -101,9 +102,11 @@ const SalesRecordPage = () => {
           <p className="mt-2 text-sm">View your sales records.</p>
         </Link>
       </div>
-      <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
-        <Link className="hover:underline" to="/sales">Home</Link>
-      </div>
+      <Link className="hover:underline" to="/sales">
+        <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
+          Home
+        </div>
+      </Link>
     </div>
   );
 };
