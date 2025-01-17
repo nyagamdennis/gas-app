@@ -26,13 +26,26 @@ const RegisterPage = () => {
   const [passVisibility, setPasswordVisibility] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const handleEmailInput = (e:any) => setEmail(e.target.value);
-  const handlePhone = (e:any) => setPhone(e.target.value);
-  const handlePwdInput = (e:any) => setPassword(e.target.value);
-  const handleConfirmPwdInput = (e:any) => setConfirmPassword(e.target.value);
-  const handleTermsChange = (e:any) => setTermsAccepted(e.target.checked);
+  // const handleEmailInput = (e:any) => setEmail(e.target.value);
+  const handleEmailInput = (e: any) => {
+    const value = e.target.value;
+    setEmail(value);
 
-  const handleSubmit = async (event:any) => {
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setError("Please enter a valid email address.");
+    } else {
+      setError("");
+    }
+  };
+
+  const handlePhone = (e: any) => setPhone(e.target.value);
+  const handlePwdInput = (e: any) => setPassword(e.target.value);
+  const handleConfirmPwdInput = (e: any) => setConfirmPassword(e.target.value);
+  const handleTermsChange = (e: any) => setTermsAccepted(e.target.checked);
+
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
     setLoading(true);
 
@@ -75,7 +88,7 @@ const RegisterPage = () => {
           });
         }
       }, 1000);
-    } catch (error:any) {
+    } catch (error: any) {
       setLoading(false);
       setSuccess(false);
       setError(
@@ -87,6 +100,17 @@ const RegisterPage = () => {
   const handlePasswordVisibility = () => {
     setPasswordVisibility(!passVisibility);
   };
+
+
+  const canSubmit = [
+    email,
+    phone,
+    password,
+    confirmPassword,
+    termsAccepted,
+    !error,
+  ].every(Boolean);
+
 
   return (
     <section className="h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-white to-green-100">
@@ -115,7 +139,9 @@ const RegisterPage = () => {
                 id="email"
                 type="text"
                 placeholder="example@gmail.com"
-                className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
+                // className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
+                className={`block w-full p-3 rounded border-gray-300 shadow-sm ${error && error.includes("email") ? "border-red-500" : ""
+                  } focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50`}
                 onChange={handleEmailInput}
                 required
               />
@@ -123,6 +149,9 @@ const RegisterPage = () => {
                 <MailOutlineIcon />
               </span>
             </div>
+            {error && error.includes("email") && (
+              <p className="text-red-500 text-sm mt-1">{error}</p>
+            )}
           </div>
 
           <div>
@@ -214,7 +243,8 @@ const RegisterPage = () => {
           <button
             type="submit"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring focus:ring-green-300 focus:ring-opacity-50 disabled:opacity-50"
-            disabled={!termsAccepted || isLoading}
+            // disabled={!termsAccepted || isLoading}
+            disabled={!canSubmit || isLoading}
           >
             {isLoading ? <ClipLoader size={20} color="#ffffff" /> : "Sign Up"}
           </button>

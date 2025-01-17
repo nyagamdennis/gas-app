@@ -181,6 +181,7 @@ const storeSlice = createSlice({
             .addCase(addNewCylinders.fulfilled, (state, action) => {
                 state.addNewCylinderStatus = "succeeded";
                 // state.store = action.payload;
+                
             })
             .addCase(addNewCylinders.rejected, (state, action) => {
                 state.addNewCylinderError = action.error.message || "Failed to fetch products";
@@ -201,6 +202,16 @@ const storeSlice = createSlice({
             .addCase(addAnotherCylinder.fulfilled, (state, action) => {
                 state.addAnotherCylinderStatus = "succeeded";
                 // state.store = action.payload;
+            //     const updatedStore = state.store.map((group) => {
+            //         if (group.id === action.payload.group_id) {
+            //             return {
+            //                 ...group,
+            //                 cylinders: [...group.cylinders, action.payload.new_cylinder],
+            //             };
+            //         }
+            //         return group;
+            //     });
+            //     state.store = updatedStore;
             })
             .addCase(addAnotherCylinder.rejected, (state, action) => {
                 state.addAnotherCyinderError = action.error.message || "Failed to fetch products";

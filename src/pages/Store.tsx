@@ -372,6 +372,7 @@ const Store = () => {
         dispatch(refillEmpties(formData))
     }
 
+
     const handleSubmit = async (e: any) => {
         e.preventDefault()
 
@@ -867,6 +868,18 @@ const Store = () => {
                                                 />
                                             </div>
                                             <div className="flex flex-col mb-4">
+                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="empties">Filled</label>
+                                                <input
+                                                    id="filled"
+                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
+                                                    type="number"
+                                                    min={0}
+                                                    value={gasFilled}
+                                                    onChange={handleGasFilledInputChange}
+                                                    placeholder="Enter filled"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col mb-4">
                                                 <label className="text-gray-700 font-semibold mb-2" htmlFor="empties">Empties</label>
                                                 <input
                                                     id="empties"
@@ -1130,7 +1143,7 @@ const Store = () => {
                 aria-labelledby="responsive-dialog-title"
             >
                 <DialogTitle id="responsive-dialog-title">
-                    {"Refill the empties. Current empties"} {selectedEmpties} {"cylinders. Id is"} {refillId}
+                    {"Refill the empties. Current empties"} {selectedEmpties}
                 </DialogTitle>
                 <DialogContent>
                     <form>

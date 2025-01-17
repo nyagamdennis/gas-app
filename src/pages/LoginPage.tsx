@@ -31,10 +31,27 @@ const LoginPage = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const apiUrl = getApiUrl();
 
-  const handleUsernameInput = (e:any) => setEmail(e.target.value);
+  // const handleUsernameInput = (e:any) => setEmail(e.target.value);
+
+
+  
+  const handleUsernameInput = (e: any) => {
+    const value = e.target.value;
+    setEmail(value);
+  
+    // Basic email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setErrMsg("Please enter a valid email address.");
+    } else {
+      setErrMsg("");
+    }
+  };
+
   const handlePwdInput = (e:any) => setPassword(e.target.value);
 
-  const canSubmit = [email, password].every(Boolean);
+  // const canSubmit = [email, password].every(Boolean);
+  const canSubmit = [email, password].every(Boolean) && !errMsg;
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
@@ -92,6 +109,7 @@ const LoginPage = () => {
     setPasswordVisibility(!passVisibility);
   };
 
+  
   return (
     <section className="h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-white to-green-100">
       <div className="bg-white p-6 rounded-lg shadow-md w-11/12 sm:w-96">
@@ -121,6 +139,7 @@ const LoginPage = () => {
                 <PersonIcon />
               </span>
             </div>
+            {errMsg && <p className="text-red-500 text-sm mt-1">{errMsg}</p>}
           </div>
 
           <div>

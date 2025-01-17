@@ -97,14 +97,15 @@ const adminSalesTeamDataSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message
       })
-
       .addCase(toggleVerification.pending, (state, action) => {
         state.status = "loading"
       })
       .addCase(toggleVerification.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        // state.adminSalesTeamData = action.payload;
-
+        state.status = "succeeded";
+        const updatedSale = action.payload;
+        state.adminSalesTeamData = state.adminSalesTeamData.map((sale) =>
+          sale.id === updatedSale.id ? updatedSale : sale
+        );
       })
       .addCase(toggleVerification.rejected, (state, action) => {
         state.status = "failed"

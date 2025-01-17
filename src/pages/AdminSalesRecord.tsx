@@ -40,13 +40,7 @@ const AdminSalesRecord = () => {
 
 
     const handleToggleVerification = async (salesId) => {
-        console.log("salesId:", salesId);
-        try {
-            await dispatch(toggleVerification(saleId)).unwrap();
-            alert('and this is called')
-        } catch (error) {
-            alert("error!", error)
-        }
+        dispatch(toggleVerification(salesId))
     }
 
     
@@ -174,11 +168,10 @@ const AdminSalesRecord = () => {
             </div>
 
             {/* Footer */}
-            <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
-                <Link className="hover:underline" to="/sales">
-                    Home
-                </Link>
-            </div>
+            <Link className="bg-blue-600 text-white py-3 text-center shadow-inner hover:underline" to="/sales">
+            Home
+            </Link>
+            
         </div>
     )
 }

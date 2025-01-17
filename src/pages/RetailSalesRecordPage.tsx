@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { getSalesError, recordSales } from '../features/sales/salesSlice';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FormattedAmount from '../components/FormattedAmount';
 
 
 const RetailSalesRecordPage = () => {
@@ -26,6 +27,7 @@ const RetailSalesRecordPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selctedProductPrice, setSelectedProductPrice] = useState();
   const [fullyPaid, setFullyPaid] = useState()
+  const [paymentAmount, setPaymentAmount] = useState("MAXIMUM"); // 'MAXIMUM' or 'MINIMUM'
 
   useEffect(() => {
     dispatch(fetchAssignedProducts());
@@ -61,15 +63,27 @@ const RetailSalesRecordPage = () => {
         (prod) => prod.id === Number(product.productId)
       );
     
+      // if (assignedProduct) {
+      //   const price =
+      //     saleType === "COMPLETESALE"
+      //       ? assignedProduct.wholesale_selling_price
+      //       : assignedProduct.wholesale_refil_price;
+      //   return total + price * product.quantity;
+      // }
+
       if (assignedProduct) {
         const price =
           saleType === "COMPLETESALE"
-            ? assignedProduct.wholesale_selling_price
-            : assignedProduct.wholesale_refil_price;
+            ? (
+              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
+            )
+            : (
+              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
+            );
         return total + price * product.quantity;
       }
 
-      return total;
+      return <FormattedAmount amount={total} /> ;
     }, 0);
   };
 
@@ -215,29 +229,40 @@ const RetailSalesRecordPage = () => {
                     ))}
                   </select>
                   {selectedProduct && (
-                    <div className=" flex space-x-2 items-center">
-                      <p className="text-sm text-gray-500 mt-1">
-                      Ksh{" "}
+                  
+
+                  <div className="flex items-center gap-4 mt-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="paymentAmount"
+                        value="MINIMUM"
+                        checked={paymentAmount === "MINIMUM"}
+                        onChange={() => setPaymentAmount("MINIMUM")}
+                      />
+                      <p>
                       {saleType === "COMPLETESALE"
-                        ? selectedProduct.min_wholesale_selling_price
-                        : selectedProduct.min_wholesale_refil_price}
-                    </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                      Ksh{" "}
+                      ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} /> 
+                      : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} /> }
+                      </p>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="paymentAmount"
+                        value="MAXIMUM"
+                        checked={paymentAmount === "MAXIMUM"}
+                        onChange={() => setPaymentAmount("MAXIMUM")}
+                      />
+                      <p>
                       {saleType === "COMPLETESALE"
-                        ? selectedProduct.wholesale_selling_price
-                        : selectedProduct.wholesale_refil_price}
-                    </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                      Ksh{" "}
-                      {saleType === "COMPLETESALE"
-                        ? selectedProduct.max_wholesale_selling_price
-                        : selectedProduct.max_wholesale_refil_price}
-                    </p>
-                    </div>
-                    
-                  )}
-      
+                      ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} /> 
+                      : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} /> }
+                      </p>
+                    </label>
+                  </div>
+
+                )}
                 </div>
 
                 <div className="mb-2">
@@ -333,7 +358,7 @@ const RetailSalesRecordPage = () => {
           )}
 
           <h3 className="text-lg font-bold mt-4">
-            Total Amount: Ksh {calculateTotal()}
+            Total Amount: <FormattedAmount amount={calculateTotal()} /> 
           </h3>
 
           <button
