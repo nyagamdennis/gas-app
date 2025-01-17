@@ -1,13 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import { useAppDispatch } from '../app/hooks';
+import { logout } from '../features/auths/authSlice';
+
+
 
 const AdminAssign = () => {
+  const dispatch = useAppDispatch();
+  const handleLogOut = () => {
+    dispatch(logout())
+  }
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-4 shadow-md">
+      <div className="bg-blue-600 text-white py-4 shadow-md flex items-center justify-between px-3">
+        <div>
         <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
         <p className="text-center mt-2">Manage Your Business and Records Efficiently</p>
+        </div>
+        <PowerSettingsNewIcon onClick={handleLogOut} />
       </div>
 
       {/* Main Content */}
