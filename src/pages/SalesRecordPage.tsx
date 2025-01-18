@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { fetchMyProfile, selectMyProfile } from "../features/employees/myProfileSlice";
 import defaultProfile from "../components/media/default.png";
-import { selectIsAuthenticated } from "../features/auths/authSlice";
+import { logout, selectIsAuthenticated } from "../features/auths/authSlice";
 import axios from "axios";
 import Cookies from "cookies-js";
 import getApiUrl from "../getApiUrl";
@@ -63,6 +63,11 @@ const SalesRecordPage = () => {
     }
   }, [isAuthenticated, navigate, apiUrl]);
 
+
+  const handleLogOut = () => {
+    dispatch(logout())
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
@@ -78,7 +83,7 @@ const SalesRecordPage = () => {
           />
           <span className="text-white text-sm">{myProfile.first_name} {myProfile.last_name}</span>
         </Link>
-        <button>logout</button>
+        <button onClick={handleLogOut}>logout</button>
       </div>
       <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link to="/salesteamcylinders" className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-30 ease-in-out">
