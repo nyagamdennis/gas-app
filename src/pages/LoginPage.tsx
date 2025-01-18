@@ -31,27 +31,27 @@ const LoginPage = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const apiUrl = getApiUrl();
 
-  // const handleUsernameInput = (e:any) => setEmail(e.target.value);
+  const handleUsernameInput = (e:any) => setEmail(e.target.value);
 
 
   
-  const handleUsernameInput = (e: any) => {
-    const value = e.target.value;
-    setEmail(value);
+  // const handleUsernameInput = (e: any) => {
+  //   const value = e.target.value;
+  //   setEmail(value);
   
-    // Basic email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      setErrMsg("Please enter a valid email address.");
-    } else {
-      setErrMsg("");
-    }
-  };
+  //   // Basic email validation regex
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!emailRegex.test(value)) {
+  //     setErrMsg("Please enter a valid email address.");
+  //   } else {
+  //     setErrMsg("");
+  //   }
+  // };
 
   const handlePwdInput = (e:any) => setPassword(e.target.value);
 
   // const canSubmit = [email, password].every(Boolean);
-  const canSubmit = [email, password].every(Boolean) && !errMsg;
+  // const canSubmit = [email, password].every(Boolean) && !errMsg;
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
@@ -139,7 +139,7 @@ const LoginPage = () => {
                 <PersonIcon />
               </span>
             </div>
-            {errMsg && <p className="text-red-500 text-sm mt-1">{errMsg}</p>}
+            {/* {errMsg && <p className="text-red-500 text-sm mt-1">{errMsg}</p>} */}
           </div>
 
           <div>
@@ -174,7 +174,7 @@ const LoginPage = () => {
           <button
             type="submit"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring focus:ring-green-300 focus:ring-opacity-50 disabled:opacity-50"
-            disabled={!canSubmit || isLoading}
+            // disabled={!canSubmit || isLoading}
           >
             {isLoading ? <ClipLoader size={20} color="#ffffff" /> : "Login"}
           </button>
