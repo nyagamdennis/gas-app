@@ -23,8 +23,29 @@ const AfterAssign = () => {
 
     const navigate = useNavigate();
 
+    // const handlePrint = () => {
+    //     window.print();
+    // };
+
+
     const handlePrint = () => {
-        window.print();
+        if (window.Android && window.Android.printText) {
+            // Format the table content for printing
+            let printContent = "Assigned Cylinders Report\n\n";
+            printContent += "Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n";
+            printContent += "---------------------------------------------\n";
+
+            cylinders.forEach((cylinder) => {
+                printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
+                    cylinder.date_assigned
+                ).toLocaleDateString()}\n`;
+            });
+
+            // Send the formatted content to the printer
+            window.Android.printText(printContent);
+        } else {
+            alert("Sunmi printer interface is not available.");
+        }
     };
 
     const handleGeneratePDF = () => {
@@ -35,7 +56,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report **printer working loads**</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
@@ -76,44 +97,7 @@ const AfterAssign = () => {
                 </button>
             </div>
         </div>
-        // <div className="min-h-screen bg-gray-100 p-4">
-        //     <h2 className="text-xl font-bold text-center mb-4">Assigned Cylinders</h2>
-        //     <table className="w-full border text-sm">
-        //         <thead>
-        //             <tr className="bg-gray-200 text-left">
-        //                 <th className="border px-2 py-1">Sales Team</th>
-        //                 <th className="border px-2 py-1">Store ID</th>
-        //                 <th className="border px-2 py-1">Cylinder ID</th>
-        //                 <th className="border px-2 py-1">Weight (kg)</th>
-        //                 <th className="border px-2 py-1">Assigned</th>
-        //             </tr>
-        //         </thead>
-        //         <tbody>
-
-        //             <tr>
-        //                 <td className="border px-2 py-1">Team Alpha</td>
-        //                 <td className="border px-2 py-1 text-center">7</td>
-        //                 <td className="border px-2 py-1 text-center">1</td>
-        //                 <td className="border px-2 py-1 text-center">12</td>
-        //                 <td className="border px-2 py-1 text-center">10</td>
-        //             </tr>
-        //         </tbody>
-        //     </table>
-        //     <div className="mt-6 flex justify-center space-x-4">
-        //         <button
-        //             className="bg-green-500 text-white px-6 py-2 rounded-lg shadow hover:bg-green-600 transition"
-        //             onClick={handlePrint}
-        //         >
-        //             Print
-        //         </button>
-        //         <button
-        //             className="bg-red-500 text-white px-6 py-2 rounded-lg shadow hover:bg-red-600 transition"
-        //             onClick={handleGeneratePDF}
-        //         >
-        //             Generate PDF
-        //         </button>
-        //     </div>
-        // </div>
+      
     )
 }
 
