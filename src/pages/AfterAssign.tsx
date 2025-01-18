@@ -30,10 +30,9 @@ const AfterAssign = () => {
 
     const handlePrint = () => {
         if (window.Android && window.Android.printText) {
-            // Format the table content for printing
-            let printContent = "Assigned Cylinders Report\n\n";
-            printContent += "Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n";
-            printContent += "---------------------------------------------\n";
+            let printContent = 'Assigned Cylinders Report\n\n';
+            printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
+            printContent += '---------------------------------------------\n';
 
             cylinders.forEach((cylinder) => {
                 printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
@@ -41,10 +40,9 @@ const AfterAssign = () => {
                 ).toLocaleDateString()}\n`;
             });
 
-            // Send the formatted content to the printer
-            window.Android.printText(printContent);
+            window.Android.printText(printContent); // Calls the native print method
         } else {
-            alert("Sunmi printer interface is not available.");
+            alert('Printing is not available.');
         }
     };
 

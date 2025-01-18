@@ -90,6 +90,7 @@ const UnverifiedPage = () => {
                         dispatch(logout());
                     } else {
                         setErrMsg("Failed to verify user status. Please try again.");
+                        dispatch(logout());
                     }
                 }
             };
