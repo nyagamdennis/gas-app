@@ -55,22 +55,27 @@ const AfterAssign = () => {
     const handlePrint = () => {
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             let printContent = '\n\n'; // Whitespace at the top
-            printContent += 'Assigned Cylinders Report\n\n'; // Report title
-            printContent += 'Cylinder   Weight(kg)  Qty   Date Assigned\n'; // Table header
+            // printContent += 'Assigned Cylinders Report\n\n'; // Report title
+            // printContent += 'Cylinder   Weight(kg)  Qty   Date Assigned\n'; // Table header
             printContent += '------------------------------------------\n';
     
             // Format table rows
+            // cylinders.forEach((cylinder) => {
+            //     // Adjust spacing between columns for better alignment
+            //     printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
+            //         .toString()
+            //         .padStart(11)}${cylinder.assigned_quantity
+            //         .toString()
+            //         .padStart(7)}${new Date(cylinder.date_assigned)
+            //         .toLocaleDateString()
+            //         .padStart(15)}\n`;
+            // });
             cylinders.forEach((cylinder) => {
-                // Adjust spacing between columns for better alignment
-                printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
-                    .toString()
-                    .padStart(11)}${cylinder.assigned_quantity
-                    .toString()
-                    .padStart(7)}${new Date(cylinder.date_assigned)
-                    .toLocaleDateString()
-                    .padStart(15)}\n`;
+                printContent += `Cylinder: ${cylinder.gas_type.padEnd(15)} Weight: ${cylinder.weight}\n`;
+                printContent += `Qty: ${cylinder.assigned_quantity.padEnd(10)} Date: ${new Date(cylinder.date_assigned).toLocaleDateString()}\n`;
+                printContent += '------------------------------------------\n';
             });
-    
+            
             printContent += '\n\n'; // Whitespace at the bottom
             window.AndroidBridge.printText(printContent); // Call the native print method
         } else {
@@ -107,7 +112,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. padding fixed.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
