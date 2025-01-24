@@ -53,66 +53,34 @@ const AfterAssign = () => {
     //     }
     // };
     const handlePrint = () => {
-        if (window.AndroidBridge && window.AndroidBridge.printTextWithFont) {
-            const currentDate = new Date().toLocaleDateString(); // Current date for the receipt
-    
-            // Prepare the receipt content
+        if (window.AndroidBridge && window.AndroidBridge.printText) {
+            const currentDate = new Date().toLocaleDateString();
+
             let printContent = '\n\n'; // Whitespace at the top
-    
-            // Add the title in bold font
-            printContent += 'Assigned Cylinders\n'; // Title of the receipt
-            printContent += '\n';
-    
-            // Add the date once at the top
+            printContent += 'Assigned Cylinders.\n\n'; // Report title
             printContent += `Date: ${currentDate}\n\n`;
-    
-            // Add table header
-            printContent += 'Cylinder    Weight(kg)    Qty\n';
-            printContent += '------------------------------\n';
+            printContent += 'Cylinder  Weight(kg)  Qty\n'; // Table header
+            printContent += '--------------------------------\n';
     
             // Format table rows
             cylinders.forEach((cylinder) => {
-                printContent += `${cylinder.gas_type.padEnd(12)}${cylinder.weight
+                // Adjust spacing between columns for better alignment
+                printContent += `${cylinder.gas_type.padEnd(5)}${cylinder.weight
                     .toString()
-                    .padStart(10)}${cylinder.assigned_quantity
+                    .padStart(5)}${cylinder.assigned_quantity
                     .toString()
-                    .padStart(8)}\n`;
+                    // .padStart(7)}${new Date(cylinder.date_assigned)
+                    // .toLocaleDateString()
+                    // .padStart(15)
+                }\n`;
             });
     
             printContent += '\n\n'; // Whitespace at the bottom
-    
-            // Print the receipt
-            window.AndroidBridge.printTextWithFont(printContent, null, 24); // Use printTextWithFont for better formatting
+            window.AndroidBridge.printText(printContent); // Call the native print method
         } else {
             alert("AndroidBridge is not available");
         }
     };
-    
-    // const handlePrint = () => {
-    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
-    //         let printContent = '\n\n'; // Whitespace at the top
-    //         printContent += 'Assigned Cylinders Report\n\n'; // Report title
-    //         printContent += 'Cylinder  Weight(kg)  Qty  Date Assigned\n'; // Table header
-    //         printContent += '--------------------------------\n';
-    
-    //         // Format table rows
-    //         cylinders.forEach((cylinder) => {
-    //             // Adjust spacing between columns for better alignment
-    //             printContent += `${cylinder.gas_type.padEnd(5)}${cylinder.weight
-    //                 .toString()
-    //                 .padStart(5)}${cylinder.assigned_quantity
-    //                 .toString()
-    //                 .padStart(7)}${new Date(cylinder.date_assigned)
-    //                 .toLocaleDateString()
-    //                 .padStart(15)}\n`;
-    //         });
-    
-    //         printContent += '\n\n'; // Whitespace at the bottom
-    //         window.AndroidBridge.printText(printContent); // Call the native print method
-    //     } else {
-    //         alert("AndroidBridge is not available");
-    //     }
-    // };
     
     // const handlePrint = () => {
     //     // if (window.AndroidBridge && window.AndroidBridge.showToast) {
@@ -143,7 +111,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report.Updated content.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report. No dates.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
