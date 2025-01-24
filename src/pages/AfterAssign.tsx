@@ -37,7 +37,7 @@ const AfterAssign = () => {
     
             // Format table rows
             cylinders.forEach((cylinder) => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
+                printContent += `${cylinder.gas_type.padEnd(2)}${cylinder.weight
                     .toString()
                     .padStart(10)}${cylinder.assigned_quantity
                     .toString()
@@ -82,7 +82,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. Padding test to 10.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report. Padding test to 2.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
