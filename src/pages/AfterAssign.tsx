@@ -29,43 +29,50 @@ const AfterAssign = () => {
 
 
     const handlePrint = () => {
-        // if (window.AndroidBridge && window.AndroidBridge.showToast) {
-        //     window.AndroidBridge.showToast("Hello from React!");
         if (window.AndroidBridge && window.AndroidBridge.printText) {
-            let printContent = 'Assigned Cylinders Report\n\n';
-            printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
-            printContent += '---------------------------------------------\n';
-
+            let printContent = '\n\n'; // Whitespace at the top
+            printContent += 'Assigned Cylinders Report\n\n'; // Report title
+            printContent += 'Cylinder Name        Weight (kg)    Qty    Date Assigned\n';
+            printContent += '-------------------------------------------------------\n';
+    
+            // Format table rows
             cylinders.forEach((cylinder) => {
-                printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
-                    cylinder.date_assigned
-                ).toLocaleDateString()}\n`;
+                printContent += `${cylinder.gas_type.padEnd(20)}${cylinder.weight
+                    .toString()
+                    .padStart(10)}${cylinder.assigned_quantity
+                    .toString()
+                    .padStart(8)}${new Date(cylinder.date_assigned)
+                    .toLocaleDateString()
+                    .padStart(15)}\n`;
             });
-
-            window.AndroidBridge.printText(printContent); // Calls the native print method
-            // window.AndroidBridge.printText("Hello from React!");
-          } else {
+    
+            printContent += '\n\n'; // Whitespace at the bottom
+            window.AndroidBridge.printText(printContent); // Call the native print method
+        } else {
             alert("AndroidBridge is not available");
-          }
-
-
-
-        // if (window.Android && window.Android.printText) {
-        //     let printContent = 'Assigned Cylinders Report\n\n';
-        //     printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
-        //     printContent += '---------------------------------------------\n';
-
-        //     cylinders.forEach((cylinder) => {
-        //         printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
-        //             cylinder.date_assigned
-        //         ).toLocaleDateString()}\n`;
-        //     });
-
-        //     window.AndroidBridge.printText(printContent); // Calls the native print method
-        // } else {
-        //     alert('Printing is not available.');
-        // }
+        }
     };
+    
+    // const handlePrint = () => {
+    //     // if (window.AndroidBridge && window.AndroidBridge.showToast) {
+    //     //     window.AndroidBridge.showToast("Hello from React!");
+    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
+    //         let printContent = 'Assigned Cylinders Report\n\n';
+    //         printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
+    //         printContent += '---------------------------------------------\n';
+
+    //         cylinders.forEach((cylinder) => {
+    //             printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
+    //                 cylinder.date_assigned
+    //             ).toLocaleDateString()}\n`;
+    //         });
+
+    //         window.AndroidBridge.printText(printContent); // Calls the native print method
+    //         // window.AndroidBridge.printText("Hello from React!");
+    //       } else {
+    //         alert("AndroidBridge is not available");
+    //       }
+    // };
 
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
@@ -75,7 +82,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. again! Printimg now available</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
