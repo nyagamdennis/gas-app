@@ -65,13 +65,13 @@ const AfterAssign = () => {
             // Format table rows
             cylinders.forEach((cylinder) => {
                 // Adjust spacing between columns for better alignment
-                printContent += `${cylinder.gas_type.padEnd(5)}${cylinder.weight
-                    .toString()
+                printContent += `${
+                    cylinder.gas_type.padEnd(5)}${cylinder.weight.toString()
                     .padStart(5)}${cylinder.assigned_quantity
                     .toString()
                     // .padStart(7)}${new Date(cylinder.date_assigned)
                     // .toLocaleDateString()
-                    // .padStart(15)
+                    .padStart(15)
                 }\n`;
             });
     
@@ -111,7 +111,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. No dates.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report. No dates again.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
