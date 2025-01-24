@@ -94,7 +94,7 @@ const UnverifiedPage = () => {
                     }
                 }
             };
-    
+    // in res i dont have the layout, i only have drawable, mitmap, values, and xml
             checkUserStatus();
         }
     }, [isAuthenticated, navigate, apiUrl, dispatch]); // Include dispatch in the dependency array
