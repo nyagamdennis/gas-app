@@ -61,8 +61,7 @@ const AfterAssign = () => {
             const currentDate = new Date().toLocaleDateString();
 
             let printContent = '\n\n'; // Whitespace at the top
-            printContent += 'Assigned Cylinders.\n\n'; // Report title
-            printContent += `Assigned Cylinders:   ${salesTeamName}\n\n`;
+            printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
             printContent += `Date: ${currentDate}\n`;
             printContent += '********************************\n';
             printContent += 'Cylinder  Weight(kg)  Qty\n'; // Table header
@@ -71,12 +70,16 @@ const AfterAssign = () => {
             // Format table rows
             cylinders.forEach((cylinder) => {
                 // Adjust spacing between columns for better alignment
-                printContent += `${
-                    cylinder.gas_type.padEnd(5)}${cylinder.weight.toString()
-                    .padStart(5)}${cylinder.assigned_quantity
-                    .toString()
-                    .padStart(15)
-                }\n`;
+                // printContent += `${
+                //     cylinder.gas_type.padEnd(5)}${cylinder.weight.toString()
+                //     .padStart(5)}${cylinder.assigned_quantity
+                //     .toString()
+                //     .padStart(15)
+                // }\n`;
+                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`
+                .padStart(10)}${cylinder.assigned_quantity
+                .toString()
+                .padStart(10)}\n`;
             });
     
             printContent += '\n\n\n\n\n'; // Whitespace at the bottom
