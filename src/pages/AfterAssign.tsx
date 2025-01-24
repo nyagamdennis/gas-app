@@ -37,13 +37,13 @@ const AfterAssign = () => {
     
             // Format table rows
             cylinders.forEach((cylinder) => {
-                printContent += `${cylinder.gas_type.padEnd(2)}${cylinder.weight
+                printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
                     .toString()
-                    .padStart(2)}${cylinder.assigned_quantity
+                    .padStart(10)}${cylinder.assigned_quantity
                     .toString()
-                    .padStart(2)}${new Date(cylinder.date_assigned)
+                    .padStart(10)}${new Date(cylinder.date_assigned)
                     .toLocaleDateString()
-                    .padStart(15)}\n`;
+                    .padStart(10)}\n`;
             });
     
             printContent += '\n\n\n\n\n\n\n'; // Whitespace at the bottom
@@ -82,7 +82,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. Padding test.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report. Padding test to 10.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
