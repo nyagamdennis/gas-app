@@ -48,7 +48,7 @@ const AfterAssign = () => {
                 ).toLocaleDateString()}\n`;
             });
 
-            window.Android.printText(printContent); // Calls the native print method
+            window.AndroidBridge.printText(printContent); // Calls the native print method
         } else {
             alert('Printing is not available.');
         }
