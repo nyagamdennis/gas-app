@@ -31,13 +31,7 @@ const AfterAssign = () => {
     const handlePrint = () => {
         // if (window.AndroidBridge && window.AndroidBridge.showToast) {
         //     window.AndroidBridge.showToast("Hello from React!");
-        // if (window.AndroidBridge && window.AndroidBridge.printText) {
-        //     // window.AndroidBridge.printText("Hello from React!");
-        //     window.AndroidBridge.printText("Hello from React!");
-        //   } else {
-        //     alert("AndroidBridge is not available");
-        //   }
-        if (window.Android && window.Android.printText) {
+        if (window.AndroidBridge && window.AndroidBridge.printText) {
             let printContent = 'Assigned Cylinders Report\n\n';
             printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
             printContent += '---------------------------------------------\n';
@@ -49,9 +43,28 @@ const AfterAssign = () => {
             });
 
             window.AndroidBridge.printText(printContent); // Calls the native print method
-        } else {
-            alert('Printing is not available.');
-        }
+            // window.AndroidBridge.printText("Hello from React!");
+          } else {
+            alert("AndroidBridge is not available");
+          }
+
+
+
+        // if (window.Android && window.Android.printText) {
+        //     let printContent = 'Assigned Cylinders Report\n\n';
+        //     printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
+        //     printContent += '---------------------------------------------\n';
+
+        //     cylinders.forEach((cylinder) => {
+        //         printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
+        //             cylinder.date_assigned
+        //         ).toLocaleDateString()}\n`;
+        //     });
+
+        //     window.AndroidBridge.printText(printContent); // Calls the native print method
+        // } else {
+        //     alert('Printing is not available.');
+        // }
     };
 
     const handleGeneratePDF = () => {
