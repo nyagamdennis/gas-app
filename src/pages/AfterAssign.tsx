@@ -32,7 +32,7 @@ const AfterAssign = () => {
         if (window.AndroidBridge && window.AndroidBridge.showToast) {
             window.AndroidBridge.showToast("Hello from React!");
           } else {
-            console.error("AndroidBridge is not available");
+            alert("AndroidBridge is not available");
           }
         // if (window.Android && window.Android.printText) {
         //     let printContent = 'Assigned Cylinders Report\n\n';
