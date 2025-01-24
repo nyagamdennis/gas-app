@@ -62,8 +62,9 @@ const AfterAssign = () => {
 
             let printContent = '\n\n'; // Whitespace at the top
             printContent += 'Assigned Cylinders.\n\n'; // Report title
-            printContent += `${salesTeamName}\n\n`;
-            printContent += `Date: ${currentDate}\n\n`;
+            printContent += `Assigned Cylinders:   ${salesTeamName}\n\n`;
+            printContent += `Date: ${currentDate}\n`;
+            printContent += '********************************\n';
             printContent += 'Cylinder  Weight(kg)  Qty\n'; // Table header
             printContent += '--------------------------------\n';
     
@@ -74,8 +75,6 @@ const AfterAssign = () => {
                     cylinder.gas_type.padEnd(5)}${cylinder.weight.toString()
                     .padStart(5)}${cylinder.assigned_quantity
                     .toString()
-                    // .padStart(7)}${new Date(cylinder.date_assigned)
-                    // .toLocaleDateString()
                     .padStart(15)
                 }\n`;
             });
