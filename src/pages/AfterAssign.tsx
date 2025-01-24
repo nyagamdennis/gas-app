@@ -32,8 +32,8 @@ const AfterAssign = () => {
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             let printContent = '\n\n'; // Whitespace at the top
             printContent += 'Assigned Cylinders Report\n\n'; // Report title
-            printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
-            printContent += '--------------------------------------------\n';
+            // printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
+            printContent += '--------------------------------\n';
     
             // Format table rows
             cylinders.forEach((cylinder) => {
@@ -82,7 +82,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. With white spaces expanded.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
