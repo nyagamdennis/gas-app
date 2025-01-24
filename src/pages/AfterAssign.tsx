@@ -32,7 +32,7 @@ const AfterAssign = () => {
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             let printContent = '\n\n'; // Whitespace at the top
             printContent += 'Assigned Cylinders Report\n\n'; // Report title
-            // printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
+            printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
             printContent += '--------------------------------\n';
     
             // Format table rows
@@ -40,10 +40,10 @@ const AfterAssign = () => {
                 printContent += `${cylinder.gas_type.padEnd(2)}${cylinder.weight
                     .toString()
                     .padStart(10)}${cylinder.assigned_quantity
-                    .toString()
-                    .padStart(10)}${new Date(cylinder.date_assigned)
+                    .toString(1)
+                    .padStart()}${new Date(cylinder.date_assigned)
                     .toLocaleDateString()
-                    .padStart(10)}\n`;
+                    .padStart(1)}\n`;
             });
     
             printContent += '\n\n\n\n\n\n\n'; // Whitespace at the bottom
@@ -82,7 +82,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. Padding test to 2.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
