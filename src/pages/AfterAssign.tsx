@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAssignedCylinders, getAssignsError, getAssignsStatus, selectAllAssigns } from '../features/assigns/assignsSlice';
 
@@ -10,13 +10,17 @@ const AfterAssign = () => {
     const cylinders = useAppSelector(selectAllAssigns);
     const cylinderError = useAppSelector(getAssignsError);
     const cylinderStatus = useAppSelector(getAssignsStatus);
+    const { state } = useLocation(); // Get the state object passed via navigate
+    const salesTeamName = state?.salesTeamName; 
 
+    console.log('team name ', salesTeamName)
     useEffect(() => {
         // Fetch all assigned cylinders (optionally filter by sales team)
         // dispatch(fetchAssignedCylinders(salesTeamId));
         dispatch(fetchAssignedCylinders(salesTeamId?.id));
     }, [dispatch]);
 
+    console.log('assigned ', cylinders)
     // if (cylinderStatus === "loading") return <p>Loading...</p>;
     // if (cylinderStatus === "failed") return <p>Error</p>;
 
@@ -58,6 +62,7 @@ const AfterAssign = () => {
 
             let printContent = '\n\n'; // Whitespace at the top
             printContent += 'Assigned Cylinders.\n\n'; // Report title
+            printContent += `${salesTeamName}\n\n`;
             printContent += `Date: ${currentDate}\n\n`;
             printContent += 'Cylinder  Weight(kg)  Qty\n'; // Table header
             printContent += '--------------------------------\n';
@@ -75,7 +80,7 @@ const AfterAssign = () => {
                 }\n`;
             });
     
-            printContent += '\n\n'; // Whitespace at the bottom
+            printContent += '\n\n\n\n\n'; // Whitespace at the bottom
             window.AndroidBridge.printText(printContent); // Call the native print method
         } else {
             alert("AndroidBridge is not available");
@@ -111,7 +116,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report. No dates again.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
