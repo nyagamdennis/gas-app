@@ -31,6 +31,7 @@ const AfterAssign = () => {
     const handlePrint = () => {
         if (window.AndroidBridge && window.AndroidBridge.showToast) {
             window.AndroidBridge.showToast("Hello from React!");
+            alert("its working on webview.")
           } else {
             alert("AndroidBridge is not available");
           }
@@ -59,7 +60,7 @@ const AfterAssign = () => {
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
-                <p className="text-sm text-gray-600">Assigned Cylinders Report.</p>
+                <p className="text-sm text-gray-600">Assigned Cylinders Report. updated</p>
             </div>
 
             <table className="w-full border-collapse border border-gray-300 text-sm">
@@ -88,7 +89,7 @@ const AfterAssign = () => {
             <div className="mt-6 flex justify-center gap-4">
                 <button
                     className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600"
-                    onClick={() => window.print()}
+                    onClick={handlePrint}
                 >
                     Print
                 </button>
