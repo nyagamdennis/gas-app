@@ -29,9 +29,11 @@ const AfterAssign = () => {
 
 
     const handlePrint = () => {
-        if (window.AndroidBridge && window.AndroidBridge.showToast) {
-            window.AndroidBridge.showToast("Hello from React!");
-            alert("its working on webview.")
+        // if (window.AndroidBridge && window.AndroidBridge.showToast) {
+        //     window.AndroidBridge.showToast("Hello from React!");
+        if (window.AndroidBridge && window.AndroidBridge.printText) {
+            // window.AndroidBridge.printText("Hello from React!");
+            window.AndroidBridge.printText("Hello from React!");
           } else {
             alert("AndroidBridge is not available");
           }
