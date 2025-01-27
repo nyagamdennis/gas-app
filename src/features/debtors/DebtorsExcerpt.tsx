@@ -33,8 +33,9 @@ const DebtorsExcerpt = ({ debtor }) => {
             <TableCell><CurrencyConvert price={debtor.sales_tab.total_amount} /> </TableCell>
             <TableCell>{formattedDate}</TableCell>
             <TableCell>{formattedDates}</TableCell>
-            <TableCell>{debtor.sales_tab.quantity} {debtor.sales_tab.product.cylinder.gas_type.name} {debtor.sales_tab.product.cylinder.weight.weight}Kg</TableCell>
-            <TableCell>{debtor.sales_tab.product.sales_team.name}</TableCell>
+            {/* <TableCell>{debtor.sales_tab.quantity} {debtor.sales_tab.product.cylinder.gas_type.name} {debtor.sales_tab.product.cylinder.weight.weight}Kg</TableCell> */}
+            <TableCell>{debtor.sales_tab.product.gas_type} {debtor.sales_tab.product.weight}kg</TableCell>
+            {/* <TableCell>{debtor.sales_tab.product.sales_team.name}</TableCell> */}
             {/* <TableCell>{employee?.name}</TableCell> */}
         </TableRow>
     )

@@ -6,6 +6,7 @@ import { fetchAssignedProducts, selectAllAssignedProducts } from "../features/pr
 import { getSalesError, recordSales } from "../features/sales/salesSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FormattedAmount from "../components/FormattedAmount";
 
 const WholeSaleRecordPage = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const WholeSaleRecordPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selctedProductPrice, setSelectedProductPrice] = useState();
   const [fullyPaid, setFullyPaid] = useState();
+  const [exchangedWithLocal, setExchangeWithLocal] = useState<boolean>(false);
 
   useEffect(() => {
     dispatch(fetchAssignedProducts());
@@ -112,6 +114,7 @@ const WholeSaleRecordPage = () => {
       debt_amount: paymentType === "DEBT" ? calculateDebt() : 0,
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
+      exchanged_with_local: exchangedWithLocal
     };
 
     try {
@@ -136,6 +139,19 @@ const WholeSaleRecordPage = () => {
     }
   };
 
+
+  
+  const handleExchangeWithLocalTrue = () => {
+    setExchangeWithLocal(true);
+  }
+
+
+
+  const handleExchangeWithLocalFalse = () => {
+    setExchangeWithLocal(false);
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -159,7 +175,7 @@ const WholeSaleRecordPage = () => {
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+              // required
             />
           </div>
           <div className="mb-4">
@@ -169,7 +185,7 @@ const WholeSaleRecordPage = () => {
               value={customerLocation}
               onChange={(e) => setCustomerLocation(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+              // required
             />
           </div>
           <div className="mb-4">
@@ -179,7 +195,7 @@ const WholeSaleRecordPage = () => {
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+              // required
             />
           </div>
 
@@ -238,8 +254,9 @@ const WholeSaleRecordPage = () => {
                         />
                         <p>
                         {saleType === "COMPLETESALE"
-                        ? selectedProduct.min_wholesale_selling_price
-                        : selectedProduct.min_wholesale_refil_price}
+                        ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} /> 
+                        : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} /> }
+                        
                         </p>
                       </label>
                       <label className="flex items-center gap-2">
@@ -252,8 +269,8 @@ const WholeSaleRecordPage = () => {
                         />
                         <p>
                         {saleType === "COMPLETESALE"
-                        ? selectedProduct.max_wholesale_selling_price
-                        : selectedProduct.max_wholesale_refil_price}
+                        ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} /> 
+                        : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} /> }
                         </p>
                       </label>
                     </div>
@@ -302,8 +319,36 @@ const WholeSaleRecordPage = () => {
           >
             Add Another Product
           </button>
-
+          <div className="mb-4">
+            <label className="block text-gray-600">Exchanged with local</label>
+            <div className="flex items-center gap-4 mt-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="exchangeWithLocal"
+                  value= 'false'
+                  checked={!exchangedWithLocal}
+                  onChange={() => handleExchangeWithLocalFalse(false)}
+                />
+                No
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="exchangeWithLocal"
+                  value= 'true'
+                  checked={exchangedWithLocal}
+                  onChange={() => handleExchangeWithLocalTrue(true)}
+                />
+                Yes
+              </label>
+            </div>
+          </div>
+          
           <h2 className="text-lg font-semibold mt-4 text-gray-700">Payment Details</h2>
+
+          
+
 
           <div className="mb-4">
             <label className="block text-gray-600">Payment Type</label>

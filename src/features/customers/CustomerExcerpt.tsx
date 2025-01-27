@@ -15,6 +15,7 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import getApiUrl from "../../getApiUrl"
+import FormattedAmount from "../../components/FormattedAmount"
 
 export interface Customer {
   id: number;
@@ -318,10 +319,10 @@ const CustomerExcerpt: React.FC<CustomerExcerptProps> = ({key,customerId,custome
                       >
                         <span>Given on: {formattedDate[index]}</span>
                         <span className=" flex items-center gap-3 ">
-                          {/* {" "} */}
+                        
                           Amount:{" "}
                           <div className=" text-lg font-bold">
-                            Ksh{debt.amount}
+                            <FormattedAmount amount={debt.amount} />
                           </div>
                         </span>
                         <span>Due: {formattedDatess[index]}</span>
@@ -341,12 +342,12 @@ const CustomerExcerpt: React.FC<CustomerExcerptProps> = ({key,customerId,custome
                   <div key={index} className="flex justify-between">
                     <span>{
                     // @ts-ignore
-                    sale.product.cylinder.gas_type.name}</span>
+                    sale.product.gas_type}</span>
                     <span>{
                     // @ts-ignore
-                    sale.product.cylinder.weight.weight} (Kg)</span>
+                    sale.product.weight} (Kg)</span>
                     <span>Quantity: {sale.quantity}</span>
-                    <span>Ksh. {sale.total_amount}</span>
+                    <span> <FormattedAmount amount={sale.total_amount} /></span>
                     <span>{formatTimestamp(
                       // @ts-ignore
                       sale.timestamp)}</span>

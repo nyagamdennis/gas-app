@@ -127,6 +127,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/debtors"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <DebtorsPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Employee-only routes */}
           <Route
             path="/sales"

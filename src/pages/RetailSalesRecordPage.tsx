@@ -22,6 +22,7 @@ const RetailSalesRecordPage = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerLocation, setCustomerLocation] = useState("");
   const [paymentType, setPaymentType] = useState("FULLY_PAID"); // 'FULLY_PAID' or 'DEBT'
+  const [exchangedWithLocal, setExchangeWithLocal] = useState<boolean>(false);
   const [deposit, setDeposit] = useState(0);
   const [repayDate, setRepayDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,7 +63,7 @@ const RetailSalesRecordPage = () => {
       const assignedProduct = allAssignedProducts.find(
         (prod) => prod.id === Number(product.productId)
       );
-    
+
       // if (assignedProduct) {
       //   const price =
       //     saleType === "COMPLETESALE"
@@ -83,7 +84,7 @@ const RetailSalesRecordPage = () => {
         return total + price * product.quantity;
       }
 
-      return <FormattedAmount amount={total} /> ;
+      return <FormattedAmount amount={total} />;
     }, 0);
   };
 
@@ -94,7 +95,7 @@ const RetailSalesRecordPage = () => {
     return Math.max(total - deposit, 0);
   };
 
-  const handleSubmit = async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
     const isFullyPaid = paymentType === "FULLY_PAID";
@@ -115,6 +116,7 @@ const RetailSalesRecordPage = () => {
       debt_amount: paymentType === "DEBT" ? calculateDebt() : 0,
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
+      exchanged_with_local: exchangedWithLocal
     };
 
     try {
@@ -140,6 +142,17 @@ const RetailSalesRecordPage = () => {
   };
 
 
+  const handleExchangeWithLocalTrue = () => {
+    setExchangeWithLocal(true);
+  }
+
+
+
+  const handleExchangeWithLocalFalse = () => {
+    setExchangeWithLocal(false);
+  }
+
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -163,7 +176,7 @@ const RetailSalesRecordPage = () => {
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+            // required
             />
           </div>
           <div className="mb-4">
@@ -173,7 +186,7 @@ const RetailSalesRecordPage = () => {
               value={customerLocation}
               onChange={(e) => setCustomerLocation(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+            // required
             />
           </div>
           <div className="mb-4">
@@ -183,7 +196,7 @@ const RetailSalesRecordPage = () => {
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              required
+            // required
             />
           </div>
 
@@ -229,40 +242,40 @@ const RetailSalesRecordPage = () => {
                     ))}
                   </select>
                   {selectedProduct && (
-                  
 
-                  <div className="flex items-center gap-4 mt-2">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="paymentAmount"
-                        value="MINIMUM"
-                        checked={paymentAmount === "MINIMUM"}
-                        onChange={() => setPaymentAmount("MINIMUM")}
-                      />
-                      <p>
-                      {saleType === "COMPLETESALE"
-                      ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} /> 
-                      : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} /> }
-                      </p>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="paymentAmount"
-                        value="MAXIMUM"
-                        checked={paymentAmount === "MAXIMUM"}
-                        onChange={() => setPaymentAmount("MAXIMUM")}
-                      />
-                      <p>
-                      {saleType === "COMPLETESALE"
-                      ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} /> 
-                      : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} /> }
-                      </p>
-                    </label>
-                  </div>
 
-                )}
+                    <div className="flex items-center gap-4 mt-2">
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="paymentAmount"
+                          value="MINIMUM"
+                          checked={paymentAmount === "MINIMUM"}
+                          onChange={() => setPaymentAmount("MINIMUM")}
+                        />
+                        <p>
+                          {saleType === "COMPLETESALE"
+                            ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} />
+                            : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} />}
+                        </p>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="paymentAmount"
+                          value="MAXIMUM"
+                          checked={paymentAmount === "MAXIMUM"}
+                          onChange={() => setPaymentAmount("MAXIMUM")}
+                        />
+                        <p>
+                          {saleType === "COMPLETESALE"
+                            ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} />
+                            : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} />}
+                        </p>
+                      </label>
+                    </div>
+
+                  )}
                 </div>
 
                 <div className="mb-2">
@@ -306,6 +319,31 @@ const RetailSalesRecordPage = () => {
             Add Another Product
           </button>
 
+          <div className="mb-4">
+            <label className="block text-gray-600">Exchanged with local</label>
+            <div className="flex items-center gap-4 mt-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="exchangeWithLocal"
+                  value= 'false'
+                  checked={!exchangedWithLocal}
+                  onChange={() => handleExchangeWithLocalFalse(false)}
+                />
+                No
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="exchangeWithLocal"
+                  value= 'true'
+                  checked={exchangedWithLocal}
+                  onChange={() => handleExchangeWithLocalTrue(true)}
+                />
+                Yes
+              </label>
+            </div>
+          </div>
           <h2 className="text-lg font-semibold mt-4 text-gray-700">Payment Details</h2>
 
           <div className="mb-4">
@@ -358,7 +396,7 @@ const RetailSalesRecordPage = () => {
           )}
 
           <h3 className="text-lg font-bold mt-4">
-            Total Amount: <FormattedAmount amount={calculateTotal()} /> 
+            Total Amount: <FormattedAmount amount={calculateTotal()} />
           </h3>
 
           <button
