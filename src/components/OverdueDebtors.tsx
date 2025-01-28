@@ -30,6 +30,8 @@ const columns = [
 ];
 
 const OverdueDebtors = () => {
+  const [open, setOpen] = useState (false);
+  const [selectedDebtor, setSelectedDebtor] = useState(null);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
   
@@ -45,6 +47,18 @@ const OverdueDebtors = () => {
       dispatch(fetchCustomers())
     }, [dispatch])
   
+
+    const handleClickOpen = (debtor:any) => {
+      setSelectedDebtor(debtor);
+      setOpen(true);
+    };
+  
+    const handleClose = () => {
+      setOpen(false);
+      setSelectedDebtor(null);
+    };
+  
+
     const overdueDebtors = debtors.filter((debtor) => {
         const currentDate = new Date();
         // @ts-ignore
@@ -60,7 +74,7 @@ const OverdueDebtors = () => {
       content = overdueDebtors
           .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
           .map((debtor) => (
-            <DebtorsExcerpt key={debtor.id} debtor={debtor} />
+            <DebtorsExcerpt key={debtor.id} debtor={debtor} onClearClick={handleClickOpen} onCloseClick={handleClose} />
           ))
     }
     const handleChangePage = (event: unknown, newPage: number) => {
