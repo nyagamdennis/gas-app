@@ -136,6 +136,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/overduedebtors"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <OverDueDebtorsPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Employee-only routes */}
           <Route
             path="/sales"

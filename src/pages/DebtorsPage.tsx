@@ -16,6 +16,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 
 const columns = [
@@ -25,13 +31,15 @@ const columns = [
     { id: 'dategive', label: 'Date Given', minWidth: 170 },
     { id: 'expecteddate', label: 'repayment Date', minWidth: 170 },
     { id: 'product', label: 'Product', minWidth: 170 },
-    // { id: 'team', label: 'Sales team', minWidth: 170 },
+    { id: 'team', label: 'Action', minWidth: 170 },
     //   { id: 'recorder', label: 'Sales Manager', minWidth: 170 },
 ];
 
 
 
 const DebtorsPage = () => {
+    const [open, setOpen] = useState (false);
+    const [selectedDebtor, setSelectedDebtor] = useState(null);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -44,7 +52,16 @@ const DebtorsPage = () => {
         dispatch(fetchCustomers());
     }, [dispatch]);
 
-   console.log('Debtors ', debtors)
+    const handleClickOpen = (debtor:any) => {
+        setSelectedDebtor(debtor);
+        setOpen(true);
+      };
+    
+      const handleClose = () => {
+        setOpen(false);
+        setSelectedDebtor(null);
+      };
+    
 
     let content;
 
@@ -54,9 +71,11 @@ const DebtorsPage = () => {
         content = debtors
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
             .map((debtor) => (
-                <DebtorsExcerpt key={debtor.id} debtor={debtor} />
+                <DebtorsExcerpt key={debtor.id} debtor={debtor} onClearClick={handleClickOpen} onCloseClick={handleClose} />
             ))
     }
+
+    
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
     };
@@ -67,6 +86,19 @@ const DebtorsPage = () => {
         setRowsPerPage(+event.target.value);
         setPage(0);
     };
+
+
+    const handleCLearDebt = () => {
+        console.log('Clearing debt')
+      }
+    
+      const handleDeposit = () => {
+        console.log('Clearing debt')
+      }
+    
+      
+    
+     
     return (
         <div className='flex gap-1 bg-slate-900 text-white'>
             <div className=' w-1/6'>
@@ -118,6 +150,28 @@ const DebtorsPage = () => {
                 </div>
             </div>
 
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Use Google's location service?"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Let Google help apps determine location. This means sending anonymous
+                        location data to Google, even when no apps are running.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Disagree</Button>
+                    <Button onClick={handleClose} autoFocus>
+                        Agree
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     )
 }
