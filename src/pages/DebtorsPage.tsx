@@ -1,11 +1,12 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react/jsx-no-undef */
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useEffect, useState } from 'react'
 import LeftNav from '../components/ui/LeftNav'
 import NavBar from '../components/ui/NavBar'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { fetchDebtors, getDebtorsStatus, selectAllDebtors } from '../features/debtors/debtorsSlice';
+import { clearDebtors, fetchDebtors, getClearDebtError, getClearDebtStatus, getDebtorsStatus, selectAllDebtors } from '../features/debtors/debtorsSlice';
 import { fetchCustomers } from '../features/customers/customerSlice';
 import DebtorsExcerpt from '../features/debtors/DebtorsExcerpt';
 import Paper from '@mui/material/Paper';
@@ -22,6 +23,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import FormattedAmount from '../components/FormattedAmount';
+import { CircularProgress } from '@mui/material';
 
 
 const columns = [
@@ -38,7 +41,7 @@ const columns = [
 
 
 const DebtorsPage = () => {
-    const [open, setOpen] = useState (false);
+    const [open, setOpen] = useState(false);
     const [selectedDebtor, setSelectedDebtor] = useState(null);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -47,21 +50,26 @@ const DebtorsPage = () => {
     const debtorsStatus = useAppSelector(getDebtorsStatus);
     const dispatch = useAppDispatch();
 
+    const clearDebtStatus = useAppSelector(getClearDebtStatus);
+    const clearDebtError = useAppSelector(getClearDebtError);
+
     useEffect(() => {
         dispatch(fetchDebtors());
         dispatch(fetchCustomers());
     }, [dispatch]);
 
-    const handleClickOpen = (debtor:any) => {
-        setSelectedDebtor(debtor);
+    const handleClickOpen = ({ debtor, customer }: any) => {
+        setSelectedDebtor({ ...debtor, customerName: customer?.name });
+        // setSelectedDebtor(debtor);
         setOpen(true);
-      };
-    
-      const handleClose = () => {
+
+    };
+
+    const handleClose = () => {
         setOpen(false);
         setSelectedDebtor(null);
-      };
-    
+    };
+
 
     let content;
 
@@ -75,7 +83,7 @@ const DebtorsPage = () => {
             ))
     }
 
-    
+
     const handleChangePage = (event: unknown, newPage: number) => {
         setPage(newPage);
     };
@@ -89,16 +97,19 @@ const DebtorsPage = () => {
 
 
     const handleCLearDebt = () => {
+        dispatch(clearDebtors(selectedDebtor?.id));
+        if (clearDebtStatus === "succeeded") {
+            handleClose(); // Close the dialog
+          }
+    }
+
+    const handleDeposit = () => {
         console.log('Clearing debt')
-      }
-    
-      const handleDeposit = () => {
-        console.log('Clearing debt')
-      }
-    
-      
-    
-     
+    }
+
+
+
+
     return (
         <div className='flex gap-1 bg-slate-900 text-white'>
             <div className=' w-1/6'>
@@ -125,15 +136,6 @@ const DebtorsPage = () => {
                                 </TableHead>
                                 <TableBody>
                                     {content}
-                                    {/* {debtors
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((debtor) => (
-                  <TableRow key={debtor.id} hover role="checkbox" tabIndex={-1}>
-                    <TableCell>{debtor.id}</TableCell>
-                    <TableCell>{debtor.amount}</TableCell>
-                    <TableCell>{debtor.sales_tab.total_amount}</TableCell>
-                  </TableRow>
-                ))} */}
                                 </TableBody>
                             </Table>
                         </TableContainer>
@@ -157,18 +159,29 @@ const DebtorsPage = () => {
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title">
-                    {"Use Google's location service?"}
+                    {/* {"Use Google's location service?"} */}
+                    {selectedDebtor ? `Clear ${selectedDebtor?.customerName || "N/A"}` : "Debtor Information"}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText id="alert-dialog-description">
-                        Let Google help apps determine location. This means sending anonymous
-                        location data to Google, even when no apps are running.
+                        {/* Let Google help apps determine location. This means sending anonymous
+                        location data to Google, even when no apps are running. */}
+                        Are you sure you want to clear {selectedDebtor?.customerName || "N/A"} the debt of <FormattedAmount amount={selectedDebtor?.amount} />
                     </DialogContentText>
+                    {/* selectedDebtor?.id */}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>Disagree</Button>
-                    <Button onClick={handleClose} autoFocus>
-                        Agree
+                    <Button onClick={handleClose}>Cancel</Button>
+                    <Button
+                        onClick={handleCLearDebt}
+                        disabled={clearDebtStatus === "loading"}
+                        autoFocus
+                    >
+                        {clearDebtStatus === "loading" ? (
+                            <CircularProgress size={24} color="inherit" />
+                        ) : (
+                            "Yes"
+                        )}
                     </Button>
                 </DialogActions>
             </Dialog>

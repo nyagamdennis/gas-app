@@ -5,13 +5,13 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAssignedCylinders, getAssignsError, getAssignsStatus, selectAllAssigns } from '../features/assigns/assignsSlice';
 
 const AfterAssign = () => {
-    const salesTeamId  = useParams();
+    const salesTeamId = useParams();
     const dispatch = useAppDispatch();
     const cylinders = useAppSelector(selectAllAssigns);
     const cylinderError = useAppSelector(getAssignsError);
     const cylinderStatus = useAppSelector(getAssignsStatus);
     const { state } = useLocation(); // Get the state object passed via navigate
-    const salesTeamName = state?.salesTeamName; 
+    const salesTeamName = state?.salesTeamName;
 
     console.log('team name ', salesTeamName)
     useEffect(() => {
@@ -38,7 +38,7 @@ const AfterAssign = () => {
     //         printContent += 'Assigned Cylinders Report\n\n'; // Report title
     //         // printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
     //         printContent += '--------------------------------\n';
-    
+
     //         // Format table rows
     //         cylinders.forEach((cylinder) => {
     //             printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
@@ -49,7 +49,7 @@ const AfterAssign = () => {
     //                 .toLocaleDateString()
     //                 .padStart(10)}\n`;
     //         });
-    
+
     //         printContent += '\n\n\n\n\n\n\n'; // Whitespace at the bottom
     //         window.AndroidBridge.printText(printContent); // Call the native print method
     //     } else {
@@ -64,31 +64,31 @@ const AfterAssign = () => {
             printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
             printContent += `Date: ${currentDate}\n`;
             printContent += '********************************\n';
-            printContent += 'Cylinder  Weight(kg)  Qty\n'; // Table header
+            printContent += 'Cylinder   Weight(kg)    Qty\n'; // Table header
             printContent += '--------------------------------\n';
-    
+
             // Format table rows
             cylinders.forEach((cylinder) => {
-                // Adjust spacing between columns for better alignment
-                // printContent += `${
-                //     cylinder.gas_type.padEnd(5)}${cylinder.weight.toString()
-                //     .padStart(5)}${cylinder.assigned_quantity
-                //     .toString()
-                //     .padStart(15)
-                // }\n`;
+
                 printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`
-                .padStart(10)}${cylinder.assigned_quantity
-                .toString()
-                .padStart(10)}\n`;
+                    .padStart(10)}${cylinder.assigned_quantity
+                        .toString()
+                        .padStart(10)}\n`;
+
             });
-    
+
+            printContent += '\n\n\n';
+            printContent += 'Goods received by: \n';
+            printContent += '_________________________\n'; // Entry field for name
+            printContent += 'Signature: \n';
+            printContent += '_________________________\n';
             printContent += '\n\n\n\n\n'; // Whitespace at the bottom
             window.AndroidBridge.printText(printContent); // Call the native print method
         } else {
             alert("AndroidBridge is not available");
         }
     };
-    
+
     // const handlePrint = () => {
     //     // if (window.AndroidBridge && window.AndroidBridge.showToast) {
     //     //     window.AndroidBridge.showToast("Hello from React!");
@@ -114,7 +114,7 @@ const AfterAssign = () => {
         alert("Generate PDF functionality can be added here.");
     };
     return (
-       
+
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">
                 {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
@@ -151,15 +151,15 @@ const AfterAssign = () => {
                 >
                     Print
                 </button>
-                <button
+                {/* <button
                     className="bg-green-500 text-white px-6 py-2 rounded shadow hover:bg-green-600"
                     onClick={() => alert("PDF Generation not implemented yet")}
                 >
                     Generate PDF
-                </button>
+                </button> */}
             </div>
         </div>
-      
+
     )
 }
 

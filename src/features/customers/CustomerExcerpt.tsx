@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useState, useRef } from "react"
 import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk"
 import SendIcon from "@mui/icons-material/Send"
@@ -308,7 +309,7 @@ const CustomerExcerpt: React.FC<CustomerExcerptProps> = ({key,customerId,custome
                 <div>
                   <div className=" ">
                     {/* <span className=" me-3">Given on: </span>{" "} */}
-                    {customer.customer_debt.map((debt, index) => (
+                    {customer.customer_debt.filter((debt) => !debt.cleared).map((debt, index) => (
                       <div
                         key={index}
                         className={
@@ -326,6 +327,7 @@ const CustomerExcerpt: React.FC<CustomerExcerptProps> = ({key,customerId,custome
                           </div>
                         </span>
                         <span>Due: {formattedDatess[index]}</span>
+                       
                       </div>
                     ))}
                   </div>
