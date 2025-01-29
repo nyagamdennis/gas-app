@@ -74,12 +74,16 @@ const AfterAssign = () => {
                     .padStart(10)}${cylinder.assigned_quantity
                         .toString()
                         .padStart(10)}\n`;
-
             });
 
             printContent += '\n\n\n';
             printContent += 'Goods received by: \n';
-            printContent += '_________________________\n'; // Entry field for name
+            printContent += '_________________________\n';
+            printContent += 'Signature: \n';
+            printContent += '_________________________\n';
+            printContent += '\n\n\n';
+            printContent += 'Goods delivered by: \n';
+            printContent += '_________________________\n';
             printContent += 'Signature: \n';
             printContent += '_________________________\n';
             printContent += '\n\n\n\n\n'; // Whitespace at the bottom
@@ -89,27 +93,7 @@ const AfterAssign = () => {
         }
     };
 
-    // const handlePrint = () => {
-    //     // if (window.AndroidBridge && window.AndroidBridge.showToast) {
-    //     //     window.AndroidBridge.showToast("Hello from React!");
-    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
-    //         let printContent = 'Assigned Cylinders Report\n\n';
-    //         printContent += 'Cylinder Name\tWeight (kg)\tQty\tDate Assigned\n';
-    //         printContent += '---------------------------------------------\n';
-
-    //         cylinders.forEach((cylinder) => {
-    //             printContent += `${cylinder.gas_type}\t${cylinder.weight}\t${cylinder.assigned_quantity}\t${new Date(
-    //                 cylinder.date_assigned
-    //             ).toLocaleDateString()}\n`;
-    //         });
-
-    //         window.AndroidBridge.printText(printContent); // Calls the native print method
-    //         // window.AndroidBridge.printText("Hello from React!");
-    //       } else {
-    //         alert("AndroidBridge is not available");
-    //       }
-    // };
-
+    
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
     };
