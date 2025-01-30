@@ -10,7 +10,6 @@ import Cookies from "cookies-js";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 
-
 const CollectCylinders = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -22,15 +21,15 @@ const CollectCylinders = () => {
     const [assignments, setAssignments] = useState([]);
     const [assignedCylinders, setAssignedCylinders] = useState([]);
     const [showStacked, setShowStacked] = useState<boolean>(false);
+    const [loadingReturnAll, setLoadingReturnAll] = useState(false);
+    const [loadingReturnSome, setLoadingReturnSome] = useState(false);
 
-    const apiUrl = getApiUrl()
-
+    const apiUrl = getApiUrl();
 
     useEffect(() => {
         dispatch(fetchSalesTeam());
         dispatch(fetchStore());
     }, [dispatch]);
-
 
     useEffect(() => {
         if (selectedTeam) {
@@ -44,8 +43,8 @@ const CollectCylinders = () => {
         }
     }, [selectedTeam]);
 
-
     const handleReturnCylinders = () => {
+        setLoadingReturnSome(true);
         const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }));
 
         axios
@@ -53,36 +52,22 @@ const CollectCylinders = () => {
                 headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
             })
             .then(() => navigate(`/admins/printcollect/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
-            .catch((error) => console.error("Error in cylinder Collection.", error));
-        // .then((response) => {
-
-        //     setAssignedCylinders([]); // Clear table after return
-        //     alert("Cylinders returned successfully!");
-        // })
-        // .catch((error) => console.error("Error returning cylinders:", error));
+            .catch((error) => console.error("Error in cylinder Collection.", error))
+            .finally(() => setLoadingReturnSome(false));
     };
 
-    // .then(() => navigate(`/admins/afterassign/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
-    // .catch((error) => console.error("Error in cylinder assignment:", error));
-
     const handleReturnAllCylinders = () => {
+        setLoadingReturnAll(true);
         const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }));
 
         axios
             .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
                 headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
             })
-            .then(() => navigate(`/admins/printcollect/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
-            .catch((error) => console.error("Error in cylinder Collection.", error));
-            // .then((response) => {
-            //     console.log(response.data.message);
-            //     setAssignedCylinders([]); // Clear table after return
-            //     alert("Cylinders returned successfully!");
-            // })
-            // .catch((error) => console.error("Error returning cylinders:", error));
+            .then(() => navigate(`/admins/printallcollect/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
+            .catch((error) => console.error("Error in cylinder Collection.", error))
+            .finally(() => setLoadingReturnAll(false));
     };
-
-
 
     const handleSelectTeam = (team) => {
         setSelectedTeam(team);
@@ -90,12 +75,9 @@ const CollectCylinders = () => {
 
     const handleShowStacked = () => {
         setShowStacked(!showStacked);
-    }
+    };
 
-    // const handleHideStacked = () => {
-    //     setShowStacked(false);
-    // }
-
+    const hasCylinders = assignedCylinders.length > 0;
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">
@@ -121,88 +103,92 @@ const CollectCylinders = () => {
                         Collect Cylinders from {selectedTeam.name}
                     </h2>
 
-                    {/* Responsive Table */}
-                    <div className="w-full">
-                        <table className="table-auto w-full text-xs md:text-sm border-collapse border border-gray-300">
-                            <thead>
-                                <tr className="bg-gray-200">
-                                    <th className="border px-2 py-1">Gas Type</th>
-                                    <th className="border px-2 py-1">Weight (kg)</th>
-                                    <th className="border px-2 py-1">Assigned</th>
-                                    <th className="border px-2 py-1">Filled</th>
-                                    <th className="border px-2 py-1">Empties</th>
-                                    <th className="border px-2 py-1">Spoiled</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {assignedCylinders.map((cylinder) => (
-                                    <tr key={cylinder.id} className="text-center">
-                                        <td className="border px-2 py-1">{cylinder.gas_type}</td>
-                                        <td className="border px-2 py-1">{cylinder.weight}</td>
-                                        <td className="border px-2 py-1">{cylinder.assigned_quantity}</td>
-                                        <td className="border px-2 py-1">{cylinder.filled}</td>
-                                        <td className="border px-2 py-1">{cylinder.empties}</td>
-                                        <td className="border px-2 py-1">{cylinder.spoiled}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className=' flex justify-center'>
-                        <button className='bg-blue-400 mt-3 flex items-center text-white px-2 rounded-md ' onClick={handleShowStacked}>
-                            Details
-                            {showStacked ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
-                        </button>
-                    </div>
+                    {hasCylinders ? (
+                        <>
+                            <div className="w-full">
+                                <table className="table-auto w-full text-xs md:text-sm border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr className="bg-gray-200">
+                                            <th className="border px-2 py-1">Gas Type</th>
+                                            <th className="border px-2 py-1">Weight (kg)</th>
+                                            <th className="border px-2 py-1">Assigned</th>
+                                            <th className="border px-2 py-1">Filled</th>
+                                            <th className="border px-2 py-1">Empties</th>
+                                            <th className="border px-2 py-1">Spoiled</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {assignedCylinders.map((cylinder) => (
+                                            <tr key={cylinder.id} className="text-center">
+                                                <td className="border px-2 py-1">{cylinder.gas_type}</td>
+                                                <td className="border px-2 py-1">{cylinder.weight}</td>
+                                                <td className="border px-2 py-1">{cylinder.assigned_quantity}</td>
+                                                <td className="border px-2 py-1">{cylinder.filled}</td>
+                                                <td className="border px-2 py-1">{cylinder.empties}</td>
+                                                <td className="border px-2 py-1">{cylinder.spoiled}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className=' flex justify-center'>
+                                <button className='bg-blue-400 mt-3 flex items-center text-white px-2 rounded-md ' onClick={handleShowStacked}>
+                                    Details
+                                    {showStacked ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
+                                </button>
+                            </div>
 
-
-                    {showStacked && (
-                        <div className="block md:hidden mt-6">
-                            {assignedCylinders.map((cylinder) => (
-                                <div
-                                    key={cylinder.id}
-                                    className="bg-white border border-gray-300 rounded-lg shadow-md p-3 mb-4"
-                                >
-                                    <p className="text-sm">
-                                        <span className="font-bold">Gas Type:</span> {cylinder.gas_type}
-                                    </p>
-                                    <p className="text-sm">
-                                        <span className="font-bold">Weight:</span> {cylinder.weight} kg
-                                    </p>
-                                    <p className="text-sm">
-                                        <span className="font-bold">Assigned:</span> {cylinder.assigned_quantity}
-                                    </p>
-                                    <p className="text-sm">
-                                        <span className="font-bold">Filled:</span> {cylinder.filled}
-                                    </p>
-                                    <p className="text-sm">
-                                        <span className="font-bold">Empties:</span> {cylinder.empties}
-                                    </p>
+                            {showStacked && (
+                                <div className="block md:hidden mt-6">
+                                    {assignedCylinders.map((cylinder) => (
+                                        <div
+                                            key={cylinder.id}
+                                            className="bg-white border border-gray-300 rounded-lg shadow-md p-3 mb-4"
+                                        >
+                                            <p className="text-sm">
+                                                <span className="font-bold">Gas Type:</span> {cylinder.gas_type}
+                                            </p>
+                                            <p className="text-sm">
+                                                <span className="font-bold">Weight:</span> {cylinder.weight} kg
+                                            </p>
+                                            <p className="text-sm">
+                                                <span className="font-bold">Assigned:</span> {cylinder.assigned_quantity}
+                                            </p>
+                                            <p className="text-sm">
+                                                <span className="font-bold">Filled:</span> {cylinder.filled}
+                                            </p>
+                                            <p className="text-sm">
+                                                <span className="font-bold">Empties:</span> {cylinder.empties}
+                                            </p>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            )}
+
+                            <div className="mt-6 text-center flex flex-col space-y-2">
+                                <button
+                                    className={`bg-green-500 text-white font-bold px-6 py-2 rounded-lg shadow ${loadingReturnAll ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'} transition`}
+                                    onClick={handleReturnAllCylinders}
+                                    disabled={loadingReturnAll}
+                                >
+                                    {loadingReturnAll ? 'Processing...' : 'Return all Cylinders'}
+                                </button>
+                                <button
+                                    className={`bg-blue-500 text-white font-bold px-6 py-2 rounded-lg shadow ${loadingReturnSome ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'} transition`}
+                                    onClick={handleReturnCylinders}
+                                    disabled={loadingReturnSome}
+                                >
+                                    {loadingReturnSome ? 'Processing...' : 'Return empty & spoiled Cylinders'}
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <p className="text-center mt-4 text-gray-600">No data available for assigned cylinders.</p>
                     )}
-
-
-                    <div className="mt-6 text-center flex space-x-2">
-                        <button
-                            className="bg-red-500 text-white px-6 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                            onClick={handleReturnAllCylinders}
-                        >
-                            Return all Cylinders
-                        </button>
-                        <button
-                            className="bg-red-500 text-white px-6 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                            onClick={handleReturnCylinders}
-                        >
-                            Return empty Cylinders
-                        </button>
-                    </div>
                 </div>
             )}
         </div>
-
-    )
-}
+    );
+};
 
 export default CollectCylinders

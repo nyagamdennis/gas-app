@@ -35,6 +35,7 @@ import FiredPage from "./pages/FiredPage"
 import SuspendedPage from "./pages/SuspendedPage"
 import OtherProductsSale from "./pages/OtherProductsSale"
 import AfterCollection from "./pages/AfterCollection"
+import AfterCollectionAll from "./pages/AfterCollectionAll"
 
 function App() {
   return (
@@ -124,6 +125,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AfterCollection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/printallcollect/:id"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AfterCollectionAll />
               </ProtectedRoute>
             }
           />

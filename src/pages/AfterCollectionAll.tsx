@@ -5,7 +5,7 @@ import { fetchAssignedCylinders, getAssignsError, getAssignsStatus, selectAllAss
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchCollectedCylinders, selectAllCollections } from '../features/collections/collectionsSlice';
 
-const AfterCollection = () => {
+const AfterCollectionAll = () => {
     const salesTeamId = useParams();
     const dispatch = useAppDispatch();
     const cylinders = useAppSelector(selectAllCollections);
@@ -28,7 +28,7 @@ const AfterCollection = () => {
             const currentDate = new Date().toLocaleDateString();
 
             let printContent = '\n\n'; // Whitespace at the top
-            printContent += `Empty & Spoiled Returns only:   ${salesTeamName}\n`;
+            printContent += `All Cylinders Returns:   ${salesTeamName}\n`;
             printContent += `Date: ${currentDate}\n`;
             printContent += '********************************\n';
 
@@ -80,6 +80,7 @@ const AfterCollection = () => {
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
     };
+
 
     return (
         <div className="min-h-screen bg-white p-6">
@@ -169,4 +170,4 @@ const AfterCollection = () => {
     )
 }
 
-export default AfterCollection
+export default AfterCollectionAll
