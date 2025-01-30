@@ -52,13 +52,18 @@ const CollectCylinders = () => {
             .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
                 headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
             })
-            .then((response) => {
-                console.log(response.data.message);
-                setAssignedCylinders([]); // Clear table after return
-                alert("Cylinders returned successfully!");
-            })
-            .catch((error) => console.error("Error returning cylinders:", error));
+            .then(() => navigate(`/admins/printcollect/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
+            .catch((error) => console.error("Error in cylinder Collection.", error));
+        // .then((response) => {
+
+        //     setAssignedCylinders([]); // Clear table after return
+        //     alert("Cylinders returned successfully!");
+        // })
+        // .catch((error) => console.error("Error returning cylinders:", error));
     };
+
+    // .then(() => navigate(`/admins/afterassign/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
+    // .catch((error) => console.error("Error in cylinder assignment:", error));
 
     const handleReturnAllCylinders = () => {
         const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }));
@@ -67,15 +72,17 @@ const CollectCylinders = () => {
             .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
                 headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
             })
-            .then((response) => {
-                console.log(response.data.message);
-                setAssignedCylinders([]); // Clear table after return
-                alert("Cylinders returned successfully!");
-            })
-            .catch((error) => console.error("Error returning cylinders:", error));
+            .then(() => navigate(`/admins/printcollect/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
+            .catch((error) => console.error("Error in cylinder Collection.", error));
+            // .then((response) => {
+            //     console.log(response.data.message);
+            //     setAssignedCylinders([]); // Clear table after return
+            //     alert("Cylinders returned successfully!");
+            // })
+            // .catch((error) => console.error("Error returning cylinders:", error));
     };
 
-   
+
 
     const handleSelectTeam = (team) => {
         setSelectedTeam(team);

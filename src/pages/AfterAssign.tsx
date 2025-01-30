@@ -27,35 +27,9 @@ const AfterAssign = () => {
 
     const navigate = useNavigate();
 
-    // const handlePrint = () => {
-    //     window.print();
-    // };
+    
 
-
-    // const handlePrint = () => {
-    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
-    //         let printContent = '\n\n'; // Whitespace at the top
-    //         printContent += 'Assigned Cylinders Report\n\n'; // Report title
-    //         // printContent += 'Cylinder Weight(kg) Qty Date Assigned\n';
-    //         printContent += '--------------------------------\n';
-
-    //         // Format table rows
-    //         cylinders.forEach((cylinder) => {
-    //             printContent += `${cylinder.gas_type.padEnd(10)}${cylinder.weight
-    //                 .toString()
-    //                 .padStart(10)}${cylinder.assigned_quantity
-    //                 .toString()
-    //                 .padStart(10)}${new Date(cylinder.date_assigned)
-    //                 .toLocaleDateString()
-    //                 .padStart(10)}\n`;
-    //         });
-
-    //         printContent += '\n\n\n\n\n\n\n'; // Whitespace at the bottom
-    //         window.AndroidBridge.printText(printContent); // Call the native print method
-    //     } else {
-    //         alert("AndroidBridge is not available");
-    //     }
-    // };
+    
     const handlePrint = () => {
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             const currentDate = new Date().toLocaleDateString();
@@ -89,7 +63,7 @@ const AfterAssign = () => {
             printContent += '\n\n\n\n\n'; // Whitespace at the bottom
             window.AndroidBridge.printText(printContent); // Call the native print method
         } else {
-            alert("AndroidBridge is not available");
+            alert("Printer is not available");
         }
     };
 
@@ -97,6 +71,7 @@ const AfterAssign = () => {
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
     };
+    
     return (
 
         <div className="min-h-screen bg-white p-6">
