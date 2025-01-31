@@ -34,7 +34,7 @@ export const fetchAssignedCylinders = createAsyncThunk(
   "assignedCylinders/fetchAssignedCylinders",
   async (salesTeamId) => {
     console.log('params ', salesTeamId)
-    const response = await axios.get(`${apiUrl}/the-assigned-cylinders/`, {
+    const response = await axios.get(`${apiUrl}/print-assigned-cylinders/`, {
       headers: {
         Authorization: `Bearer ${Cookies.get("accessToken")}`,
       },
