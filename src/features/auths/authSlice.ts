@@ -168,7 +168,7 @@ export const refreshAccessToken = () => async (dispatch: any, getState: any) => 
 
     dispatch(loginSuccess({ user, accessToken, refreshToken }));
   } catch (error) {
-    console.error(error);
+    alert(error);
     dispatch(logout());
   }
 };

@@ -15,6 +15,7 @@ const AssigningProducts = () => {
 
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [assignments, setAssignments] = useState([]); 
+    const [loadingAssign, setLoadingAssign] = useState(false);
 
     useEffect(() => {
         dispatch(fetchSalesTeam());
@@ -40,20 +41,19 @@ const AssigningProducts = () => {
         });
     };
 
-   
-
     const handleAssign = () => {
+        setLoadingAssign(true);
         const payload = assignments.map((item) => ({
-          sales_team: selectedTeam?.id,
-          cylinder: item.cylinderId,
-          assigned_quantity: item.assigned_quantity,
+            sales_team: selectedTeam?.id,
+            cylinder: item.cylinderId,
+            assigned_quantity: item.assigned_quantity,
         }));
-    
-    
+
         dispatch(assignCylinders(payload))
-        .then(() => navigate(`/admins/afterassign/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
-      .catch((error) => console.error("Error in cylinder assignment:", error));
-      };
+            .then(() => navigate(`/admins/afterassign/${selectedTeam?.id}`, { state: { salesTeamName: selectedTeam?.name } }))
+            .catch((error) => console.error("Error in cylinder assignment:", error))
+            .finally(() => setLoadingAssign(false));
+    };
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">
@@ -91,7 +91,6 @@ const AssigningProducts = () => {
                                             <table className="mt-2 w-full border text-sm">
                                                 <thead>
                                                     <tr className="bg-gray-200 text-left">
-                                                        {/* <th className="border px-2 py-1">Store ID</th> */}
                                                         <th className="border px-2 py-1">Filled</th>
                                                         <th className="border px-2 py-1">Empties</th>
                                                         <th className="border px-2 py-1">Spoiled</th>
@@ -102,7 +101,6 @@ const AssigningProducts = () => {
                                                 <tbody>
                                                     {cylinder.stores.map((storeItem) => (
                                                         <tr key={storeItem.id}>
-                                                            {/* <td className="border px-2 py-1">{storeItem.id}</td> */}
                                                             <td className="border px-2 py-1 text-center">{storeItem.filled}</td>
                                                             <td className="border px-2 py-1 text-center">{storeItem.empties}</td>
                                                             <td className="border px-2 py-1 text-center">{storeItem.spoiled}</td>
@@ -119,7 +117,6 @@ const AssigningProducts = () => {
                                                                         handleInputChange(
                                                                             storeItem.id,
                                                                             storeItem.id,
-                                                                            
                                                                             cylinder.weight.id,
                                                                             e.target.value
                                                                         )
@@ -140,10 +137,11 @@ const AssigningProducts = () => {
                     </div>
                     <div className="mt-6 text-center">
                         <button
-                            className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition"
+                            className={`bg-blue-500 text-white px-6 py-2 rounded-lg shadow ${loadingAssign ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition`}
                             onClick={handleAssign}
+                            disabled={loadingAssign}
                         >
-                            Assign Cylinders
+                            {loadingAssign ? 'Assigning...' : 'Assign Cylinders'}
                         </button>
                     </div>
                 </div>
