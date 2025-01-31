@@ -45,7 +45,6 @@ const AssigningProducts = () => {
     const handleAssign = () => {
         const payload = assignments.map((item) => ({
           sales_team: selectedTeam?.id,
-        //   sales_team_name: selectedTeam?.name,
           cylinder: item.cylinderId,
           assigned_quantity: item.assigned_quantity,
         }));
