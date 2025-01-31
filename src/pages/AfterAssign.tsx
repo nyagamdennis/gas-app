@@ -11,6 +11,7 @@ const AfterAssign = () => {
     const cylinderError = useAppSelector(getAssignsError);
     const cylinderStatus = useAppSelector(getAssignsStatus);
     const { state } = useLocation(); // Get the state object passed via navigate
+    const [printComplete, setPrintComplete] = useState(false);
     const salesTeamName = state?.salesTeamName;
 
     console.log('team name ', salesTeamName)
@@ -27,51 +28,85 @@ const AfterAssign = () => {
 
     const navigate = useNavigate();
 
-    
 
-    
+
+
+    // const handlePrint = () => {
+    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
+    //         const currentDate = new Date().toLocaleDateString();
+
+    //         let printContent = '\n\n'; // Whitespace at the top
+    //         printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
+    //         printContent += `Date: ${currentDate}\n`;
+    //         printContent += '********************************\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n'; // Table header
+    //         printContent += '--------------------------------\n';
+
+    //         // Format table rows
+    //         cylinders.forEach((cylinder) => {
+
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`
+    //                 .padStart(10)}${cylinder.assigned_quantity
+    //                     .toString()
+    //                     .padStart(10)}\n`;
+    //         });
+
+    //         printContent += '\n\n\n';
+    //         printContent += 'Goods received by: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += 'Signature: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += '\n\n\n';
+    //         printContent += 'Goods delivered by: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += 'Signature: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += '\n\n\n\n\n'; // Whitespace at the bottom
+    //         window.AndroidBridge.printText(printContent); // Call the native print method
+    //     } else {
+    //         alert("Printer is not available");
+    //     }
+    // };
     const handlePrint = () => {
-        if (window.AndroidBridge && window.AndroidBridge.printText) {
-            const currentDate = new Date().toLocaleDateString();
+        if (!printComplete) {
+            if (window.AndroidBridge && window.AndroidBridge.printText) {
+                const currentDate = new Date().toLocaleDateString();
 
-            let printContent = '\n\n'; // Whitespace at the top
-            printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
-            printContent += `Date: ${currentDate}\n`;
-            printContent += '********************************\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n'; // Table header
-            printContent += '--------------------------------\n';
+                let printContent = '\n\n'; // Whitespace at the top
+                printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
+                printContent += `Date: ${currentDate}\n`;
+                printContent += '********************************\n';
+                printContent += 'Cylinder   Weight(kg)    Qty\n'; // Table header
+                printContent += '--------------------------------\n';
 
-            // Format table rows
-            cylinders.forEach((cylinder) => {
+                cylinders.forEach((cylinder) => {
+                    printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.assigned_quantity.toString().padStart(10)}\n`;
+                });
 
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`
-                    .padStart(10)}${cylinder.assigned_quantity
-                        .toString()
-                        .padStart(10)}\n`;
-            });
+                printContent += '\n\nGoods received by: \n_________________________\nSignature: \n_________________________\n';
+                printContent += '\n\nGoods delivered by: \n_________________________\nSignature: \n_________________________\n\n\n';
 
-            printContent += '\n\n\n';
-            printContent += 'Goods received by: \n';
-            printContent += '_________________________\n';
-            printContent += 'Signature: \n';
-            printContent += '_________________________\n';
-            printContent += '\n\n\n';
-            printContent += 'Goods delivered by: \n';
-            printContent += '_________________________\n';
-            printContent += 'Signature: \n';
-            printContent += '_________________________\n';
-            printContent += '\n\n\n\n\n'; // Whitespace at the bottom
-            window.AndroidBridge.printText(printContent); // Call the native print method
+                window.AndroidBridge.printText(printContent);
+
+                // Mark print as complete in the backend
+                const apiUrl = getApiUrl();
+                axios.post(`${apiUrl}/mark-print-complete/`,
+                    { sales_team_id: salesTeamId?.id },
+                    { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+                ).then(() => setPrintComplete(true))
+                    .catch(err => console.error("Error marking print complete:", err));
+            } else {
+                alert("Printer is not available");
+            }
         } else {
-            alert("Printer is not available");
+            alert("Print already completed. No need to reprint.");
         }
     };
 
-    
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
     };
-    
+
     return (
 
         <div className="min-h-screen bg-white p-6">
@@ -110,12 +145,7 @@ const AfterAssign = () => {
                 >
                     Print
                 </button>
-                {/* <button
-                    className="bg-green-500 text-white px-6 py-2 rounded shadow hover:bg-green-600"
-                    onClick={() => alert("PDF Generation not implemented yet")}
-                >
-                    Generate PDF
-                </button> */}
+
             </div>
         </div>
 
