@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchAssignedCylinders, getAssignsError, getAssignsStatus, selectAllAssigns } from '../features/assigns/assignsSlice';
+import getApiUrl from '../getApiUrl';
+import axios from 'axios';
+import Cookies from "cookies-js"
 
 const AfterAssign = () => {
     const salesTeamId = useParams();
@@ -21,7 +24,7 @@ const AfterAssign = () => {
         dispatch(fetchAssignedCylinders(salesTeamId?.id));
     }, [dispatch]);
 
-    console.log('assigned ', cylinders)
+    // console.log('assigned ', cylinders)
     // if (cylinderStatus === "loading") return <p>Loading...</p>;
     // if (cylinderStatus === "failed") return <p>Error</p>;
 
@@ -30,7 +33,7 @@ const AfterAssign = () => {
 
 
 
-
+    const apiUrl = getApiUrl();
     // const handlePrint = () => {
     //     if (window.AndroidBridge && window.AndroidBridge.printText) {
     //         const currentDate = new Date().toLocaleDateString();
@@ -69,6 +72,7 @@ const AfterAssign = () => {
     // };
     const handlePrint = () => {
         if (!printComplete) {
+         
             if (window.AndroidBridge && window.AndroidBridge.printText) {
                 const currentDate = new Date().toLocaleDateString();
 
@@ -89,7 +93,7 @@ const AfterAssign = () => {
                 window.AndroidBridge.printText(printContent);
 
                 // Mark print as complete in the backend
-                const apiUrl = getApiUrl();
+                
                 axios.post(`${apiUrl}/mark-print-complete/`,
                     { sales_team_id: salesTeamId?.id },
                     { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
