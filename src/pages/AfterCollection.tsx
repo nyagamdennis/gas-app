@@ -64,6 +64,24 @@ const AfterCollection = () => {
                     printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.spoiled.toString().padStart(10)}\n`;
                 });
 
+                // Section for lost empties Cylinders
+                printContent += '\nLost Spoiled Cylinders\n';
+                printContent += '--------------------------------\n';
+                printContent += 'Cylinder   Weight(kg)    Qty\n';
+                printContent += '--------------------------------\n';
+                cylinders.filter(cylinder => cylinder.empties_lost > 0).forEach(cylinder => {
+                    printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties_lost.toString().padStart(10)}\n`;
+                });
+
+                // Section for lost empties Cylinders
+                printContent += '\nLost Filled Cylinders\n';
+                printContent += '--------------------------------\n';
+                printContent += 'Cylinder   Weight(kg)    Qty\n';
+                printContent += '--------------------------------\n';
+                cylinders.filter(cylinder => cylinder.filled_lost > 0).forEach(cylinder => {
+                    printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled_lost.toString().padStart(10)}\n`;
+                });
+
                 // Footer information
                 printContent += '\n\nGoods Collected by: \n';
                 printContent += '_________________________\n';
@@ -167,6 +185,54 @@ const AfterCollection = () => {
                                 <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                 <td className="border px-4 py-2">{cylinder.weight}</td>
                                 <td className="border px-4 py-2">{cylinder.spoiled}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600">Lost Filled Cylinders.</p>
+                </div>
+
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                    <thead className="bg-gray-200">
+                        <tr>
+                            <th className="border px-4 py-2">Cylinder Name</th>
+                            <th className="border px-4 py-2">Weight (kg)</th>
+                            <th className="border px-4 py-2">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                            <tr key={cylinder.id}>
+                                <td className="border px-4 py-2">{cylinder.gas_type}</td>
+                                <td className="border px-4 py-2">{cylinder.weight}</td>
+                                <td className="border px-4 py-2">{cylinder.filled_lost}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div className="mt-4 text-center">
+                    <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
+                </div>
+
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                    <thead className="bg-gray-200">
+                        <tr>
+                            <th className="border px-4 py-2">Cylinder Name</th>
+                            <th className="border px-4 py-2">Weight (kg)</th>
+                            <th className="border px-4 py-2">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                            <tr key={cylinder.id}>
+                                <td className="border px-4 py-2">{cylinder.gas_type}</td>
+                                <td className="border px-4 py-2">{cylinder.weight}</td>
+                                <td className="border px-4 py-2">{cylinder.empties_lost}</td>
                             </tr>
                         ))}
                     </tbody>

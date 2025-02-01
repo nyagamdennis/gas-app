@@ -23,7 +23,8 @@ const CollectCylinders = () => {
     const [showStacked, setShowStacked] = useState<boolean>(false);
     const [loadingReturnAll, setLoadingReturnAll] = useState(false);
     const [loadingReturnSome, setLoadingReturnSome] = useState(false);
-
+    const [losses, setLosses] = useState({});
+    const [loadingLosses, setLoadingLosses] = useState({});
     const apiUrl = getApiUrl();
 
     useEffect(() => {
@@ -42,6 +43,47 @@ const CollectCylinders = () => {
                 .catch((error) => console.error("Error fetching assigned cylinders:", error));
         }
     }, [selectedTeam]);
+
+
+    const handleLossChange = (cylinderId, field, value) => {
+        setLosses((prev) => ({
+            ...prev,
+            [cylinderId]: {
+                ...prev[cylinderId],
+                [field]: parseInt(value, 10) || 0,
+            },
+        }));
+    };
+
+    const handleSubmitLosses = (cylinderId) => {
+        const lossData = losses[cylinderId];
+        if (!lossData) return;
+        setLoadingLosses((prev) => ({ ...prev, [cylinderId]: true }));
+
+        const payload = {
+            sales_team_id: selectedTeam.id,
+            losses: [{ cylinder_id: cylinderId, filled_lost: lossData.filled_lost, empties_lost: lossData.empties_lost }],
+        };
+
+        axios
+            .post(`${apiUrl}/report-cylinder-losses/`, payload, {
+                headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+            })
+            .then((response) => {
+                // Update frontend dynamically
+                setAssignedCylinders((prev) =>
+                    prev.map((cylinder) =>
+                        cylinder.cylinder === cylinderId
+                            ? { ...cylinder, filled_lost: lossData.filled_lost, empties_lost: lossData.empties_lost }
+                            : cylinder
+                    )
+                );
+                setLosses((prev) => ({ ...prev, [cylinderId]: { filled_lost: 0, empties_lost: 0 } }));
+            })
+            .catch((error) => console.error("Error reporting cylinder losses:", error))
+            .finally(() => setLoadingLosses((prev) => ({ ...prev, [cylinderId]: false })));
+    };
+
 
     const handleReturnCylinders = () => {
         setLoadingReturnSome(true);
@@ -123,15 +165,26 @@ const CollectCylinders = () => {
                                                 <td className="border px-2 py-1">{cylinder.gas_type}</td>
                                                 <td className="border px-2 py-1">{cylinder.weight}</td>
                                                 <td className="border px-2 py-1">{cylinder.assigned_quantity}</td>
-                                                <td className="border px-2 py-1">{cylinder.filled}</td>
-                                                <td className="border px-2 py-1">{cylinder.empties}</td>
+                                                <td className="border px-2 py-1">
+                                                    {cylinder.filled}
+                                                    {cylinder.filled_lost > 0 && (
+                                                        <span className="text-red-500 ml-2 font-bold">- {cylinder.filled_lost}</span>
+                                                    )}
+                                                </td>
+                                                {/* <td className="border px-2 py-1">{cylinder.empties}</td> */}
+                                                <td className="border px-2 py-1">
+                                                    {cylinder.empties}
+                                                    {cylinder.empties_lost > 0 && (
+                                                        <span className="text-red-500 ml-2 font-bold">- {cylinder.empties_lost}</span>
+                                                    )}
+                                                </td>
                                                 <td className="border px-2 py-1">{cylinder.spoiled}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-                            <div className=' flex justify-center'>
+                            <div className='flex justify-center'>
                                 <button className='bg-blue-400 mt-3 flex items-center text-white px-2 rounded-md ' onClick={handleShowStacked}>
                                     Details
                                     {showStacked ? <ArrowDropUpIcon /> : <ArrowDropDownIcon />}
@@ -139,27 +192,67 @@ const CollectCylinders = () => {
                             </div>
 
                             {showStacked && (
-                                <div className="block md:hidden mt-6">
+                                <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
                                     {assignedCylinders.map((cylinder) => (
-                                        <div
-                                            key={cylinder.id}
-                                            className="bg-white border border-gray-300 rounded-lg shadow-md p-3 mb-4"
-                                        >
-                                            <p className="text-sm">
-                                                <span className="font-bold">Gas Type:</span> {cylinder.gas_type}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-bold">Weight:</span> {cylinder.weight} kg
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-bold">Assigned:</span> {cylinder.assigned_quantity}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-bold">Filled:</span> {cylinder.filled}
-                                            </p>
-                                            <p className="text-sm">
-                                                <span className="font-bold">Empties:</span> {cylinder.empties}
-                                            </p>
+                                        <div key={cylinder.id} className="bg-white border border-gray-300 rounded-lg shadow-md p-4">
+                                            <h3 className="text-lg font-bold text-blue-600 mb-2">{cylinder.gas_type}</h3>
+                                            <p className="text-sm text-gray-700">Weight: {cylinder.weight} kg</p>
+                                            <p className="text-sm text-gray-700">Assigned: {cylinder.assigned_quantity}</p>
+                                            <p className="text-sm text-gray-700">Filled: {cylinder.filled}</p>
+                                            <p className="text-sm text-gray-700">Empties: {cylinder.empties}</p>
+                                            <p className="text-sm text-gray-700">Filled lost: {cylinder.filled_lost}</p>
+                                            <p className="text-sm text-gray-700">Empties lost: {cylinder.empties_lost}</p>
+                                            <p className="text-sm text-gray-700">Spoiled: {cylinder.spoiled}</p>
+                                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                                <form
+                                                    onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        handleSubmitLosses(cylinder.cylinder);
+                                                    }}
+                                                >
+                                                    <label className="block text-sm font-semibold">Missing Empties</label>
+                                                    <input
+                                                        type='number'
+                                                        min={0}
+                                                        max={cylinder.empties}
+                                                        className="w-full p-1 border rounded-md"
+                                                        placeholder="Enter amount"
+                                                        value={losses[cylinder.cylinder]?.empties_lost || ""}
+                                                        onChange={(e) => handleLossChange(cylinder.cylinder, "empties_lost", e.target.value)}
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
+                                                            }`}
+                                                        disabled={loadingLosses[cylinder.cylinder]}
+                                                    >
+                                                        {loadingLosses[cylinder.cylinder] ? "Processing..." : "Add"}
+                                                    </button>                                                </form>
+                                                <form
+                                                    onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        handleSubmitLosses(cylinder.cylinder);
+                                                    }}
+                                                >
+                                                    <label className="block text-sm font-semibold">Missing Filled</label>
+                                                    <input
+                                                        type='number'
+                                                        min={0}
+                                                        max={cylinder.filled}
+                                                        className="w-full p-1 border rounded-md"
+                                                        placeholder="Enter amount"
+                                                        value={losses[cylinder.cylinder]?.filled_lost || ""}
+                                                        onChange={(e) => handleLossChange(cylinder.cylinder, "filled_lost", e.target.value)}
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
+                                                            }`}
+                                                        disabled={loadingLosses[cylinder.cylinder]}
+                                                    >
+                                                        {loadingLosses[cylinder.cylinder] ? "Processing..." : "Add"}
+                                                    </button>                                                </form>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
