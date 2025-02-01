@@ -69,7 +69,7 @@ const AfterCollectionAll = () => {
                 printContent += '--------------------------------\n';
                 printContent += 'Cylinder   Weight(kg)    Qty\n';
                 printContent += '--------------------------------\n';
-                cylinders.filter(cylinder => cylinder.empties_lost > 0).forEach(cylinder => {
+                cylinders.filter(cylinder => cylinder.empties_lost> 0).forEach(cylinder => {
                     printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties_lost.toString().padStart(10)}\n`;
                 });
 
@@ -78,7 +78,7 @@ const AfterCollectionAll = () => {
                 printContent += '--------------------------------\n';
                 printContent += 'Cylinder   Weight(kg)    Qty\n';
                 printContent += '--------------------------------\n';
-                cylinders.filter(cylinder => cylinder.filled_lost > 0).forEach(cylinder => {
+                cylinders.filter(cylinder => cylinder.filled_lost> 0).forEach(cylinder => {
                     printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled_lost.toString().padStart(10)}\n`;
                 });
     
@@ -205,7 +205,7 @@ const AfterCollectionAll = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                        {cylinders.filter(cylinder => cylinder.filled_lost> 0).map((cylinder) => (
                             <tr key={cylinder.id}>
                                 <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                 <td className="border px-4 py-2">{cylinder.weight}</td>
@@ -229,7 +229,7 @@ const AfterCollectionAll = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                        {cylinders.filter(cylinder => cylinder.empties_lost> 0).map((cylinder) => (
                             <tr key={cylinder.id}>
                                 <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                 <td className="border px-4 py-2">{cylinder.weight}</td>

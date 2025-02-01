@@ -18,6 +18,7 @@ const AfterCollection = () => {
     const { state } = useLocation(); // Get the state object passed via navigate
     const salesTeamName = state?.salesTeamName;
 
+    console.log('cyd ', cylinders)
     useEffect(() => {
         // Fetch all assigned cylinders (optionally filter by sales team)
         dispatch(fetchCollectedCylinders(salesTeamId?.id));
@@ -204,7 +205,7 @@ const AfterCollection = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                        {cylinders.filter(cylinder => cylinder.filled_lost > 0).map((cylinder) => (
                             <tr key={cylinder.id}>
                                 <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                 <td className="border px-4 py-2">{cylinder.weight}</td>
@@ -228,7 +229,7 @@ const AfterCollection = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {cylinders.filter(cylinder => cylinder.spoiled > 0).map((cylinder) => (
+                        {cylinders.filter(cylinder => cylinder.empties_lost > 0).map((cylinder) => (
                             <tr key={cylinder.id}>
                                 <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                 <td className="border px-4 py-2">{cylinder.weight}</td>
