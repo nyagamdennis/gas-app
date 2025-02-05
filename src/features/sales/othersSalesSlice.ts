@@ -8,45 +8,41 @@ const apiUrl = getApiUrl()
 const SALES_URLS = `${apiUrl}/sales/`;
 
 
-interface Sales {
+interface OthersSales {
   id: number;
   total_amount: number;
   product: number;
   timestamp: string;
 }
 
-interface SalesState {
-    sales: Sales[];
+interface OthersSalesState {
+    othersSales: OthersSales[];
     status: "idle" | "loading" | "succeeded" | "failed";
     error: string | null;
 }
 
-interface FetchSalesResponse {
-  data: Sales[];
-}
 
-const initialState: SalesState = {
-    sales: [],
+const initialState: OthersSalesState = {
+    othersSales: [],
     status: "idle",
     error: null,
 };
 
-export const fetchSales = createAsyncThunk<Sales[], void, {}>(
-    "sales/fetchSales",
+export const fetchOthersSales = createAsyncThunk<OthersSales[], void, {}>(
+    "othersSales/fetchOthersSales",
     async () => {
-      const response = await axios.get<Sales[]>(SALES_URLS);
+      const response = await axios.get<OthersSales[]>(SALES_URLS);
       return response.data; // Corrected the return statement
     }
   );
   
 
-  
-export const recordSales = createAsyncThunk(
-  "sales/recordSales",
+export const recordOthersSales = createAsyncThunk(
+  "othersSales/recordOthersSales",
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${apiUrl}/recordotherssales/`,
+        `${apiUrl}/recordOtherssales/`,
         formData,
         {
           headers: {
@@ -68,42 +64,42 @@ export const recordSales = createAsyncThunk(
 
 
 
-const salesSlice = createSlice({
-  name: "sales",
+const othersSalesSlice = createSlice({
+  name: "othersSales",
   initialState,
   reducers: {},
   extraReducers(builder) {
     builder
-      .addCase(fetchSales.pending, (state) => {
+      .addCase(fetchOthersSales.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(fetchSales.fulfilled, (state, action) => {
+      .addCase(fetchOthersSales.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.sales = action.payload;
+        state.othersSales = action.payload;
       })
-      .addCase(fetchSales.rejected, (state, action) => {
+      .addCase(fetchOthersSales.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch sales";
       })
-      .addCase(recordSales.pending, (state) => {
+      .addCase(recordOthersSales.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(recordSales.fulfilled, (state, action) => {
+      .addCase(recordOthersSales.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.sales = action.payload;
+        state.othersSales = action.payload;
       })
-      .addCase(recordSales.rejected, (state, action) => {
+      .addCase(recordOthersSales.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch sales";
       });
   },
 });
 
-export const selectAllSales = (state: { sales: SalesState }) =>
-  state.sales.sales;
-export const getSalestatus = (state: { sales: SalesState }) =>
-  state.sales.status;
-export const getSalesError = (state: { sales: SalesState }) =>
-  state.sales.error;
+export const selectAllSales = (state: { othersSales: OthersSalesState }) =>
+  state.othersSales.othersSales;
+export const getOthersSalestatus = (state: { othersSales: OthersSalesState }) =>
+  state.othersSales.status;
+export const getOthersSalesError = (state: { othersSales: OthersSalesState }) =>
+  state.othersSales.error;
 
-export default salesSlice.reducer;
+export default othersSalesSlice.reducer;

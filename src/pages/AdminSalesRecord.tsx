@@ -43,7 +43,7 @@ const AdminSalesRecord = () => {
         dispatch(toggleVerification(salesId))
     }
 
-    
+
 
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -56,7 +56,7 @@ const AdminSalesRecord = () => {
             </div>
 
             {/* Filter Section */}
-            <div className="bg-white shadow-md p-4 flex items-center justify-between space-x-4">
+            <div className="bg-white shadow-md p-4 flex flex-col space-y-2 items-center  md:flex md:justify-between">
                 <div className="flex items-center space-x-2">
                     <label htmlFor="start-date" className="text-gray-700 font-medium">
                         Start Date:
@@ -117,6 +117,14 @@ const AdminSalesRecord = () => {
                                 <strong>Type:</strong> {sale.sales_type} ({sale.sales_choice})
                             </p>
 
+                            {sale.exchanged_with_local ?
+                                <p className="mt-2 text-gray-700">
+                                    <strong>Exchanged with Local: <span className=' text-red-700 ms-2'>Yes</span></strong>
+                                </p> : <p className="mt-2 text-gray-700">
+                                    <strong>Exchanged with Local: <span className='text-green-700 ms-2'>No</span></strong>
+                                </p>
+                            }
+
                             {/* Debt Info */}
                             {sale.debt_info ? (
                                 <p className="mt-2 text-red-500">
@@ -142,7 +150,7 @@ const AdminSalesRecord = () => {
                                 </div>}
                             <button
                                 onClick={() => handleToggleVerification(sale.id)}
-                                className={`px-4 py-2 rounded ${sale.admin_payment_verified ? "bg-red-500" : "bg-green-500"
+                                className={`px-4 py-2 rounded mt-2 ${sale.admin_payment_verified ? "bg-red-500" : "bg-green-500"
                                     } text-white`}
                             >
                                 {sale.admin_payment_verified ? "Unverify" : "Verify"}
@@ -169,9 +177,9 @@ const AdminSalesRecord = () => {
 
             {/* Footer */}
             <Link className="bg-blue-600 text-white py-3 text-center shadow-inner hover:underline" to="/sales">
-            Home
+                Home
             </Link>
-            
+
         </div>
     )
 }

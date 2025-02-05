@@ -18,6 +18,10 @@ import salesTeamDataReducer from "../features/salesTeam/salesTeamDataSlice";
 import assignedOtherProductsReducer from "../features/product/assignedOtherProductsSlice";
 import adminSalesTeamDataReducer from "../features/salesTeam/adminSalesTeamDataSlice";
 import collectionsReducer from "../features/collections/collectionsSlice";
+import defaultsReducer from "../features/defaults/defaultsSlice";
+import lessPayReducer from "../features/defaults/lessPaySlice";
+import assignOthersReducer from "../features/assigns/assignsOthersSlice";
+import othersSalesReducer from "../features/sales/othersSalesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +44,10 @@ export const store = configureStore({
     assignedOtherProducts: assignedOtherProductsReducer,
     adminSalesTeamData: adminSalesTeamDataReducer,
     collections: collectionsReducer,
+    defaults: defaultsReducer,
+    lessPay: lessPayReducer,
+    assignsOthers: assignOthersReducer,
+    othersSales: othersSalesReducer
   },
 })
 

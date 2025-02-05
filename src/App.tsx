@@ -36,6 +36,8 @@ import SuspendedPage from "./pages/SuspendedPage"
 import OtherProductsSale from "./pages/OtherProductsSale"
 import AfterCollection from "./pages/AfterCollection"
 import AfterCollectionAll from "./pages/AfterCollectionAll"
+import AssigningOtherProducts from "./pages/AssigningOtherProducts"
+import AfterAssignOthers from "./pages/AfterAssignOthers"
 
 function App() {
   return (
@@ -125,6 +127,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AfterCollection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/assignothers"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AssigningOtherProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/afterassignothers/:id"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AfterAssignOthers />
               </ProtectedRoute>
             }
           />

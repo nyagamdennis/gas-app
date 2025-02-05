@@ -40,7 +40,7 @@ const AdminAssign = () => {
           <p className="mt-2 text-sm">Collect the Cylinders effectively</p>
         </Link>
         <Link
-          to="/admins/assign"
+          to="/admins/assignothers"
           className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out"
         >
           <h3 className="text-xl font-semibold">Assign Other Products</h3>

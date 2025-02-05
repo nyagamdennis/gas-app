@@ -142,15 +142,17 @@ const SalesTeamCylinders = () => {
                             {viewMode[cylinder.id] === "retail" ? (
                                 <div>
                                     <h4 className="text-lg font-bold text-green-600">Retail Prices</h4>
+                                    <p>Min Refill: <FormattedAmount amount={cylinder.min_retail_refil_price} /></p>
+                                    <p>Max Refill: <FormattedAmount amount={cylinder.max_retail_refil_price} /></p>
                                     <p>Min Selling: <FormattedAmount amount={cylinder.min_retail_selling_price} /></p>
-                                    <p>Standard Selling: <FormattedAmount amount={cylinder.retail_selling_price} /></p>
                                     <p>Max Selling: <FormattedAmount amount={cylinder.max_retail_selling_price} /></p>
                                 </div>
                             ) : (
                                 <div>
                                     <h4 className="text-lg font-bold text-blue-600">Wholesale Prices</h4>
+                                    <p>Min Refill: <FormattedAmount amount={cylinder.min_wholesale_refil_price} /></p>
+                                    <p>Max Refill: <FormattedAmount amount={cylinder.max_wholesale_refil_price} /></p>
                                     <p>Min Selling: <FormattedAmount amount={cylinder.min_wholesale_selling_price} /></p>
-                                    <p>Standard Selling: <FormattedAmount amount={cylinder.wholesale_selling_price} /></p>
                                     <p>Max Selling: <FormattedAmount amount={cylinder.max_wholesale_selling_price} /></p>
                                 </div>
                             )}

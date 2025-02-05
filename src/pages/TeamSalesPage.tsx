@@ -36,15 +36,15 @@ const TeamSalesPage = () => {
     setFilteredSales(filtered);
   }, [allSalesData, startDate, endDate]);
 
-  console.log('data ', allSalesData)
+  console.log('sales data ', filteredSales)
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
       <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
-        <div>
+        <Link to="/sales">
           <h1 className="text-3xl font-bold">{myProfile?.sales_team?.name || 'Sales Team'}</h1>
           <p className="mt-1 text-sm">Track your team's sales performance.</p>
-        </div>
+        </Link>
         <Link to="/myprofile" className="flex items-center space-y-2 flex-col">
           <img
             src={myProfile?.profile_image || defaultProfile}
@@ -58,7 +58,7 @@ const TeamSalesPage = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white shadow-md p-4 flex items-center justify-between space-x-4">
+      <div className="bg-white shadow-md p-4 flex flex-col space-y-2 items-center  md:flex md:justify-between">
         <div className="flex items-center space-x-2">
           <label htmlFor="start-date" className="text-gray-700 font-medium">
             Start Date:
@@ -103,6 +103,9 @@ const TeamSalesPage = () => {
                 <strong>Customer:</strong> {sale.customer?.name} ({sale.customer?.sales})
               </p>
               <p className="mt-2 text-gray-700">
+                <strong>Customer Phone:</strong> +254 {sale.customer?.phone}
+              </p>
+              <p className="mt-2 text-gray-700">
                 <strong>Customer Location:</strong> {sale.customer?.location?.name}
               </p>
 
@@ -118,6 +121,14 @@ const TeamSalesPage = () => {
               <p className="mt-2 text-gray-700">
                 <strong>Type:</strong> {sale.sales_type} ({sale.sales_choice})
               </p>
+              {sale.exchanged_with_local ?
+                <p className="mt-2 text-gray-700">
+                  <strong>Exchanged with Local: <span className=' text-red-700 ms-2'>Yes</span></strong>
+                </p> : <p className="mt-2 text-gray-700">
+                  <strong>Exchanged with Local: <span className='text-green-700 ms-2'>No</span></strong>
+                </p>
+              }
+
 
               {/* Debt Info */}
               {sale.debt_info ? (
@@ -136,12 +147,12 @@ const TeamSalesPage = () => {
                 Total Amount: <FormattedAmount amount={sale.total_amount} />
               </p>
               {sale?.admin_payment_verified ? <div>
-                  <p className=' text-green-900 text-xl'>payment verified.</p>
-                </div>
-                 :
-                 <div>
+                <p className=' text-green-900 text-xl'>payment verified.</p>
+              </div>
+                :
+                <div>
                   <p className=' text-red-900 text-xl'>payment not verified.</p>
-                  </div>}
+                </div>}
 
               {/* Timestamp */}
               <p className="mt-2 text-sm text-gray-500">
@@ -150,9 +161,9 @@ const TeamSalesPage = () => {
 
               {/* verified */}
 
-                
-                {/* Payment Verified: {sale?.admin_payment_verified} */}
-              
+
+              {/* Payment Verified: {sale?.admin_payment_verified} */}
+
             </div>
           ))
         ) : (
@@ -163,11 +174,14 @@ const TeamSalesPage = () => {
       </div>
 
       {/* Footer */}
-      <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
-        <Link className="hover:underline" to="/sales">
+
+      <Link className="bg-blue-600 text-white py-3 text-center shadow-inner" to="/sales">
+        <div className="">
           Home
-        </Link>
-      </div>
+        </div>
+
+      </Link>
+
     </div>
   );
 };

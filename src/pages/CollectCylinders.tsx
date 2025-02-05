@@ -9,6 +9,8 @@ import getApiUrl from '../getApiUrl';
 import Cookies from "cookies-js";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import { fetchEmployees, selectAllEmployees } from '../features/employees/employeesSlice';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 const CollectCylinders = () => {
     const dispatch = useAppDispatch();
@@ -16,7 +18,7 @@ const CollectCylinders = () => {
 
     const allSalesTeam = useAppSelector(selectAllSalesTeam);
     const store = useAppSelector(selectAllStore);
-
+    const employees = useAppSelector(selectAllEmployees);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [assignments, setAssignments] = useState([]);
     const [assignedCylinders, setAssignedCylinders] = useState([]);
@@ -24,12 +26,22 @@ const CollectCylinders = () => {
     const [loadingReturnAll, setLoadingReturnAll] = useState(false);
     const [loadingReturnSome, setLoadingReturnSome] = useState(false);
     const [losses, setLosses] = useState({});
+    const [lesses, setLesses] = useState({});
     const [loadingLosses, setLoadingLosses] = useState({});
+    const [loadingLossesFilled, setLoadingLossesFilled] = useState({});
+    const [loadingLessPay, setLoadingLessPay] = useState({});
     const apiUrl = getApiUrl();
+    const [showEmployeeDropdown, setShowEmployeeDropdown] = useState({});
+    const [showEmployeeLessPayDropdown, setShowEmployeeLessPayDropdown] = useState({});
+    const [showEmployeeFilledDropdown, setShowEmployeeFilledDropdown] = useState({});
+    const [selectedEmployee, setSelectedEmployee] = useState({});
+    const [selectedEmployeeFilled, setSelectedEmployeeFilled] = useState({});
+    const [selectedEmployeeLessPay, setSelectedEmployeeLessPay] = useState({});
 
     useEffect(() => {
         dispatch(fetchSalesTeam());
         dispatch(fetchStore());
+        dispatch(fetchEmployees());
     }, [dispatch]);
 
     useEffect(() => {
@@ -45,6 +57,62 @@ const CollectCylinders = () => {
     }, [selectedTeam]);
 
 
+    // Handle dropdown toggle
+    const handleToggleDropdown = (cylinderId) => {
+        setShowEmployeeDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: !prev[cylinderId],
+        }));
+    };
+
+    const handleFilledToggleDropdown = (cylinderId) => {
+        setShowEmployeeFilledDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: !prev[cylinderId],
+        }));
+    };
+
+    const handleLessPayToggleDropdown = (cylinderId) => {
+        setShowEmployeeLessPayDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: !prev[cylinderId],
+        }));
+    };
+
+    // Handle employee selection
+    const handleSelectEmployee = (cylinderId, employeeId) => {
+        setSelectedEmployee((prev) => ({
+            ...prev,
+            [cylinderId]: employeeId,
+        }));
+        setShowEmployeeDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: false,
+        }));
+    };
+
+    const handleSelectEmployeeFilled = (cylinderId, employeeId) => {
+        setSelectedEmployeeFilled((prev) => ({
+            ...prev,
+            [cylinderId]: employeeId,
+        }));
+        setShowEmployeeFilledDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: false,
+        }));
+    };
+
+    const handleSelectEmployeeLessPay = (cylinderId, employeeId) => {
+        setSelectedEmployeeLessPay((prev) => ({
+            ...prev,
+            [cylinderId]: employeeId,
+        }));
+        setShowEmployeeLessPayDropdown((prev) => ({
+            ...prev,
+            [cylinderId]: false,
+        }));
+    };
+
     const handleLossChange = (cylinderId, field, value) => {
         setLosses((prev) => ({
             ...prev,
@@ -55,14 +123,44 @@ const CollectCylinders = () => {
         }));
     };
 
+    const handleLossFilledChange = (cylinderId, field, value) => {
+        setLosses((prev) => ({
+            ...prev,
+            [cylinderId]: {
+                ...prev[cylinderId],
+                [field]: parseInt(value, 10) || 0,
+            },
+        }));
+    };
+
+    const handleLessPayChange = (cylinderId, field, value) => {
+        setLesses((prev) => ({
+            ...prev,
+            [cylinderId]: {
+                ...prev[cylinderId],
+                [field]: parseInt(value, 10) || 0,
+            },
+        }));
+    };
+
     const handleSubmitLosses = (cylinderId) => {
         const lossData = losses[cylinderId];
+        const employeeId = selectedEmployee[cylinderId];
+
         if (!lossData) return;
         setLoadingLosses((prev) => ({ ...prev, [cylinderId]: true }));
 
         const payload = {
             sales_team_id: selectedTeam.id,
-            losses: [{ cylinder_id: cylinderId, filled_lost: lossData.filled_lost, empties_lost: lossData.empties_lost }],
+            losses: [
+                {
+                    cylinder_id: cylinderId,
+                    filled_lost: lossData.filled_lost,
+                    empties_lost: lossData.empties_lost,
+                    employee_id: employeeId,
+                }
+            ],
+
         };
 
         axios
@@ -83,6 +181,50 @@ const CollectCylinders = () => {
             .catch((error) => console.error("Error reporting cylinder losses:", error))
             .finally(() => setLoadingLosses((prev) => ({ ...prev, [cylinderId]: false })));
     };
+
+
+
+
+    const handleSubmitLessPay = (cylinderId) => {
+        const lessData = lesses[cylinderId];
+        const employeeId = selectedEmployee[cylinderId];
+
+        if (!lessData) return;
+        setLoadingLessPay((prev) => ({ ...prev, [cylinderId]: true }));
+
+        const payload = {
+            sales_team_id: selectedTeam.id,
+            lesses: [
+                {
+                    cylinder_id: cylinderId,
+                    less_pay: lessData.less_pay,
+                    employee_id: employeeId,
+                }
+            ],
+
+        };
+
+        axios
+            .post(`${apiUrl}/report-less_pay/`, payload, {
+                headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+            })
+            .then((response) => {
+                // Update frontend dynamically
+                setAssignedCylinders((prev) =>
+                    prev.map((cylinder) =>
+                        cylinder.cylinder === cylinderId
+                            ? { ...cylinder, less_pay: lessData.less_pay }
+                            : cylinder
+                    )
+                );
+                setLesses((prev) => ({ ...prev, [cylinderId]: { less_pay: 0 } }));
+            })
+            .catch((error) => console.error("Error reporting cylinder lesses:", error))
+            .finally(() => setLoadingLessPay((prev) => ({ ...prev, [cylinderId]: false })));
+    };
+
+
+
 
 
     const handleReturnCylinders = () => {
@@ -120,6 +262,15 @@ const CollectCylinders = () => {
     };
 
     const hasCylinders = assignedCylinders.length > 0;
+
+    console.log('assignes cylinders ', assignedCylinders)
+    console.log('employees ', employees)
+
+    const filteredEmployees = employees.filter(
+        (employee) => employee.sales_team && employee.sales_team.id === selectedTeam?.id
+    );
+
+    console.log('filetred ', filteredEmployees);
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">
@@ -165,17 +316,23 @@ const CollectCylinders = () => {
                                                 <td className="border px-2 py-1">{cylinder.gas_type}</td>
                                                 <td className="border px-2 py-1">{cylinder.weight}</td>
                                                 <td className="border px-2 py-1">{cylinder.assigned_quantity}</td>
-                                                <td className="border px-2 py-1">
+                                                <td className="border px-2 py-1 whitespace-nowrap">
                                                     {cylinder.filled}
                                                     {cylinder.filled_lost > 0 && (
                                                         <span className="text-red-500 ml-2 font-bold">- {cylinder.filled_lost}</span>
                                                     )}
+                                                    {cylinder.less_pay > 0 && (
+                                                        <span className="text-green-800 ml-2 font-bold">- {cylinder.less_pay}</span>
+                                                    )}
                                                 </td>
                                                 {/* <td className="border px-2 py-1">{cylinder.empties}</td> */}
-                                                <td className="border px-2 py-1">
+                                                <td className="border px-2 py-1 whitespace-nowrap">
                                                     {cylinder.empties}
                                                     {cylinder.empties_lost > 0 && (
                                                         <span className="text-red-500 ml-2 font-bold">- {cylinder.empties_lost}</span>
+                                                    )}
+                                                    {cylinder.less_pay > 0 && (
+                                                        <span className="text-green-800 ml-2 font-bold">+ {cylinder.less_pay}</span>
                                                     )}
                                                 </td>
                                                 <td className="border px-2 py-1">{cylinder.spoiled}</td>
@@ -202,6 +359,7 @@ const CollectCylinders = () => {
                                             <p className="text-sm text-gray-700">Empties: {cylinder.empties}</p>
                                             <p className="text-sm text-gray-700">Filled lost: {cylinder.filled_lost}</p>
                                             <p className="text-sm text-gray-700">Empties lost: {cylinder.empties_lost}</p>
+                                            <p className="text-sm text-gray-700">Less pay: {cylinder.less_pay}</p>
                                             <p className="text-sm text-gray-700">Spoiled: {cylinder.spoiled}</p>
                                             <div className="mt-4 grid grid-cols-2 gap-2">
                                                 <form
@@ -210,16 +368,41 @@ const CollectCylinders = () => {
                                                         handleSubmitLosses(cylinder.cylinder);
                                                     }}
                                                 >
-                                                    <label className="block text-sm font-semibold">Missing Empties</label>
-                                                    <input
-                                                        type='number'
-                                                        min={0}
-                                                        max={cylinder.empties}
-                                                        className="w-full p-1 border rounded-md"
-                                                        placeholder="Enter amount"
-                                                        value={losses[cylinder.cylinder]?.empties_lost || ""}
-                                                        onChange={(e) => handleLossChange(cylinder.cylinder, "empties_lost", e.target.value)}
-                                                    />
+                                                    <label className="block text-sm font-semibold">Missing Empties
+                                                        {selectedEmployee[cylinder.cylinder] && (
+                                                            <span className="text-blue-600"> ({filteredEmployees.find(emp => emp.id === selectedEmployee[cylinder.cylinder])?.first_name})</span>
+                                                        )}
+                                                    </label>
+                                                    <div className=' flex items-center'>
+                                                        <input
+                                                            type='number'
+                                                            min={0}
+                                                            max={cylinder.empties}
+                                                            className="w-full p-1 border rounded-md"
+                                                            placeholder="Enter amount"
+                                                            value={losses[cylinder.cylinder]?.empties_lost || ""}
+                                                            onChange={(e) => handleLossChange(cylinder.cylinder, "empties_lost", e.target.value)}
+                                                        />
+                                                        <KeyboardArrowDownIcon
+                                                            onClick={() => handleToggleDropdown(cylinder.cylinder)}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        {showEmployeeDropdown[cylinder.cylinder] && (
+                                                            <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
+                                                                {filteredEmployees.map((employee) => (
+                                                                    <div
+                                                                        key={employee.id}
+                                                                        className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedEmployee[cylinder.cylinder] === employee.id ? "bg-gray-200" : ""
+                                                                            }`}
+                                                                        onClick={() => handleSelectEmployee(cylinder.cylinder, employee.id)}
+                                                                    >
+                                                                        {employee.first_name} {employee.last_name}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
                                                     <button
                                                         type="submit"
                                                         className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
@@ -227,31 +410,112 @@ const CollectCylinders = () => {
                                                         disabled={loadingLosses[cylinder.cylinder]}
                                                     >
                                                         {loadingLosses[cylinder.cylinder] ? "Processing..." : "Add"}
-                                                    </button>                                                </form>
+                                                    </button>
+
+                                                </form>
+
+
                                                 <form
                                                     onSubmit={(e) => {
                                                         e.preventDefault();
                                                         handleSubmitLosses(cylinder.cylinder);
                                                     }}
                                                 >
-                                                    <label className="block text-sm font-semibold">Missing Filled</label>
-                                                    <input
-                                                        type='number'
-                                                        min={0}
-                                                        max={cylinder.filled}
-                                                        className="w-full p-1 border rounded-md"
-                                                        placeholder="Enter amount"
-                                                        value={losses[cylinder.cylinder]?.filled_lost || ""}
-                                                        onChange={(e) => handleLossChange(cylinder.cylinder, "filled_lost", e.target.value)}
-                                                    />
+                                                    <label className="block text-sm font-semibold">Missing Filled
+                                                        {selectedEmployeeFilled[cylinder.cylinder] && (
+                                                            <span className="text-blue-600"> ({filteredEmployees.find(emp => emp.id === selectedEmployeeFilled[cylinder.cylinder])?.first_name})</span>
+                                                        )}
+                                                    </label>
+                                                    <div className=' flex items-center'>
+                                                        <input
+                                                            type='number'
+                                                            min={0}
+                                                            max={cylinder.filled}
+                                                            className="w-full p-1 border rounded-md"
+                                                            placeholder="Enter amount"
+                                                            value={losses[cylinder.cylinder]?.filled_lost || ""}
+                                                            onChange={(e) => handleLossFilledChange(cylinder.cylinder, "filled_lost", e.target.value)}
+                                                        />
+                                                        <KeyboardArrowDownIcon
+                                                            onClick={() => handleFilledToggleDropdown(cylinder.cylinder)}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        {showEmployeeFilledDropdown[cylinder.cylinder] && (
+                                                            <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
+                                                                {filteredEmployees.map((employee) => (
+                                                                    <div
+                                                                        key={employee.id}
+                                                                        className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedEmployeeFilled[cylinder.cylinder] === employee.id ? "bg-gray-200" : ""
+                                                                            }`}
+                                                                        onClick={() => handleSelectEmployeeFilled(cylinder.cylinder, employee.id)}
+                                                                    >
+                                                                        {employee.first_name} {employee.last_name}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <button
+                                                        type="submit"
+                                                        className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLossesFilled[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
+                                                            }`}
+                                                        disabled={loadingLossesFilled[cylinder.cylinder]}
+                                                    >
+                                                        {loadingLossesFilled[cylinder.cylinder] ? "Processing..." : "Add"}
+                                                    </button>
+                                                </form>
+
+                                                <form
+                                                    onSubmit={(e) => {
+                                                        e.preventDefault();
+                                                        handleSubmitLessPay(cylinder.cylinder);
+                                                    }}
+                                                >
+                                                    <label className="block text-sm font-semibold">Less Payment
+                                                        {selectedEmployeeLessPay[cylinder.cylinder] && (
+                                                            <span className="text-blue-600"> ({filteredEmployees.find(emp => emp.id === selectedEmployeeLessPay[cylinder.cylinder])?.first_name})</span>
+                                                        )}
+                                                    </label>
+                                                    <div className=' flex items-center'>
+                                                        <input
+                                                            type='number'
+                                                            min={0}
+                                                            max={(cylinder.filled + cylinder.empties)}
+                                                            className="w-full p-1 border rounded-md"
+                                                            placeholder="Enter amount"
+                                                            value={lesses[cylinder.cylinder]?.less_pay || ""}
+                                                            onChange={(e) => handleLessPayChange(cylinder.cylinder, "less_pay", e.target.value)}
+                                                        />
+                                                        <KeyboardArrowDownIcon
+                                                            onClick={() => handleLessPayToggleDropdown(cylinder.cylinder)}
+                                                            className="cursor-pointer"
+                                                        />
+                                                        {showEmployeeLessPayDropdown[cylinder.cylinder] && (
+                                                            <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
+                                                                {filteredEmployees.map((employee) => (
+                                                                    <div
+                                                                        key={employee.id}
+                                                                        className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedEmployeeLessPay[cylinder.cylinder] === employee.id ? "bg-gray-200" : ""
+                                                                            }`}
+                                                                        onClick={() => handleSelectEmployeeLessPay(cylinder.cylinder, employee.id)}
+                                                                    >
+                                                                        {employee.first_name} {employee.last_name}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
                                                     <button
                                                         type="submit"
                                                         className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
                                                             }`}
-                                                        disabled={loadingLosses[cylinder.cylinder]}
+                                                        disabled={loadingLessPay[cylinder.cylinder]}
                                                     >
-                                                        {loadingLosses[cylinder.cylinder] ? "Processing..." : "Add"}
-                                                    </button>                                                </form>
+                                                        {loadingLessPay[cylinder.cylinder] ? "Processing..." : "Add"}
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     ))}

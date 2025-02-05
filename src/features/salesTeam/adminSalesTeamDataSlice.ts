@@ -45,22 +45,6 @@ export const fetchAdminSalesTeamData = createAsyncThunk(
 );
 
 
-// export const toggleVerification = createAsyncThunk(
-//   "adminSalesTeamData/toggleVerification",
-//   async (saleId) => {
-//     const response = await axios.patch(
-//       `${apiUrl}/adminsverifyalesteamdata/${saleId}/`,
-//       null, // No request body needed
-//       {
-//         headers: {
-//           Authorization: `Bearer ${Cookies.get("accessToken")}`,
-//         },
-//       }
-//     );
-//     alert('called sending...')
-//     return response.data; // Return the updated sale
-//   }
-// );
 
 export const toggleVerification = createAsyncThunk(
   "adminSalesTeamData/toggleVerification",
