@@ -17,7 +17,7 @@ const AfterAssign = () => {
     const [printComplete, setPrintComplete] = useState(false);
     const salesTeamName = state?.salesTeamName;
 
-    console.log('team name ', salesTeamName)
+    
     useEffect(() => {
         // Fetch all assigned cylinders (optionally filter by sales team)
         // dispatch(fetchAssignedCylinders(salesTeamId));
@@ -90,6 +90,8 @@ const AfterAssign = () => {
             printContent += '\n\nGoods dispatched by: \n_________________________\nSignature: \n_________________________\n';
             printContent += '\n\nGoods delivered by: \n_________________________\nSignature: \n_________________________\n\n\n';
             printContent += '\n\nGoods received by: \n_________________________\nSignature: \n_________________________\n';
+            
+            printContent += '\n\n';
 
 
             window.AndroidBridge.printText(printContent);

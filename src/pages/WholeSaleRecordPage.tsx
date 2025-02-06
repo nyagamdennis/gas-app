@@ -210,7 +210,6 @@ const WholeSaleRecordPage = () => {
 
   const handleSubmitOtherProduct = async (e) => {
     e.preventDefault();
-    console.log('Submitting...')
     setIsSubmittingOther(true);
     const isFullyPaid = otherPaymentType === "FULLY_PAID";
     const formData = {

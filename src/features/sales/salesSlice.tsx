@@ -40,13 +40,34 @@ export const fetchSales = createAsyncThunk<Sales[], void, {}>(
   );
   
 
+// export const recordSales = createAsyncThunk<Sales[], void, {}>(
+//     "sales/recordSales",
+//     async (formData) => {
+//       // const response = await axios.post(`${apiUrl}/recordsales/`, formData,{
+//       //   headers: {
+//       //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+//       //     "Content-Type": "application/json",
+//       //   });
+//       const response = await axios.post(
+//         `${apiUrl}/recordsales/`,
+//         formData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${Cookies.get("accessToken")}`,
+//             "Content-Type": "application/json",
+//           },
+//         },
+//       )
+//       return response.data; // Corrected the return statement
+//     }
+//   );
   
 export const recordSales = createAsyncThunk(
   "sales/recordSales",
   async (formData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${apiUrl}/recordotherssales/`,
+        `${apiUrl}/recordsales/`,
         formData,
         {
           headers: {
