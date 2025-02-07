@@ -92,6 +92,8 @@ const AfterAssign = () => {
             printContent += '\n\nGoods received by: \n_________________________\nSignature: \n_________________________\n';
             
             printContent += '\n\n';
+            printContent += '\n\n';
+            // printContent += '\n\n';
 
 
             window.AndroidBridge.printText(printContent);
