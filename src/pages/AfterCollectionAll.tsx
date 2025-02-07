@@ -23,7 +23,7 @@ const AfterCollectionAll = () => {
         dispatch(fetchCollectedCylinders(salesTeamId?.id));
     }, [dispatch]);
 
-    console.log('assigned ', cylinders);
+    
 
     const navigate = useNavigate();
 
