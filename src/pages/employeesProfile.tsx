@@ -139,7 +139,7 @@ const Employee = () => {
         {/* Employee Modal */}
         {selectedEmployee && (
           <Modal open={Boolean(selectedEmployee)} onClose={() => setSelectedEmployee(null)}>
-            <div className="bg-white p-6 rounded-lg shadow-md mx-4 mt-2 max-w-md m-auto">
+            <div className="bg-white p-4 rounded-lg shadow-md mx-4 mt-2 max-w-md m-auto">
               <h2 className="text-xl font-bold mb-4">
                 {selectedEmployee.first_name} {selectedEmployee.last_name}
               </h2>
@@ -196,15 +196,20 @@ const Employee = () => {
                               <td className="border px-0.5 py-2">
                                 <DateDisplay date={item.date_lost} />
                               </td>
-                              <td className="border px-0.5 py-2">
-                                {item.cleared ? "Yes" : <button className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
+                              <td>
+                                {item.cleared ? "Yes" : <button
+                                  onClick={() => handleClearDefaults(selectedEmployee.id)}
+                                  className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                  disabled={loading}
+                                  className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-
+                    {/* 
                     <button
                       onClick={() => handleClearDefaults(selectedEmployee.id)}
                       className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
@@ -212,7 +217,7 @@ const Employee = () => {
                       disabled={loading}
                     >
                       Clear Defaults
-                    </button>
+                    </button> */}
                   </>
                 ) : (
                   <p>No default records found.</p>
@@ -243,7 +248,12 @@ const Employee = () => {
                                 <DateDisplay date={item.date_lost} />
                               </td>
                               <td className="border px-3 py-2">
-                                {item.resolved ? "Yes" : <button className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
+                                {item.resolved ? "Yes" : <button
+                                  onClick={() => handleClearLessPay(selectedEmployee.id)}
+                                  className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+                                    }`}
+                                  disabled={loading}
+                                >clear</button>}
                               </td>
                             </tr>
                           ))}
@@ -251,14 +261,14 @@ const Employee = () => {
                       </table>
                     </div>
 
-                    <button
+                    {/* <button
                       onClick={() => handleClearLessPay(selectedEmployee.id)}
                       className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       disabled={loading}
                     >
                       Clear Less Pay
-                    </button>
+                    </button> */}
                   </>
                 ) : (
                   <p>No less pay records found.</p>

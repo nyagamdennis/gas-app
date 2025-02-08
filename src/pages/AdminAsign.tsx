@@ -70,11 +70,12 @@ const AdminAssign = () => {
       </div>
 
       {/* Footer Section */}
-      <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
-        <Link to="/sales" className="hover:underline">
-          Back to Home
-        </Link>
-      </div>
+
+
+      <Link to="/sales" className="bg-blue-600 text-white py-3 text-center shadow-inner">
+        Home
+      </Link>
+
     </div>
   );
 };
