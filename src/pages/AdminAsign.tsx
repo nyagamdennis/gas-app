@@ -16,8 +16,8 @@ const AdminAssign = () => {
       {/* Header Section */}
       <div className="bg-blue-600 text-white py-4 shadow-md flex items-center justify-between px-3">
         <div>
-        <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
-        <p className="text-center mt-2">Manage Your Business and Records Efficiently</p>
+          <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
+          <p className="text-center mt-2">Manage Your Business and Records Efficiently</p>
         </div>
         <PowerSettingsNewIcon onClick={handleLogOut} />
       </div>
@@ -60,10 +60,13 @@ const AdminAssign = () => {
           <p className="mt-2 text-sm">Access detailed sales data</p>
         </Link>
 
-        <div className="bg-white hover:bg-yellow-50 border border-yellow-500 text-yellow-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out">
-          <h3 className="text-xl font-semibold">Customer</h3>
-          <p className="mt-2 text-sm">Manage customer data efficiently</p>
-        </div>
+        <Link to='/admins/employees'>
+          <div className="bg-white hover:bg-yellow-50 border border-yellow-500 text-yellow-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out">
+            <h3 className="text-xl font-semibold">Employees</h3>
+            <p className="mt-2 text-sm">Manage employees data efficiently</p>
+          </div>
+        </Link>
+
       </div>
 
       {/* Footer Section */}

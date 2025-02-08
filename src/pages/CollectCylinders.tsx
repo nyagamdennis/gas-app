@@ -183,6 +183,46 @@ const CollectCylinders = () => {
     };
 
 
+    const handleSubmitMissingFilled = (cylinderId) => {
+        const lossData = losses[cylinderId];
+        const employeeId = selectedEmployee[cylinderId];
+
+        if (!lossData) return;
+        setLoadingLossesFilled((prev) => ({ ...prev, [cylinderId]: true }));
+
+        const payload = {
+            sales_team_id: selectedTeam.id,
+            losses: [
+                {
+                    cylinder_id: cylinderId,
+                    filled_lost: lossData.filled_lost,
+                    empties_lost: lossData.empties_lost,
+                    employee_id: employeeId,
+                }
+            ],
+
+        };
+
+        axios
+            .post(`${apiUrl}/report-cylinder-losses/`, payload, {
+                headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+            })
+            .then((response) => {
+                // Update frontend dynamically
+                setAssignedCylinders((prev) =>
+                    prev.map((cylinder) =>
+                        cylinder.cylinder === cylinderId
+                            ? { ...cylinder, filled_lost: lossData.filled_lost, empties_lost: lossData.empties_lost }
+                            : cylinder
+                    )
+                );
+                setLosses((prev) => ({ ...prev, [cylinderId]: { filled_lost: 0, empties_lost: 0 } }));
+            })
+            .catch((error) => console.error("Error reporting cylinder losses:", error))
+            .finally(() => setLoadingLossesFilled((prev) => ({ ...prev, [cylinderId]: false })));
+    };
+
+
 
 
     const handleSubmitLessPay = (cylinderId) => {
@@ -365,7 +405,11 @@ const CollectCylinders = () => {
                                                 <form
                                                     onSubmit={(e) => {
                                                         e.preventDefault();
-                                                        handleSubmitLosses(cylinder.cylinder);
+                                                        // handleSubmitLosses(cylinder.cylinder);
+                                                        e.preventDefault();
+                                                        if (selectedEmployee[cylinder.cylinder] && losses[cylinder.cylinder]?.empties_lost > 0) {
+                                                            handleSubmitLosses(cylinder.cylinder);
+                                                        }
                                                     }}
                                                 >
                                                     <label className="block text-sm font-semibold">Missing Empties
@@ -407,7 +451,8 @@ const CollectCylinders = () => {
                                                         type="submit"
                                                         className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
                                                             }`}
-                                                        disabled={loadingLosses[cylinder.cylinder]}
+                                                        // disabled={loadingLosses[cylinder.cylinder]}
+                                                        disabled={!selectedEmployee[cylinder.cylinder] || !losses[cylinder.cylinder]?.empties_lost || loadingLosses[cylinder.cylinder]}
                                                     >
                                                         {loadingLosses[cylinder.cylinder] ? "Processing..." : "Add"}
                                                     </button>
@@ -418,7 +463,7 @@ const CollectCylinders = () => {
                                                 <form
                                                     onSubmit={(e) => {
                                                         e.preventDefault();
-                                                        handleSubmitLosses(cylinder.cylinder);
+                                                        handleSubmitMissingFilled(cylinder.cylinder);
                                                     }}
                                                 >
                                                     <label className="block text-sm font-semibold">Missing Filled
@@ -486,6 +531,7 @@ const CollectCylinders = () => {
                                                             placeholder="Enter amount"
                                                             value={lesses[cylinder.cylinder]?.less_pay || ""}
                                                             onChange={(e) => handleLessPayChange(cylinder.cylinder, "less_pay", e.target.value)}
+                                                            required
                                                         />
                                                         <KeyboardArrowDownIcon
                                                             onClick={() => handleLessPayToggleDropdown(cylinder.cylinder)}
@@ -509,7 +555,7 @@ const CollectCylinders = () => {
 
                                                     <button
                                                         type="submit"
-                                                        className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLosses[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
+                                                        className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loadingLessPay[cylinder.cylinder] ? "opacity-50 cursor-not-allowed" : ""
                                                             }`}
                                                         disabled={loadingLessPay[cylinder.cylinder]}
                                                     >

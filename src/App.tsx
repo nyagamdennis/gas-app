@@ -38,6 +38,7 @@ import AfterCollection from "./pages/AfterCollection"
 import AfterCollectionAll from "./pages/AfterCollectionAll"
 import AssigningOtherProducts from "./pages/AssigningOtherProducts"
 import AfterAssignOthers from "./pages/AfterAssignOthers"
+import EmployeesProfile from "./pages/employeesProfile"
 
 function App() {
   return (
@@ -103,6 +104,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminAsign />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/employees"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <EmployeesProfile />
               </ProtectedRoute>
             }
           />

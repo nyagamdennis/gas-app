@@ -7,6 +7,7 @@ import bluetick from "../components/media/bluetick.png";
 import defaultProfile from "../components/media/default.png"
 import { fetchDefaults, selectAllDefaults } from "../features/defaults/defaultsSlice";
 import { fetchLessPay, selectAllLessPay } from "../features/defaults/lessPaySlice";
+import DateDisplay from "../components/DateDisplay";
 
 const MyProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -14,6 +15,7 @@ const MyProfilePage = () => {
   // const defaulted_data = useAppSelector(selectMyProfile);
   const defaulted_data = useAppSelector(selectAllDefaults)
   const lessPay_data = useAppSelector(selectAllLessPay);
+  // console.log('less pay data ', lessPay_data)
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,9 +33,19 @@ const MyProfilePage = () => {
 
   useEffect(() => {
     dispatch(fetchMyProfile());
-    dispatch(fetchDefaults(myProfile?.id));
-    dispatch(fetchLessPay(myProfile?.id));
+    // dispatch(fetchDefaults(myProfile?.id));
+    // dispatch(fetchLessPay(myProfile?.id));
   }, [dispatch]);
+
+
+  useEffect(() => {
+    if (myProfile?.id) {
+      // Fetch data only when myProfile is available
+      dispatch(fetchDefaults(myProfile.id));
+      dispatch(fetchLessPay(myProfile.id));
+    }
+  }, [dispatch, myProfile]);
+
 
   useEffect(() => {
     if (myProfile) {
@@ -358,85 +370,79 @@ const MyProfilePage = () => {
           <p className="text-gray-600">Loading profile...</p>
         )}
       </div>
-      <div className=" px-2 mb-5">
-        <div className=" mt-4  border-t-2 border-dotted">
-          <h5 className=" text-lg font-bold">Defaults</h5>
+      {defaulted_data.length > 0 && (
+        <div className=" px-2 mb-5">
+          <div className=" mt-4  border-t-2 border-dotted">
+            <h5 className=" text-lg font-bold">Defaults</h5>
 
-          <div className="mt-3">
-            <h3 className="font-semibold">Cylinders Lost</h3>
+            <div className="mt-3">
+              <h3 className="font-semibold">Cylinders Lost</h3>
 
-            {/* {defaulted_data.map((defaults) => 
-                <div>
-                  <h3>Cylinder: {defaults.cylinder.gas_type}</h3>
-                  <h3>Weight: {defaults.cylinder.weight}kg</h3>
-                  <h3>Empties Lost: {defaults.number_of_empty_cylinder}</h3>
-                  <h3>Filled Lost: {defaults.number_of_filled_cylinder}</h3>
-                  <h3>Date Lost: {defaults.date_lost}</h3>
-                </div>
-                )} */}
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Filled</th>
-                  <th className="border px-4 py-2">Empty</th>
-                  <th className="border px-4 py-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {defaulted_data.map((cylinder) => (
-                  <tr key={cylinder.id}>
-                    <td className="border px-4 py-2">{cylinder.cylinder.gas_type}</td>
-                    <td className="border px-4 py-2">{cylinder.cylinder.weight}</td>
-                    <td className="border px-4 py-2">{cylinder.number_of_filled_cylinder}</td>
-                    <td className="border px-4 py-2">{cylinder.number_of_empty_cylinder}</td>
-                    {/* <td className="border px-4 py-2">{cylinder.date_lost}</td> */}
-                    <td className="border px-4 py-2">
-                      {new Date(cylinder.date_lost).toLocaleDateString()}
-                    </td>
+
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Filled</th>
+                    <th className="border px-4 py-2">Empty</th>
+                    <th className="border px-4 py-2">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {defaulted_data.map((cylinder) => (
+                    <tr key={cylinder.id}>
+                      <td className="border px-4 py-2">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
+                      <td className="border px-4 py-2">{cylinder.cylinder?.weight ?? "N/A"}</td>
+                      <td className="border px-4 py-2">{cylinder.number_of_filled_cylinder ?? "N/A"}</td>
+                      <td className="border px-4 py-2">{cylinder.number_of_empty_cylinder ?? "N/A"}</td>
+                      <td className="border px-4 py-2">
+                        <DateDisplay date={cylinder.date_lost} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+
         </div>
+      )}
 
-      </div>
+      {lessPay_data.length > 0 && (
+        <div className=" px-2 mb-5">
+          <div className=" mt-4  border-t-2 border-dotted">
 
-      <div className=" px-2 mb-5">
-        <div className=" mt-4  border-t-2 border-dotted">
-
-          <div className="mt-3">
-            <h3 className="font-semibold">Less Pay Cylinders</h3>
-
-
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                  <th className="border px-4 py-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lessPay_data.map((cylinder) => (
-                  <tr key={cylinder.id}>
-                    <td className="border px-4 py-2">{cylinder.cylinder.gas_type}</td>
-                    <td className="border px-4 py-2">{cylinder.cylinder.weight}</td>
-                    <td className="border px-4 py-2">{cylinder.cylinders_less_pay}</td>
-                    <td className="border px-4 py-2">
-                      {new Date(cylinder.date_lost).toLocaleDateString()}
-                    </td>
+            <div className="mt-3">
+              <h3 className="font-semibold">Less Pay Cylinders</h3>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                    <th className="border px-4 py-2">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {lessPay_data?.map((cylinder) => (
+                    <tr key={cylinder.id}>
+                      <td className="border px-4 py-2">{cylinder.cylinder?.gas_type ?? 'N/A'}</td>
+                      <td className="border px-4 py-2">{cylinder.cylinder?.weight ?? "N/A"}</td>
+                      <td className="border px-4 py-2">{cylinder.cylinders_less_pay ?? "N/A"}</td>
+                      <td className="border px-4 py-2">
+                        <DateDisplay date={cylinder.date_lost} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-      </div>
+        </div>
+      )}
+
 
 
 
