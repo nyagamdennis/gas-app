@@ -2,22 +2,29 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { Modal } from "@mui/material";
-import defaultProfile from "../components/media/default.png"
-import { fetchEmployees, selectAllEmployees } from "../features/employees/employeesSlice";
+import { ClipLoader } from "react-spinners";
+import { fetchEmployees, selectAllEmployees, transferEmployee, updateEmployeeStatus } from "../features/employees/employeesSlice";
 import { fetchSalesTeam, selectAllSalesTeam } from "../features/salesTeam/salesTeamSlice";
 import { fetchDefaults } from "../features/defaults/defaultsSlice";
 import { fetchLessPay } from "../features/defaults/lessPaySlice";
+import defaultProfile from "../components/media/default.png"
+import DateDisplay from "../components/DateDisplay";
 
 
-const EmployeesProfile = () => {
+const Employee = () => {
   const dispatch = useAppDispatch();
   const allEmployees = useAppSelector(selectAllEmployees);
   const allSalesTeams = useAppSelector(selectAllSalesTeam);
 
-  const [modalEmployee, setModalEmployee] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [newSalesTeam, setNewSalesTeam] = useState("");
+  const [loading, setLoading] = useState(false);
   const [employeeDefaults, setEmployeeDefaults] = useState({});
   const [employeeLessPays, setEmployeeLessPays] = useState({});
-  const [loading, setLoading] = useState(false);
+
+  const [modalEmployee, setModalEmployee] = useState(null);
+  // const [employeeDefaults, setEmployeeDefaults] = useState({});
+  // const [employeeLessPays, setEmployeeLessPays] = useState({});
 
   useEffect(() => {
     dispatch(fetchEmployees());
@@ -25,9 +32,8 @@ const EmployeesProfile = () => {
   }, [dispatch]);
 
   const handleSelectEmployee = async (employee) => {
-    setModalEmployee(employee);
+    setSelectedEmployee(employee);
 
-    // Fetch defaults and less pay for the selected employee
     if (!employeeDefaults[employee.id]) {
       const defaultsResponse = await dispatch(fetchDefaults(employee.id)).unwrap();
       setEmployeeDefaults((prev) => ({ ...prev, [employee.id]: defaultsResponse }));
@@ -39,9 +45,35 @@ const EmployeesProfile = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setModalEmployee(null);
+  const handleStatusChange = async (employeeId, statusField) => {
+    setLoading(true);
+    try {
+      await dispatch(updateEmployeeStatus({ employeeId, statusField })).unwrap();
+      alert(`Employee status updated: ${statusField}`);
+      setSelectedEmployee(null);
+    } catch (error) {
+      alert("Failed to update employee status");
+    }
+    setLoading(false);
   };
+
+  const handleTransferEmployee = async () => {
+    if (!newSalesTeam) {
+      alert("Please select a sales team.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await dispatch(transferEmployee({ employeeId: selectedEmployee.id, salesTeamId: newSalesTeam })).unwrap();
+      alert("Employee transferred successfully.");
+      setSelectedEmployee(null);
+    } catch (error) {
+      alert("Failed to transfer employee.");
+    }
+    setLoading(false);
+  };
+
+
 
   const handleClearDefaults = async (employeeId) => {
     setLoading(true);
@@ -67,157 +99,206 @@ const EmployeesProfile = () => {
     setLoading(false);
   };
 
-
-  const handleTransfer = async (employeeId) => {
-    if (!newSalesTeam) {
-      alert("Please select a sales team.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await dispatch(transferEmployee({ employeeId, salesTeamId: newSalesTeam })).unwrap();
-      alert("Employee transferred successfully.");
-      setModalEmployee(null);
-    } catch (error) {
-      alert("Failed to transfer employee.");
-    }
-    setLoading(false);
-  };
-  
+  console.log('def ', employeeDefaults)
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Employees List</h1>
-      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        {allEmployees.map((employee) => (
-          <div
-            key={employee.id}
-            className="bg-white p-4 shadow rounded-lg cursor-pointer"
-            onClick={() => handleSelectEmployee(employee)}
-          >
-            <img
-              src={employee.profile_image || defaultProfile}
-              alt={`${employee.first_name} ${employee.last_name}`}
-              className="w-20 h-20 rounded-full mx-auto"
-            />
-            <h2 className="text-center mt-2 font-semibold">
-              {employee.first_name} {employee.last_name}
-            </h2>
-            <p className="text-center text-gray-600">{employee.phone || "No Phone"}</p>
-            <p className="text-center text-gray-500">
-              Current Sales Team:{" "}
-              {allSalesTeams.find((team) => team.id === employee.sales_team)?.name || "N/A"}
-            </p>
+    <div className="flex flex-col bg-gray-100 min-h-screen">
+      <div className="p-4">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Employees</h1>
+
+        {loading && (
+          <div className="flex justify-center my-4">
+            <ClipLoader size={25} color={"#6366f1"} />
           </div>
-        ))}
-      </div>
+        )}
 
-      {/* Modal for Employee Details */}
-      {modalEmployee && (
-        <Modal open={Boolean(modalEmployee)} onClose={handleCloseModal}>
-          <div className="bg-white p-6 rounded-lg shadow-md mx-4 mt-20 max-w-md m-auto">
-            <h2 className="text-xl font-bold mb-4">
-              {modalEmployee.first_name} {modalEmployee.last_name}
-            </h2>
-            <img
-              src={modalEmployee.profile_image || defaultProfile}
-              alt={`${modalEmployee.first_name} ${modalEmployee.last_name}`}
-              className="w-32 h-32 rounded-full mx-auto mb-4"
-            />
-            <p><strong>ID Number:</strong> {modalEmployee.id_number || "N/A"}</p>
-            <p><strong>Phone:</strong> {modalEmployee.phone || "N/A"}</p>
-            <p><strong>Current Sales Team:</strong> {allSalesTeams.find(team => team.id === modalEmployee.sales_team)?.name || "N/A"}</p>
-
-            {/* Defaults Table */}
-            <h3 className="font-semibold mt-4">Defaults</h3>
-            {employeeDefaults[modalEmployee.id]?.length > 0 ? (
-              <>
-                <table className="w-full border-collapse border border-gray-300 text-sm mt-2">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border px-4 py-2">Cylinder Name</th>
-                      <th className="border px-4 py-2">Amount</th>
-                      <th className="border px-4 py-2">Cleared</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employeeDefaults[modalEmployee.id].map((item) => (
-                      <tr key={item.id}>
-                        <td className="border px-4 py-2">
-                          {item.cylinder?.gas_type || "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">{item.amount}</td>
-                        <td className="border px-4 py-2">
-                          {item.cleared ? "Yes" : "No"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button
-                  onClick={() => handleClearDefaults(modalEmployee.id)}
-                  className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  Clear Defaults
-                </button>
-              </>
-            ) : (
-              <p>No default records found.</p>
-            )}
-
-            {/* Less Pays Table */}
-            <h3 className="font-semibold mt-4">Less Pays</h3>
-            {employeeLessPays[modalEmployee.id]?.length > 0 ? (
-              <>
-                <table className="w-full border-collapse border border-gray-300 text-sm mt-2">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border px-4 py-2">Cylinder Name</th>
-                      <th className="border px-4 py-2">Less Pay Amount</th>
-                      <th className="border px-4 py-2">Resolved</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employeeLessPays[modalEmployee.id].map((item) => (
-                      <tr key={item.id}>
-                        <td className="border px-4 py-2">
-                          {item.cylinder?.gas_type || "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">{item.cylinders_less_pay}</td>
-                        <td className="border px-4 py-2">
-                          {item.resolved ? "Yes" : "No"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button
-                  onClick={() => handleClearLessPay(modalEmployee.id)}
-                  className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${
-                    loading ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  Clear Less Pay
-                </button>
-              </>
-            ) : (
-              <p>No less pay records found.</p>
-            )}
-
-            <button
-              onClick={handleCloseModal}
-              className="w-full bg-red-500 text-white mt-4 py-2 rounded"
+        <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {allEmployees.map((employee) => (
+            <div
+              key={employee.id}
+              className="bg-white p-4 rounded-lg shadow hover:scale-105 transition cursor-pointer"
+              onClick={() => handleSelectEmployee(employee)}
             >
-              Close
-            </button>
-          </div>
-        </Modal>
-      )}
+              <img
+                src={employee.profile_image || defaultProfile}
+                alt={`${employee.first_name} ${employee.last_name}`}
+                className="w-20 h-20 rounded-full mx-auto"
+              />
+              <h2 className="text-center mt-2 font-semibold text-gray-700">
+                {employee.first_name} {employee.last_name}
+              </h2>
+              <p className="text-center text-gray-500">{employee.phone || "No Phone"}</p>
+              <p className="text-center text-indigo-600">
+                Current sales team: <span className=" font-bold">{employee.sales_team?.name || 'Not placed'}</span>
+
+                {/* {allSalesTeams.find((team) => team.id === employee.sales_team)?.name || "No Team"} */}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Employee Modal */}
+        {selectedEmployee && (
+          <Modal open={Boolean(selectedEmployee)} onClose={() => setSelectedEmployee(null)}>
+            <div className="bg-white p-6 rounded-lg shadow-md mx-4 mt-20 max-w-md m-auto">
+              <h2 className="text-xl font-bold mb-4">
+                {selectedEmployee.first_name} {selectedEmployee.last_name}
+              </h2>
+              <p><strong>ID:</strong> {selectedEmployee.id_number || "N/A"}</p>
+              <p><strong>Phone:</strong> {selectedEmployee.phone || "N/A"}</p>
+
+              {/* Status Management */}
+              <h3 className="font-semibold mt-4">Manage Status</h3>
+              <div className="flex justify-between mt-2">
+                <button
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white py-1 px-4 rounded"
+                  onClick={() => handleStatusChange(selectedEmployee.id, "verified")}
+                >
+                  {selectedEmployee.verified ? "Unverify" : "Verify"}
+                </button>
+                <button
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-4 rounded"
+                  onClick={() => handleStatusChange(selectedEmployee.id, "suspended")}
+                >
+                  {selectedEmployee.suspended ? "Unsuspend" : "Suspend"}
+                </button>
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white py-1 px-4 rounded"
+                  onClick={() => handleStatusChange(selectedEmployee.id, "fired")}
+                >
+                  {selectedEmployee.fired ? "Rehire" : "Fire"}
+                </button>
+              </div>
+
+              <div>
+                {/* Defaults Table */}
+                <h3 className="font-semibold mt-4">Defaults</h3>
+                {employeeDefaults[selectedEmployee.id]?.length > 0 ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border-collapse border border-gray-300 text-sm">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            <th className="border px-0.5 py-2 ">Cylinder Name</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Weight</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Filled</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Empty</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Date</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Cleared</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {employeeDefaults[selectedEmployee.id].map((item) => (
+                            <tr key={item.id}>
+                              <td className="border px-0.5 py-2">{item.cylinder?.gas_type || "N/A"}</td>
+                              <td className="border px-0.5 py-2">{item.cylinder?.weight}</td>
+                              <td className="border px-0.5 py-2">{item.cylinder?.filled_lost}</td>
+                              <td className="border px-0.5 py-2">{item.cylinder?.empties_lost}</td>
+                              <td className="border px-0.5 py-2">
+                                <DateDisplay date={item.date_lost} />
+                              </td>
+                              <td className="border px-0.5 py-2">
+                                {item.cleared ? "Yes" : <button className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <button
+                      onClick={() => handleClearDefaults(selectedEmployee.id)}
+                      className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={loading}
+                    >
+                      Clear Defaults
+                    </button>
+                  </>
+                ) : (
+                  <p>No default records found.</p>
+                )}
+
+                {/* Less Pays Table */}
+                <h3 className="font-semibold mt-4">Less Pays</h3>
+                {employeeLessPays[selectedEmployee.id]?.length > 0 ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border-collapse border border-gray-300 text-sm">
+                        <thead className="bg-gray-200">
+                          <tr>
+                            <th className="border px-0.5 py-2 ">Cylinder Name</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Weight</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Quantity</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Date</th>
+                            <th className="border px-0.5 py-2 whitespace-nowrap">Resolved</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {employeeLessPays[selectedEmployee.id].map((item) => (
+                            <tr key={item.id}>
+                              <td className="border px-0.5 py-2">{item.cylinder?.gas_type || "N/A"}</td>
+                              <td className="border px-0.5 py-2">{item.cylinder?.weight}</td>
+                              <td className="border px-0.5 py-2">{item.cylinders_less_pay}</td>
+                              <td className="border px-0.5 py-2">
+                                <DateDisplay date={item.date_lost} />
+                              </td>
+                              <td className="border px-3 py-2">
+                                {item.resolved ? "Yes" : <button className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <button
+                      onClick={() => handleClearLessPay(selectedEmployee.id)}
+                      className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      disabled={loading}
+                    >
+                      Clear Less Pay
+                    </button>
+                  </>
+                ) : (
+                  <p>No less pay records found.</p>
+                )}
+              </div>
+
+
+              {/* Transfer Employee */}
+              <h3 className="font-semibold mt-4">Transfer Employee</h3>
+              <select
+                className="border p-2 rounded w-full mt-2"
+                onChange={(e) => setNewSalesTeam(e.target.value)}
+              >
+                <option value="">Select Sales Team</option>
+                {allSalesTeams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleTransferEmployee}
+                className="mt-2 w-full bg-cyan-500 hover:bg-cyan-600 text-white py-1 rounded"
+                disabled={!newSalesTeam}
+              >
+                Transfer
+              </button>
+
+              <button
+                onClick={() => setSelectedEmployee(null)}
+                className="w-full bg-gray-700 text-white mt-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </Modal>
+        )}
+      </div>
     </div>
   );
 };
 
-export default EmployeesProfile;
+export default Employee;
