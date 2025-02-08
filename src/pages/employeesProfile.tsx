@@ -139,7 +139,7 @@ const Employee = () => {
         {/* Employee Modal */}
         {selectedEmployee && (
           <Modal open={Boolean(selectedEmployee)} onClose={() => setSelectedEmployee(null)}>
-            <div className="bg-white p-6 rounded-lg shadow-md mx-4 mt-20 max-w-md m-auto">
+            <div className="bg-white p-6 rounded-lg shadow-md mx-4 mt-2 max-w-md m-auto">
               <h2 className="text-xl font-bold mb-4">
                 {selectedEmployee.first_name} {selectedEmployee.last_name}
               </h2>
