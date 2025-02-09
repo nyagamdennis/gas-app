@@ -5,8 +5,8 @@ import { Modal } from "@mui/material";
 import { ClipLoader } from "react-spinners";
 import { fetchEmployees, selectAllEmployees, transferEmployee, updateEmployeeStatus } from "../features/employees/employeesSlice";
 import { fetchSalesTeam, selectAllSalesTeam } from "../features/salesTeam/salesTeamSlice";
-import { fetchDefaults } from "../features/defaults/defaultsSlice";
-import { fetchLessPay } from "../features/defaults/lessPaySlice";
+import { clearDefault, fetchDefaults } from "../features/defaults/defaultsSlice";
+import { clearLessPay, fetchLessPay } from "../features/defaults/lessPaySlice";
 import defaultProfile from "../components/media/default.png"
 import DateDisplay from "../components/DateDisplay";
 
@@ -23,8 +23,7 @@ const Employee = () => {
   const [employeeLessPays, setEmployeeLessPays] = useState({});
 
   const [modalEmployee, setModalEmployee] = useState(null);
-  // const [employeeDefaults, setEmployeeDefaults] = useState({});
-  // const [employeeLessPays, setEmployeeLessPays] = useState({});
+
 
   useEffect(() => {
     dispatch(fetchEmployees());
@@ -75,31 +74,67 @@ const Employee = () => {
 
 
 
-  const handleClearDefaults = async (employeeId) => {
+  // const handleClearDefaults = async (defaultId) => {
+  //   setLoading(true);
+  //   try {
+  //     await dispatch(clearDefault(defaultId)).unwrap();
+  //     alert("Defaults cleared successfully.");
+  //     setEmployeeDefaults((prev) => ({ ...prev, [defaultId]: [] }));
+  //   } catch (error) {
+  //     alert("Failed to clear defaults.");
+  //   }
+  //   setLoading(false);
+  // };
+  const handleClearDefaults = async (defaultId) => {
     setLoading(true);
     try {
-      await dispatch(clearDefault(employeeId)).unwrap();
+      await dispatch(clearDefault(defaultId)).unwrap();
       alert("Defaults cleared successfully.");
-      setEmployeeDefaults((prev) => ({ ...prev, [employeeId]: [] }));
+
+      // Remove the cleared item from the frontend state
+      setEmployeeDefaults((prev) => {
+        const updatedDefaults = { ...prev };
+        updatedDefaults[selectedEmployee.id] = updatedDefaults[selectedEmployee.id].filter(item => item.id !== defaultId);
+        return updatedDefaults;
+      });
     } catch (error) {
       alert("Failed to clear defaults.");
     }
     setLoading(false);
   };
 
-  const handleClearLessPay = async (employeeId) => {
+  const handleClearLessPay = async (lessPayId) => {
     setLoading(true);
     try {
-      await dispatch(clearLessPay(employeeId)).unwrap();
-      alert("Less Pay data cleared successfully.");
-      setEmployeeLessPays((prev) => ({ ...prev, [employeeId]: [] }));
+      await dispatch(clearLessPay(lessPayId)).unwrap();
+      alert("less payments cleared successfully.");
+
+      // Remove the cleared item from the frontend state
+      setEmployeeLessPays((prev) => {
+        const updatedLessPay = { ...prev };
+        updatedLessPay[selectedEmployee.id] = updatedLessPay[selectedEmployee.id].filter(item => item.id !== lessPayId);
+        return updatedLessPay;
+      });
     } catch (error) {
-      alert("Failed to clear less pay data.");
+      alert("Failed to clear defaults.");
     }
     setLoading(false);
   };
 
-  console.log('def ', employeeDefaults)
+
+  // const handleClearLessPay = async (defaultId) => {
+  //   setLoading(true);
+  //   try {
+  //     await dispatch(clearLessPay(defaultId)).unwrap();
+  //     alert("Less Pay data cleared successfully.");
+  //     setEmployeeLessPays((prev) => ({ ...prev, [defaultId]: [] }));
+  //   } catch (error) {
+  //     alert("Failed to clear less pay data.");
+  //   }
+  //   setLoading(false);
+  // };
+
+
   return (
     <div className="flex flex-col bg-gray-100 min-h-screen">
       <div className="p-4">
@@ -121,7 +156,7 @@ const Employee = () => {
               <img
                 src={employee.profile_image || defaultProfile}
                 alt={`${employee.first_name} ${employee.last_name}`}
-                className="w-20 h-20 rounded-full mx-auto"
+                className="w-20 h-20 rounded-full object-contain mx-auto"
               />
               <h2 className="text-center mt-2 font-semibold text-gray-700">
                 {employee.first_name} {employee.last_name}
@@ -130,7 +165,6 @@ const Employee = () => {
               <p className="text-center text-indigo-600">
                 Current sales team: <span className=" font-bold">{employee.sales_team?.name || 'Not placed'}</span>
 
-                {/* {allSalesTeams.find((team) => team.id === employee.sales_team)?.name || "No Team"} */}
               </p>
             </div>
           ))}
@@ -198,26 +232,18 @@ const Employee = () => {
                               </td>
                               <td>
                                 {item.cleared ? "Yes" : <button
-                                  onClick={() => handleClearDefaults(selectedEmployee.id)}
+                                  onClick={() => handleClearDefaults(item?.id)}
                                   className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
                                     }`}
                                   disabled={loading}
-                                  className=" bg-green-600 px-2 py-1 text-white font-bold">clear</button>}
+                                >clear</button>}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                    {/* 
-                    <button
-                      onClick={() => handleClearDefaults(selectedEmployee.id)}
-                      className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={loading}
-                    >
-                      Clear Defaults
-                    </button> */}
+
                   </>
                 ) : (
                   <p>No default records found.</p>
@@ -249,7 +275,7 @@ const Employee = () => {
                               </td>
                               <td className="border px-3 py-2">
                                 {item.resolved ? "Yes" : <button
-                                  onClick={() => handleClearLessPay(selectedEmployee.id)}
+                                  onClick={() => handleClearLessPay(item.id)}
                                   className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
                                     }`}
                                   disabled={loading}
@@ -260,15 +286,6 @@ const Employee = () => {
                         </tbody>
                       </table>
                     </div>
-
-                    {/* <button
-                      onClick={() => handleClearLessPay(selectedEmployee.id)}
-                      className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      disabled={loading}
-                    >
-                      Clear Less Pay
-                    </button> */}
                   </>
                 ) : (
                   <p>No less pay records found.</p>
@@ -296,7 +313,6 @@ const Employee = () => {
               >
                 Transfer
               </button>
-
               <button
                 onClick={() => setSelectedEmployee(null)}
                 className="w-full bg-gray-700 text-white mt-4 py-2 rounded"

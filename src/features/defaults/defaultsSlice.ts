@@ -32,37 +32,13 @@ export const fetchDefaults = createAsyncThunk<Defaults[]>(
   }
 );
 
-export const transferEmployee = createAsyncThunk(
-  "employees/transferEmployee",
-  async ({ employeeId, salesTeamId }: { employeeId: number; salesTeamId: number }) => {
-    const formData = { sales_team_id: salesTeamId };
-    const response = await axios.patch(`${apiUrl}/transfer/${employeeId}/`, formData, 
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
-    console.log('after transfer ', response.data)
-    return response.data; // Return the updated employee data
+export const clearDefault = createAsyncThunk(
+  "defaults/clearDefault",
+  async (defaultId) => {
+    const response = await axios.patch(`${apiUrl}/cylinder-lost/${defaultId}/resolve/`);
+    return response.data
   }
-);
-
-export const updateEmployeeStatus = createAsyncThunk(
-  "employees/updateEmployeeStatus",
-  async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
-      status_field: statusField,
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    });
-    console.log('STatus functions', response.data)
-    return response.data; // Return the updated employee data
-    // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
-  }
-);
+)
 
 const defaultsSlice = createSlice({
   name: "defaults",
@@ -79,6 +55,17 @@ const defaultsSlice = createSlice({
         state.defaults = action.payload;
       })
       .addCase(fetchDefaults.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch employees";
+      })
+      .addCase(clearDefault.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(clearDefault.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.defaults = action.payload;
+      })
+      .addCase(clearDefault.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch employees";
       })

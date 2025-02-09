@@ -34,6 +34,16 @@ export const fetchLessPay = createAsyncThunk<LessPay[]>(
 
 
 
+export const clearLessPay = createAsyncThunk(
+  "lessPay/clearClearLessPay",
+  async (lessPayId) => {
+    const response = await axios.patch(`${apiUrl}/cylinder-less_pay/${lessPayId}/resolve/`);
+    return response.data
+  }
+)
+
+
+
 
 const lessPaySlice = createSlice({
   name: "lessPay",
@@ -53,8 +63,17 @@ const lessPaySlice = createSlice({
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch employees";
       })
-      // Transfer Employee
-    
+      .addCase(clearLessPay.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(clearLessPay.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.lessPay = action.payload;
+      })
+      .addCase(clearLessPay.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch employees";
+      })
   },
 });
 

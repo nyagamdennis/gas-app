@@ -185,7 +185,7 @@ const CollectCylinders = () => {
 
     const handleSubmitMissingFilled = (cylinderId) => {
         const lossData = losses[cylinderId];
-        const employeeId = selectedEmployee[cylinderId];
+        const employeeId = selectedEmployeeFilled[cylinderId];
 
         if (!lossData) return;
         setLoadingLossesFilled((prev) => ({ ...prev, [cylinderId]: true }));
@@ -227,7 +227,8 @@ const CollectCylinders = () => {
 
     const handleSubmitLessPay = (cylinderId) => {
         const lessData = lesses[cylinderId];
-        const employeeId = selectedEmployee[cylinderId];
+        const employeeId = selectedEmployeeLessPay[cylinderId];
+        console.log('less pay employee id ', employeeId)
 
         if (!lessData) return;
         setLoadingLessPay((prev) => ({ ...prev, [cylinderId]: true }));
