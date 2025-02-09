@@ -156,7 +156,7 @@ const Employee = () => {
               <img
                 src={employee.profile_image || defaultProfile}
                 alt={`${employee.first_name} ${employee.last_name}`}
-                className="w-20 h-20 rounded-full object-contain mx-auto"
+                className="w-20 h-20 rounded-full object-cover mx-auto"
               />
               <h2 className="text-center mt-2 font-semibold text-gray-700">
                 {employee.first_name} {employee.last_name}
