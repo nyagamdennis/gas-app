@@ -40,7 +40,7 @@ const AfterAssignOthers = () => {
             const currentDate = new Date().toLocaleDateString();
 
             let printContent = '\n\n'; // Whitespace at the top
-            printContent += `Assigned Cylinders:   ${salesTeamName}\n`;
+            printContent += `Assigned products:   ${salesTeamName}\n`;
             printContent += `Date: ${currentDate}\n`;
             printContent += '********************************\n';
             printContent += 'product       Qty\n'; // Table header
@@ -77,7 +77,7 @@ const AfterAssignOthers = () => {
         alert("Generate PDF functionality can be added here.");
     };
 
-    console.log('Prod ', products)
+  
     return (
         <div className="min-h-screen bg-white p-6">
             <div className="mb-4 text-center">

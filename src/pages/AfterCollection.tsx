@@ -391,6 +391,37 @@ const AfterCollection = () => {
                 </>
             )}
 
+{/* const lessPay = cylinders.filter(cylinder => cylinder.less_pay > 0); */}
+            {cylinders.filter(cylinder => cylinder.less_pay > 0).length > 0 && (
+                <>
+                    <div>
+                        {/* {cylinders.filter} */}
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
+                        </div>
+
+                        <table className="w-full border-collapse border border-gray-300 text-sm">
+                            <thead className="bg-gray-200">
+                                <tr>
+                                    <th className="border px-4 py-2">Cylinder Name</th>
+                                    <th className="border px-4 py-2">Weight (kg)</th>
+                                    <th className="border px-4 py-2">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {cylinders.filter(cylinder => cylinder.less_pay > 0).map((cylinder) => (
+                                    <tr key={cylinder.id}>
+                                        <td className="border px-4 py-2">{cylinder.gas_type}</td>
+                                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                                        <td className="border px-4 py-2">{cylinder.less_pay}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            )}
+
 
             <div className="mt-6 flex justify-center gap-4">
                 <button

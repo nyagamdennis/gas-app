@@ -7,6 +7,7 @@ import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfile
 import { fetchSalesTeamData, selectAllSalesTeamData } from '../features/salesTeam/salesTeamDataSlice';
 import defaultProfile from "../components/media/default.png"
 import { fetchAdminSalesTeamData, selectAllAdminSalesTeamData, toggleVerification } from '../features/salesTeam/adminSalesTeamDataSlice';
+import AdminsFooter from '../components/AdminsFooter';
 
 const AdminSalesRecord = () => {
     const dispatch = useAppDispatch();
@@ -176,9 +177,7 @@ const AdminSalesRecord = () => {
             </div>
 
             {/* Footer */}
-            <Link className="bg-blue-600 text-white py-3 text-center shadow-inner hover:underline" to="/sales">
-                Home
-            </Link>
+            <AdminsFooter />
 
         </div>
     )

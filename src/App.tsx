@@ -39,6 +39,7 @@ import AfterCollectionAll from "./pages/AfterCollectionAll"
 import AssigningOtherProducts from "./pages/AssigningOtherProducts"
 import AfterAssignOthers from "./pages/AfterAssignOthers"
 import EmployeesProfile from "./pages/employeesProfile"
+import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
 
 function App() {
   return (
@@ -223,6 +224,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* <Route
+            path="/teamotherssales"
+            element={
+              <ProtectedRoute requiredRole="employee">
+                <TeamOthersSalesPage />
+              </ProtectedRoute>
+            }
+          /> */}
           <Route
             path="/otherproducts"
             element={

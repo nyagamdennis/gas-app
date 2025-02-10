@@ -230,7 +230,7 @@ const Employee = () => {
                               <td className="border px-0.5 py-2">
                                 <DateDisplay date={item.date_lost} />
                               </td>
-                              <td>
+                              <td className="border px-3 py-2">
                                 {item.cleared ? "Yes" : <button
                                   onClick={() => handleClearDefaults(item?.id)}
                                   className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""

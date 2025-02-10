@@ -36,7 +36,6 @@ const TeamSalesPage = () => {
     setFilteredSales(filtered);
   }, [allSalesData, startDate, endDate]);
 
-  console.log('sales data ', filteredSales)
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}

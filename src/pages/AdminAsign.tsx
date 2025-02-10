@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import { useAppDispatch } from '../app/hooks';
 import { logout } from '../features/auths/authSlice';
+import AdminsFooter from '../components/AdminsFooter';
 
 
 
@@ -69,12 +70,8 @@ const AdminAssign = () => {
 
       </div>
 
-      {/* Footer Section */}
 
-
-      <Link to="/sales" className="bg-blue-600 text-white py-3 text-center shadow-inner">
-        Home
-      </Link>
+      <AdminsFooter />
 
     </div>
   );

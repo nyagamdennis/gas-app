@@ -103,7 +103,11 @@ const SalesRecordPage = () => {
           <p className="mt-2 text-sm">Record sales of burners, grills, etc.</p>
         </Link>
         <Link to="/teamsales" className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-30 ease-in-out">
-          <h3 className="text-xl font-semibold">Sales Record</h3>
+          <h3 className="text-xl font-semibold">Cylinders Sales Record</h3>
+          <p className="mt-2 text-sm">View your sales records.</p>
+        </Link>
+        <Link to="/teamotherssales" className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-30 ease-in-out">
+          <h3 className="text-xl font-semibold">Other ProductsSales Record</h3>
           <p className="mt-2 text-sm">View your sales records.</p>
         </Link>
       </div>
