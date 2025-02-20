@@ -153,23 +153,11 @@ const Employee = () => {
                 </div>
                 <div className=" flex flex-col space-y-4">
                   <img className="w-16 h-16 object-cover rounded-full border border-gray-950" src={employee.profile_image || defaultProfile} alt={`${employee.first_name} ${employee.last_name}`} />
-                  <button className=" text-black font-semibold border border-black px-2 py-0.5 text-center">manage</button>
+                  <button className=" text-gray-800 border border-gray-700 px-2 py-0.5 text-center">manage</button>
                 </div>
               </div>
-              
-              {/* <img
-                src={employee.profile_image || defaultProfile}
-                alt={`${employee.first_name} ${employee.last_name}`}
-                className="w-20 h-20 rounded-full object-cover mx-auto"
-              />
-              <h2 className="text-center mt-2 font-semibold text-gray-700">
-                {employee.first_name} {employee.last_name}
-              </h2>
-              <p className="text-center text-gray-500">{employee.phone || "No Phone"}</p>
-              <p className="text-center text-indigo-600">
-                Current sales team: <span className=" font-bold">{employee.sales_team?.name || 'Not placed'}</span>
 
-              </p> */}
+              
             </div>
           ))}
         </div>
