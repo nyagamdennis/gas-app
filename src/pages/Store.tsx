@@ -1021,6 +1021,7 @@ const Store = () => {
 
                                 <form className={`bg-white shadow-lg rounded-lg p-6 w-full max-w-md ${activeForm === 'others' ? 'block' : 'hidden'}`}>
                                     {/* <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Add Cylinder</h2> */}
+
                                     <div className=' '>
                                         <div>
                                             <div className="flex flex-col mb-4">
@@ -1071,57 +1072,8 @@ const Store = () => {
                                                 />
                                             </div>
                                         </div>
-                                        <div>
-                                            {/* <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailPrice">Retail Selling Price</label>
-                                                <input
-                                                    id="retailPrice"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={retailSellingPrice}
-                                                    onChange={handleRetailSalesInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div> */}
-                                            {/* <div className="flex flex-col mb-4">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="wholesaleRefill">Wholesale Refilling Price</label>
-                                                <input
-                                                    id="wholesaleRefill"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={wholeSaleRefillingPrice}
-                                                    onChange={handleWholeSaleRefillingInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div> */}
-                                            {/* <div className="flex flex-col mb-6">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailRefill">Retail Refilling Price</label>
-                                                <input
-                                                    id="retailRefill"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={retailRefillingPrice}
-                                                    onChange={handleRetailFillingInputChange}
-                                                    placeholder="Enter price"
-                                                />
-                                            </div> */}
-                                            {/* <div className="flex flex-col mb-6">
-                                                <label className="text-gray-700 font-semibold mb-2" htmlFor="retailRefill">Empties</label>
-                                                <input
-                                                    id="retailRefill"
-                                                    className="text-black border border-gray-300 rounded-md p-2 focus:ring focus:ring-green-300 focus:outline-none"
-                                                    type="number"
-                                                    min={0}
-                                                    value={gasEmpties}
-                                                    onChange={handleGasEmptiesInputChange}
-                                                    placeholder="Enter empties"
-                                                />
-                                            </div> */}
-                                        </div>
                                     </div>
+
                                     <button
                                         onClick={addOtherProducts}
                                         type="submit"
@@ -1130,6 +1082,7 @@ const Store = () => {
                                         Submit
                                     </button>
                                 </form>
+                                
                             </div>
                         </div>
                     </div>

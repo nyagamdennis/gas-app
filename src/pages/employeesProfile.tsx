@@ -122,17 +122,6 @@ const Employee = () => {
   };
 
 
-  // const handleClearLessPay = async (defaultId) => {
-  //   setLoading(true);
-  //   try {
-  //     await dispatch(clearLessPay(defaultId)).unwrap();
-  //     alert("Less Pay data cleared successfully.");
-  //     setEmployeeLessPays((prev) => ({ ...prev, [defaultId]: [] }));
-  //   } catch (error) {
-  //     alert("Failed to clear less pay data.");
-  //   }
-  //   setLoading(false);
-  // };
 
 
   return (
@@ -153,7 +142,22 @@ const Employee = () => {
               className="bg-white p-4 rounded-lg shadow hover:scale-105 transition cursor-pointer"
               onClick={() => handleSelectEmployee(employee)}
             >
-              <img
+              <div className=" flex justify-between ">
+                <div className=" flex flex-col space-y-4">
+                  <h3 className=" font-bold text-2xl">{employee.first_name} {employee.last_name}</h3>
+
+                  <div className=" flex flex-col">
+                    <p className="font-bold">Phone: <span className="text-gray-800">{employee.phone || "No phone"}</span></p>
+                    <p className="font-bold">Sales Team <span className=" text-gray-800">{employee.sales_team?.name || "Not placed"}</span></p>
+                  </div>
+                </div>
+                <div className=" flex flex-col space-y-4">
+                  <img className="w-16 h-16 object-cover rounded-full border border-gray-950" src={employee.profile_image || defaultProfile} alt={`${employee.first_name} ${employee.last_name}`} />
+                  <button className=" text-black font-semibold border border-black px-2 py-0.5 text-center">manage</button>
+                </div>
+              </div>
+              
+              {/* <img
                 src={employee.profile_image || defaultProfile}
                 alt={`${employee.first_name} ${employee.last_name}`}
                 className="w-20 h-20 rounded-full object-cover mx-auto"
@@ -165,7 +169,7 @@ const Employee = () => {
               <p className="text-center text-indigo-600">
                 Current sales team: <span className=" font-bold">{employee.sales_team?.name || 'Not placed'}</span>
 
-              </p>
+              </p> */}
             </div>
           ))}
         </div>
