@@ -40,6 +40,7 @@ import AssigningOtherProducts from "./pages/AssigningOtherProducts"
 import AfterAssignOthers from "./pages/AfterAssignOthers"
 import EmployeesProfile from "./pages/employeesProfile"
 import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
+import Transactions from "./pages/Transactions"
 
 function App() {
   return (
@@ -105,6 +106,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AdminAsign />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <Transactions />
               </ProtectedRoute>
             }
           />

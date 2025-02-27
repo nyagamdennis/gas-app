@@ -22,6 +22,7 @@ import defaultsReducer from "../features/defaults/defaultsSlice";
 import lessPayReducer from "../features/defaults/lessPaySlice";
 import assignOthersReducer from "../features/assigns/assignsOthersSlice";
 import othersSalesReducer from "../features/sales/othersSalesSlice";
+import transactionsReducer from "../features/transactions/transactionsSlice";
 
 export const store = configureStore({
   reducer: {
@@ -47,7 +48,8 @@ export const store = configureStore({
     defaults: defaultsReducer,
     lessPay: lessPayReducer,
     assignsOthers: assignOthersReducer,
-    othersSales: othersSalesReducer
+    othersSales: othersSalesReducer,
+    transactions: transactionsReducer
   },
 })
 

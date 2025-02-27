@@ -89,6 +89,16 @@ const LeftNav = () => {
                             <BadgeIcon />Employees
                         </NavLink>
                     </li>
+                    <li>
+                        <NavLink
+                            to='/transactions'
+                            className={({ isActive }) =>
+                                `flex items-center px-4 py-2 ${isActive ? 'bg-red-100 text-amber-700' : ''}`
+                            }
+                        >
+                            <BadgeIcon />Transactions
+                        </NavLink>
+                    </li>
 
                 </ul>
             </div>
