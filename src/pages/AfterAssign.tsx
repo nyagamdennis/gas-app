@@ -87,7 +87,6 @@ const AfterAssign = () => {
                 printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.assigned_quantity.toString().padStart(10)}\n`;
             });
 
-            printContent += '\n\nGoods dispatched by: \n_________________________\nSignature: \n_________________________\n';
             printContent += '\n\nGoods delivered by: \n_________________________\nSignature: \n_________________________\n\n\n';
             printContent += '\n\nGoods received by: \n_________________________\nSignature: \n_________________________\n';
             
