@@ -71,7 +71,15 @@ const AfterAssign = () => {
     //     }
     // };
     const handlePrint = () => {
-
+        // if (!printComplete) {
+            axios.post(`${apiUrl}/mark-print-complete/`,
+                { sales_team_id: salesTeamId?.id },
+                { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+            ).then(() => setPrintComplete(true))
+                .catch(err => console.error("Error marking print complete:", err));
+        // } else {
+        //     alert("Print already completed. No need to reprint.");
+        // }
 
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             const currentDate = new Date().toLocaleDateString();
@@ -98,15 +106,7 @@ const AfterAssign = () => {
             window.AndroidBridge.printText(printContent);
 
             // Mark print as complete in the backend
-            if (!printComplete) {
-                axios.post(`${apiUrl}/mark-print-complete/`,
-                    { sales_team_id: salesTeamId?.id },
-                    { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
-                ).then(() => setPrintComplete(true))
-                    .catch(err => console.error("Error marking print complete:", err));
-            } else {
-                alert("Print already completed. No need to reprint.");
-            }
+            
         } else {
             alert("Printer is not available");
         }

@@ -8,6 +8,9 @@ import defaultProfile from "../components/media/default.png"
 import { fetchDefaults, selectAllDefaults } from "../features/defaults/defaultsSlice";
 import { fetchLessPay, selectAllLessPay } from "../features/defaults/lessPaySlice";
 import DateDisplay from "../components/DateDisplay";
+import { fetchExpenses, selectAllExpenses } from "../features/expenses/expensesSlice";
+import CurrencyConvert from "../components/CurrencyConvert";
+import FormattedAmount from "../components/FormattedAmount";
 
 const MyProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -16,6 +19,7 @@ const MyProfilePage = () => {
   const defaulted_data = useAppSelector(selectAllDefaults)
   const lessPay_data = useAppSelector(selectAllLessPay);
   // console.log('less pay data ', lessPay_data)
+  const expense = useAppSelector(selectAllExpenses);
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,8 +37,6 @@ const MyProfilePage = () => {
 
   useEffect(() => {
     dispatch(fetchMyProfile());
-    // dispatch(fetchDefaults(myProfile?.id));
-    // dispatch(fetchLessPay(myProfile?.id));
   }, [dispatch]);
 
 
@@ -43,6 +45,7 @@ const MyProfilePage = () => {
       // Fetch data only when myProfile is available
       dispatch(fetchDefaults(myProfile.id));
       dispatch(fetchLessPay(myProfile.id));
+      dispatch(fetchExpenses(myProfile.id));
     }
   }, [dispatch, myProfile]);
 
@@ -370,6 +373,45 @@ const MyProfilePage = () => {
           <p className="text-gray-600">Loading profile...</p>
         )}
       </div>
+
+<div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+  <div className=" flex space-x-1 items-center">
+  <h4 className="font-bold ">Salary:</h4>
+  <FormattedAmount amount={myProfile.salary} />
+  </div>
+  
+
+</div>
+      {expense.length > 0 && (
+        <div className=" px-2 mb-5">
+        <div className=" mt-4  border-t-2 border-dotted">
+          <h5 className=" text-lg font-bold">Expenses</h5>
+
+          <div className="mt-3">
+            <table className="w-full border-collapse border border-gray-300 text-sm">
+              <thead className="bg-gray-200">
+                <tr>
+                  <th className="border px-4 py-2">Name</th>
+                  <th className="border px-4 py-2">Amount</th>
+                  <th className="border px-4 py-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expense.map((expense) => (
+                  <tr key={expense.id}>
+                    <td className="border px-4 py-2">{expense.name ?? "N/A"}</td>
+                    <td className="border px-4 py-2">{expense.amount ?? "N/A"}</td>
+                    <td className="border px-4 py-2"><DateDisplay date = {expense.date} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      )}
+
       {defaulted_data.length > 0 && (
         <div className=" px-2 mb-5">
           <div className=" mt-4  border-t-2 border-dotted">

@@ -49,7 +49,7 @@ const CustomersPage = () => {
       const nameMatch = customer.name
         .toLowerCase()
         .includes(searchText.toLowerCase())
-      const phoneMatch = customer.phone.toString().includes(searchText)
+      const phoneMatch = customer?.phone?.toString().includes(searchText)
       return nameMatch || phoneMatch
     })
   }

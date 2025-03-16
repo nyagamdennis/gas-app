@@ -130,6 +130,15 @@ const AfterCollection = () => {
     // };
 
     const handlePrint = () => {
+        if (!printComplete) {
+            axios.post(`${apiUrl}/mark-print-return-complete/`,
+                { sales_team_id: salesTeamId?.id },
+                { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+            ).then(() => setPrintComplete(true))
+                .catch(err => console.error("Error marking print complete:", err));
+        } else {
+            alert("Print already completed. No need to reprint.");
+        }
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             const currentDate = new Date().toLocaleDateString();
             let printContent = '\n\n'; // Whitespace at the top
@@ -229,15 +238,7 @@ const AfterCollection = () => {
             // Call the native print method
             window.AndroidBridge.printText(printContent);
 
-            if (!printComplete) {
-                axios.post(`${apiUrl}/mark-print-return-complete/`,
-                    { sales_team_id: salesTeamId?.id },
-                    { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
-                ).then(() => setPrintComplete(true))
-                    .catch(err => console.error("Error marking print complete:", err));
-            } else {
-                alert("Print already completed. No need to reprint.");
-            }
+
 
         } else {
             alert("AndroidBridge is not available");
@@ -391,7 +392,7 @@ const AfterCollection = () => {
                 </>
             )}
 
-{/* const lessPay = cylinders.filter(cylinder => cylinder.less_pay > 0); */}
+            {/* const lessPay = cylinders.filter(cylinder => cylinder.less_pay > 0); */}
             {cylinders.filter(cylinder => cylinder.less_pay > 0).length > 0 && (
                 <>
                     <div>

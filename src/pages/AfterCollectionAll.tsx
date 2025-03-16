@@ -23,12 +23,22 @@ const AfterCollectionAll = () => {
         dispatch(fetchCollectedCylinders(salesTeamId?.id));
     }, [dispatch]);
 
-
+const apiUrl = getApiUrl();
+    console.log('all collections ', cylinders)
 
     const navigate = useNavigate();
 
     const handlePrint = () => {
-
+        if (!printComplete) {
+            alert('ala!')
+            axios.post(`${apiUrl}/mark-print-return-complete/`,
+                { sales_team_id: salesTeamId?.id },
+                { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+            ).then(() => setPrintComplete(true))
+                .catch(err => console.error("Error marking print complete:", err));
+        } else {
+            alert("Print already completed. No need to reprint.");
+        }
         if (window.AndroidBridge && window.AndroidBridge.printText) {
             const currentDate = new Date().toLocaleDateString();
 
@@ -37,64 +47,27 @@ const AfterCollectionAll = () => {
             printContent += `Date: ${currentDate}\n`;
             printContent += '********************************\n';
 
-            // Section for Empty Cylinders
-            printContent += '\nEmpty Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.empties > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties.toString().padStart(10)}\n`;
-            });
+            // Function to add section if there is data
+            const addSection = (title, filterCondition) => {
+                const filteredCylinders = cylinders.filter(filterCondition);
+                if (filteredCylinders.length > 0) {
+                    printContent += `\n--------------------------------\n`;
+                    printContent += `\n${title}\n`;
+                    printContent += '--------------------------------\n';
+                    printContent += 'Cylinder   Weight(kg)    Qty\n';
+                    printContent += '--------------------------------\n';
+                    filteredCylinders.forEach(cylinder => {
+                        printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties.toString().padStart(10)}\n`;
+                    });
+                }
+            };
 
-            // Section for Filled Cylinders
-            printContent += '\n--------------------------------\n';
-            printContent += '\nFilled Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.filled > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled.toString().padStart(10)}\n`;
-            });
-
-            // Section for Spoiled Cylinders
-            printContent += '\n--------------------------------\n';
-            printContent += '\nSpoiled Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.spoiled > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.spoiled.toString().padStart(10)}\n`;
-            });
-
-            // Section for lost empties Cylinders
-            printContent += '\n--------------------------------\n';
-            printContent += '\nLost Spoiled Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.empties_lost > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties_lost.toString().padStart(10)}\n`;
-            });
-
-            // Section for lost empties Cylinders
-            printContent += '\n--------------------------------\n';
-            printContent += '\nLost Filled Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.filled_lost > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled_lost.toString().padStart(10)}\n`;
-            });
-
-            // Section for lost empties Cylinders
-            printContent += '\n--------------------------------\n';
-            printContent += '\nLess Pay Cylinders\n';
-            printContent += '--------------------------------\n';
-            printContent += 'Cylinder   Weight(kg)    Qty\n';
-            printContent += '--------------------------------\n';
-            cylinders.filter(cylinder => cylinder.less_pay > 0).forEach(cylinder => {
-                printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.less_pay.toString().padStart(10)}\n`;
-            });
+            // Add sections only if they contain data
+            addSection("Empty Cylinders", cylinder => cylinder.empties > 0);
+            addSection("Filled Cylinders", cylinder => cylinder.filled > 0);
+            addSection("Spoiled Cylinders", cylinder => cylinder.spoiled > 0);
+            addSection("Lost Filled Cylinders", cylinder => cylinder.filled_lost > 0);
+            addSection("Less Pay Cylinders", cylinder => cylinder.less_pay > 0);
 
             // Footer information
             printContent += '\n--------------------------------\n';
@@ -111,21 +84,112 @@ const AfterCollectionAll = () => {
             // Call the native print method
             window.AndroidBridge.printText(printContent);
 
-            if (!printComplete) {
-                axios.post(`${apiUrl}/mark-print-return-complete/`,
-                    { sales_team_id: salesTeamId?.id },
-                    { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
-                ).then(() => setPrintComplete(true))
-                    .catch(err => console.error("Error marking print complete:", err));
-            } else {
-                alert("Print already completed. No need to reprint.");
-            }
+
         } else {
             alert("AndroidBridge is not available");
         }
-
-
     };
+
+    // const handlePrint = () => {
+
+    //     if (window.AndroidBridge && window.AndroidBridge.printText) {
+    //         const currentDate = new Date().toLocaleDateString();
+
+    //         let printContent = '\n\n'; // Whitespace at the top
+    //         printContent += `All Cylinders Returns:   ${salesTeamName}\n`;
+    //         printContent += `Date: ${currentDate}\n`;
+    //         printContent += '********************************\n';
+
+    //         // Section for Empty Cylinders
+
+    //         printContent += '\nEmpty Cylinders\n';
+    //         printContent += '--------------------------------\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         printContent += '--------------------------------\n';
+    //         cylinders.filter(cylinder => cylinder.empties > 0).forEach(cylinder => {
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties.toString().padStart(10)}\n`;
+    //         });
+
+    //         // Section for Filled Cylinders
+    //         printContent += '\n--------------------------------\n';
+    //         printContent += '\nFilled Cylinders\n';
+    //         printContent += '--------------------------------\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         printContent += '--------------------------------\n';
+    //         cylinders.filter(cylinder => cylinder.filled > 0).forEach(cylinder => {
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled.toString().padStart(10)}\n`;
+    //         });
+
+    //         // Section for Spoiled Cylinders
+    //         printContent += '\n--------------------------------\n';
+    //         printContent += '\nSpoiled Cylinders\n';
+    //         printContent += '--------------------------------\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         printContent += '--------------------------------\n';
+    //         cylinders.filter(cylinder => cylinder.spoiled > 0).forEach(cylinder => {
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.spoiled.toString().padStart(10)}\n`;
+    //         });
+
+    //         // // Section for lost empties Cylinders
+    //         // printContent += '\n--------------------------------\n';
+    //         // printContent += '\nLost Spoiled Cylinders\n';
+    //         // printContent += '--------------------------------\n';
+    //         // printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         // printContent += '--------------------------------\n';
+    //         // cylinders.filter(cylinder => cylinder.empties_lost > 0).forEach(cylinder => {
+    //         //     printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.empties_lost.toString().padStart(10)}\n`;
+    //         // });
+
+    //         // Section for lost empties Cylinders
+    //         printContent += '\n--------------------------------\n';
+    //         printContent += '\nLost Filled Cylinders\n';
+    //         printContent += '--------------------------------\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         printContent += '--------------------------------\n';
+    //         cylinders.filter(cylinder => cylinder.filled_lost > 0).forEach(cylinder => {
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.filled_lost.toString().padStart(10)}\n`;
+    //         });
+
+    //         // Section for lost empties Cylinders
+    //         printContent += '\n--------------------------------\n';
+    //         printContent += '\nLess Pay Cylinders\n';
+    //         printContent += '--------------------------------\n';
+    //         printContent += 'Cylinder   Weight(kg)    Qty\n';
+    //         printContent += '--------------------------------\n';
+    //         cylinders.filter(cylinder => cylinder.less_pay > 0).forEach(cylinder => {
+    //             printContent += `${cylinder.gas_type.padEnd(10)}${`${cylinder.weight}kg`.padStart(10)}${cylinder.less_pay.toString().padStart(10)}\n`;
+    //         });
+
+    //         // Footer information
+    //         printContent += '\n--------------------------------\n';
+    //         printContent += '\n\nGoods Collected by: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += 'Signature: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += '\n\nGoods dispatched by: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += 'Signature: \n';
+    //         printContent += '_________________________\n';
+    //         printContent += '\n\n\n\n\n'; // Whitespace at the bottom
+
+    //         // Call the native print method
+    //         window.AndroidBridge.printText(printContent);
+
+    //         if (!printComplete) {
+    //             axios.post(`${apiUrl}/mark-print-return-complete/`,
+    //                 { sales_team_id: salesTeamId?.id },
+    //                 { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+    //             ).then(() => setPrintComplete(true))
+    //                 .catch(err => console.error("Error marking print complete:", err));
+    //         } else {
+    //             alert("Print already completed. No need to reprint.");
+    //         }
+    //     } else {
+    //         alert("AndroidBridge is not available");
+    //     }
+
+
+    // };
 
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");

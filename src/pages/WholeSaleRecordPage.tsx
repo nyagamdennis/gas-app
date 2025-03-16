@@ -41,6 +41,15 @@ const WholeSaleRecordPage = () => {
   const [otherDeposit, setOtherDeposit] = useState(0);
   const [otherRepayDate, setOtherRepayDate] = useState("");
 
+  const [customPrice, setCustomPrice] = useState("");
+  const [paymentMode, setPaymentMode] = useState("cash");
+  const [mpesaName, setMpesaName] = useState("");
+  const [mpesaPhone, setMpesaPhone] = useState("");
+  const [mpesaCodes, setMpesaCodes] = useState([""]);
+  const [cashAmount, setCashAmount] = useState("");
+  const [numMpesaDeposits, setNumMpesaDeposits] = useState(1);
+
+
   useEffect(() => {
     dispatch(fetchAssignedProducts());
     dispatch(fetchAssignedOtherProducts());
@@ -70,29 +79,61 @@ const WholeSaleRecordPage = () => {
     setProducts(products.filter((_, idx) => idx !== index));
   };
 
+  // const calculateTotal = () => {
+  //   return products.reduce((total, product) => {
+  //     const assignedProduct = allAssignedProducts.find(
+  //       (prod) => prod.id === Number(product.productId)
+  //     );
+
+
+  //     if (assignedProduct) {
+  //       const price =
+  //         saleType === "COMPLETESALE"
+  //           ? (
+  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
+  //           )
+  //           : (
+  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
+  //           );
+  //       return total + price * product.quantity;
+  //     }
+
+  //     return total;
+  //   }, 0);
+  // };
+
   const calculateTotal = () => {
     return products.reduce((total, product) => {
       const assignedProduct = allAssignedProducts.find(
         (prod) => prod.id === Number(product.productId)
       );
 
-
       if (assignedProduct) {
-        const price =
-          saleType === "COMPLETESALE"
-            ? (
-              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
-            )
-            : (
-              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
-            );
-        return total + price * product.quantity;
+        let price;
+
+        if (paymentAmount === "CUSTOM" && customPrice) {
+          price = parseFloat(customPrice); // ✅ Use custom price when selected
+        } else {
+          price =
+            saleType === "COMPLETESALE"
+              ? paymentAmount === "MAXIMUM"
+                ? assignedProduct.max_wholesale_selling_price
+                : paymentAmount === "MEDIUM"
+                  ? assignedProduct.mid_wholesale_selling_price
+                  : assignedProduct.min_wholesale_selling_price
+              : paymentAmount === "MAXIMUM"
+                ? assignedProduct.max_wholesale_refil_price
+                : paymentAmount === "MEDIUM"
+                  ? assignedProduct.mid_wholesale_refil_price
+                  : assignedProduct.min_wholesale_refil_price;
+        }
+
+        return total + (price * product.quantity);
       }
 
       return total;
     }, 0);
   };
-
   // console.log('Payment amount is ', paymentAmount)
   const calculateDebt = () => {
     const total = calculateTotal();
@@ -336,7 +377,7 @@ const WholeSaleRecordPage = () => {
               );
 
               return (
-                <div key={index} className="mb-4 border-b pb-4">
+                <div key={index} className="mb-4 border-b-4 border-green-900 pb-4">
                   <div className="mb-2">
                     <label className="block text-gray-600">Product</label>
                     <select
@@ -360,7 +401,7 @@ const WholeSaleRecordPage = () => {
                     {selectedProduct && (
 
 
-                      <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center space-x-1  space-y-2 mt-2">
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -376,6 +417,25 @@ const WholeSaleRecordPage = () => {
 
                           </p>
                         </label>
+
+                        {/* Medium Price */}
+                        <label className="flex items-center space-x-1">
+                          <input
+                            type="radio"
+                            name={`paymentAmount-${index}`}
+                            value="MEDIUM"
+                            checked={paymentAmount === "MEDIUM"}
+                            onChange={() => setPaymentAmount("MEDIUM")}
+                          />
+                          <p>
+                            {saleType === "COMPLETESALE"
+                              ? <FormattedAmount amount={selectedProduct.mid_wholesale_selling_price} />
+                              : <FormattedAmount amount={selectedProduct.mid_wholesale_refil_price} />}
+                            {/* mid_retail_refil_price */}
+                          </p>
+                        </label>
+
+
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -390,10 +450,37 @@ const WholeSaleRecordPage = () => {
                               : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} />}
                           </p>
                         </label>
+
+                        {/* Custom Price (Shows Input Field When Selected) */}
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`paymentAmount-${index}`}
+                            value="CUSTOM"
+                            checked={paymentAmount === "CUSTOM"}
+                            onChange={() => setPaymentAmount("CUSTOM")}
+                          />
+                          <p>Custom Amount</p>
+                        </label>
                       </div>
 
                     )}
 
+                  </div>
+
+                  <div className=" my-3 bg-gray-600">
+                    {/* Custom Price Input Field */}
+                    {paymentAmount === "CUSTOM" && (
+                      <input
+                        type="number"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(e.target.value)}
+                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                        placeholder="Enter custom amount"
+                        min="0"
+                        required
+                      />
+                    )}
                   </div>
 
                   <div className="mb-2">
@@ -683,13 +770,13 @@ const WholeSaleRecordPage = () => {
             <button
               type="submit"
               className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition mt-4"
-            disabled={isSubmittingOther}
+              disabled={isSubmittingOther}
             >
-              { isSubmittingOther ? "submitting..." : "Submit Product Sale"}
+              {isSubmittingOther ? "submitting..." : "Submit Product Sale"}
             </button>
 
 
-            
+
           </form>
         )}
 

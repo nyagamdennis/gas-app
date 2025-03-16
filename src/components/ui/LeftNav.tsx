@@ -7,6 +7,7 @@ import SpaIcon from '@mui/icons-material/Spa';
 import { Link, NavLink } from 'react-router-dom';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import BadgeIcon from '@mui/icons-material/Badge';
+import ContactlessIcon from '@mui/icons-material/Contactless';
 
 const LeftNav = () => {
     return (
@@ -96,7 +97,7 @@ const LeftNav = () => {
                                 `flex items-center px-4 py-2 ${isActive ? 'bg-red-100 text-amber-700' : ''}`
                             }
                         >
-                            <BadgeIcon />Transactions
+                            <ContactlessIcon />Transactions
                         </NavLink>
                     </li>
 

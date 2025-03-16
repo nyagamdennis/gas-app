@@ -18,6 +18,7 @@ const RetailSalesRecordPage = () => {
   const allAssignedProducts = useAppSelector(selectAllAssignedProducts);
   const allOtherProducts = useAppSelector(selectAllAssignedOtherProducts);
   const operationError = useAppSelector(getSalesError);
+  const [customPrice, setCustomPrice] = useState("");
 
   const [products, setProducts] = useState([{ productId: "", quantity: 1 }]);
   const [otherProducts, setOtherProducts] = useState([{ productId: "", quantity: 1 }]);
@@ -44,6 +45,24 @@ const RetailSalesRecordPage = () => {
   // const [cylinderSale, setCylinder] = useState(false);
   const [cylinderSale, setCylinderSale] = useState(true); // Toggle state for form display
 
+  const [paymentMode, setPaymentMode] = useState("cash");
+  const [mpesaName, setMpesaName] = useState("");
+  const [mpesaPhone, setMpesaPhone] = useState("");
+  const [mpesaCodes, setMpesaCodes] = useState([""]);
+  const [cashAmount, setCashAmount] = useState("");
+  const [numMpesaDeposits, setNumMpesaDeposits] = useState(1);
+
+  const handleNumDepositsChange = (e) => {
+    const numDeposits = parseInt(e.target.value, 10);
+    setNumMpesaDeposits(numDeposits);
+    setMpesaCodes(new Array(numDeposits).fill(""));
+  };
+
+  const handleMpesaCodeChange = (index, value) => {
+    const newCodes = [...mpesaCodes];
+    newCodes[index] = value;
+    setMpesaCodes(newCodes);
+  };
 
   useEffect(() => {
     dispatch(fetchAssignedProducts());
@@ -89,6 +108,7 @@ const RetailSalesRecordPage = () => {
   };
 
 
+  console.log('selected ', selctedProductPrice)
 
   const handleAddProduct = () => {
     setProducts([...products, { productId: "", quantity: 1 }]);
@@ -98,28 +118,91 @@ const RetailSalesRecordPage = () => {
     setProducts(products.filter((_, idx) => idx !== index));
   };
 
+  // const calculateTotal = () => {
+  //   return products.reduce((total, product) => {
+  //     const assignedProduct = allAssignedProducts.find(
+  //       (prod) => prod.id === Number(product.productId)
+  //     );
+  //     console.log('Total ', total)
+  //     if (assignedProduct) {
+  //       const price =
+  //         saleType === "COMPLETESALE"
+  //           ? (
+  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
+  //           )
+  //           : (
+  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
+  //           );
+  //       return total + price * product.quantity;
+  //     }
+
+  //     return <FormattedAmount amount={total} />;
+  //   }, 0);
+  // };
+
+  // const calculateTotal = () => {
+  //   return products.reduce((total, product) => {
+  //     const assignedProduct = allAssignedProducts.find(
+  //       (prod) => prod.id === Number(product.productId)
+  //     );
+
+  //     if (assignedProduct) {
+  //       const price =
+  //         saleType === "COMPLETESALE"
+  //           ? (
+  //             paymentAmount === "MAXIMUM"
+  //               ? assignedProduct.max_retail_selling_price
+  //               : paymentAmount === "MEDIUM"
+  //                 ? assignedProduct.mid_retail_selling_price
+  //                 : assignedProduct.min_retail_selling_price
+  //           )
+  //           : (
+  //             paymentAmount === "MAXIMUM"
+  //               ? assignedProduct.max_retail_refil_price
+  //               : paymentAmount === "MEDIUM"
+  //                 ? assignedProduct.mid_retail_refil_price
+  //                 : assignedProduct.min_retail_refil_price
+  //           );
+
+  //       return total + price * product.quantity;
+  //     }
+
+  //     return total;
+  //   }, 0);
+  // };
   const calculateTotal = () => {
     return products.reduce((total, product) => {
       const assignedProduct = allAssignedProducts.find(
         (prod) => prod.id === Number(product.productId)
       );
-      console.log('Total ', total)
+  
       if (assignedProduct) {
-        const price =
-          saleType === "COMPLETESALE"
-            ? (
-              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
-            )
-            : (
-              paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
-            );
-        return total + price * product.quantity;
+        let price;
+  
+        if (paymentAmount === "CUSTOM" && customPrice) {
+          price = parseFloat(customPrice); // ✅ Use custom price when selected
+        } else {
+          price =
+            saleType === "COMPLETESALE"
+              ? paymentAmount === "MAXIMUM"
+                ? assignedProduct.max_retail_selling_price
+                : paymentAmount === "MEDIUM"
+                ? assignedProduct.mid_retail_selling_price
+                : assignedProduct.min_retail_selling_price
+              : paymentAmount === "MAXIMUM"
+              ? assignedProduct.max_retail_refil_price
+              : paymentAmount === "MEDIUM"
+              ? assignedProduct.mid_retail_refil_price
+              : assignedProduct.min_retail_refil_price;
+        }
+  
+        return total + (price * product.quantity);
       }
-
-      return <FormattedAmount amount={total} />;
+  
+      return total;
     }, 0);
   };
-
+  
   const calculateOtherTotal = () => {
     return otherProducts.reduce((total, product) => {
       const assignedProduct = allOtherProducts.find(
@@ -169,7 +252,11 @@ const RetailSalesRecordPage = () => {
       debt_amount: paymentType === "DEBT" ? calculateDebt() : 0,
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
-      exchanged_with_local: exchangedWithLocal
+      exchanged_with_local: exchangedWithLocal,
+      // admin_mpesa_verified,
+      mpesa_code: mpesaCodes,
+      cash: cashAmount,
+      // admin_cash_verified
     };
 
     try {
@@ -179,7 +266,7 @@ const RetailSalesRecordPage = () => {
 
       setTimeout(() => {
         navigate("/sales");
-      }, 3000);
+      }, 5000);
 
     } catch (error: any) {
       if (error && error.error) {
@@ -246,7 +333,7 @@ const RetailSalesRecordPage = () => {
     }
   }
 
-
+  // console.log('selected product ', products)
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -302,7 +389,7 @@ const RetailSalesRecordPage = () => {
             <div className="mb-4">
               <label className="block text-gray-600">Customer Phone</label>
               <input
-                type="tel"
+                type="text"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
@@ -354,7 +441,7 @@ const RetailSalesRecordPage = () => {
                     {selectedProduct && (
 
 
-                      <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center space-y-2 space-x-1 flex-wrap mt-2">
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -365,10 +452,29 @@ const RetailSalesRecordPage = () => {
                           />
                           <p>
                             {saleType === "COMPLETESALE"
-                              ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} />
-                              : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} />}
+                              ? <FormattedAmount amount={selectedProduct.min_retail_selling_price} />
+                              : <FormattedAmount amount={selectedProduct.min_retail_refil_price} />}
                           </p>
                         </label>
+
+                        {/* Medium Price */}
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`paymentAmount-${index}`}
+                            value="MEDIUM"
+                            checked={paymentAmount === "MEDIUM"}
+                            onChange={() => setPaymentAmount("MEDIUM")}
+                          />
+                          <p>
+                            {saleType === "COMPLETESALE"
+                              ? <FormattedAmount amount={selectedProduct.mid_retail_selling_price} />
+                              : <FormattedAmount amount={selectedProduct.mid_retail_refil_price} />}
+                            {/* mid_retail_refil_price */}
+                          </p>
+                        </label>
+
+                        {/* maximum price */}
                         <label className="flex items-center gap-2">
                           <input
                             type="radio"
@@ -379,12 +485,38 @@ const RetailSalesRecordPage = () => {
                           />
                           <p>
                             {saleType === "COMPLETESALE"
-                              ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} />
-                              : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} />}
+                              ? <FormattedAmount amount={selectedProduct.max_retail_selling_price} />
+                              : <FormattedAmount amount={selectedProduct.max_retail_refil_price} />}
                           </p>
+                        </label>
+
+                        {/* Custom Price (Shows Input Field When Selected) */}
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name={`paymentAmount-${index}`}
+                            value="CUSTOM"
+                            checked={paymentAmount === "CUSTOM"}
+                            onChange={() => setPaymentAmount("CUSTOM")}
+                          />
+                          <p>Custom Amount</p>
                         </label>
                       </div>
 
+                    )}
+                  </div>
+                  <div>
+                    {/* Custom Price Input Field */}
+                    {paymentAmount === "CUSTOM" && (
+                      <input
+                        type="number"
+                        value={customPrice}
+                        onChange={(e) => setCustomPrice(e.target.value)}
+                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                        placeholder="Enter custom amount"
+                        min="0"
+                        required
+                      />
                     )}
                   </div>
 
@@ -504,6 +636,124 @@ const RetailSalesRecordPage = () => {
                 </p>
               </div>
             )}
+{/* ------------------------------------------------------------ */}
+            <div className=' border border-green-700 p-2'>
+              <h2 className="text-lg font-semibold mb-4 text-gray-700">Payment Mode</h2>
+
+              <div className="mb-4 flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value="cash"
+                    checked={paymentMode === "cash"}
+                    onChange={() => setPaymentMode("cash")}
+                  />
+                  Cash
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value="mpesa"
+                    checked={paymentMode === "mpesa"}
+                    onChange={() => setPaymentMode("mpesa")}
+                  />
+                  Mpesa
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    value="mpesa_cash"
+                    checked={paymentMode === "mpesa_cash"}
+                    onChange={() => setPaymentMode("mpesa_cash")}
+                  />
+                  Mpesa + Cash
+                </label>
+              </div>
+
+              {paymentMode === "cash" && (
+                <div className="mb-4">
+                  <label className="block text-gray-600">Cash Amount (Ksh)</label>
+                  <input
+                    type="number"
+                    value={calculateTotal()}
+                    // onChange={(e) => setCashAmount(e.target.value)}
+                    className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                    required
+                  />
+                </div>
+              )}
+
+              {(paymentMode === "mpesa" || paymentMode === "mpesa_cash") && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-gray-600">Mpesa Name</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                     
+                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-gray-600">Mpesa Phone Number</label>
+                    <input
+                      type="text"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      
+                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-gray-600">Number of Mpesa Deposits</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={numMpesaDeposits}
+                      onChange={handleNumDepositsChange}
+                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                      required
+                    />
+                  </div>
+
+                  {mpesaCodes.map((code, index) => (
+                    <div key={index} className="mb-4">
+                      <label className="block text-gray-600">Mpesa Code {index + 1}</label>
+                      <input
+                        type="text"
+                        value={code}
+                        onChange={(e) => handleMpesaCodeChange(index, e.target.value)}
+                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                        required
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {paymentMode === "mpesa_cash" && (
+                <div className="mb-4">
+                  <label className="block text-gray-600">Cash Deposit (Ksh)</label>
+                  <input
+                    type="number"
+                    value={cashAmount}
+                    onChange={(e) => setCashAmount(e.target.value)}
+                    className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                    required
+                  />
+                </div>
+              )}
+
+            </div>
+            {/* ----------------------------------- */}
 
             <h3 className="text-lg font-bold mt-4">
               Total Amount: <FormattedAmount amount={calculateTotal()} />
@@ -673,9 +923,9 @@ const RetailSalesRecordPage = () => {
             <button
               type="submit"
               className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition mt-4"
-            disabled={isSubmittingOther}
+              disabled={isSubmittingOther}
             >
-              { isSubmittingOther ? "submitting..." : "Submit Product Sale"}
+              {isSubmittingOther ? "submitting..." : "Submit Product Sale"}
             </button>
           </form>
         )}
