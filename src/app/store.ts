@@ -24,6 +24,7 @@ import assignOthersReducer from "../features/assigns/assignsOthersSlice";
 import othersSalesReducer from "../features/sales/othersSalesSlice";
 import transactionsReducer from "../features/transactions/transactionsSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
+import singleEmployeeReducer from "../features/employees/singleEmployeeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -51,7 +52,8 @@ export const store = configureStore({
     assignsOthers: assignOthersReducer,
     othersSales: othersSalesReducer,
     transactions: transactionsReducer,
-    expenses: expensesReducer
+    expenses: expensesReducer,
+    singleEmployee: singleEmployeeReducer,
   },
 })
 

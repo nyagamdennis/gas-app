@@ -9,10 +9,12 @@ import { clearDefault, fetchDefaults } from "../features/defaults/defaultsSlice"
 import { clearLessPay, fetchLessPay } from "../features/defaults/lessPaySlice";
 import defaultProfile from "../components/media/default.png"
 import DateDisplay from "../components/DateDisplay";
+import { useNavigate } from "react-router-dom";
 
 
 const Employee = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate()
   const allEmployees = useAppSelector(selectAllEmployees);
   const allSalesTeams = useAppSelector(selectAllSalesTeam);
 
@@ -74,17 +76,6 @@ const Employee = () => {
 
 
 
-  // const handleClearDefaults = async (defaultId) => {
-  //   setLoading(true);
-  //   try {
-  //     await dispatch(clearDefault(defaultId)).unwrap();
-  //     alert("Defaults cleared successfully.");
-  //     setEmployeeDefaults((prev) => ({ ...prev, [defaultId]: [] }));
-  //   } catch (error) {
-  //     alert("Failed to clear defaults.");
-  //   }
-  //   setLoading(false);
-  // };
   const handleClearDefaults = async (defaultId) => {
     setLoading(true);
     try {
@@ -122,7 +113,9 @@ const Employee = () => {
   };
 
 
-
+const handleNavigate = (id) => {
+  navigate(`/admins/employees/${id}`)
+}
 
   return (
     <div className="flex flex-col bg-gray-100 min-h-screen">
@@ -140,7 +133,7 @@ const Employee = () => {
             <div
               key={employee.id}
               className="bg-white p-4 rounded-lg shadow hover:scale-105 transition cursor-pointer"
-              onClick={() => handleSelectEmployee(employee)}
+              onClick={() => handleNavigate(employee.id)}
             >
               <div className=" flex justify-between ">
                 <div className=" flex flex-col space-y-4">
@@ -157,7 +150,7 @@ const Employee = () => {
                 </div>
               </div>
 
-              
+
             </div>
           ))}
         </div>

@@ -64,6 +64,7 @@ const apiUrl = getApiUrl();
 
             // Add sections only if they contain data
             addSection("Empty Cylinders", cylinder => cylinder.empties > 0);
+           
             addSection("Filled Cylinders", cylinder => cylinder.filled > 0);
             addSection("Spoiled Cylinders", cylinder => cylinder.spoiled > 0);
             addSection("Lost Filled Cylinders", cylinder => cylinder.filled_lost > 0);
@@ -322,7 +323,7 @@ const apiUrl = getApiUrl();
 
 
             {/* lost empties */}
-            {cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) && (
+            {cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.empties_lost > 0) && (
                 <div>
                     <div className="mt-4 text-center">
                         <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
@@ -342,6 +343,35 @@ const apiUrl = getApiUrl();
                                     <td className="border px-4 py-2">{cylinder.gas_type}</td>
                                     <td className="border px-4 py-2">{cylinder.weight}</td>
                                     <td className="border px-4 py-2">{cylinder.empties_lost}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+
+            {/* less pay */}
+            {cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.less_pay > 0) && (
+                <div>
+                    <div className="mt-4 text-center">
+                        <p className="text-sm text-gray-600">Less Pay Cylinders.</p>
+                    </div>
+
+                    <table className="w-full border-collapse border border-gray-300 text-sm">
+                        <thead className="bg-gray-200">
+                            <tr>
+                                <th className="border px-4 py-2">Cylinder Name</th>
+                                <th className="border px-4 py-2">Weight (kg)</th>
+                                <th className="border px-4 py-2">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {cylinders.filter(cylinder => cylinder.less_pay > 0).map((cylinder) => (
+                                <tr key={cylinder.id}>
+                                    <td className="border px-4 py-2">{cylinder.gas_type}</td>
+                                    <td className="border px-4 py-2">{cylinder.weight}</td>
+                                    <td className="border px-4 py-2">{cylinder.less_pay}</td>
                                 </tr>
                             ))}
                         </tbody>

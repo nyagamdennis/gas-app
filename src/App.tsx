@@ -41,6 +41,7 @@ import AfterAssignOthers from "./pages/AfterAssignOthers"
 import EmployeesProfile from "./pages/employeesProfile"
 import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
 import Transactions from "./pages/Transactions"
+import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
 
 function App() {
   return (
@@ -122,6 +123,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <EmployeesProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/employees/:id"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <EmployeesProfileDetails />
               </ProtectedRoute>
             }
           />
