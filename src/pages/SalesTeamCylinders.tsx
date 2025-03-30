@@ -12,6 +12,8 @@ import FormattedAmount from "../components/FormattedAmount";
 import { fetchMyProfile, selectMyProfile } from "../features/employees/myProfileSlice";
 import defaultProfile from "../components/media/default.png"
 import { fetchOtherProducts, selectAllOtherProducts } from "../features/store/otherProductsSlice";
+import EmployeeNav from "../components/ui/EmployeeNav";
+import { fetchRequests } from "../features/RequestCylinders/requestedSlice";
 
 const SalesTeamCylinders = () => {
     const dispatch = useAppDispatch();
@@ -31,6 +33,7 @@ const SalesTeamCylinders = () => {
     }, [dispatch]);
 
 
+ 
     // Extract Sales Team Name
     const salesTeamName =
         assigned_cylinders.length > 0 ? assigned_cylinders[0].sales_team?.name : "Sales Team";
@@ -91,25 +94,26 @@ const SalesTeamCylinders = () => {
             });
     };
 
+
+
+    // useEffect(() => {
+    //     if (cylinderId) {
+    //         dispatch(fetchRequests({ cylinderId }));
+    //     }
+    // }, [dispatch, salesTeamId]);
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header */}
-            <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
-                <div>
-                    <h1 className="text-3xl font-bold">{salesTeamName}</h1>
-                    <p className="mt-1 text-sm">Make sales the easy way.</p>
-                </div>
-                <Link to="/myprofile" className="flex items-center space-y-2 flex-col">
-                    <img
-                        src={myProfile.profile_image || defaultProfile}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <span className="text-white text-sm">{myProfile.first_name} {myProfile.last_name}</span>
+            <EmployeeNav salesTeamName={salesTeamName} myProfile={myProfile} />
+
+            <div className="text-center mt-2">
+                <Link to='/request'>
+                    <button className="bg-blue-700 px-2 py-1 rounded-md text-white">Request Cylinder</button>
                 </Link>
             </div>
-
             {/* Content */}
+
             <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {assigned_cylinders.map((cylinder) => (
                     <div

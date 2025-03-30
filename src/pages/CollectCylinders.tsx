@@ -304,14 +304,12 @@ const CollectCylinders = () => {
 
     const hasCylinders = assignedCylinders.length > 0;
 
-    console.log('assignes cylinders ', assignedCylinders)
-    console.log('employees ', employees)
+ 
 
     const filteredEmployees = employees.filter(
         (employee) => employee.sales_team && employee.sales_team.id === selectedTeam?.id
     );
 
-    console.log('filetred ', filteredEmployees);
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">

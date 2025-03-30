@@ -25,9 +25,12 @@ import othersSalesReducer from "../features/sales/othersSalesSlice";
 import transactionsReducer from "../features/transactions/transactionsSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import singleEmployeeReducer from "../features/employees/singleEmployeeSlice";
+import advancesReducer from "../features/defaults/advancesSlice";
+import requestReducer from "../features/RequestCylinders/requestedSlice"
 
 export const store = configureStore({
   reducer: {
+    requested: requestReducer,
     customers: customerReducer,
     debtors: debtorsReducer,
     locations: locationsReducer,
@@ -54,6 +57,7 @@ export const store = configureStore({
     transactions: transactionsReducer,
     expenses: expensesReducer,
     singleEmployee: singleEmployeeReducer,
+    advances: advancesReducer,
   },
 })
 

@@ -1,11 +1,11 @@
 // @ts-nocheck
 import React, { useEffect, useState } from 'react';
-import { fetchSingleEmployee, selectSingleEmployees, transferEmployee, updateSimgleEmployeeStatus } from '../features/employees/singleEmployeeSlice';
+import { addEmployeeSalary, fetchSingleEmployee, selectSingleEmployees, transferEmployee, updateSimgleEmployeeStatus } from '../features/employees/singleEmployeeSlice';
 import { fetchSalesTeam, selectAllSalesTeam } from '../features/salesTeam/salesTeamSlice';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useNavigate, useParams } from 'react-router-dom';
-import { clearDefault, fetchDefaults, selectAllDefaults } from '../features/defaults/defaultsSlice';
-import { fetchLessPay, selectAllLessPay } from '../features/defaults/lessPaySlice';
+import { clearDefault, fetchDefaults, ReturnDefault, selectAllDefaults } from '../features/defaults/defaultsSlice';
+import { clearLessPay, fetchLessPay, selectAllLessPay } from '../features/defaults/lessPaySlice';
 import DateDisplay from '../components/DateDisplay';
 import { fetchExpenses, selectAllExpenses } from '../features/expenses/expensesSlice';
 import FormattedAmount from '../components/FormattedAmount';
@@ -16,9 +16,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import CircularProgress from '@mui/material/CircularProgress';
+import { addEmployeeAdvance, clearAdvances, fetchAdvances, selectAllAdvance } from '../features/defaults/advancesSlice';
 
 const EmployeesProfileDetails = () => {
-
+  const [showIds, setShowIds] = useState<boolean>(false);
+  const [addingSalary, setAddingSalary] = useState<Boolean>(false);
+  const [salaryAmount, setSalaryAmount] = useState<number>(0)
+  const [addingAdvance, setAddingAdvance] = useState<Boolean>(false);
+  const [advanceAmount, setAdvanceAmount] = useState<number>(0)
   const { id } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -27,16 +33,25 @@ const EmployeesProfileDetails = () => {
   const employeeDefaults = useAppSelector(selectAllDefaults);
   const employeeLessPays = useAppSelector(selectAllLessPay)
   const expense = useAppSelector(selectAllExpenses);
+  const advances = useAppSelector(selectAllAdvance);
 
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [newSalesTeam, setNewSalesTeam] = useState("");
   const [loading, setLoading] = useState(false);
+  const [advanceDate, setAdvanceDate] = useState("");
   // const [employeeDefaults, setEmployeeDefaults] = useState({});
   // const [employeeLessPays, setEmployeeLessPays] = useState({});
 
   const [modalEmployee, setModalEmployee] = useState(null);
 
   const [open, setOpen] = React.useState(false);
+  const [openAdvance, setOpenAdvance] = React.useState(false);
+
+
+  const handleOpenIds = () => {
+    setShowIds(!showIds);
+  }
+
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -44,6 +59,14 @@ const EmployeesProfileDetails = () => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleClickOpenAdvance = () => {
+    setOpenAdvance(true);
+  };
+
+  const handleCloseAdvance = () => {
+    setOpenAdvance(false);
   };
 
 
@@ -54,11 +77,11 @@ const EmployeesProfileDetails = () => {
       dispatch(fetchDefaults(id));
       dispatch(fetchLessPay(id));
       dispatch(fetchExpenses(id));
+      dispatch(fetchAdvances(id));
     }
 
   }, [dispatch, id]);
 
-  console.log('defaults ', employeeDefaults)
 
   const handleStatusChange = async (employeeId, statusField) => {
     setLoading(true);
@@ -96,14 +119,24 @@ const EmployeesProfileDetails = () => {
     try {
       await dispatch(clearDefault(defaultId)).unwrap();
       alert("Defaults cleared successfully.");
-
-      // Remove the cleared item from the frontend state
-      setEmployeeDefaults((prev) => {
-        const updatedDefaults = { ...prev };
-        updatedDefaults[employee.id] = updatedDefaults[employee.id].filter(item => item.id !== defaultId);
-        return updatedDefaults;
-      });
     } catch (error) {
+      console.log('Error in clearing defaults ', error.message)
+      alert("Failed to clear defaults.");
+    }
+    setLoading(false);
+  };
+
+
+
+
+
+  const handleReturnDefaults = async (defaultId) => {
+    setLoading(true);
+    try {
+      await dispatch(ReturnDefault(defaultId)).unwrap();
+      alert("Defaults cleared successfully.");
+    } catch (error) {
+      console.log('Error in clearing defaults ', error.message)
       alert("Failed to clear defaults.");
     }
     setLoading(false);
@@ -121,18 +154,27 @@ const EmployeesProfileDetails = () => {
     try {
       await dispatch(clearLessPay(lessPayId)).unwrap();
       alert("less payments cleared successfully.");
-
-      // Remove the cleared item from the frontend state
-      setEmployeeLessPays((prev) => {
-        const updatedLessPay = { ...prev };
-        updatedLessPay[selectedEmployee.id] = updatedLessPay[selectedEmployee.id].filter(item => item.id !== lessPayId);
-        return updatedLessPay;
-      });
     } catch (error) {
-      alert("Failed to clear defaults.");
+      console.log('failed to clear less pay ', error.message)
+      alert("Failed to clear less pay.");
     }
     setLoading(false);
   };
+
+
+
+  const handleRemoveAdvance = async (advanceId) => {
+    // setLoading(true);
+    try {
+      await dispatch(clearAdvances(advanceId)).unwrap();
+      alert("advance cleared successfully.");
+    } catch (error) {
+      console.log('failed to clear advavance.', error.message)
+      alert("Failed to clear advance.");
+    }
+    // setLoading(false);
+  };
+
 
   const handleSalesTeamChange = async (event) => {
     const newSalesTeamId = event.target.value;
@@ -152,7 +194,7 @@ const EmployeesProfileDetails = () => {
   };
 
   // Calculate the total max wholesale refill price for all Less Pays
-  const totalMaxWholesaleRefillPrice = employeeLessPays.reduce((total, item) => {
+  const totalMaxWholesaleRefillLessPayPrice = employeeLessPays.reduce((total, item) => {
     return total + (item.cylinder?.max_wholesale_refil_price || 0) * item.cylinders_less_pay;
   }, 0);
 
@@ -165,19 +207,44 @@ const EmployeesProfileDetails = () => {
   }, 0);
 
 
-  // const totalExpenses = expense.reduce((total, expe) => {
-  //   return total + (expe.amount || 0)
-  // })
+  const totalExpenses = expense.reduce((total, item) => total + (item.amount || 0), 0);
+  const totalAdvances = advances.reduce((total, item) => total + (item.amount || 0), 0);
 
-  // Calculate total expenses
-const totalExpenses = expense.reduce((total, item) => total + (item.amount || 0), 0);
+  const employeeId = Number(id);
+  const handleAddNewSalary = async () => {
+    setAddingSalary(true)
+    try {
 
+      const updatedEmployeeSalary = await dispatch(
+        addEmployeeSalary({ employeeId: employeeId, salaryAmount: Number(salaryAmount) })
+      ).unwrap();
+      alert("Salary added successfully!");
+      handleClose()
+    } catch (error) {
+      console.log('error ', error)
+      alert("Failed to add salary.", error.message);
+    }
+    setAddingSalary(false)
+  }
 
-const handleAddNewSalary = () => {
-  
-}
+  const handleAddNewAdvance = async () => {
+    setAddingSalary(true)
+    try {
+
+      const employeeAdvance = await dispatch(
+        addEmployeeAdvance({ employeeId: employeeId, amount: Number(advanceAmount), date_issued: advanceDate })
+      ).unwrap();
+      alert("advance added successfully!");
+      handleCloseAdvance()
+    } catch (error) {
+      console.log('error ', error)
+      alert("Failed to advance.", error.message);
+    }
+    setAddingAdvance(false)
+  }
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-3">
       {/* Back Button */}
       <button
         className="mb-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-900"
@@ -261,68 +328,128 @@ const handleAddNewSalary = () => {
             <span onClick={handleClickOpen} className='px-3 py-1 rounded text-white bg-pink-800 text-sm text-center'>
               enter salary
             </span>
+            <span onClick={handleClickOpenAdvance} className='px-3 py-1 rounded text-white bg-pink-800 text-sm text-center'>
+              Add Advance
+            </span>
           </div>
         </div>
       </div>
 
-      {/* ID Cards */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <h3 className="text-lg font-semibold">Front ID</h3>
-          <img src={employee.front_id} alt="Front ID" className="w-full h-48 object-cover border border-gray-400 rounded-lg" />
+      <div>
+        {/* Toggle Button */}
+        <div className=' flex justify-center'>
+          <button
+            onClick={handleOpenIds}
+            className="bg-blue-500 text-white  px-4 py-2 rounded-md m-4"
+          >
+            {showIds ? "Hide ID Cards" : "Show ID Cards"}
+          </button>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold">Back ID</h3>
-          <img src={employee.back_id} alt="Back ID" className="w-full h-48 object-cover border border-gray-400 rounded-lg" />
-        </div>
+
+
+        {/* ID Cards */}
+        {showIds && (
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">Front ID</h3>
+              <img
+                src={employee.front_id}
+                alt="Front ID"
+                className="w-full h-48 object-cover border border-gray-400 rounded-lg"
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Back ID</h3>
+              <img
+                src={employee.back_id}
+                alt="Back ID"
+                className="w-full h-48 object-cover border border-gray-400 rounded-lg"
+              />
+            </div>
+          </div>
+        )}
       </div>
+
 
 
       <div className=' my-3 p-4 border border-green-500'>
-        <p>Payment Date: </p>
-        <h4>Salary: <span>{employee.contract_salary}</span></h4>
+        <p>Payment Date: <DateDisplay date={employee.date_joined} /> </p>
+        <h4>Salary: <span><FormattedAmount amount={employee.contract_salary} /> </span></h4>
+        <h4>Total advances: <span><FormattedAmount amount={totalAdvances} /></span></h4>
         <h4>Total Expenses: ksh {totalExpenses.toLocaleString()}</h4>
-        <h4>Total Less Pay: ksh {totalMaxWholesaleRefillPrice.toLocaleString()}</h4>
+        <h4>Total Less Pay: ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}</h4>
         <h4>Total Defaults: ksh {totalMaxWholesaleDefaultPrice.toLocaleString()}</h4>
 
         <div>
-          <h4 className=' text-lg font-bold underline '><span>Total Salary:</span> <span className=' text-green-800 '><FormattedAmount amount={employee.salary - totalExpenses - totalMaxWholesaleDefaultPrice - totalMaxWholesaleRefillPrice} /> </span></h4>
+          <h4 className=' text-lg font-bold underline '><span>Total Salary:</span> <span className=' text-green-800 '><FormattedAmount amount={employee.contract_salary - totalExpenses - totalMaxWholesaleDefaultPrice - totalMaxWholesaleRefillLessPayPrice - totalAdvances} /> </span></h4>
         </div>
         <div className=' flex justify-end'>
-          <button className=' bg-green-950 text-white px-2 py-0.5 rounded-md'>Paid</button>
+          <button className=' bg-green-950 text-white px-2 py-0.5 rounded-md'>Pay</button>
         </div>
       </div>
+
+      {advances.length > 0 && (
+        <div className=" px-2 mb-5">
+          <div className=" mt-4  border-t-2 border-dotted">
+            <h5 className=" text-lg font-bold">Advances</h5>
+
+            <div className="mt-3">
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Amount</th>
+                    <th className="border px-4 py-2">Date</th>
+                    <th className="border px-4 py-2">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {advances.map((advance) => (
+                    <tr key={advance.id}>
+                      <td className="border px-4 py-2">{advance.amount ?? "N/A"}</td>
+                      <td className="border px-4 py-2"><DateDisplay date={advance.date_issued} /></td>
+                      <td className="border px-4 py-2"><button  onClick={() => handleRemoveAdvance(advance?.id)} className='bg-green-800 px-1 py-0.5 text-white'>Remove</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="mt-4 text-right font-semibold text-lg">
+            <p>Total Advances: <span className="text-red-600"><FormattedAmount amount={totalAdvances} /></span></p>
+          </div>
+        </div>
+      )}
 
       {expense.length > 0 && (
         <div className=" px-2 mb-5">
-        <div className=" mt-4  border-t-2 border-dotted">
-          <h5 className=" text-lg font-bold">Expenses</h5>
+          <div className=" mt-4  border-t-2 border-dotted">
+            <h5 className=" text-lg font-bold">Expenses</h5>
 
-          <div className="mt-3">
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Name</th>
-                  <th className="border px-4 py-2">Amount</th>
-                  <th className="border px-4 py-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expense.map((expense) => (
-                  <tr key={expense.id}>
-                    <td className="border px-4 py-2">{expense.name ?? "N/A"}</td>
-                    <td className="border px-4 py-2">{expense.amount ?? "N/A"}</td>
-                    <td className="border px-4 py-2"><DateDisplay date = {expense.date} /></td>
+            <div className="mt-3">
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Name</th>
+                    <th className="border px-4 py-2">Amount</th>
+                    <th className="border px-4 py-2">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {expense.map((expense) => (
+                    <tr key={expense.id}>
+                      <td className="border px-4 py-2">{expense.name ?? "N/A"}</td>
+                      <td className="border px-4 py-2">{expense.amount ?? "N/A"}</td>
+                      <td className="border px-4 py-2"><DateDisplay date={expense.date} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="mt-4 text-right font-semibold text-lg">
+            <p>Total Expenses: <span className="text-red-600">Ksh {totalExpenses.toLocaleString()}</span></p>
           </div>
         </div>
-        <div className="mt-4 text-right font-semibold text-lg">
-        <p>Total Expenses: <span className="text-red-600">Ksh {totalExpenses.toLocaleString()}</span></p>
-      </div>
-      </div>
       )}
       <div>
         {/* Defaults Table */}
@@ -333,12 +460,12 @@ const handleAddNewSalary = () => {
               <table className="min-w-full border-collapse border border-gray-300 text-sm">
                 <thead className="bg-gray-200">
                   <tr>
-                    <th className="border px-0.5 py-2 ">Cylinder Name</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">Weight</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">Filled</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">Empty</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">Date</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">Cleared</th>
+                    <th className="border px-0.5 py-2 text-sm">Cylinder Name</th>
+                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">Weight</th>
+                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs ">Filled</th>
+                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">Empty</th>
+                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">Date</th>
+                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">Cleared</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -362,7 +489,7 @@ const handleAddNewSalary = () => {
                         </td>
                         <td className="border px-3 py-2">
                           {item.cleared ? "Yes" : <button
-                            onClick={() => handleClearDefaults(item?.id)}
+                            onClick={() => handleReturnDefaults(item?.id)}
                             className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
                               }`}
                             disabled={loading}
@@ -423,7 +550,7 @@ const handleAddNewSalary = () => {
             </div>
             {/* Display the Total Max Wholesale Refill Price */}
             <div className="mt-4 text-right font-semibold text-lg">
-              <p>Total Less Pay: <span className="text-blue-600">Ksh {totalMaxWholesaleRefillPrice.toLocaleString()}</span></p>
+              <p>Total Less Pay: <span className="text-blue-600">Ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}</span></p>
             </div>
           </>
         ) : (
@@ -433,7 +560,7 @@ const handleAddNewSalary = () => {
       <Dialog
         open={open}
         onClose={handleClose}
-        
+
       >
         <DialogTitle>Enter Salary</DialogTitle>
         <DialogContent>
@@ -444,17 +571,77 @@ const handleAddNewSalary = () => {
             autoFocus
             required
             margin="dense"
-            id="name"
-            name="email"
+
+            name="new-salary"
             label="New Salary"
             type="number"
             fullWidth
             variant="standard"
+            value={salaryAmount}
+            onChange={(e) => setSalaryAmount(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit">Add</Button>
+          {/* <CircularProgress />
+          <Button onClick={handleAddNewSalary}>Add</Button> */}
+          {addingSalary ? (
+            <CircularProgress size={24} />
+          ) : (
+            <Button onClick={handleAddNewSalary} disabled={addingSalary}>
+              Add
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openAdvance}
+        onClose={handleCloseAdvance}
+
+      >
+        <DialogTitle>Enter Advance</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter new Advance.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            name="new-advance"
+            label="New Salary"
+            type="number"
+            fullWidth
+            variant="standard"
+            value={advanceAmount}
+            onChange={(e) => setAdvanceAmount(e.target.value)}
+          />
+          <TextField
+            required
+            margin="dense"
+            name="advance-date"
+            label="Advance Date"
+            type="date"
+            fullWidth
+            variant="standard"
+            InputLabelProps={{ shrink: true }}
+            value={advanceDate}
+            onChange={(e) => setAdvanceDate(e.target.value)}
+          />
+
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseAdvance}>Cancel</Button>
+          {/* <CircularProgress />
+          <Button onClick={handleAddNewSalary}>Add</Button> */}
+          {addingAdvance ? (
+            <CircularProgress size={24} />
+          ) : (
+            <Button onClick={handleAddNewAdvance} disabled={addingAdvance}>
+              Add
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </div>

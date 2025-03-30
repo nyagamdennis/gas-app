@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import Cookies from "cookies-js"
@@ -9,7 +10,7 @@ const apiUrl = getApiUrl();
 
 interface Defaults {
   id: number;
-  
+
 }
 
 interface DefaultsState {
@@ -36,6 +37,17 @@ export const clearDefault = createAsyncThunk(
   "defaults/clearDefault",
   async (defaultId) => {
     const response = await axios.patch(`${apiUrl}/cylinder-lost/${defaultId}/resolve/`);
+    console.log('error here ', response.data)
+    return response.data
+  }
+)
+
+
+export const ReturnDefault = createAsyncThunk(
+  "defaults/returnDefault",
+  async (defaultId) => {
+    const response = await axios.patch(`${apiUrl}/return-lost/${defaultId}/return/`);
+    console.log('error here ', response.data)
     return response.data
   }
 )
@@ -63,14 +75,29 @@ const defaultsSlice = createSlice({
       })
       .addCase(clearDefault.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.defaults = action.payload;
+        const removedId = action.meta.arg; // Get the defaultId that was cleared
+        state.defaults = state.defaults.filter((item) => item.id !== removedId);
+       
       })
       .addCase(clearDefault.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch employees";
       })
-      // Transfer Employee
-    
+      .addCase(ReturnDefault.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(ReturnDefault.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        // const removedId = action.meta.arg; // Get the defaultId that was cleared
+        // state.defaults = state.defaults.filter((item) => item.id !== removedId);
+       
+      })
+      .addCase(ReturnDefault.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch employees";
+      })
+    // Transfer Employee
+
   },
 });
 

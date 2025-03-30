@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import Cookies from "cookies-js"
@@ -68,7 +69,9 @@ const lessPaySlice = createSlice({
       })
       .addCase(clearLessPay.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.lessPay = action.payload;
+        const removedId = action.meta.arg;
+        // state.lessPay = action.payload;
+        state.lessPay = state.lessPay.filter((item) => item.id !== removedId);
       })
       .addCase(clearLessPay.rejected, (state, action) => {
         state.status = "failed";

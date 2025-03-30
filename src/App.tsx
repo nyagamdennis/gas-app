@@ -42,6 +42,7 @@ import EmployeesProfile from "./pages/employeesProfile"
 import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
 import Transactions from "./pages/Transactions"
 import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
+import CylinderRequest from "./pages/CylinderRequest"
 
 function App() {
   return (
@@ -215,6 +216,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="employee">
                 <SalesRecordPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/request"
+            element={
+              <ProtectedRoute requiredRole="employee">
+                <CylinderRequest />
               </ProtectedRoute>
             }
           />

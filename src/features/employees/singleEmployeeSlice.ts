@@ -9,7 +9,7 @@ const apiUrl = getApiUrl();
 const EMPLOYEES_URLS = `${apiUrl}/employees/`;
 
 interface SingleEmployee {
-    id: number;
+    id: string;
     first_name: string;
     last_name: string;
     phone: string;
@@ -58,6 +58,24 @@ export const transferEmployee = createAsyncThunk(
         return response.data; // Return the updated employee data
     }
 );
+
+
+export const addEmployeeSalary = createAsyncThunk(
+    "singleEmployee/addEmployeeSalary",
+    async ({ employeeId, salaryAmount }: { employeeId: number; salaryAmount: number }) => {
+        const formData = { contract_salary: salaryAmount };
+        const response = await axios.patch(`${apiUrl}/salary/${employeeId}/`, formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("accessToken")}`,
+                },
+            }
+        );
+        console.log('response ', response.data)
+        return response.data;
+    }
+);
+
 
 
 export const updateSimgleEmployeeStatus = createAsyncThunk(
@@ -114,11 +132,30 @@ const singleEmployeeSlice = createSlice({
                 state.status = "failed";
                 state.error = action.error.message || "Failed to transfer employee";
             })
+            .addCase(addEmployeeSalary.pending, (state) => {
+                state.status = "loading";
+            })
+
+            .addCase(addEmployeeSalary.fulfilled, (state, action) => {
+                state.status = "succeeded";
+
+                // Extract updated employee from the payload
+                const updatedEmployee = action.payload;
+
+                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
+                    state.singleEmployee.contract_salary = updatedEmployee.contract_salary; // ✅ Update ONLY the verified field
+                }
+            })
+
+            .addCase(addEmployeeSalary.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.error.message || "Failed to add salary.";
+            })
             // Update Employee Status
             .addCase(updateSimgleEmployeeStatus.pending, (state) => {
                 state.status = "loading";
             })
-           
+
             .addCase(updateSimgleEmployeeStatus.fulfilled, (state, action) => {
                 state.status = "succeeded";
 
@@ -129,7 +166,7 @@ const singleEmployeeSlice = createSlice({
                     state.singleEmployee.verified = updatedEmployee.verified; // ✅ Update ONLY the verified field
                 }
 
-                
+
             })
 
 
