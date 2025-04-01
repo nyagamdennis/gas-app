@@ -7,7 +7,7 @@ import { fetchStore, selectAllStore } from '../features/store/storeSlice';
 import getApiUrl from '../getApiUrl';
 import Cookies from "cookies-js";
 import axios from 'axios';
-import { addRequest, clearRequested, fetchRequests, selectAllRequests } from '../features/RequestCylinders/requestedSlice';
+import { addRequest, approveRequest, clearRequested, fetchRequests, selectAllRequests } from '../features/RequestCylinders/requestedSlice';
 
 const CylinderRequest = () => {
     const apiUrl = getApiUrl();
@@ -104,6 +104,7 @@ const CylinderRequest = () => {
     const handleDeleteRequest = async (cylinderId) => {
         await dispatch(clearRequested({cylinderId}))
     }
+
 
 
     return (

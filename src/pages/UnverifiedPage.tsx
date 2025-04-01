@@ -6,6 +6,7 @@ import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfile
 import getApiUrl from '../getApiUrl';
 import { logout, selectIsAuthenticated } from '../features/auths/authSlice';
 import axios from 'axios';
+import Person2Icon from '@mui/icons-material/Person2';
 
 const UnverifiedPage = () => {
     const navigate = useNavigate();
@@ -16,44 +17,6 @@ const UnverifiedPage = () => {
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const apiUrl = getApiUrl();
 
-
-    // useEffect(() => {
-    //     if (isAuthenticated) {
-    //         // Check user's status after login
-    //         const checkUserStatus = async () => {
-    //             try {
-    //                 const response = await axios.get(`${apiUrl}/check-user-status/`, {
-    //                     headers: {
-    //                         Authorization: `Bearer ${document.cookie.split("accessToken=")[1]}`,
-    //                     },
-    //                 });
-
-    //                 const {
-    //                     has_employee_profile,
-    //                     is_verified,
-    //                     is_admin,
-    //                 } = response.data;
-
-    //                 if (is_admin) {
-    //                     console.log("is admin");
-    //                     navigate("/", { state: { message: "Welcome, Admin!" } });
-    //                 } else if (has_employee_profile && is_verified) {
-    //                     navigate("/sales", {
-    //                         state: { message: "Your profile is not verified. Please contact the admin." },
-    //                     });
-    //                 } else if (!has_employee_profile) {
-    //                     navigate("/createprofile", {
-    //                         state: { message: "Please create your employee profile to continue." },
-    //                     });
-    //                 }
-    //             } catch (error) {
-    //                 setErrMsg("Failed to verify user status. Please try again.");
-    //             }
-    //         };
-
-    //         checkUserStatus();
-    //     }
-    // }, [isAuthenticated, navigate, apiUrl]);
     useEffect(() => {
         if (isAuthenticated) {
             // Check user's status after login
@@ -106,6 +69,12 @@ const UnverifiedPage = () => {
                 <p className="text-gray-700 mb-4">
                     Your account is not verified yet. Please contact the administrator to verify your profile and gain access.
                 </p>
+                <div className=''>
+                    <Link to='/myprofile'>
+                    <Person2Icon className='' />
+                    <p>View Profile</p>
+                    </Link>
+                </div>
             </div>
         </div>
     )

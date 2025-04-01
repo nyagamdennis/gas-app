@@ -11,6 +11,8 @@ import DateDisplay from "../components/DateDisplay";
 import { fetchExpenses, selectAllExpenses } from "../features/expenses/expensesSlice";
 import CurrencyConvert from "../components/CurrencyConvert";
 import FormattedAmount from "../components/FormattedAmount";
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import { logout } from "../features/auths/authSlice";
 
 const MyProfilePage = () => {
   const dispatch = useAppDispatch();
@@ -113,6 +115,10 @@ const MyProfilePage = () => {
   };
 
 
+  const HandleLogout = () => {
+    dispatch(logout())
+  }
+  
   return (
     <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
       {/* Header */}
@@ -124,6 +130,9 @@ const MyProfilePage = () => {
         <Link to="/sales" className="text-white underline">
           Back to Sales
         </Link>
+        <div onClick={HandleLogout} className=" cursor-pointer">
+          <PowerSettingsNewIcon />
+        </div>
       </div>
 
       {/* Content */}

@@ -25,6 +25,7 @@ const initialState: RequestedState = {
   error: null,
 };
 
+
 export const fetchRequests = createAsyncThunk<Requested[]>(
   "requested/fetchRequests",
   async ({ salesTeamId }) => {
@@ -39,6 +40,25 @@ export const fetchRequests = createAsyncThunk<Requested[]>(
   }
 );
 
+
+
+export const fetchAllRequests = createAsyncThunk<Requested[]>(
+  "requested/fetchAllRequests",
+  async () => {
+    const response = await axios.get<Requested[]>(`${apiUrl}/all-request/`,
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+    return response.data; // Return the fetched employees data
+  }
+);
+
+
+
+
 export const clearRequested = createAsyncThunk(
   "requested/clearRequested",
   async ({ cylinderId }) => {
@@ -52,18 +72,13 @@ export const clearRequested = createAsyncThunk(
         },
       }
     );
-
-
     return response.data
   }
 )
 
-
 export const addRequest = createAsyncThunk(
   "requested/addRequest",
   async ({ employee, sales_team_id, assigned_cylinder_id, quantity }) => {
-    console.log("Adding request...");
-
     const formData = {
       employee: employee,
       sales_team: sales_team_id,
@@ -72,8 +87,6 @@ export const addRequest = createAsyncThunk(
       date_issued: new Date().toISOString(),
     };
 
-    console.log("Form data: ", formData);
-
     try {
       const response = await axios.post(`${apiUrl}/cylinder-request/`, formData, {
         headers: {
@@ -81,17 +94,28 @@ export const addRequest = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Response:", response.data);
       return response.data;
     } catch (error) {
-      console.error("Request Failed:", error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Failed to add request.");
     }
   }
 );
 
-
+export const approveRequest = createAsyncThunk(
+  "requested/approveRequest",
+  async ({cylinderId}) => {
+    const response = await axios.post(`${apiUrl}/approve-request/${cylinderId}/`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          "Content-Type": "application/json"
+        }
+      }
+    )
+    return response.data
+  }
+)
 
 const requestedSlice = createSlice({
   name: "requested",
@@ -99,6 +123,18 @@ const requestedSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder
+    .addCase(fetchAllRequests.pending, (state) => {
+      state.status = "loading";
+    })
+    .addCase(fetchAllRequests.fulfilled, (state, action) => {
+      state.status = "succeeded";
+      state.requested = action.payload;
+    })
+    .addCase(fetchAllRequests.rejected, (state, action) => {
+      state.status = "failed";
+      state.error = action.error.message || "Failed to fetch employees";
+    })
+
       // Fetch Employees
       .addCase(fetchRequests.pending, (state) => {
         state.status = "loading";
@@ -150,6 +186,20 @@ const requestedSlice = createSlice({
       .addCase(addRequest.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to add salary.";
+      })
+      .addCase(approveRequest.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(approveRequest.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const removedId = action.meta.arg.cylinderId; // ✅ Correctly extract cylinderId
+        // Filter out the removed item
+        state.requested = state.requested.filter((item) => item.cylinder !== removedId);
+       
+      })
+      .addCase(approveRequest.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch employees";
       })
 
   },
