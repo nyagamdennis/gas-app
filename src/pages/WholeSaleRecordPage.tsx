@@ -45,9 +45,13 @@ const WholeSaleRecordPage = () => {
   const [paymentMode, setPaymentMode] = useState("cash");
   const [mpesaName, setMpesaName] = useState("");
   const [mpesaPhone, setMpesaPhone] = useState("");
-  const [mpesaCodes, setMpesaCodes] = useState([""]);
-  const [cashAmount, setCashAmount] = useState("");
-  const [numMpesaDeposits, setNumMpesaDeposits] = useState(1);
+
+
+  const [cashAmount, setCashAmount] = useState<number>(0)
+    const [cashAmountDeposit, setCashAmountDeposit] = useState<number>(0)
+    const [numMpesaDeposits, setNumMpesaDeposits] = useState(1)
+    const [mpesaPayments, setMpesaPayments] = useState([{ code: "", amount: "" }])
+    const [mpesaCodes, setMpesaCodes] = useState([{ code: "", amount: 0 }])
 
 
   useEffect(() => {
@@ -56,84 +60,85 @@ const WholeSaleRecordPage = () => {
   }, [dispatch]);
 
 
+  const handleNumDepositsChange = (e) => {
+    const count = Math.max(1, parseInt(e.target.value, 10) || 1)
+    setNumMpesaDeposits(count)
+
+    // Adjust Mpesa Codes List
+    setMpesaCodes((prevCodes) => {
+      const newCodes = [...prevCodes]
+
+      // Expand array if needed
+      while (newCodes.length < count) {
+        newCodes.push({ code: "", amount: 0 })
+      }
+
+      // Trim array if needed
+      return newCodes.slice(0, count)
+    })
+  }
+
+  const handleMpesaCodeChange = (index, field, value) => {
+    setMpesaCodes((prevCodes) => {
+      const newCodes = [...prevCodes]
+      newCodes[index][field] = value
+      return newCodes
+    })
+  }
+
+  
 
   const handleProductChange = (index, field, value) => {
-    setProducts((prev) => {
-      const updated = [...prev];
-      if (field === "quantity") {
-        updated[index][field] = value === "" ? "" : parseInt(value, 10); // Allow temporary invalid values
-      } else if (field === "productId") {
-        updated[index][field] = value; // Update productId
-      }
-      return updated;
-    });
-  };
-
-
+    setProducts((prevProducts) =>
+      prevProducts.map((product, i) =>
+        i === index ? { ...product, [field]: value } : product,
+      ),
+    )
+  }
 
   const handleAddProduct = () => {
-    setProducts([...products, { productId: "", quantity: 1 }]);
-  };
+    setProducts([...products, { productId: "", quantity: 1 }])
+  }
 
   const handleRemoveProduct = (index) => {
-    setProducts(products.filter((_, idx) => idx !== index));
-  };
+    setProducts(products.filter((_, idx) => idx !== index))
+  }
 
-  // const calculateTotal = () => {
-  //   return products.reduce((total, product) => {
-  //     const assignedProduct = allAssignedProducts.find(
-  //       (prod) => prod.id === Number(product.productId)
-  //     );
-
-
-  //     if (assignedProduct) {
-  //       const price =
-  //         saleType === "COMPLETESALE"
-  //           ? (
-  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_selling_price : assignedProduct.min_wholesale_selling_price
-  //           )
-  //           : (
-  //             paymentAmount === "MAXIMUM" ? assignedProduct.max_wholesale_refil_price : assignedProduct.min_wholesale_refil_price
-  //           );
-  //       return total + price * product.quantity;
-  //     }
-
-  //     return total;
-  //   }, 0);
-  // };
-
+ 
+  
   const calculateTotal = () => {
     return products.reduce((total, product) => {
       const assignedProduct = allAssignedProducts.find(
-        (prod) => prod.id === Number(product.productId)
-      );
+        (prod) => prod.id === Number(product.productId),
+      )
 
       if (assignedProduct) {
-        let price;
+        let price
 
-        if (paymentAmount === "CUSTOM" && customPrice) {
-          price = parseFloat(customPrice); // ✅ Use custom price when selected
+        if (product.paymentAmount === "CUSTOM" && product.customPrice) {
+          price = parseFloat(product.customPrice) // ✅ Use product's custom price
         } else {
           price =
             saleType === "COMPLETESALE"
-              ? paymentAmount === "MAXIMUM"
+              ? product.paymentAmount === "MAXIMUM"
                 ? assignedProduct.max_wholesale_selling_price
-                : paymentAmount === "MEDIUM"
-                  ? assignedProduct.mid_wholesale_selling_price
-                  : assignedProduct.min_wholesale_selling_price
-              : paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_wholesale_refil_price
-                : paymentAmount === "MEDIUM"
-                  ? assignedProduct.mid_wholesale_refil_price
-                  : assignedProduct.min_wholesale_refil_price;
+                : product.paymentAmount === "MEDIUM"
+                ? assignedProduct.mid_wholesale_selling_price
+                : assignedProduct.min_wholesale_selling_price
+              : product.paymentAmount === "MAXIMUM"
+              ? assignedProduct.max_wholesale_refil_price
+              : product.paymentAmount === "MEDIUM"
+              ? assignedProduct.mid_wholesale_refil_price
+              : assignedProduct.min_wholesale_refil_price
         }
 
-        return total + (price * product.quantity);
+        return total + price * product.quantity // ✅ Correct multiplication
       }
 
-      return total;
-    }, 0);
-  };
+      return total
+    }, 0)
+  }
+
   // console.log('Payment amount is ', paymentAmount)
   const calculateDebt = () => {
     const total = calculateTotal();
@@ -163,8 +168,18 @@ const WholeSaleRecordPage = () => {
       debt_amount: paymentType === "DEBT" ? calculateDebt() : 0,
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
-      exchanged_with_local: exchangedWithLocal
+      exchanged_with_local: exchangedWithLocal,
+      mpesa_code: mpesaCodes,
     };
+
+    if (paymentMode === "cash") {
+      formData.cashAmount = Number(calculateTotal()) // Set full total to cash
+    } else if (paymentMode === "mpesa") {
+      formData.mpesaAmount = Number(calculateTotal())
+    } else if (paymentMode === "mpesa_cash") {
+      formData.cashAmount = Number(cashAmount)
+      formData.mpesaAmount = Number(calculateTotal()) - Number(cashAmount)
+    }
 
     try {
       await dispatch(recordSales(formData)).unwrap()
@@ -199,6 +214,13 @@ const WholeSaleRecordPage = () => {
   const handleExchangeWithLocalFalse = () => {
     setExchangeWithLocal(false);
   }
+useEffect(() => {
+    if (paymentMode === "cash") {
+      setCashAmount(calculateTotal()) // Set total when "cash" mode is selected
+    } else if (paymentMode === "mpesa") {
+      setCashAmount("") // Reset cashAmount when only Mpesa is selected
+    }
+  }, [paymentMode]) // Re-run when paymentMode changes
 
 
   // -------------------other products sales-------------------
@@ -231,7 +253,7 @@ const WholeSaleRecordPage = () => {
       );
 
       if (assignedProduct) {
-        const price = assignedProduct?.product?.retail_sales_price
+        const price = assignedProduct?.product?.wholesale_sales_price
 
 
         return total + price * product.quantity;
@@ -321,300 +343,808 @@ const WholeSaleRecordPage = () => {
       <div className="flex justify-center mt-6 px-4">
         {cylinderSale ? (
           <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg"
-          >
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">Customer Details</h2>
-
-            <div className="mb-4">
-              <label className="block text-gray-600">Customer Name</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              // required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-600">Customer Location</label>
-              <input
-                type="text"
-                value={customerLocation}
-                onChange={(e) => setCustomerLocation(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              // required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-600">Customer Phone</label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-              // required
-              />
-            </div>
-
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">Sale Details</h2>
-
-            <div className="mb-4">
-              <label className="block text-gray-600">Sale Type</label>
-              <select
-                value={saleType}
-                onChange={(e) => setSaleType(e.target.value)}
-                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                required
-              >
-                <option value="REFILL">Refill</option>
-                <option value="COMPLETESALE">Complete Sale</option>
-              </select>
-            </div>
-            {products.map((product, index) => {
-              const selectedProduct = allAssignedProducts.find(
-                (prod) => prod.id === Number(product.productId)
-              );
-
-              return (
-                <div key={index} className="mb-4 border-b-4 border-green-900 pb-4">
-                  <div className="mb-2">
-                    <label className="block text-gray-600">Product</label>
-                    <select
-                      value={product.productId}
-                      onChange={(e) =>
-                        handleProductChange(index, "productId", e.target.value)
-                      }
-                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                      required
+                      onSubmit={handleSubmit}
+                      className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg"
                     >
-                      <option value="">Select a product</option>
-                      {allAssignedProducts.map((assignedProduct) => (
-                        <option
-                          key={assignedProduct.id}
-                          value={assignedProduct.id}
-                        >
-                          {assignedProduct.gas_type} {assignedProduct.weight}kg
-                        </option>
-                      ))}
-                    </select>
-                    {selectedProduct && (
-
-
-                      <div className="flex items-center space-x-1  space-y-2 mt-2">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="paymentAmount"
-                            value="MINIMUM"
-                            checked={paymentAmount === "MINIMUM"}
-                            onChange={() => setPaymentAmount("MINIMUM")}
-                          />
-                          <p>
-                            {saleType === "COMPLETESALE"
-                              ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} />
-                              : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} />}
-
-                          </p>
-                        </label>
-
-                        {/* Medium Price */}
-                        <label className="flex items-center space-x-1">
-                          <input
-                            type="radio"
-                            name={`paymentAmount-${index}`}
-                            value="MEDIUM"
-                            checked={paymentAmount === "MEDIUM"}
-                            onChange={() => setPaymentAmount("MEDIUM")}
-                          />
-                          <p>
-                            {saleType === "COMPLETESALE"
-                              ? <FormattedAmount amount={selectedProduct.mid_wholesale_selling_price} />
-                              : <FormattedAmount amount={selectedProduct.mid_wholesale_refil_price} />}
-                            {/* mid_retail_refil_price */}
-                          </p>
-                        </label>
-
-
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name="paymentAmount"
-                            value="MAXIMUM"
-                            checked={paymentAmount === "MAXIMUM"}
-                            onChange={() => setPaymentAmount("MAXIMUM")}
-                          />
-                          <p>
-                            {saleType === "COMPLETESALE"
-                              ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} />
-                              : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} />}
-                          </p>
-                        </label>
-
-                        {/* Custom Price (Shows Input Field When Selected) */}
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name={`paymentAmount-${index}`}
-                            value="CUSTOM"
-                            checked={paymentAmount === "CUSTOM"}
-                            onChange={() => setPaymentAmount("CUSTOM")}
-                          />
-                          <p>Custom Amount</p>
-                        </label>
+                      <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                        Customer Details
+                      </h2>
+          
+                      <div className="mb-4">
+                        <label className="block text-gray-600">Customer Name</label>
+                        <input
+                          type="text"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                          // required
+                        />
                       </div>
+                      <div className="mb-4">
+                        <label className="block text-gray-600">Customer Location</label>
+                        <input
+                          type="text"
+                          value={customerLocation}
+                          onChange={(e) => setCustomerLocation(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                          // required
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-gray-600">Customer Phone</label>
+                        <input
+                          type="text"
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                          // required
+                        />
+                      </div>
+          
+                      <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                        Sale Details
+                      </h2>
+          
+                      <div className="mb-4">
+                        <label className="block text-gray-600">Sale Type</label>
+                        <select
+                          value={saleType}
+                          onChange={(e) => setSaleType(e.target.value)}
+                          className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                          required
+                        >
+                          <option value="REFILL">Refill</option>
+                          <option value="COMPLETESALE">Complete Sale</option>
+                        </select>
+                      </div>
+                      {products.map((product, index) => {
+                        // Get selected product details
+                        const selectedProduct = allAssignedProducts.find(
+                          (prod) => prod.id === Number(product.productId),
+                        )
+          
+                        // Available products: Exclude selected ones, but keep the current row's selection
+                        const availableProducts = allAssignedProducts.filter(
+                          (prod) =>
+                            prod.id === Number(product.productId) || // Keep the selected product in its own dropdown
+                            !products.some(
+                              (p, i) => i !== index && p.productId === prod.id.toString(), // Exclude from other rows
+                            ),
+                        )
+          
+                        return (
+                          <div key={index} className="mb-4 border-b-4 border-green-900 pb-4">
+                            <div className="mb-2">
+                              <label className="block text-gray-600">Product</label>
+          
+                              <select
+                                value={product.productId}
+                                onChange={(e) =>
+                                  handleProductChange(index, "productId", e.target.value)
+                                }
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                required
+                              >
+                                <option value="">Select a product</option>
+                                {availableProducts.map((assignedProduct) => (
+                                  <option
+                                    key={assignedProduct.id}
+                                    value={assignedProduct.id}
+                                  >
+                                    {assignedProduct.gas_type} {assignedProduct.weight}kg
+                                  </option>
+                                ))}
+                              </select>
+          
+                              {selectedProduct && (
+                                <div className="flex items-center  space-x-3 flex-wrap mt-2">
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`paymentAmount-${index}`}
+                                      value="MINIMUM"
+                                      checked={product.paymentAmount === "MINIMUM"}
+                                      onChange={() =>
+                                        handleProductChange(
+                                          index,
+                                          "paymentAmount",
+                                          "MINIMUM",
+                                        )
+                                      }
+                                    />
+                                    <p>
+                                      {saleType === "COMPLETESALE" ? (
+                                        <FormattedAmount
+                                          amount={
+                                            selectedProduct.min_wholesale_selling_price
+                                          }
+                                        />
+                                      ) : (
+                                        <FormattedAmount
+                                          amount={selectedProduct.min_wholesale_refil_price}
+                                        />
+                                      )}
+                                    </p>
+                                  </label>
+          
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`paymentAmount-${index}`}
+                                      value="MEDIUM"
+                                      checked={product.paymentAmount === "MEDIUM"}
+                                      onChange={() =>
+                                        handleProductChange(
+                                          index,
+                                          "paymentAmount",
+                                          "MEDIUM",
+                                        )
+                                      }
+                                    
+                                    />
+                                    <p>
+                                      {saleType === "COMPLETESALE" ? (
+                                        <FormattedAmount
+                                          amount={
+                                            selectedProduct.mid_wholesale_selling_price
+                                          }
+                                        />
+                                      ) : (
+                                        <FormattedAmount
+                                          amount={selectedProduct.mid_wholesale_refil_price}
+                                        />
+                                      )}
+                                    </p>
+                                  </label>
+          
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`paymentAmount-${index}`}
+                                      value="MAXIMUM"
+                                      // checked={paymentAmount === "MAXIMUM"}
+                                      // onChange={() => setPaymentAmount("MAXIMUM")}
+                                      checked={product.paymentAmount === "MAXIMUM"}
+                                      onChange={() =>
+                                        handleProductChange(
+                                          index,
+                                          "paymentAmount",
+                                          "MAXIMUM",
+                                        )
+                                      }
+                                    />
+                                    <p>
+                                      {saleType === "COMPLETESALE" ? (
+                                        <FormattedAmount
+                                          amount={
+                                            selectedProduct.max_wholesale_selling_price
+                                          }
+                                        />
+                                      ) : (
+                                        <FormattedAmount
+                                          amount={selectedProduct.max_wholesale_refil_price}
+                                        />
+                                      )}
+                                    </p>
+                                  </label>
+          
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      type="radio"
+                                      name={`paymentAmount-${index}`}
+                                      value="CUSTOM"
+                                      // checked={paymentAmount === "CUSTOM"}
+                                      // onChange={() => setPaymentAmount("CUSTOM")}
+                                      checked={product.paymentAmount === "CUSTOM"}
+                                      onChange={() =>
+                                        handleProductChange(
+                                          index,
+                                          "paymentAmount",
+                                          "CUSTOM",
+                                        )
+                                      }
+                                    />
+                                    <p>Custom Amount</p>
+                                  </label>
+                                </div>
+                              )}
+                            </div>
+          
+                            {product.paymentAmount === "CUSTOM" && (
+                              <input
+                                type="number"
+                                value={product.customPrice || ""}
+                                onChange={(e) =>
+                                  handleProductChange(
+                                    index,
+                                    "customPrice",
+                                    e.target.value,
+                                  )
+                                }
+                                
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                placeholder="Enter custom amount"
+                                min="0"
+                                required
+                              />
+                            )}
+          
+                            <div className="mb-2">
+                              <label className="block text-gray-600">Quantity</label>
+                              <input
+                                type="number"
+                                value={product.quantity}
+                                onChange={(e) =>
+                                  handleProductChange(index, "quantity", e.target.value)
+                                }
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                min={1}
+                                required
+                              />
+                              {selectedProduct &&
+                                product.quantity > selectedProduct.filled && (
+                                  <p className="text-red-500 text-sm mt-1">
+                                    Maximum quantity available: {selectedProduct.filled}
+                                  </p>
+                                )}
+                            </div>
+          
+                            {products.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveProduct(index)}
+                                className="text-red-500 underline text-sm mt-2"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+          
+                      <button
+                        type="button"
+                        onClick={handleAddProduct}
+                        className="text-blue-500 underline text-sm"
+                      >
+                        Add Another Product
+                      </button>
+          
+                      <div className="mb-4">
+                        <label className="block text-gray-600">
+                          Exchanged with local
+                        </label>
+                        <div className="flex items-center gap-4 mt-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="exchangeWithLocal"
+                              value="false"
+                              checked={!exchangedWithLocal}
+                              onChange={() => handleExchangeWithLocalFalse(false)}
+                            />
+                            No
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="exchangeWithLocal"
+                              value="true"
+                              checked={exchangedWithLocal}
+                              onChange={() => handleExchangeWithLocalTrue(true)}
+                            />
+                            Yes
+                          </label>
+                        </div>
+                      </div>
+                      <h2 className="text-lg font-semibold mt-4 text-gray-700">
+                        Payment Details
+                      </h2>
+          
+                      <div className="mb-4">
+                        <label className="block text-gray-600">Payment Type</label>
+                        <div className="flex items-center gap-4 mt-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="paymentType"
+                              value="FULLY_PAID"
+                              checked={paymentType === "FULLY_PAID"}
+                              onChange={() => setPaymentType("FULLY_PAID")}
+                            />
+                            Fully Paid
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="paymentType"
+                              value="DEBT"
+                              checked={paymentType === "DEBT"}
+                              onChange={() => setPaymentType("DEBT")}
+                            />
+                            Debt
+                          </label>
+                        </div>
+                      </div>
+          
+                      {paymentType === "DEBT" && (
+                        <div className="mb-4">
+                          <label className="block text-gray-600">Deposit Amount</label>
+                          <input
+                            type="number"
+                            value={deposit}
+                            onChange={(e) => setDeposit(parseFloat(e.target.value))}
+                            className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                            min={0}
+                          />
+                          <label className="block text-gray-600 mt-2">
+                            Repayment Date
+                          </label>
+                          <input
+                            type="date"
+                            value={repayDate}
+                            onChange={(e) => setRepayDate(e.target.value)}
+                            className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                          />
+                          <p className="text-red-500 text-sm mt-2">
+                            Debt Balance: Ksh {calculateDebt()}
+                          </p>
+                        </div>
+                      )}
+                      {/* ------------------------------------------------------------ */}
+                      <div className=" border border-green-700 p-2">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-700">
+                          Payment Mode
+                        </h2>
+          
+                        <div className="mb-4 flex gap-4">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="paymentMode"
+                              value="cash"
+                              checked={paymentMode === "cash"}
+                              onChange={() => setPaymentMode("cash")}
+                            />
+                            Cash
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="paymentMode"
+                              value="mpesa"
+                              checked={paymentMode === "mpesa"}
+                              onChange={() => setPaymentMode("mpesa")}
+                            />
+                            Mpesa
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="radio"
+                              name="paymentMode"
+                              value="mpesa_cash"
+                              checked={paymentMode === "mpesa_cash"}
+                              onChange={() => setPaymentMode("mpesa_cash")}
+                            />
+                            Mpesa + Cash
+                          </label>
+                        </div>
+          
+                        {paymentMode === "cash" && (
+                          <div className="mb-4">
+                            <label className="block text-gray-600">
+                              Cash Amount (Ksh)
+                            </label>
+                            <input
+                              type="number"
+                              value={cashAmount || Number(calculateTotal())} // Only set initial value
+                              onChange={(e) => setCashAmount(e.target.value)} // Allow manual updates
+                              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                              required
+                            />
+                          </div>
+                        )}
+          
+                     
+                        {/* cash + mpesa payment */}
+                        {(paymentMode === "mpesa" || paymentMode === "mpesa_cash") && (
+                          <>
+                            <div className="mb-4">
+                              <label className="block text-gray-600">Mpesa Name</label>
+                              <input
+                                type="text"
+                                value={customerName}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                required
+                              />
+                            </div>
+          
+                            <div className="mb-4">
+                              <label className="block text-gray-600">
+                                Mpesa Phone Number
+                              </label>
+                              <input
+                                type="text"
+                                value={customerPhone}
+                                onChange={(e) => setCustomerPhone(e.target.value)}
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                required
+                              />
+                            </div>
+          
+                            <div className="mb-4">
+                              <label className="block text-gray-600">
+                                Number of Mpesa Deposits
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={numMpesaDeposits}
+                                onChange={handleNumDepositsChange}
+                                className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                required
+                              />
+                            </div>
+          
+                            {mpesaCodes.map((code, index) => (
+                              <div key={index} className="mb-4">
+                                <label className="block text-gray-600">
+                                  Mpesa Code {index + 1}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={code.code}
+                                  onChange={(e) =>
+                                    handleMpesaCodeChange(index, "code", e.target.value)
+                                  }
+                                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                  required
+                                />
+                                {/* Show Amount Input Only if Deposits > 1 */}
+                                {numMpesaDeposits > 1 && (
+                                  <div className="mt-2">
+                                    <label className="block text-gray-600">
+                                      Amount for Code {index + 1}
+                                    </label>
+                                    <input
+                                      type="number"
+                                      value={code.amount}
+                                      onChange={(e) =>
+                                        handleMpesaCodeChange(
+                                          index,
+                                          "amount",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                                      min="0"
+                                      required
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </>
+                        )}
+          
+                        {paymentMode === "mpesa_cash" && (
+                          <div className="mb-4">
+                            <label className="block text-gray-600">
+                              Cash Deposit (Ksh)
+                            </label>
+                            <input
+                              type="number"
+                              value={cashAmount}
+                              onChange={(e) => setCashAmount(e.target.value)}
+                              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                              required
+                            />
+                          </div>
+                        )}
+                      </div>
+                      {/* ----------------------------------- */}
+          
+                      <h3 className="text-lg font-bold mt-4">
+                        Total Amount: <FormattedAmount amount={calculateTotal()} />
+                      </h3>
+          
+                      <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition mt-4"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Submitting..." : "Submit"}
+                      </button>
+                    </form>
+          // <form
+          //   onSubmit={handleSubmit}
+          //   className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg"
+          // >
+          //   <h2 className="text-lg font-semibold mb-4 text-gray-700">Customer Details</h2>
 
-                    )}
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Customer Name</label>
+          //     <input
+          //       type="text"
+          //       value={customerName}
+          //       onChange={(e) => setCustomerName(e.target.value)}
+          //       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //     />
+          //   </div>
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Customer Location</label>
+          //     <input
+          //       type="text"
+          //       value={customerLocation}
+          //       onChange={(e) => setCustomerLocation(e.target.value)}
+          //       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //     />
+          //   </div>
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Customer Phone</label>
+          //     <input
+          //       type="tel"
+          //       value={customerPhone}
+          //       onChange={(e) => setCustomerPhone(e.target.value)}
+          //       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //     />
+          //   </div>
 
-                  </div>
+          //   <h2 className="text-lg font-semibold mb-4 text-gray-700">Sale Details</h2>
 
-                  <div className=" my-3 bg-gray-600">
-                    {/* Custom Price Input Field */}
-                    {paymentAmount === "CUSTOM" && (
-                      <input
-                        type="number"
-                        value={customPrice}
-                        onChange={(e) => setCustomPrice(e.target.value)}
-                        className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                        placeholder="Enter custom amount"
-                        min="0"
-                        required
-                      />
-                    )}
-                  </div>
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Sale Type</label>
+          //     <select
+          //       value={saleType}
+          //       onChange={(e) => setSaleType(e.target.value)}
+          //       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //       required
+          //     >
+          //       <option value="REFILL">Refill</option>
+          //       <option value="COMPLETESALE">Complete Sale</option>
+          //     </select>
+          //   </div>
+          //   {products.map((product, index) => {
+          //     const selectedProduct = allAssignedProducts.find(
+          //       (prod) => prod.id === Number(product.productId)
+          //     );
 
-                  <div className="mb-2">
-                    <label className="block text-gray-600">Quantity</label>
-                    <input
-                      type="number"
-                      value={product.quantity}
-                      onChange={(e) =>
-                        handleProductChange(index, "quantity", e.target.value)
-                      }
-                      className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                      min={1}
-                      required
-                    />
-                    {selectedProduct && product.quantity > selectedProduct.filled && (
-                      <p className="text-red-500 text-sm mt-1">
-                        Maximum quantity available: {selectedProduct.filled}
-                      </p>
-                    )}
-
-                  </div>
-                  {products.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveProduct(index)}
-                      className="text-red-500 underline text-sm mt-2"
-                    >
-                      Remove
-                    </button>
-                  )}
-
-                </div>
-              );
-            })}
-
-            <button
-              type="button"
-              onClick={handleAddProduct}
-              className="text-blue-500 underline text-sm"
-            >
-              Add Another Product
-            </button>
-            <div className="mb-4">
-              <label className="block text-gray-600">Exchanged with local</label>
-              <div className="flex items-center gap-4 mt-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="exchangeWithLocal"
-                    value='false'
-                    checked={!exchangedWithLocal}
-                    onChange={() => handleExchangeWithLocalFalse(false)}
-                  />
-                  No
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="exchangeWithLocal"
-                    value='true'
-                    checked={exchangedWithLocal}
-                    onChange={() => handleExchangeWithLocalTrue(true)}
-                  />
-                  Yes
-                </label>
-              </div>
-            </div>
-
-            <h2 className="text-lg font-semibold mt-4 text-gray-700">Payment Details</h2>
+          //     return (
+          //       <div key={index} className="mb-4 border-b-4 border-green-900 pb-4">
+          //         <div className="mb-2">
+          //           <label className="block text-gray-600">Product</label>
+          //           <select
+          //             value={product.productId}
+          //             onChange={(e) =>
+          //               handleProductChange(index, "productId", e.target.value)
+          //             }
+          //             className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //             required
+          //           >
+          //             <option value="">Select a product</option>
+          //             {allAssignedProducts.map((assignedProduct) => (
+          //               <option
+          //                 key={assignedProduct.id}
+          //                 value={assignedProduct.id}
+          //               >
+          //                 {assignedProduct.gas_type} {assignedProduct.weight}kg
+          //               </option>
+          //             ))}
+          //           </select>
+          //           {selectedProduct && (
 
 
+          //             <div className="flex items-center space-x-1  space-y-2 mt-2">
+          //               <label className="flex items-center gap-2">
+          //                 <input
+          //                   type="radio"
+          //                   name="paymentAmount"
+          //                   value="MINIMUM"
+          //                   checked={paymentAmount === "MINIMUM"}
+          //                   onChange={() => setPaymentAmount("MINIMUM")}
+          //                 />
+          //                 <p>
+          //                   {saleType === "COMPLETESALE"
+          //                     ? <FormattedAmount amount={selectedProduct.min_wholesale_selling_price} />
+          //                     : <FormattedAmount amount={selectedProduct.min_wholesale_refil_price} />}
+
+          //                 </p>
+          //               </label>
+
+          //               <label className="flex items-center space-x-1">
+          //                 <input
+          //                   type="radio"
+          //                   name={`paymentAmount-${index}`}
+          //                   value="MEDIUM"
+          //                   checked={paymentAmount === "MEDIUM"}
+          //                   onChange={() => setPaymentAmount("MEDIUM")}
+          //                 />
+          //                 <p>
+          //                   {saleType === "COMPLETESALE"
+          //                     ? <FormattedAmount amount={selectedProduct.mid_wholesale_selling_price} />
+          //                     : <FormattedAmount amount={selectedProduct.mid_wholesale_refil_price} />}
+          //                 </p>
+          //               </label>
 
 
-            <div className="mb-4">
-              <label className="block text-gray-600">Payment Type</label>
-              <div className="flex items-center gap-4 mt-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="paymentType"
-                    value="FULLY_PAID"
-                    checked={paymentType === "FULLY_PAID"}
-                    onChange={() => setPaymentType("FULLY_PAID")}
-                  />
-                  Fully Paid
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="paymentType"
-                    value="DEBT"
-                    checked={paymentType === "DEBT"}
-                    onChange={() => setPaymentType("DEBT")}
-                  />
-                  Debt
-                </label>
-              </div>
-            </div>
+          //               <label className="flex items-center gap-2">
+          //                 <input
+          //                   type="radio"
+          //                   name="paymentAmount"
+          //                   value="MAXIMUM"
+          //                   checked={paymentAmount === "MAXIMUM"}
+          //                   onChange={() => setPaymentAmount("MAXIMUM")}
+          //                 />
+          //                 <p>
+          //                   {saleType === "COMPLETESALE"
+          //                     ? <FormattedAmount amount={selectedProduct.max_wholesale_selling_price} />
+          //                     : <FormattedAmount amount={selectedProduct.max_wholesale_refil_price} />}
+          //                 </p>
+          //               </label>
 
-            {paymentType === "DEBT" && (
-              <div className="mb-4">
-                <label className="block text-gray-600">Deposit Amount</label>
-                <input
-                  type="number"
-                  value={deposit}
-                  onChange={(e) => setDeposit(parseFloat(e.target.value))}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                  min={0}
-                />
-                <label className="block text-gray-600 mt-2">Repayment Date</label>
-                <input
-                  type="date"
-                  value={repayDate}
-                  onChange={(e) => setRepayDate(e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-                />
-                <p className="text-red-500 text-sm mt-2">
-                  Debt Balance: Ksh {calculateDebt()}
-                </p>
-              </div>
-            )}
+          //               <label className="flex items-center gap-2">
+          //                 <input
+          //                   type="radio"
+          //                   name={`paymentAmount-${index}`}
+          //                   value="CUSTOM"
+          //                   checked={paymentAmount === "CUSTOM"}
+          //                   onChange={() => setPaymentAmount("CUSTOM")}
+          //                 />
+          //                 <p>Custom Amount</p>
+          //               </label>
+          //             </div>
 
-            <h3 className="text-lg font-bold mt-4">
-              Total Amount: Ksh {calculateTotal()}
-            </h3>
+          //           )}
 
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition mt-4"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Submitting..." : "Submit"}
-            </button>
-          </form>
+          //         </div>
+
+          //         <div className=" my-3 bg-gray-600">
+          //           {paymentAmount === "CUSTOM" && (
+          //             <input
+          //               type="number"
+          //               value={customPrice}
+          //               onChange={(e) => setCustomPrice(e.target.value)}
+          //               className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //               placeholder="Enter custom amount"
+          //               min="0"
+          //               required
+          //             />
+          //           )}
+          //         </div>
+
+          //         <div className="mb-2">
+          //           <label className="block text-gray-600">Quantity</label>
+          //           <input
+          //             type="number"
+          //             value={product.quantity}
+          //             onChange={(e) =>
+          //               handleProductChange(index, "quantity", e.target.value)
+          //             }
+          //             className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //             min={1}
+          //             required
+          //           />
+          //           {selectedProduct && product.quantity > selectedProduct.filled && (
+          //             <p className="text-red-500 text-sm mt-1">
+          //               Maximum quantity available: {selectedProduct.filled}
+          //             </p>
+          //           )}
+
+          //         </div>
+          //         {products.length > 1 && (
+          //           <button
+          //             type="button"
+          //             onClick={() => handleRemoveProduct(index)}
+          //             className="text-red-500 underline text-sm mt-2"
+          //           >
+          //             Remove
+          //           </button>
+          //         )}
+
+          //       </div>
+          //     );
+          //   })}
+
+          //   <button
+          //     type="button"
+          //     onClick={handleAddProduct}
+          //     className="text-blue-500 underline text-sm"
+          //   >
+          //     Add Another Product
+          //   </button>
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Exchanged with local</label>
+          //     <div className="flex items-center gap-4 mt-2">
+          //       <label className="flex items-center gap-2">
+          //         <input
+          //           type="radio"
+          //           name="exchangeWithLocal"
+          //           value='false'
+          //           checked={!exchangedWithLocal}
+          //           onChange={() => handleExchangeWithLocalFalse(false)}
+          //         />
+          //         No
+          //       </label>
+          //       <label className="flex items-center gap-2">
+          //         <input
+          //           type="radio"
+          //           name="exchangeWithLocal"
+          //           value='true'
+          //           checked={exchangedWithLocal}
+          //           onChange={() => handleExchangeWithLocalTrue(true)}
+          //         />
+          //         Yes
+          //       </label>
+          //     </div>
+          //   </div>
+
+          //   <h2 className="text-lg font-semibold mt-4 text-gray-700">Payment Details</h2>
+
+
+
+
+          //   <div className="mb-4">
+          //     <label className="block text-gray-600">Payment Type</label>
+          //     <div className="flex items-center gap-4 mt-2">
+          //       <label className="flex items-center gap-2">
+          //         <input
+          //           type="radio"
+          //           name="paymentType"
+          //           value="FULLY_PAID"
+          //           checked={paymentType === "FULLY_PAID"}
+          //           onChange={() => setPaymentType("FULLY_PAID")}
+          //         />
+          //         Fully Paid
+          //       </label>
+          //       <label className="flex items-center gap-2">
+          //         <input
+          //           type="radio"
+          //           name="paymentType"
+          //           value="DEBT"
+          //           checked={paymentType === "DEBT"}
+          //           onChange={() => setPaymentType("DEBT")}
+          //         />
+          //         Debt
+          //       </label>
+          //     </div>
+          //   </div>
+
+          //   {paymentType === "DEBT" && (
+          //     <div className="mb-4">
+          //       <label className="block text-gray-600">Deposit Amount</label>
+          //       <input
+          //         type="number"
+          //         value={deposit}
+          //         onChange={(e) => setDeposit(parseFloat(e.target.value))}
+          //         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //         min={0}
+          //       />
+          //       <label className="block text-gray-600 mt-2">Repayment Date</label>
+          //       <input
+          //         type="date"
+          //         value={repayDate}
+          //         onChange={(e) => setRepayDate(e.target.value)}
+          //         className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+          //       />
+          //       <p className="text-red-500 text-sm mt-2">
+          //         Debt Balance: Ksh {calculateDebt()}
+          //       </p>
+          //     </div>
+          //   )}
+
+          //   <h3 className="text-lg font-bold mt-4">
+          //     Total Amount: Ksh {calculateTotal()}
+          //   </h3>
+
+          //   <button
+          //     type="submit"
+          //     className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition mt-4"
+          //     disabled={isSubmitting}
+          //   >
+          //     {isSubmitting ? "Submitting..." : "Submit"}
+          //   </button>
+          // </form>
         ) : (
           <form onSubmit={handleSubmitOtherProduct} className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg">
             <h2 className="text-lg font-semibold mb-4 text-gray-700">Other Products Sales Form</h2>

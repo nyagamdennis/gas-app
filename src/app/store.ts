@@ -26,7 +26,9 @@ import transactionsReducer from "../features/transactions/transactionsSlice";
 import expensesReducer from "../features/expenses/expensesSlice";
 import singleEmployeeReducer from "../features/employees/singleEmployeeSlice";
 import advancesReducer from "../features/defaults/advancesSlice";
-import requestReducer from "../features/RequestCylinders/requestedSlice"
+import requestReducer from "../features/RequestCylinders/requestedSlice";
+import cashReducer from "../features/cashAtHand/cashSlice";
+import teamExpensesReducer from "../features/expenses/teamExpensesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -58,6 +60,8 @@ export const store = configureStore({
     expenses: expensesReducer,
     singleEmployee: singleEmployeeReducer,
     advances: advancesReducer,
+    cash: cashReducer,
+    teamExpenses: teamExpensesReducer
   },
 })
 

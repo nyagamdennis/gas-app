@@ -21,47 +21,45 @@ const SalesRecordPage = () => {
     dispatch(fetchMyProfile());
   }, [dispatch]);
 
-  useEffect(() => {
-    console.log('running here!')
-    if (isAuthenticated) {
-      // Check user's status after login
-      const checkUserStatus = async () => {
-        try {
-          const response = await axios.get(`${apiUrl}/check-user-status/`, {
-            headers: {
-              Authorization: `Bearer ${document.cookie.split("accessToken=")[1]}`,
-            },
-          });
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const checkUserStatus = async () => {
+  //       try {
+  //         const response = await axios.get(`${apiUrl}/check-user-status/`, {
+  //           headers: {
+  //             Authorization: `Bearer ${document.cookie.split("accessToken=")[1]}`,
+  //           },
+  //         });
 
-          const {
-            has_employee_profile,
-            is_verified,
-            is_admin,
-          } = response.data;
+  //         const {
+  //           has_employee_profile,
+  //           is_verified,
+  //           is_admin,
+  //         } = response.data;
 
-          if (is_admin) {
-            console.log("is admin");
-            navigate("/", { state: { message: "Welcome, Admin!" } });
-          } else if (has_employee_profile && !is_verified) {
-            console.log("is not verified");
-            navigate("/unverified", {
+  //         if (is_admin) {
+  //           console.log("is admin");
+  //           navigate("/", { state: { message: "Welcome, Admin!" } });
+  //         } else if (has_employee_profile && !is_verified) {
+  //           console.log("is not verified");
+  //           navigate("/unverified", {
 
-              state: { message: "Your profile is not verified. Please contact the admin." },
-            });
-          } else if (!has_employee_profile) {
-            console.log("is create profile");
-            navigate("/createprofile", {
-              state: { message: "Please create your employee profile to continue." },
-            });
-          }
-        } catch (error) {
-          setErrMsg("Failed to verify user status. Please try again.");
-        }
-      };
+  //             state: { message: "Your profile is not verified. Please contact the admin." },
+  //           });
+  //         } else if (!has_employee_profile) {
+  //           console.log("is create profile");
+  //           navigate("/createprofile", {
+  //             state: { message: "Please create your employee profile to continue." },
+  //           });
+  //         }
+  //       } catch (error) {
+  //         setErrMsg("Failed to verify user status. Please try again.");
+  //       }
+  //     };
 
-      checkUserStatus();
-    }
-  }, [isAuthenticated, navigate, apiUrl]);
+  //     checkUserStatus();
+  //   }
+  // }, [isAuthenticated, navigate, apiUrl]);
 
 
   const handleLogOut = () => {

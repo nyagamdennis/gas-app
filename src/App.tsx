@@ -43,8 +43,11 @@ import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
 import Transactions from "./pages/Transactions"
 import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
 import CylinderRequest from "./pages/CylinderRequest"
+import { useTokenAutoRefresher } from "./features/auths/useTokenAutoRefresher "
+
 
 function App() {
+  useTokenAutoRefresher()
   return (
     <div>
       <Router>
@@ -320,7 +323,7 @@ function App() {
           <Route
             path="/myprofile"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole={["employee", "regular_user"]}>
                 <MyProfilePage />
               </ProtectedRoute>
             }
@@ -338,7 +341,7 @@ function App() {
           <Route
             path="/unverified"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="regular_user">
                 <UnverifiedPage />
               </ProtectedRoute>
             }

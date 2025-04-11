@@ -47,13 +47,6 @@ if (userCookie && accessTokenCookie && accessRefreshCookie) {
   }
 }
 
-// const initialState = {
-//   user,
-//   accessToken,
-//   refreshToken,
-//   isLoading: false,
-//   error: null,
-// };
 
 const initialState: AuthState = {
     user,
@@ -66,6 +59,33 @@ const initialState: AuthState = {
  
 
 const apiUrl = getApiUrl()
+
+
+
+export const refreshAccessTokenIfExpired = () => async (dispatch: any, getState: any) => {
+  const state = getState();
+  const accessToken = state.auth.accessToken;
+
+  if (!accessToken) return;
+
+  try {
+    const decoded: any = jwt_decode(accessToken);
+    const now = Date.now() / 1000;
+
+    // If token is about to expire in next 2 minutes
+    if (decoded.exp - now < 120) {
+      console.log("⏰ Access token expiring soon, refreshing...");
+      await dispatch(refreshAccessToken());
+    } else {
+      console.log("✅ Access token still valid.");
+    }
+  } catch (err) {
+    console.warn("🔴 Error decoding token, force logout.");
+    dispatch(logout());
+  }
+};
+
+
 
 
 export const authSlice = createSlice({
