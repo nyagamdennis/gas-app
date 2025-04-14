@@ -64,6 +64,10 @@ const MyProfilePage = () => {
     }
   }, [dispatch, myProfile])
 
+  const totalExpenses = expense.reduce(
+    (total, item) => total + (item.amount || 0),
+    0,
+  )
   useEffect(() => {
     if (myProfile) {
       setFormData({
@@ -131,12 +135,35 @@ const MyProfilePage = () => {
   }
 
   const employeeId = myProfile?.id
+
   const filteredCash = allCash?.filter((cash) => {
     return cash.employee === employeeId
   })
   const totalCashDefault = filteredCash?.reduce((acc, cash) => {
     return acc + cash.cash_default
   }, 0)
+
+
+
+  const totalCost = defaulted_data.reduce((sum, cylinder) => {
+    const isFilled = !!cylinder.number_of_filled_cylinder;
+    const isEmpty = !!cylinder.number_of_empty_cylinder;
+  
+    const price = isFilled
+      ? cylinder.cylinder?.maximum_selling_price
+      : isEmpty
+      ? cylinder.cylinder?.empty_cylinder_price
+      : 0;
+  
+    return sum + (price || 0); // fallback in case price is undefined
+  }, 0);
+
+  const totalLessPay = lessPay_data.reduce((sum, cylinder) => {
+    return sum + (cylinder.cylinders_less_pay || 0)
+  }, 0)
+
+
+  
 
   return (
     <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
@@ -437,7 +464,7 @@ const MyProfilePage = () => {
         <div className=" flex space-x-1 flex-col">
           <div className="flex">
             <h4 className="font-bold items-center">Salary:</h4>
-            
+
             <FormattedAmount amount={myProfile.contract_salary} />
           </div>
           <div className="flex items-center space-x-2">
@@ -447,11 +474,66 @@ const MyProfilePage = () => {
               currency: "KSH",
             })}
           </div>
+          <div className="flex items-center space-x-2">
+            <h4 className=" me-2 font-bold">Total Expenses: </h4>
+            {totalExpenses.toLocaleString("en-US", {
+              style: "currency",
+              currency: "KSH",
+            })}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <h4 className=" me-2 font-bold">Total Lost Cylinders: </h4>
+            {totalCost.toLocaleString("en-US", {
+              style: "currency",
+              currency: "KSH",
+            })}
+          </div>
+
         </div>
         <div className="flex items-center space-x-2 border-2  border-dotted mt-4 p-2 border-green-950">
           <h4 className=" font-bold">Net Salary: </h4>
-          <p> <FormattedAmount amount={myProfile.contract_salary - totalCashDefault} /></p>
+          <p>
+            {" "}
+            <FormattedAmount
+              amount={
+                myProfile.contract_salary - totalCashDefault - totalExpenses - totalCost
+              }
+            />
+          </p>
         </div>
+      </div>
+      <div>
+        {filteredCash.length > 0 && (
+          <div className=" px-2 mb-5">
+            <div className=" mt-4  border-t-2 border-dotted">
+              <h5 className=" text-lg font-bold">Cash at Hand Defaults</h5>
+
+              <div className="mt-3">
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="border px-4 py-2">Amount</th>
+                      <th className="border px-4 py-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCash.map((cash) => (
+                      <tr key={cash.id}>
+                        <td className="border px-4 py-2">
+                          {cash.cash_default ?? "N/A"}
+                        </td>
+                        <td className="border px-4 py-2">
+                          <DateDisplay date={cash.date} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       {expense.length > 0 && (
         <div className=" px-2 mb-5">
@@ -485,6 +567,14 @@ const MyProfilePage = () => {
               </table>
             </div>
           </div>
+          <div className="mt-4 text-right font-semibold text-lg">
+            <p>
+              Total Expenses:{" "}
+              <span className="text-red-900 font-bold">
+                Ksh {totalExpenses.toLocaleString()}
+              </span>
+            </p>
+          </div>
         </div>
       )}
 
@@ -503,32 +593,54 @@ const MyProfilePage = () => {
                     <th className="border px-4 py-2">Weight (kg)</th>
                     <th className="border px-4 py-2">Filled</th>
                     <th className="border px-4 py-2">Empty</th>
+                    <th className="border px-4 py-2">Cost</th>
                     <th className="border px-4 py-2">Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {defaulted_data.map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">
-                        {cylinder.cylinder?.gas_type ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {cylinder.cylinder?.weight ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {cylinder.number_of_filled_cylinder ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {cylinder.number_of_empty_cylinder ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <DateDisplay date={cylinder.date_lost} />
-                      </td>
-                    </tr>
-                  ))}
+                  {defaulted_data.map((cylinder) => {
+                    const isFilled = !!cylinder.number_of_filled_cylinder
+                    const isEmpty = !!cylinder.number_of_empty_cylinder
+
+                    const cost = isFilled
+                      ? cylinder.cylinder?.maximum_selling_price
+                      : isEmpty
+                      ? cylinder.cylinder?.empty_cylinder_price
+                      : "N/A"
+
+                    return (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.cylinder?.gas_type ?? "N/A"}
+                        </td>
+                        <td className="border px-4 py-2">
+                          {cylinder.cylinder?.weight ?? "N/A"}
+                        </td>
+                        <td className="border px-4 py-2">
+                          {cylinder.number_of_filled_cylinder ?? "N/A"}
+                        </td>
+                        <td className="border px-4 py-2">
+                          {cylinder.number_of_empty_cylinder ?? "N/A"}
+                        </td>
+                        <td className="border px-4 py-2">{cost ?? "N/A"}</td>
+                        <td className="border px-4 py-2">
+                          <DateDisplay date={cylinder.date_lost} />
+                        </td>
+                        {/* empty_cylinder_price */}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
+          </div>
+          <div className="mt-4 text-right font-semibold text-lg">
+            <p>
+              Total Lost Cylinder amount:{" "}
+              <span className="text-red-900 font-bold">
+                Ksh {totalCost.toLocaleString()}
+              </span>
+            </p>
           </div>
         </div>
       )}

@@ -33,21 +33,27 @@ import {
 } from "../features/employees/employeesSlice"
 import { updateExpenseOwner } from "../features/expenses/expensesSlice"
 import CurrencyConvert from "../components/CurrencyConvert"
-import { fetchCash, postCash, selectAllCash } from "../features/cashAtHand/cashSlice"
+import {
+  fetchCash,
+  postCash,
+  selectAllCash,
+} from "../features/cashAtHand/cashSlice"
 
 const AdminSalesRecord = () => {
   const dispatch = useAppDispatch()
   const myProfile = useAppSelector(selectMyProfile)
   const allSalesData = useAppSelector(selectAllAdminSalesTeamData)
   const expense = useAppSelector(selectAllTeamExpenses)
-  const employees = useAppSelector(selectAllEmployees);
-  const allCash = useAppSelector(selectAllCash);
+  const employees = useAppSelector(selectAllEmployees)
+  const allCash = useAppSelector(selectAllCash)
   const allSalesTeam = useAppSelector(selectAllSalesTeam)
   const [cashAtHand, setCashAtHand] = useState<number>(0)
   const [filteredSales, setFilteredSales] = useState([])
   const [selectedTeam, setSelectedTeam] = useState("all")
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
   const [filteredExpenses, setFilteredExpenses] = useState([])
+  const [addingCash, setAddingCash] = useState(false)
+  const [addingAssign, setAddingAssign] = useState(false)
   const [ownerSelections, setOwnerSelections] = useState<
     Record<number, string>
   >({})
@@ -67,8 +73,8 @@ const AdminSalesRecord = () => {
   useEffect(() => {
     dispatch(fetchAdminSalesTeamData())
     dispatch(fetchSalesTeam())
-    dispatch(fetchEmployees());
-    dispatch(fetchCash());
+    dispatch(fetchEmployees())
+    dispatch(fetchCash())
   }, [dispatch])
 
   useEffect(() => {
@@ -151,13 +157,16 @@ const AdminSalesRecord = () => {
   const handleSubmitOwner = async (expenseId: number) => {
     const selectedOwner = ownerSelections[expenseId]
     if (!selectedOwner) return
-    console.log("selected owner ", selectedOwner)
+    setAddingAssign(true);
     try {
-      await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
+      await dispatch(updateExpenseOwner({ expenseId, selectedOwner }));
+      alert("Owner assigned successfully.");
     } catch (error) {
       console.error("Error assigning owner:", error)
       alert("Failed to assign owner.")
     }
+    setAddingAssign(false);
+    
   }
 
   const filteredEmployees = salesTeamId
@@ -170,23 +179,27 @@ const AdminSalesRecord = () => {
 
   const handleLessCash = async (e) => {
     e.preventDefault()
-    await dispatch(
-      postCash({
-        selectedEmployeeId,
-        totalDefaultCash,
-        cashAtHand,
-        salesTeamId,
-        endDate
-      }),
-    )
+    setAddingCash(true)
+    try {
+      await dispatch(
+        postCash({
+          selectedEmployeeId,
+          totalDefaultCash,
+          cashAtHand,
+          salesTeamId,
+          endDate,
+        }),
+      )
+      alert("Cash posted successfully.")
+    } catch (error) {
+      console.error("Error posting cash:", error)
+      alert("Failed to post cash.")
+    }
+    setAddingCash(false)
   }
 
+ 
 
-  // const filteredCash = allCash?.filter((cash) => {
-  //   const cashDate = new Date(cash.date).toISOString().split("T")[0]
-  //   return cashDate >= startDate && cashDate <= endDate
-  // })
-  // console.log("filtered cash", filteredCash)
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -504,11 +517,48 @@ const AdminSalesRecord = () => {
                                 ))}
                                 <option value="Company">Company</option>
                               </select>
-                              <button
+                              {/* <button
                                 onClick={() => handleSubmitOwner(expense.id)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
                               >
                                 Assign
+                              </button> */}
+                              <button
+                                onClick={() => handleSubmitOwner(expense.id)}
+                                disabled={addingAssign}
+                                className={`bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded ${
+                                  addingAssign
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`}
+                              >
+                                {addingAssign ? (
+                                  <>
+                                    <svg
+                                      className="animate-spin h-4 w-4 text-white"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                      ></circle>
+                                      <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                                      ></path>
+                                    </svg>
+                                    Loading...
+                                  </>
+                                ) : (
+                                  "Assign"
+                                )}
                               </button>
                             </td>
                           </tr>
@@ -573,11 +623,41 @@ const AdminSalesRecord = () => {
                 ))}
               </select>
             </div>
+
             <button
               onClick={handleLessCash}
-              className="bg-blue-900 px-2 text-white rounded-md mt-2"
+              disabled={addingCash}
+              className={`bg-blue-900 px-2 text-white rounded-md mt-2 flex items-center justify-center gap-2 ${
+                addingCash ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              submit
+              {addingCash ? (
+                <>
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </form>
         </div>
