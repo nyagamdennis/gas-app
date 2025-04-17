@@ -517,12 +517,7 @@ const AdminSalesRecord = () => {
                                 ))}
                                 <option value="Company">Company</option>
                               </select>
-                              {/* <button
-                                onClick={() => handleSubmitOwner(expense.id)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
-                              >
-                                Assign
-                              </button> */}
+                            
                               <button
                                 onClick={() => handleSubmitOwner(expense.id)}
                                 disabled={addingAssign}
@@ -669,4 +664,4 @@ const AdminSalesRecord = () => {
   )
 }
 
-export default AdminSalesRecord
+export default AdminSalesRecord;
