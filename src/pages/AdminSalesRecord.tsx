@@ -328,7 +328,7 @@ const AdminSalesRecord = () => {
                   <div>
                     <p className="mt-4 text-gray-900 font-bold">
                       Mpesa Amount:{" "}
-                      <FormattedAmount amount={sale.mpesaAmount} />
+                      <FormattedAmount amount={sale.amount_sold_for_mpesa * sale.quantity} />
                     </p>
 
                     {/* Show Mpesa transaction details if they exist */}
@@ -352,7 +352,7 @@ const AdminSalesRecord = () => {
 
                 {sale.cashAmount > 0 && (
                   <p className="mt-4 text-gray-900 font-bold">
-                    Cash Amount: <FormattedAmount amount={sale.cashAmount} />
+                    Cash Amount: <FormattedAmount amount={sale.amount_sold_for * sale.quantity} />
                   </p>
                 )}
 

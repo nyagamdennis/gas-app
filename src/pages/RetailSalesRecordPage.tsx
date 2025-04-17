@@ -244,10 +244,42 @@ const RetailSalesRecordPage = () => {
         sales: "RETAIL",
       },
       sales_type: saleType,
-      products: products.map((product) => ({
-        id: product.productId,
-        quantity: product.quantity,
-      })),
+      products: products.map((product) => {
+        const assignedProduct = allAssignedProducts.find(
+          (prod) => prod.id === Number(product.productId)
+        )
+      
+        let unitPrice = 0
+      
+        if (product.paymentAmount === "CUSTOM" && product.customPrice) {
+          unitPrice = parseFloat(product.customPrice)
+        } else {
+          unitPrice =
+            saleType === "COMPLETESALE"
+              ? product.paymentAmount === "MAXIMUM"
+                ? assignedProduct.max_wholesale_selling_price
+                : product.paymentAmount === "MEDIUM"
+                ? assignedProduct.mid_wholesale_selling_price
+                : assignedProduct.min_wholesale_selling_price
+              : product.paymentAmount === "MAXIMUM"
+              ? assignedProduct.max_wholesale_refil_price
+              : product.paymentAmount === "MEDIUM"
+              ? assignedProduct.mid_wholesale_refil_price
+              : assignedProduct.min_wholesale_refil_price
+        }
+      
+        const productPayload: any = {
+          id: product.productId,
+          quantity: product.quantity,
+          amount_sold_for: unitPrice,
+        }
+      
+        if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
+          productPayload.amount_sold_for_mpesa = unitPrice
+        }
+      
+        return productPayload
+      }),
       total_amount: calculateTotal(),
       partial_payment_amount:
         paymentType === "FULLY_PAID" ? calculateTotal() : deposit,

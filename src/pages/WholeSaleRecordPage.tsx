@@ -184,20 +184,21 @@ const WholeSaleRecordPage = () => {
               : assignedProduct.min_wholesale_refil_price
         }
       
-        return {
-          // cylinder: product,
+        const productPayload: any = {
           id: product.productId,
           quantity: product.quantity,
-          amount_sold_for: unitPrice, // ✅ Final unit price used
+          amount_sold_for: unitPrice,
         }
+      
+        if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
+          productPayload.amount_sold_for_mpesa = unitPrice
+        }
+      
+        return productPayload
       }),
       
-      // products: products.map((product) => ({
-      //   cylinder: product,
-      //   id: product.productId,
-      //   quantity: product.quantity,
-      //   // amount: amount_payed
-      // })),
+     
+      
       total_amount: calculateTotal(),
       partial_payment_amount:
         paymentType === "FULLY_PAID" ? calculateTotal() : deposit,
