@@ -1,11 +1,10 @@
 // @ts-nocheck
 import React, { useState } from 'react';
-import LeftNav from '../components/ui/LeftNav';
-import NavBar from '../components/ui/NavBar';
 import Login from '../components/Login';
 import { selectIsAuthenticated } from '../features/auths/authSlice';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { addSalesTeam } from '../features/salesTeam/salesTeamSlice';
+import AdminsFooter from '../components/AdminsFooter';
 
 const CreateTeamPage = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -37,93 +36,104 @@ const CreateTeamPage = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
       {isAuthenticated ? (
-        <div className="flex h-full overflow-hidden">
-          {/* Left Navigation */}
-          <aside className="w-1/6 bg-gray-900 text-white">
-            <LeftNav />
-          </aside>
+        <>
+          {/* Header */}
+          <header className="px-6 py-6 bg-white border-b border-gray-200 shadow-sm">
+            <h1 className="text-4xl font-extrabold tracking-tight">Create New Team</h1>
+            <p className="text-sm text-gray-500 mt-1">Upload a team profile and assign its type</p>
+          </header>
 
-          {/* Main Content */}
-          <main className="flex-1 flex flex-col">
-            <NavBar />
-
-            <div className="flex justify-center items-center mt-10">
-              <form
-                className="w-full max-w-md bg-white shadow-md rounded-lg p-6 space-y-6"
-                encType="multipart/form-data"
-                onSubmit={handleSaveClick}
-              >
-                <div className="flex flex-col items-center">
-                  <label htmlFor="profilePicture" className="cursor-pointer">
-                    <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                      {selectedImage ? (
-                        <img
-                          src={selectedImage}
-                          alt="Profile"
-                          className="object-cover w-full h-full"
+          {/* Main */}
+          <main className="flex-grow flex justify-center items-center py-10">
+            <form
+              className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl p-8 space-y-6"
+              encType="multipart/form-data"
+              onSubmit={handleSaveClick}
+            >
+              {/* Image Upload */}
+              <div className="flex flex-col items-center">
+                <label htmlFor="profilePicture" className="cursor-pointer">
+                  <div className="w-24 h-24 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition">
+                    {selectedImage ? (
+                      <img
+                        src={selectedImage}
+                        alt="Profile"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-10 h-10 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 5v14M5 12l2-2 2 2M15 12l2-2 2 2"
                         />
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-10 h-10 text-gray-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 5v14M5 12l2-2 2 2M15 12l2-2 2 2"
-                          />
-                        </svg>
-                      )}
-                    </div>
-                  </label>
-                  <input
-                    type="file"
-                    id="profilePicture"
-                    accept="image/jpeg,image/png,image/gif"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                  <span className="text-gray-600 text-sm mt-2">Upload Profile Picture</span>
-                </div>
+                      </svg>
+                    )}
+                  </div>
+                </label>
+                <input
+                  type="file"
+                  id="profilePicture"
+                  accept="image/jpeg,image/png,image/gif"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+                <span className="text-sm text-gray-500 mt-2">Upload Team Image</span>
+              </div>
 
-                <div className="space-y-2">
-                  <label className="block text-gray-700 font-medium">Team Name</label>
-                  <input
-                    type="text"
-                    className=" px-2 py-0.5 w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    value={teamName}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
+              {/* Team Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Team Name
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={teamName}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <label className="block text-gray-700 font-medium">Team Type</label>
-                  <input
-                    type="text"
-                    className=" py-0.5 px-2 w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    value={teamType}
-                    onChange={(e) => setTeamType(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300"
+              {/* Team Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Team Type
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
+                  value={teamType}
+                  onChange={(e) => setTeamType(e.target.value)}
+                  required
                 >
-                  Add Team
-                </button>
-              </form>
-            </div>
+                  <option value="">-- Select Team Type --</option>
+                  <option value="Retail Shop">Retail Shop</option>
+                  <option value="Distributor">Distributor</option>
+                </select>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg shadow hover:bg-blue-700 transition focus:ring-4 focus:ring-blue-300"
+              >
+                Add Team
+              </button>
+            </form>
           </main>
-        </div>
+
+          {/* Footer */}
+          <AdminsFooter />
+        </>
       ) : (
         <Login />
       )}

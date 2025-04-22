@@ -44,6 +44,7 @@ import Transactions from "./pages/Transactions"
 import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
 import CylinderRequest from "./pages/CylinderRequest"
 import { useTokenAutoRefresher } from "./features/auths/useTokenAutoRefresher "
+import AdminStore from "./pages/AdminStore"
 
 
 function App() {
@@ -193,6 +194,14 @@ function App() {
                 <CollectCylinders />
               </ProtectedRoute>
             }
+          />
+          <Route
+          path="/admins/store"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminStore />
+            </ProtectedRoute>
+          }
           />
 
           <Route

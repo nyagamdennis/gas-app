@@ -559,7 +559,6 @@ const Store = () => {
             alert("failed to save, try again.")
         }
 
-
     }
 
     const handleNameInputChange = (e: any) => {
@@ -1341,16 +1340,7 @@ const Store = () => {
                         update
                     </Button>
 
-                    {/* {updatingCylinderStatus === "idle" && (
-                        <Button  className=' !bg-green-600 !text-white' onClick={handleUpdateCylinder} autoFocus>
-                        update
-                    </Button>
-                    ) } */}
-                    {/* {updatingCylinderStatus === "idle" && (
-                        <Button  className=' !bg-green-600 !text-white' onClick={handleUpdateCylinder} autoFocus>
-                        update
-                    </Button>
-                    ) } */}
+                  
 
 
                 </DialogActions>

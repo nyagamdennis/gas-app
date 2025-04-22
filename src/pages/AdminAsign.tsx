@@ -5,74 +5,122 @@ import { useAppDispatch } from '../app/hooks';
 import { logout } from '../features/auths/authSlice';
 import AdminsFooter from '../components/AdminsFooter';
 
-
-
 const AdminAssign = () => {
   const dispatch = useAppDispatch();
+
   const handleLogOut = () => {
-    dispatch(logout())
-  }
+    dispatch(logout());
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header Section */}
-      <div className="bg-blue-600 text-white py-4 shadow-md flex items-center justify-between px-3">
+    <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
-          <p className="text-center mt-2">Manage Your Business and Records Efficiently</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Admin Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage your operations with style and clarity</p>
         </div>
-        <PowerSettingsNewIcon onClick={handleLogOut} />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Link
-          to="/admins/assign"
-          className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out"
+        <button
+          onClick={handleLogOut}
+          className="text-red-500 hover:text-red-600 transition duration-200"
+          title="Log out"
         >
-          <h3 className="text-xl font-semibold">Assign Cylinders</h3>
-          <p className="mt-2 text-sm">Distribute cylinders to sales teams.</p>
-        </Link>
+          <PowerSettingsNewIcon fontSize="large" />
+        </button>
+      </header>
 
-        <Link
-          to="/admins/collect"
-          className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out"
-        >
-          <h3 className="text-xl font-semibold">Collect Cylinders</h3>
-          <p className="mt-2 text-sm">Collect the Cylinders effectively</p>
-        </Link>
-        <Link
-          to="/admins/assignothers"
-          className="bg-white hover:bg-blue-50 border border-blue-500 text-blue-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out"
-        >
-          <h3 className="text-xl font-semibold">Assign Other Products</h3>
-          <p className="mt-2 text-sm">Allocate Other Products.</p>
-        </Link>
-
-        <div className="bg-white hover:bg-green-50 border border-green-500 text-green-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out">
-          <h3 className="text-xl font-semibold">Other Sold</h3>
-          <p className="mt-2 text-sm">Track sales of other items</p>
-        </div>
-
-        <Link
-          to="/admin/sales"
-          className="bg-white hover:bg-green-50 border border-green-500 text-green-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out"
-        >
-          <h3 className="text-xl font-semibold">Sales Record</h3>
-          <p className="mt-2 text-sm">Access detailed sales data</p>
-        </Link>
-
-        <Link to='/admins/employees'>
-          <div className="bg-white hover:bg-yellow-50 border border-yellow-500 text-yellow-600 rounded-lg shadow-lg flex flex-col justify-center items-center p-6 transition duration-300 ease-in-out">
-            <h3 className="text-xl font-semibold">Employees</h3>
-            <p className="mt-2 text-sm">Manage employees data efficiently</p>
-          </div>
-        </Link>
-
-      </div>
-
+      {/* Main Cards */}
+      <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          {
+            to: '/admins/assign',
+            title: 'Assign Cylinders',
+            subtitle: 'Distribute cylinders to sales teams.',
+            color: 'blue',
+          },
+          {
+            to: '/admins/collect',
+            title: 'Collect Cylinders',
+            subtitle: 'Collect the Cylinders effectively',
+            color: 'blue',
+          },
+          {
+            to: '/admins/assignothers',
+            title: 'Assign Other Products',
+            subtitle: 'Allocate Other Products.',
+            color: 'blue',
+          },
+          {
+            to: '',
+            title: 'Other Sold',
+            subtitle: 'Track sales of other items',
+            color: 'green',
+          },
+          {
+            to: '/admin/sales',
+            title: 'Sales Record',
+            subtitle: 'Access detailed sales data',
+            color: 'green',
+          },
+          {
+            to: '/admins/employees',
+            title: 'Employees',
+            subtitle: 'Manage employees data efficiently',
+            color: 'yellow',
+          },
+          {
+            to: '/createteam',
+            title: 'Create Team',
+            subtitle: 'Create a new sales team',
+            color: 'blue',
+          },
+          {
+            to: '/admins/store',
+            title: 'Store',
+            subtitle: 'Manage store inventory and operations',
+            color: 'blue',
+          },
+          {
+            to: '/admins/customers',
+            title: 'Customers',
+            subtitle: 'Manage customer data and interactions',
+            color: 'blue',
+          },
+          {
+            to: "/admins/sms",
+            title: 'SMS',
+            subtitle: 'Send SMS to customers',
+            color: 'blue',
+          },
+          {
+            to: '/admins/analysis',
+            title: 'Analysis',
+            subtitle: 'Analyze sales and performance data',
+            color: 'blue',
+          }
+        ].map(({ to, title, subtitle, color }, index) =>
+          to ? (
+            <Link
+              to={to}
+              key={index}
+              className={`rounded-2xl shadow-xl bg-white hover:bg-${color}-50 border border-${color}-300 text-${color}-600 transition duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center hover:scale-[1.02]`}
+            >
+              <h3 className="text-xl font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
+            </Link>
+          ) : (
+            <div
+              key={index}
+              className={`rounded-2xl shadow-xl bg-white hover:bg-${color}-50 border border-${color}-300 text-${color}-600 transition duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center hover:scale-[1.02]`}
+            >
+              <h3 className="text-xl font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
+            </div>
+          )
+        )}
+      </main>
 
       <AdminsFooter />
-
     </div>
   );
 };
