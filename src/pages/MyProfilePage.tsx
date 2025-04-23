@@ -143,41 +143,51 @@ const MyProfilePage = () => {
     return acc + cash.cash_default
   }, 0)
 
-
-
   const totalCost = defaulted_data.reduce((sum, cylinder) => {
-    const isFilled = !!cylinder.number_of_filled_cylinder;
-    const isEmpty = !!cylinder.number_of_empty_cylinder;
-  
+    const isFilled = !!cylinder.number_of_filled_cylinder
+    const isEmpty = !!cylinder.number_of_empty_cylinder
+
     const price = isFilled
       ? cylinder.cylinder?.maximum_selling_price
       : isEmpty
       ? cylinder.cylinder?.empty_cylinder_price
-      : 0;
-  
-    return sum + (price || 0); // fallback in case price is undefined
-  }, 0);
+      : 0
+
+    return sum + (price || 0) // fallback in case price is undefined
+  }, 0)
 
   const totalLessPay = lessPay_data.reduce((sum, cylinder) => {
     return sum + (cylinder.cylinders_less_pay || 0)
   }, 0)
 
-
-  
-
   return (
     <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
+      <div className="bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm px-6 py-4 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="mt-1 text-sm">Manage your profile information.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+            My Profile
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage your profile information.
+          </p>
         </div>
-        <Link to="/sales" className="text-white underline">
-          Back to Sales
-        </Link>
-        <div onClick={HandleLogout} className=" cursor-pointer">
-          <PowerSettingsNewIcon />
+
+        <div className="flex items-center space-x-4">
+          <Link
+            to="/sales"
+            className="text-sm font-medium text-blue-600 hover:underline transition duration-150"
+          >
+            Back to Sales
+          </Link>
+
+          <button
+            onClick={HandleLogout}
+            title="Logout"
+            className="text-red-500 hover:text-red-600 transition duration-200"
+          >
+            <PowerSettingsNewIcon fontSize="medium" />
+          </button>
         </div>
       </div>
 
@@ -231,21 +241,27 @@ const MyProfilePage = () => {
             </div>
 
             {/* ID Pictures */}
-            <div className="mt-6">
-              <h3 className="text-xl font-bold mb-4">ID Pictures</h3>
-              <div className="flex space-x-4">
+            <div className="mt-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-5">
+                ID Pictures
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Front ID */}
-                <div>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                    Front ID
+                  </h4>
                   <img
                     src={myProfile.front_id || defaultProfile}
                     alt="Front ID"
-                    className="w-48 h-32 object-cover border border-gray-300 rounded-md"
+                    className="w-full h-40 object-cover rounded-md border border-gray-300"
                   />
                   {isEditing && (
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <label
                         htmlFor="front_id"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                       >
                         Upload Front ID
                       </label>
@@ -254,24 +270,27 @@ const MyProfilePage = () => {
                         id="front_id"
                         accept="image/*"
                         onChange={(e) => handleImageChange(e, "front_id")}
-                        className="mt-1 block w-full text-sm text-gray-600"
+                        className="block w-full text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border file:border-gray-300 file:text-sm file:bg-white hover:file:bg-gray-100"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Back ID */}
-                <div>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                    Back ID
+                  </h4>
                   <img
                     src={myProfile.back_id || defaultProfile}
                     alt="Back ID"
-                    className="w-48 h-32 object-cover border border-gray-300 rounded-md"
+                    className="w-full h-40 object-cover rounded-md border border-gray-300"
                   />
                   {isEditing && (
-                    <div className="mt-2">
+                    <div className="mt-3">
                       <label
                         htmlFor="back_id"
-                        className="block text-sm font-medium text-gray-700"
+                        className="block text-sm font-medium text-gray-700 mb-1"
                       >
                         Upload Back ID
                       </label>
@@ -280,7 +299,7 @@ const MyProfilePage = () => {
                         id="back_id"
                         accept="image/*"
                         onChange={(e) => handleImageChange(e, "back_id")}
-                        className="mt-1 block w-full text-sm text-gray-600"
+                        className="block w-full text-sm text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border file:border-gray-300 file:text-sm file:bg-white hover:file:bg-gray-100"
                       />
                     </div>
                   )}
@@ -291,13 +310,13 @@ const MyProfilePage = () => {
             {/* Profile Details */}
             <div className="mt-6">
               {isEditing ? (
-                <form className="space-y-4">
+                <form className="space-y-6 bg-white shadow-md rounded-xl p-6 border border-gray-200">
                   {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="first_name"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
                         First Name
                       </label>
@@ -307,13 +326,13 @@ const MyProfilePage = () => {
                         name="first_name"
                         value={formData.first_name}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="last_name"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
                         Last Name
                       </label>
@@ -323,17 +342,17 @@ const MyProfilePage = () => {
                         name="last_name"
                         value={formData.last_name}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       />
                     </div>
                   </div>
 
                   {/* Phone Numbers */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="phone"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
                         Phone
                       </label>
@@ -343,13 +362,13 @@ const MyProfilePage = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="alternative_phone"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
                         Alternative Phone
                       </label>
@@ -359,17 +378,19 @@ const MyProfilePage = () => {
                         name="alternative_phone"
                         value={formData.alternative_phone}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* ID & Gender */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label
                         htmlFor="id_number"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
-                        id number
+                        ID Number
                       </label>
                       <input
                         type="text"
@@ -377,13 +398,13 @@ const MyProfilePage = () => {
                         name="id_number"
                         value={formData.id_number}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       />
                     </div>
                     <div>
                       <label
                         htmlFor="gender"
-                        className="block text-gray-700 font-medium"
+                        className="text-sm font-semibold text-gray-600"
                       >
                         Gender
                       </label>
@@ -392,7 +413,7 @@ const MyProfilePage = () => {
                         name="gender"
                         value={formData.gender}
                         onChange={handleInputChange}
-                        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                       >
                         <option value="">Select Gender</option>
                         <option value="MALE">Male</option>
@@ -402,28 +423,34 @@ const MyProfilePage = () => {
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <p className="text-gray-700">
-                    <strong>First Name:</strong> {myProfile.first_name}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Last Name:</strong> {myProfile.last_name}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Phone:</strong> {myProfile.phone || "Not Provided"}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Alternative Phone:</strong>{" "}
-                    {myProfile.alternative_phone || "Not Provided"}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Id Number:</strong>{" "}
-                    {myProfile.id_number || "Not Provided"}
-                  </p>
-                  <p className="text-gray-700">
-                    <strong>Gender:</strong>{" "}
-                    {myProfile.gender || "Not Provided"}
-                  </p>
+                <div className="space-y-3 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                  {[
+                    { label: "First Name", value: myProfile.first_name },
+                    { label: "Last Name", value: myProfile.last_name },
+                    {
+                      label: "Phone",
+                      value: myProfile.phone || "Not Provided",
+                    },
+                    {
+                      label: "Alternative Phone",
+                      value: myProfile.alternative_phone || "Not Provided",
+                    },
+                    {
+                      label: "ID Number",
+                      value: myProfile.id_number || "Not Provided",
+                    },
+                    {
+                      label: "Gender",
+                      value: myProfile.gender || "Not Provided",
+                    },
+                  ].map(({ label, value }, idx) => (
+                    <p key={idx} className="text-sm text-gray-700">
+                      <span className="font-semibold text-gray-900">
+                        {label}:
+                      </span>{" "}
+                      {value}
+                    </p>
+                  ))}
                 </div>
               )}
             </div>
@@ -460,228 +487,199 @@ const MyProfilePage = () => {
         )}
       </div>
 
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
-        <div className=" flex space-x-1 flex-col">
-          <div className="flex">
-            <h4 className="font-bold items-center">Salary:</h4>
-
-            <FormattedAmount amount={myProfile.contract_salary} />
-          </div>
-          <div className="flex items-center space-x-2">
-            <h4 className=" me-2 font-bold">Total Cash Default: </h4>
-            {totalCashDefault.toLocaleString("en-US", {
-              style: "currency",
-              currency: "KSH",
-            })}
-          </div>
-          <div className="flex items-center space-x-2">
-            <h4 className=" me-2 font-bold">Total Expenses: </h4>
-            {totalExpenses.toLocaleString("en-US", {
-              style: "currency",
-              currency: "KSH",
-            })}
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6 space-y-6">
+        {/* Salary Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Base Salary</span>
+            <span className="text-lg font-semibold text-gray-900">
+              <FormattedAmount amount={myProfile.contract_salary} />
+            </span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <h4 className=" me-2 font-bold">Total Lost Cylinders: </h4>
-            {totalCost.toLocaleString("en-US", {
-              style: "currency",
-              currency: "KSH",
-            })}
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Cash Default</span>
+            <span className="text-lg font-semibold text-red-600">
+              {totalCashDefault.toLocaleString("en-US", {
+                style: "currency",
+                currency: "KSH",
+              })}
+            </span>
           </div>
 
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Expenses</span>
+            <span className="text-lg font-semibold text-yellow-600">
+              {totalExpenses.toLocaleString("en-US", {
+                style: "currency",
+                currency: "KSH",
+              })}
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Lost Cylinders</span>
+            <span className="text-lg font-semibold text-rose-600">
+              {totalCost.toLocaleString("en-US", {
+                style: "currency",
+                currency: "KSH",
+              })}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center space-x-2 border-2  border-dotted mt-4 p-2 border-green-950">
-          <h4 className=" font-bold">Net Salary: </h4>
-          <p>
-            {" "}
+
+        {/* Net Salary */}
+        <div className="border border-dashed border-green-800 rounded-md p-4 bg-green-50">
+          <h4 className="text-md font-bold text-green-900 mb-1">Net Salary</h4>
+          <p className="text-xl font-bold text-green-700">
             <FormattedAmount
               amount={
-                myProfile.contract_salary - totalCashDefault - totalExpenses - totalCost
+                myProfile.contract_salary -
+                totalCashDefault -
+                totalExpenses -
+                totalCost
               }
             />
           </p>
         </div>
       </div>
-      <div>
-        {filteredCash.length > 0 && (
-          <div className=" px-2 mb-5">
-            <div className=" mt-4  border-t-2 border-dotted">
-              <h5 className=" text-lg font-bold">Cash at Hand Defaults</h5>
 
-              <div className="mt-3">
-                <table className="w-full border-collapse border border-gray-300 text-sm">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border px-4 py-2">Amount</th>
-                      <th className="border px-4 py-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCash.map((cash) => (
-                      <tr key={cash.id}>
-                        <td className="border px-4 py-2">
-                          {cash.cash_default ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">
-                          <DateDisplay date={cash.date} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="space-y-8 mt-6">
+
+  {/* Cash Defaults */}
+  {filteredCash.length > 0 && (
+    <section className="bg-white shadow-sm rounded-lg p-4 border">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">Cash at Hand Defaults</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-2 border">Amount</th>
+              <th className="px-4 py-2 border">Date</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {filteredCash.map((cash) => (
+              <tr key={cash.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">{cash.cash_default ?? "N/A"}</td>
+                <td className="px-4 py-2 border"><DateDisplay date={cash.date} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      {expense.length > 0 && (
-        <div className=" px-2 mb-5">
-          <div className=" mt-4  border-t-2 border-dotted">
-            <h5 className=" text-lg font-bold">Expenses</h5>
+    </section>
+  )}
 
-            <div className="mt-3">
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Name</th>
-                    <th className="border px-4 py-2">Amount</th>
-                    <th className="border px-4 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expense.map((expense) => (
-                    <tr key={expense.id}>
-                      <td className="border px-4 py-2">
-                        {expense.name ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {expense.amount ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <DateDisplay date={expense.date} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="mt-4 text-right font-semibold text-lg">
-            <p>
-              Total Expenses:{" "}
-              <span className="text-red-900 font-bold">
-                Ksh {totalExpenses.toLocaleString()}
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
+  {/* Expenses */}
+  {expense.length > 0 && (
+    <section className="bg-white shadow-sm rounded-lg p-4 border">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">Expenses</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-2 border">Name</th>
+              <th className="px-4 py-2 border">Amount</th>
+              <th className="px-4 py-2 border">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {expense.map((exp) => (
+              <tr key={exp.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">{exp.name ?? "N/A"}</td>
+                <td className="px-4 py-2 border">{exp.amount ?? "N/A"}</td>
+                <td className="px-4 py-2 border"><DateDisplay date={exp.date} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="text-right text-lg font-semibold mt-4">
+        Total Expenses:{" "}
+        <span className="text-red-600">
+          Ksh {totalExpenses.toLocaleString()}
+        </span>
+      </div>
+    </section>
+  )}
 
-      {defaulted_data.length > 0 && (
-        <div className=" px-2 mb-5">
-          <div className=" mt-4  border-t-2 border-dotted">
-            <h5 className=" text-lg font-bold">Defaults</h5>
+  {/* Lost Cylinders */}
+  {defaulted_data.length > 0 && (
+    <section className="bg-white shadow-sm rounded-lg p-4 border">
+      <h3 className="text-xl font-bold text-gray-800 mb-2">Lost Cylinders</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-2 border">Gas Type</th>
+              <th className="px-4 py-2 border">Weight (kg)</th>
+              <th className="px-4 py-2 border">Filled</th>
+              <th className="px-4 py-2 border">Empty</th>
+              <th className="px-4 py-2 border">Cost</th>
+              <th className="px-4 py-2 border">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {defaulted_data.map((cylinder) => {
+              const isFilled = !!cylinder.number_of_filled_cylinder
+              const isEmpty = !!cylinder.number_of_empty_cylinder
+              const cost = isFilled
+                ? cylinder.cylinder?.maximum_selling_price
+                : isEmpty
+                ? cylinder.cylinder?.empty_cylinder_price
+                : "N/A"
 
-            <div className="mt-3">
-              <h3 className="font-semibold">Cylinders Lost</h3>
+              return (
+                <tr key={cylinder.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 border">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
+                  <td className="px-4 py-2 border">{cylinder.cylinder?.weight ?? "N/A"}</td>
+                  <td className="px-4 py-2 border">{cylinder.number_of_filled_cylinder ?? "N/A"}</td>
+                  <td className="px-4 py-2 border">{cylinder.number_of_empty_cylinder ?? "N/A"}</td>
+                  <td className="px-4 py-2 border">{cost ?? "N/A"}</td>
+                  <td className="px-4 py-2 border"><DateDisplay date={cylinder.date_lost} /></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="text-right text-lg font-semibold mt-4">
+        Total Lost Cylinder Cost:{" "}
+        <span className="text-red-600">Ksh {totalCost.toLocaleString()}</span>
+      </div>
+    </section>
+  )}
 
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Filled</th>
-                    <th className="border px-4 py-2">Empty</th>
-                    <th className="border px-4 py-2">Cost</th>
-                    <th className="border px-4 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {defaulted_data.map((cylinder) => {
-                    const isFilled = !!cylinder.number_of_filled_cylinder
-                    const isEmpty = !!cylinder.number_of_empty_cylinder
-
-                    const cost = isFilled
-                      ? cylinder.cylinder?.maximum_selling_price
-                      : isEmpty
-                      ? cylinder.cylinder?.empty_cylinder_price
-                      : "N/A"
-
-                    return (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.cylinder?.gas_type ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">
-                          {cylinder.cylinder?.weight ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">
-                          {cylinder.number_of_filled_cylinder ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">
-                          {cylinder.number_of_empty_cylinder ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">{cost ?? "N/A"}</td>
-                        <td className="border px-4 py-2">
-                          <DateDisplay date={cylinder.date_lost} />
-                        </td>
-                        {/* empty_cylinder_price */}
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="mt-4 text-right font-semibold text-lg">
-            <p>
-              Total Lost Cylinder amount:{" "}
-              <span className="text-red-900 font-bold">
-                Ksh {totalCost.toLocaleString()}
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
-
-      {lessPay_data.length > 0 && (
-        <div className=" px-2 mb-5">
-          <div className=" mt-4  border-t-2 border-dotted">
-            <div className="mt-3">
-              <h3 className="font-semibold">Less Pay Cylinders</h3>
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                    <th className="border px-4 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lessPay_data?.map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">
-                        {cylinder.cylinder?.gas_type ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {cylinder.cylinder?.weight ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {cylinder.cylinders_less_pay ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <DateDisplay date={cylinder.date_lost} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+  {/* Less Pay Cylinders */}
+  {lessPay_data.length > 0 && (
+    <section className="bg-white shadow-sm rounded-lg p-4 border">
+      <h3 className="text-xl font-bold text-gray-800 mb-4">Less Pay Cylinders</h3>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border text-sm text-left">
+          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-2 border">Gas Type</th>
+              <th className="px-4 py-2 border">Weight (kg)</th>
+              <th className="px-4 py-2 border">Quantity</th>
+              <th className="px-4 py-2 border">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lessPay_data.map((cylinder) => (
+              <tr key={cylinder.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 border">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
+                <td className="px-4 py-2 border">{cylinder.cylinder?.weight ?? "N/A"}</td>
+                <td className="px-4 py-2 border">{cylinder.cylinders_less_pay ?? "N/A"}</td>
+                <td className="px-4 py-2 border"><DateDisplay date={cylinder.date_lost} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )}
+</div>
 
       {/* Footer */}
 
