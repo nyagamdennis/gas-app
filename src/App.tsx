@@ -45,6 +45,9 @@ import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
 import CylinderRequest from "./pages/CylinderRequest"
 import { useTokenAutoRefresher } from "./features/auths/useTokenAutoRefresher "
 import AdminStore from "./pages/AdminStore"
+import AdminCustomer from "./pages/AdminCustomer"
+import AdminSms from "./pages/AdminSms"
+import AdminAnalysis from "./pages/AdminAnalysis"
 
 
 function App() {
@@ -75,6 +78,23 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admins/sms"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminSms />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+          path="/admins/analysis"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminAnalysis />
+            </ProtectedRoute>
+          }
+           />
+          {/* admins/analysis */}
           <Route
             path="/customers"
             element={
@@ -192,6 +212,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <CollectCylinders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/customers"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminCustomer />
               </ProtectedRoute>
             }
           />

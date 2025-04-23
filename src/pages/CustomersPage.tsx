@@ -99,7 +99,7 @@ console.log('Customers ', customers)
     retail_content = retail_customers.map((customer) => (
       <CustomerExcerpt
         key={customer.id}
-        customerId={customer.id}
+        customer={customer.id}
         // @ts-ignore
         customer={customer}
       />
@@ -107,7 +107,7 @@ console.log('Customers ', customers)
     wholesale_content = wholesale_customers.map((customer) => (
       <CustomerExcerpt
         key={customer.id}
-        customerId={customer.id}
+        customer={customer.id}
         // @ts-ignore
         customer={customer}
       />

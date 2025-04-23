@@ -17,7 +17,6 @@ const SendSmsPage = () => {
                     <SendSms />
                 </div>
             </div>
-
         </div>
   )
 }

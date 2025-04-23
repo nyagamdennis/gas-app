@@ -1,365 +1,206 @@
-/* eslint-disable prettier/prettier */
 // @ts-nocheck
 import React, { useState, useRef } from "react"
-import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk"
-import SendIcon from "@mui/icons-material/Send"
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import { useAppSelector } from "../../app/hooks"
 import { selectAllLocations } from "../location/locationSlice"
-import LocationOnIcon from "@mui/icons-material/LocationOn"
 import { selectAllProducts } from "../product/productSlice"
 import { selectAllSales } from "../sales/salesSlice"
 import axios from "axios"
 import Cookies from "cookies-js"
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
-import getApiUrl from "../../getApiUrl"
 import FormattedAmount from "../../components/FormattedAmount"
+import getApiUrl from "../../getApiUrl"
 
-export interface Customer {
-  id: number;
-  name: string;
-  sales: string;
-  location: {
-    id: number;
-    name: string;
-  }
-  phone: number;
-  customer_debt: {
-    amount: number;
-    expected_date_to_repay: string;
-    date_given: string;
-  }[]
-  customer_sales: {
-    id: number;
-    product: {
-      id: number;
-      name: string;
-      weight: number;
-      timestamp: string;
-    }[]
-    total_amount: number;
-    quantity: number;
-  }[]
-}
+import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import SendIcon from "@mui/icons-material/Send"
+import LocationOnIcon from "@mui/icons-material/LocationOn"
+import CircularProgress from "@mui/material/CircularProgress"
+import Box from "@mui/material/Box"
+import Alert from "@mui/material/Alert"
+import Stack from "@mui/material/Stack"
 
-export interface products {
-  id: number;
-  name: string;
-  weight: number;
-  timestamp: string;
-}
-
-interface CustomerExcerptProps {
-  key: number;
-  customerId: number; // Include the customerId prop
-  customer: Customer
-}
-
-const CustomerExcerpt: React.FC<CustomerExcerptProps> = ({key,customerId,customer,}) => {
+const CustomerExcerpt = ({ customer }) => {
   const apiUrl = getApiUrl()
-  const [showAlert, setShowAlert] = useState(false);
-  const [showError, setShowError] = useState(false);
-
-  // const messageInputRef = useRef(null);
-  const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-
+  const [smsState, setSmsState] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+  const [message, setMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [message, setMessage] = useState('');
-  const [location, setLocation] = useState();
-  const [customers, setCustomers] = useState();
-
-
-  const handleMessage = (e: any) => setMessage(e.target.value)
+  const [showAlert, setShowAlert] = useState(false)
+  const [showError, setShowError] = useState(false)
+  const messageTextareaRef = useRef(null)
 
   const locations = useAppSelector(selectAllLocations)
-
   const products = useAppSelector(selectAllProducts)
-
   const salesProduct = useAppSelector(selectAllSales)
 
-  const [smsState, setSmsState] = useState(false)
+  const location = locations.find((l) => l.id === customer.location.id)
+  const phoneStr = customer.phone.toString()
 
-  const [showHistory, setShowHistory] = useState(false)
+  const toggleSMS = () => setSmsState(!smsState)
+  const toggleHistory = () => setShowHistory(!showHistory)
 
-  const showSmsInputs = () => setSmsState(!smsState)
+  const formattedDates = customer.customer_debt.map((debt) => {
+    const date = new Date(debt.expected_date_to_repay)
+    return {
+      formatted: date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+      isPastDue: date < new Date(),
+    }
+  })
 
-  const showHist = () => setShowHistory(!showHistory)
-
-  const phoneNum = customer.phone
-  const phoneStr = phoneNum.toString()
-
-  console.log("Phone string ", phoneStr)
-
-  function formatTimestamp() {
-    const date = new Date()
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    })
-    return formattedDate
-  }
-
-  const formattedDatess =
-  customer &&
-  customer.customer_debt.map((debt) => {
-    const debtDate = new Date(debt.expected_date_to_repay);
-    console.log("debt date given ", debtDate);
-    const formattedDate = debtDate.toLocaleDateString("en-US", {
+  const dateGivenList = customer.customer_debt.map((debt) => {
+    const date = new Date(debt.date_given)
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-    return formattedDate;
-  });
-
-
-  const formattedDates =
-    customer &&
-    customer.customer_debt.map((debt) => {
-      const debtDate = new Date(debt.expected_date_to_repay)
-      const formattedDate = debtDate.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-      return {
-        formattedDate,
-        isPastDue: debtDate < new Date(),
-      }
     })
+  })
 
-  const formattedDate =
-    customer &&
-    customer.customer_debt.map((debt) => {
-      const debtDate = new Date(debt.date_given)
-      console.log("debt date given ", debtDate)
-      const formattedDate = debtDate.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-      return formattedDate
-    })
-
-  const locat = locations.find(
-    (location) => location.id === customer.location.id,
-  )
-
-  const sold = customer.customer_sales
-    ? salesProduct.find((sale) =>
-        customer.customer_sales.some(
-          // @ts-ignore
-          (customerSale) => customerSale.product.id === sale.id,
-        ),
-      )
-    : null
-
-  const productName = sold
-    ? products.find((product) => product.id === sold.product)?.name
-    : "not found"
-  const productWeight = sold
-    ? products.find((product) => product.id === sold.product)?.weight
-    : 0
-
-
-
-    const handleSubmit = async (e: any) => {
-      e.preventDefault()
-  
-      setIsSubmitting(true)
-  
-      try {
-        // Create an object with the form data
-        const formData = {
-          message: message,
-          customer: [customer.id],
-          location: [customer.location.id],
-        }
-        const response = await axios.post(
-          `${apiUrl}/sendsms/`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("accessToken")}`,
-              "Content-Type": "application/json",
-            },
-          },
-        )
-  
-        if (response.status === 201) {
-          if (messageTextareaRef.current) {
-            messageTextareaRef.current.value = "";
-            setShowAlert(true);
-            setTimeout(() => {
-              setShowAlert(false);
-            }, 5000);
-            // console.log("Form submitted successfully!");
-          }
-          // messageTextareaRef.current.value = "";
-          // setShowAlert(true);
-          // setTimeout(() => {
-          //   setShowAlert(false);
-          // }, 5000);
-          // console.log("Form submitted successfully!");
-        } else {
-          // Handle specific error status codes
-          if (response.status === 400) {
-            console.error("Bad Request: The submitted data is invalid");
-          } else if (response.status === 401) {
-            console.error("Unauthorized: User is not authenticated");
-          } else {
-            console.error("Form submission failed with status:", response.status);
-          }
-        }
-      } catch (error:any) {
-        if (error.response.status === 401) {
-          console.error("Error occurred while submitting the form:", error);
-          setShowError(true);
-          setTimeout(() => {
-            setShowError(false);
-          }, 5000);
-        } else {
-          console.error("Error occurred while submitting the form:", error);
-        }
-    //     console.error("Error occurred while submitting the form:", error);
-    //     console.error("Error occurred while submitting the form:", error);
-    // console.log("Response data:", error.response.data);
-    // console.log("Response status:", error.response.status);
-    // console.log("Response headers:", error.response.headers);
-      } finally {
-        // Reset isSubmitting to enable the submit button
-        setIsSubmitting(false);
-        setTimeout(() => {
-          setSmsState(false);
-        }, 6000);
-        
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const formData = {
+        message,
+        customer: [customer.id],
+        location: [customer.location.id],
       }
+
+      const response = await axios.post(`${apiUrl}/sendsms/`, formData, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.status === 201) {
+        setShowAlert(true)
+        if (messageTextareaRef.current) {
+          messageTextareaRef.current.value = ""
+        }
+        setTimeout(() => setShowAlert(false), 5000)
+      }
+    } catch (error) {
+      console.error("SMS error", error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 5000)
+    } finally {
+      setIsSubmitting(false)
+      setTimeout(() => setSmsState(false), 5000)
     }
+  }
+
   return (
-    <div className=" bg-green-400 mx-1 p-3 rounded-sm mb-3 ">
-      <div className="flex justify-between  mt-2 cursor-pointer">
-        <h5 className=" font-semibold text-xl">{customer.name}</h5>
-        <div className=" font-semibold text-lg">
-          <PhoneInTalkIcon />
-          <span>
-            {phoneStr.substring(0, 2)}****{phoneStr.substring(6, 9)}
-          </span>
-        </div>
-        <span>
-          <LocationOnIcon />
-          {locat?.name}
-        </span>
+    <div className="bg-white shadow-md rounded-2xl p-4 mb-4 border border-gray-200">
+      {/* Header Section */}
+      <div className="flex justify-between items-center">
         <div>
+          <h2 className="text-xl font-semibold text-blue-700">{customer.name}</h2>
+          <p className="text-sm text-gray-500 flex items-center gap-1">
+            <PhoneInTalkIcon fontSize="small" />{" "}
+            {phoneStr}
+            {/* {phoneStr.slice(0, 3)}****{phoneStr.slice(-3)} */}
+          </p>
+          <p className="text-sm text-gray-500 flex items-center gap-1">
+            <LocationOnIcon fontSize="small" />
+            {location?.name}
+          </p>
+        </div>
+        <div className="flex gap-2">
           <button
-            onClick={showSmsInputs}
-            className=" bg-blue-500 px-3 py-1 rounded-sm"
+            onClick={toggleSMS}
+            className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
           >
             Message
           </button>
+          <ExpandMoreIcon onClick={toggleHistory} className="cursor-pointer" />
         </div>
-        <ExpandMoreIcon onClick={showHist} className=" right-1" />
       </div>
+
+      {/* SMS Form */}
       {smsState && (
-        <div className=" mx-auto mt-4">
-          <form className=" ms-6 " onSubmit={handleSubmit}>
-            <textarea ref={messageTextareaRef} required name={message} onChange={handleMessage}  className=" w-full h-11 text-black p-1 outline-none rounded-sm"></textarea>
-            <div className="flex justify-end mt-2">
-              <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
-                {isSubmitting ?
-                ( <Box sx={{ display: 'flex' }}>
-                <CircularProgress className=" !text-white" />
-              </Box>): (<>Send <SendIcon /></>)
-                }
-                
-              </button>
-            </div>
-          </form>
+        <form onSubmit={handleSubmit} className="mt-4 space-y-2">
+          <textarea
+            ref={messageTextareaRef}
+            placeholder="Type your message..."
+            className="w-full p-2 border rounded-md outline-none"
+            required
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
+            >
+              {isSubmitting ? <CircularProgress size={20} className="text-white" /> : <><SendIcon /> Send</>}
+            </button>
+          </div>
+
           {showAlert && (
-        <Stack className=" mt-2" sx={{ width: "100%" }} spacing={2}>
-          <Alert severity="success">Message sent successfully!</Alert>
-        </Stack>
+            <Stack className="mt-2" spacing={1}>
+              <Alert severity="success">Message sent successfully!</Alert>
+            </Stack>
+          )}
+
+          {showError && (
+            <Stack className="mt-2" spacing={1}>
+              <Alert severity="error">Please login to send messages.</Alert>
+            </Stack>
+          )}
+        </form>
       )}
 
-      {showError && (
-        <Stack className=" mt-2" sx={{ width: "100%" }} spacing={2}>
-          <Alert severity="error">Please Log in!</Alert>
-        </Stack>
-        
-      )}
-        </div>
-      )}
-
+      {/* History Section */}
       {showHistory && (
-        <div className="">
-          <h5 className=" font-semibold text-zinc-950 text-lg">
-            Customer Details
-          </h5>
-          <div>
-            {customer.customer_debt.length > 0 && (
-              <div className=" bg-red-400 text-bold">
-                <span>Customer Debts:</span>
-                <div>
-                  <div className=" ">
-                    {/* <span className=" me-3">Given on: </span>{" "} */}
-                    {customer.customer_debt.filter((debt) => !debt.cleared).map((debt, index) => (
-                      <div
-                        key={index}
-                        className={
-                          formattedDates[index].isPastDue
-                            ? " bg-red-950 flex gap-2 "
-                            : "flex gap-2"
-                        }
-                      >
-                        <span>Given on: {formattedDate[index]}</span>
-                        <span className=" flex items-center gap-3 ">
-                        
-                          Amount:{" "}
-                          <div className=" text-lg font-bold">
-                            <FormattedAmount amount={debt.amount} />
-                          </div>
-                        </span>
-                        <span>Due: {formattedDatess[index]}</span>
-                       
-                      </div>
-                    ))}
-                  </div>
-                  
+        <div className="mt-4 space-y-4">
+          {customer.customer_debt.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-red-700">Customer Debts</h4>
+              {customer.customer_debt.map((debt, index) => (
+                <div
+                  key={index}
+                  className={`p-2 rounded-md text-sm ${
+                    formattedDates[index].isPastDue
+                      ? "bg-red-100 text-red-700"
+                      : "bg-gray-100"
+                  }`}
+                >
+                  <p>🕐 Given on: {dateGivenList[index]}</p>
+                  <p>
+                    💰 Amount:{" "}
+                    <span className="font-bold">
+                      <FormattedAmount amount={debt.amount} />
+                    </span>
+                  </p>
+                  <p>📅 Due: {formattedDates[index].formatted}</p>
                 </div>
+              ))}
+            </div>
+          )}
+
+          <div>
+            <h4 className="font-semibold text-green-700">Purchase History</h4>
+            {customer.customer_sales.map((sale, i) => (
+              <div
+                key={i}
+                className="p-2 rounded-md bg-green-50 text-sm border border-green-200 mb-2"
+              >
+                <p>🧪 Product: {sale.product[0]?.name || "N/A"}</p>
+                <p>⚖️ Weight: {sale.product[0]?.weight || "N/A"}kg</p>
+                <p>📦 Qty: {sale.quantity}</p>
+                <p>
+                  💵 Total: <FormattedAmount amount={sale.total_amount} />
+                </p>
               </div>
-            )}
-          </div>
-          <div className="mt-1 bg-green-800 p-1 rounded-sm">
-            <h2 className=" text-lg">Purchase History</h2>
-            {customer.customer_sales.length > 0 && (
-              <div>
-                {customer.customer_sales.map((sale, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>{
-                    // @ts-ignore
-                    sale.product.gas_type}</span>
-                    <span>{
-                    // @ts-ignore
-                    sale.product.weight} (Kg)</span>
-                    <span>Quantity: {sale.quantity}</span>
-                    <span> <FormattedAmount amount={sale.total_amount} /></span>
-                    <span>{formatTimestamp(
-                      // @ts-ignore
-                      sale.timestamp)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         </div>
       )}
+
+    
     </div>
   )
 }

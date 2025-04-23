@@ -234,7 +234,8 @@ const AdminStore = () => {
   const [selectedGasCylinder, setSelectedGasCylinder] = useState(null)
   // console.log("selected gas", selectedGas)
   // console.log("selected gas data", selectedGasData);
-  console.log("selected gas cylinder", selectedGasCylinder)
+    const [assignments, setAssignments] = useState([]); 
+
   const [dialogOpenAgain, setDialogOpenAgain] = useState(false)
   const [dialogTypeAgain, setDialogTypeAgain] = useState(null) // 'update' | 'delete'
 
@@ -915,6 +916,22 @@ const AdminStore = () => {
     setGasSpoiled(e.target.value)
   }
 
+
+  const handleInputChange = (storeId, cylinderId, weightId, value) => {
+    setAssignments((prev) => {
+        const updated = [...prev];
+        const index = updated.findIndex((item) => item.storeId === storeId);
+
+        if (index !== -1) {
+            updated[index] = { storeId, cylinderId, weightId, assigned_quantity: parseInt(value, 10) };
+        } else {
+            updated.push({ storeId, cylinderId, weightId, assigned_quantity: parseInt(value, 10) });
+        }
+
+        return updated.filter((item) => item.assigned_quantity > 0); // Remove items with 0 quantity
+    });
+};
+
   const renderContent = () => {
     switch (activeTab) {
       case "cylinders":
@@ -1293,7 +1310,80 @@ const AdminStore = () => {
           </div>
         )
       case "depot":
-        return <div className="p-6">🏭 Depot information or layout</div>
+        return <div className="p-6">
+          <div className="min-h-screen bg-gray-100">
+          
+              
+                    <div>
+                        {store.map((gas) => (
+                            <div key={gas.id} className="mb-4 bg-white p-3 rounded-lg shadow-md">
+                                <h3 className="text-lg font-semibold text-blue-600">{gas.name}</h3>
+                                {gas.cylinders.map((cylinder) => (
+                                    <div key={cylinder.id} className="mt-3">
+                                        <h4 className="text-base font-semibold">
+                                            Cylinder Weight: {cylinder.weight.weight}kg
+                                        </h4>
+                                        {cylinder.stores.length > 0 ? (
+                                            <table className="mt-2 w-full border text-sm">
+                                                <thead>
+                                                    <tr className="bg-gray-200 text-left">
+                                                        <th className="border px-2 py-1">Filled</th>
+                                                        <th className="border px-2 py-1">Empties</th>
+                                                        <th className="border px-2 py-1">Spoiled</th>
+                                                        <th className="border px-2 py-1">Total</th>
+                                                        <th className="border px-2 py-1">Assign</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {cylinder.stores.map((storeItem) => (
+                                                        <tr key={storeItem.id}>
+                                                            <td className="border px-2 py-1 text-center">{storeItem.filled}</td>
+                                                            <td className="border px-2 py-1 text-center">{storeItem.empties}</td>
+                                                            <td className="border px-2 py-1 text-center">{storeItem.spoiled}</td>
+                                                            <td className="border px-2 py-1 text-center">
+                                                                {storeItem.total_cylinders}
+                                                            </td>
+                                                            <td className="border px-2 py-1 text-center">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    max={storeItem.filled}
+                                                                    className="w-full border px-1 py-1"
+                                                                    onChange={(e) =>
+                                                                        handleInputChange(
+                                                                            storeItem.id,
+                                                                            storeItem.id,
+                                                                            cylinder.weight.id,
+                                                                            e.target.value
+                                                                        )
+                                                                    }
+                                                                />
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        ) : (
+                                            <p className="text-gray-600 mt-2">No stores available for this cylinder.</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                    {/* <div className="mt-6 text-center">
+                        <button
+                            className={`bg-blue-500 text-white px-6 py-2 rounded-lg shadow ${loadingAssign ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition`}
+                            onClick={handleAssign}
+                            disabled={loadingAssign}
+                        >
+                            {loadingAssign ? 'Assigning...' : 'Assign Cylinders'}
+                        </button>
+                    </div> */}
+                </div>
+            
+        </div>
+        
       default:
         return null
     }
@@ -1301,6 +1391,7 @@ const AdminStore = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
+    <ToastContainer />
       {/* Header */}
       <header className="px-6 py-6 bg-white border-b border-gray-200 shadow-sm">
         <h1 className="text-4xl font-extrabold tracking-tight">Admin Store</h1>
@@ -1308,7 +1399,7 @@ const AdminStore = () => {
           Switch between product layouts and depot view
         </p>
       </header>
-      <ToastContainer />
+      
 
       <Dialog
         open={dialogOpen}
@@ -1732,7 +1823,7 @@ const AdminStore = () => {
       </nav>
 
       {/* Dynamic Content */}
-      <main className="flex-grow">{renderContent()}</main>
+      <main className="flex-grow overflow-x-hidden ">{renderContent()}</main>
 
       {/* Footer */}
       <AdminsFooter />
