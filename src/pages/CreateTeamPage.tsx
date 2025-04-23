@@ -44,9 +44,13 @@ const CreateTeamPage = () => {
             <h1 className="text-4xl font-extrabold tracking-tight">Create New Team</h1>
             <p className="text-sm text-gray-500 mt-1">Upload a team profile and assign its type</p>
           </header>
-
+          
+          <div>
+          <h1>All other teams.</h1>
+          </div>
           {/* Main */}
           <main className="flex-grow flex justify-center items-center py-10">
+            
             <form
               className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl p-8 space-y-6"
               encType="multipart/form-data"
