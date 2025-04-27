@@ -444,7 +444,7 @@ const CollectCylinders = () => {
                       key={cylinder.id}
                       className="bg-white border border-gray-300 rounded-lg shadow-md p-4"
                     >
-                      <h3 className="text-lg font-bold text-blue-600 mb-2">
+                      <h3 className="text-lg font-bold text-blue</p>-600 mb-2">
                         {cylinder.gas_type}
                       </h3>
                       <p className="text-sm text-gray-700">
@@ -463,7 +463,7 @@ const CollectCylinders = () => {
                         Filled lost: {cylinder.filled_lost}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Empties lost: {cylinder.empties_lost}
+                        Empties lost: {cylinder.empties_lost}Collect Cy
                       </p>
                       <p className="text-sm text-gray-700">
                         Less pay: {cylinder.less_pay}
