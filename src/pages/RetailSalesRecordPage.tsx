@@ -24,6 +24,7 @@ const RetailSalesRecordPage = () => {
   const allOtherProducts = useAppSelector(selectAllAssignedOtherProducts)
   const operationError = useAppSelector(getSalesError)
   const [customPrice, setCustomPrice] = useState("")
+  const [cylinderExchaged, setCylinderExchanged] = useState("")
 
   const [products, setProducts] = useState([{ productId: "", quantity: 1 }])
   const [otherProducts, setOtherProducts] = useState([
@@ -246,11 +247,11 @@ const RetailSalesRecordPage = () => {
       sales_type: saleType,
       products: products.map((product) => {
         const assignedProduct = allAssignedProducts.find(
-          (prod) => prod.id === Number(product.productId)
+          (prod) => prod.id === Number(product.productId),
         )
-      
+
         let unitPrice = 0
-      
+
         if (product.paymentAmount === "CUSTOM" && product.customPrice) {
           unitPrice = parseFloat(product.customPrice)
         } else {
@@ -267,17 +268,17 @@ const RetailSalesRecordPage = () => {
               ? assignedProduct.mid_wholesale_refil_price
               : assignedProduct.min_wholesale_refil_price
         }
-      
+
         const productPayload: any = {
           id: product.productId,
           quantity: product.quantity,
           amount_sold_for: unitPrice,
         }
-      
+
         if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
           productPayload.amount_sold_for_mpesa = unitPrice
         }
-      
+
         return productPayload
       }),
       total_amount: calculateTotal(),
@@ -287,6 +288,7 @@ const RetailSalesRecordPage = () => {
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
       exchanged_with_local: exchangedWithLocal,
+      cylinder_exchanged_with: cylinderExchaged,
       // admin_mpesa_verified,
       mpesa_code: mpesaCodes,
       // cash: cashAmount,
@@ -492,7 +494,10 @@ const RetailSalesRecordPage = () => {
               )
 
               return (
-                <div key={index} className="mb-4 border-b-4 border-green-900 pb-4">
+                <div
+                  key={index}
+                  className="mb-4 border-b-4 border-green-900 pb-4"
+                >
                   <div className="mb-2">
                     <label className="block text-gray-600">Product</label>
 
@@ -559,7 +564,6 @@ const RetailSalesRecordPage = () => {
                                 "MEDIUM",
                               )
                             }
-                          
                           />
                           <p>
                             {saleType === "COMPLETESALE" ? (
@@ -716,6 +720,25 @@ const RetailSalesRecordPage = () => {
                   Yes
                 </label>
               </div>
+              {exchangedWithLocal && (
+                <div className="mt-4">
+                  <label className="block text-gray-600">
+                    Select Product Exchange with
+                  </label>
+                  <select
+                    className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                    onChange={(e) => setCylinderExchanged(e.target.value)}
+                    value={cylinderExchaged}
+                  >
+                    <option value="">Select a product</option>
+                    {allAssignedProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.gas_type} {product.weight}kg
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <h2 className="text-lg font-semibold mt-4 text-gray-700">
               Payment Details
@@ -825,7 +848,6 @@ const RetailSalesRecordPage = () => {
                 </div>
               )}
 
-           
               {/* cash + mpesa payment */}
               {(paymentMode === "mpesa" || paymentMode === "mpesa_cash") && (
                 <>
