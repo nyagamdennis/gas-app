@@ -293,7 +293,7 @@ const AdminSalesRecord = () => {
                 )}
 
                 {sale.cashAmount > 0 && (
-                  <p className="text-sm font-bold text-green-700">Cash: {<FormattedAmount amount={(sale.amount_sold_for * sale.quantity) - sale.debt_info?.debt_amount} />}</p>
+                    <p className="text-sm font-bold text-green-700">Cash: {<FormattedAmount amount={(sale.amount_sold_for * sale.quantity) - (sale.debt_info?.debt_amount || 0)} />}</p>
                 )}
 
                 {/* Verification Buttons */}
