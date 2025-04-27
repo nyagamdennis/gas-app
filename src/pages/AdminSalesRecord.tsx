@@ -213,7 +213,7 @@ const AdminSalesRecord = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white shadow-md p-4 flex justify-between items-center ">
+      <div className="bg-white shadow-md p-1 flex justify-between items-center ">
         <div className="flex flex-col space-y-2 items-center  md:flex md:justify-between">
           <div className="flex items-center space-x-2">
             <label htmlFor="start-date" className="text-gray-700 font-medium">
@@ -240,7 +240,7 @@ const AdminSalesRecord = () => {
             />
           </div>
         </div>
-        <div className="ms-6">
+        <div className="ms-5">
           <label className="text-gray-700 font-medium mr-2">Sales Team:</label>
           <select
             value={selectedTeam}
@@ -415,7 +415,7 @@ const AdminSalesRecord = () => {
             disabled={addingCash}
             className="bg-blue-700 text-white rounded p-2 hover:bg-blue-800"
           >
-            {addingCash ? "Submitting..." : "Submit Cash Adjustment"}
+            {addingCash ? "Submitting..." : "Submit Cash"}
           </button>
         </form>
       </div>
