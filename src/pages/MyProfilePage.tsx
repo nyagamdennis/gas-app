@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react"
+import { format, differenceInMonths, addMonths, isSameMonth } from "date-fns"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
   fetchMyProfile,
@@ -27,14 +28,19 @@ import FormattedAmount from "../components/FormattedAmount"
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew"
 import { logout } from "../features/auths/authSlice"
 import { fetchCash, selectAllCash } from "../features/cashAtHand/cashSlice"
+import { fetchSalary, selectAllSalary } from "../features/salary/salarySlice"
 
 const MyProfilePage = () => {
   const dispatch = useAppDispatch()
   const myProfile = useAppSelector(selectMyProfile)
-  const defaulted_data = useAppSelector(selectAllDefaults)
+
+  const defaulted_data = useAppSelector(selectAllDefaults);
+  console.log("defaulted_data", defaulted_data)
   const lessPay_data = useAppSelector(selectAllLessPay)
+  console.log("lessPay_data", lessPay_data)
   const expense = useAppSelector(selectAllExpenses)
   const allCash = useAppSelector(selectAllCash)
+  const mySalary = useAppSelector(selectAllSalary)
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
@@ -61,6 +67,7 @@ const MyProfilePage = () => {
       dispatch(fetchDefaults(myProfile.id))
       dispatch(fetchLessPay(myProfile.id))
       dispatch(fetchExpenses(myProfile.id))
+      dispatch(fetchSalary(myProfile.id))
     }
   }, [dispatch, myProfile])
 
@@ -148,7 +155,7 @@ const MyProfilePage = () => {
     const isEmpty = !!cylinder.number_of_empty_cylinder
 
     const price = isFilled
-      ? cylinder.cylinder?.maximum_selling_price
+      ? cylinder.cylinder?.max_retail_selling_price
       : isEmpty
       ? cylinder.cylinder?.empty_cylinder_price
       : 0
@@ -157,8 +164,37 @@ const MyProfilePage = () => {
   }, 0)
 
   const totalLessPay = lessPay_data.reduce((sum, cylinder) => {
-    return sum + (cylinder.cylinders_less_pay || 0)
+    return sum + (cylinder.cylinder?.max_retail_refil_price || 0)
   }, 0)
+
+  // payment filters
+  // Payment Filters - Salary Period Logic
+  const [selectedPeriod, setSelectedPeriod] = useState("")
+
+  const joinDate = myProfile?.date_joined
+    ? new Date(myProfile.date_joined)
+    : new Date()
+  const today = new Date()
+
+  const monthDiff = differenceInMonths(today, joinDate) + 1
+  const months = Array.from({ length: monthDiff }, (_, i) =>
+    addMonths(joinDate, i),
+  )
+
+  const getMonthStatus = (monthDate) => {
+    const record = mySalary.find((entry) =>
+      isSameMonth(new Date(entry.payment_date), monthDate),
+    )
+    return {
+      isPaid: record?.is_paid || false,
+      paymentDate: record?.payment_date || null,
+    }
+  }
+
+  const unpaidMonths = months.filter((month) => !getMonthStatus(month).isPaid)
+
+  const netSalary =
+    myProfile.contract_salary - totalCashDefault - totalExpenses - totalCost
 
   return (
     <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
@@ -487,6 +523,140 @@ const MyProfilePage = () => {
         )}
       </div>
 
+      {unpaidMonths.length > 0 && (
+        <div className="bg-red-50 border border-red-300 p-4 rounded-md text-red-700 mt-6">
+          <h4 className="font-semibold">Unpaid Months</h4>
+          <ul className="list-disc ml-5 mt-2 text-sm">
+            {unpaidMonths.map((month, i) => (
+              <li key={i}>{format(month, "MMMM yyyy")}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6 space-y-6">
+        {/* Period Selector */}
+        <div className="flex justify-end">
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="text-sm border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:ring-blue-500"
+          >
+            {months.map((month, i) => (
+              <option key={i} value={month.toISOString()}>
+                {format(month, "MMMM yyyy")}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Salary Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Base Salary</span>
+            <span className="text-lg font-semibold text-gray-900">
+              <FormattedAmount amount={myProfile.contract_salary} />
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Cash Default</span>
+            <span className="text-lg font-semibold text-red-600">
+              {filteredCash
+                .filter((item) =>
+                  isSameMonth(new Date(item.date), new Date(selectedPeriod)),
+                )
+                .reduce((sum, item) => sum + item.cash_default, 0)
+                .toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "KSH",
+                })}
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Expenses</span>
+            <span className="text-lg font-semibold text-yellow-600">
+              {expense
+                .filter((item) =>
+                  isSameMonth(new Date(item.date), new Date(selectedPeriod)),
+                )
+                .reduce((sum, item) => sum + item.amount, 0)
+                .toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "KSH",
+                })}
+            </span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Lost Cylinders</span>
+            <span className="text-lg font-semibold text-rose-600">
+              {defaulted_data
+                .filter((item) =>
+                  isSameMonth(
+                    new Date(item.date_lost),
+                    new Date(selectedPeriod),
+                  ),
+                )
+                .reduce((sum, cylinder) => {
+                  const isFilled = !!cylinder.number_of_filled_cylinder
+                  const isEmpty = !!cylinder.number_of_empty_cylinder
+                  const price = isFilled
+                    ? cylinder.cylinder?.maximum_selling_price
+                    : isEmpty
+                    ? cylinder.cylinder?.empty_cylinder_price
+                    : 0
+                  return sum + (price || 0)
+                }, 0)
+                .toLocaleString("en-US", {
+                  style: "currency",
+                  currency: "KSH",
+                })}
+            </span>
+          </div>
+        </div>
+
+        {/* Net Salary */}
+        <div className="border border-dashed border-green-800 rounded-md p-4 bg-green-50">
+          <h4 className="text-md font-bold text-green-900 mb-1">Net Salary</h4>
+          <p className="text-xl font-bold text-green-700">
+            <FormattedAmount
+              amount={
+                myProfile.contract_salary -
+                filteredCash
+                  .filter((item) =>
+                    isSameMonth(new Date(item.date), new Date(selectedPeriod)),
+                  )
+                  .reduce((sum, item) => sum + item.cash_default, 0) -
+                expense
+                  .filter((item) =>
+                    isSameMonth(new Date(item.date), new Date(selectedPeriod)),
+                  )
+                  .reduce((sum, item) => sum + item.amount, 0) -
+                defaulted_data
+                  .filter((item) =>
+                    isSameMonth(
+                      new Date(item.date_lost),
+                      new Date(selectedPeriod),
+                    ),
+                  )
+                  .reduce((sum, cylinder) => {
+                    const isFilled = !!cylinder.number_of_filled_cylinder
+                    const isEmpty = !!cylinder.number_of_empty_cylinder
+                    const price = isFilled
+                      ? cylinder.cylinder?.maximum_selling_price
+                      : isEmpty
+                      ? cylinder.cylinder?.empty_cylinder_price
+                      : 0
+                    return sum + (price || 0)
+                  }, 0)
+              }
+            />
+          </p>
+        </div>
+      </div>
+
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6 space-y-6">
         {/* Salary Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
@@ -526,7 +696,20 @@ const MyProfilePage = () => {
               })}
             </span>
           </div>
+
+
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-500">Less Pay</span>
+            <span className="text-lg font-semibold text-rose-600">
+              {totalLessPay.toLocaleString("en-US", {
+                style: "currency",
+                currency: "KSH",
+              })}
+            </span>
+          </div>
         </div>
+
+        
 
         {/* Net Salary */}
         <div className="border border-dashed border-green-800 rounded-md p-4 bg-green-50">
@@ -537,7 +720,7 @@ const MyProfilePage = () => {
                 myProfile.contract_salary -
                 totalCashDefault -
                 totalExpenses -
-                totalCost
+                totalCost - totalLessPay
               }
             />
           </p>
@@ -545,141 +728,180 @@ const MyProfilePage = () => {
       </div>
 
       <div className="space-y-8 mt-6">
+        {/* Cash Defaults */}
+        {filteredCash.length > 0 && (
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Cash at Hand Defaults
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 border">Amount</th>
+                    <th className="px-4 py-2 border">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {filteredCash.map((cash) => (
+                    <tr key={cash.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">
+                        {cash.cash_default ?? "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        <DateDisplay date={cash.date} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
-  {/* Cash Defaults */}
-  {filteredCash.length > 0 && (
-    <section className="bg-white shadow-sm rounded-lg p-4 border">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Cash at Hand Defaults</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border text-sm text-left">
-          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-2 border">Amount</th>
-              <th className="px-4 py-2 border">Date</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white">
-            {filteredCash.map((cash) => (
-              <tr key={cash.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 border">{cash.cash_default ?? "N/A"}</td>
-                <td className="px-4 py-2 border"><DateDisplay date={cash.date} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )}
+        {/* Expenses */}
+        {expense.length > 0 && (
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Expenses</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 border">Name</th>
+                    <th className="px-4 py-2 border">Amount</th>
+                    <th className="px-4 py-2 border">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expense.map((exp) => (
+                    <tr key={exp.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">{exp.name ?? "N/A"}</td>
+                      <td className="px-4 py-2 border">
+                        {exp.amount ?? "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        <DateDisplay date={exp.date} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="text-right text-lg font-semibold mt-4">
+              Total Expenses:{" "}
+              <span className="text-red-600">
+                Ksh {totalExpenses.toLocaleString()}
+              </span>
+            </div>
+          </section>
+        )}
 
-  {/* Expenses */}
-  {expense.length > 0 && (
-    <section className="bg-white shadow-sm rounded-lg p-4 border">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Expenses</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border text-sm text-left">
-          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-2 border">Name</th>
-              <th className="px-4 py-2 border">Amount</th>
-              <th className="px-4 py-2 border">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expense.map((exp) => (
-              <tr key={exp.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 border">{exp.name ?? "N/A"}</td>
-                <td className="px-4 py-2 border">{exp.amount ?? "N/A"}</td>
-                <td className="px-4 py-2 border"><DateDisplay date={exp.date} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="text-right text-lg font-semibold mt-4">
-        Total Expenses:{" "}
-        <span className="text-red-600">
-          Ksh {totalExpenses.toLocaleString()}
-        </span>
-      </div>
-    </section>
-  )}
+        {/* Lost Cylinders */}
+        {defaulted_data.length > 0 && (
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Lost Cylinders
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 border">Gas Type</th>
+                    <th className="px-4 py-2 border">Weight (kg)</th>
+                    <th className="px-4 py-2 border">Filled</th>
+                    <th className="px-4 py-2 border">Empty</th>
+                    <th className="px-4 py-2 border">Cost</th>
+                    <th className="px-4 py-2 border">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {defaulted_data.map((cylinder) => {
+                    const isFilled = !!cylinder.number_of_filled_cylinder
+                    const isEmpty = !!cylinder.number_of_empty_cylinder
+                    const cost = isFilled
+                      ? cylinder.cylinder?.max_retail_selling_price
+                      : isEmpty
+                      ? cylinder.cylinder?.empty_cylinder_price
+                      : "N/A"
 
-  {/* Lost Cylinders */}
-  {defaulted_data.length > 0 && (
-    <section className="bg-white shadow-sm rounded-lg p-4 border">
-      <h3 className="text-xl font-bold text-gray-800 mb-2">Lost Cylinders</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border text-sm text-left">
-          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-2 border">Gas Type</th>
-              <th className="px-4 py-2 border">Weight (kg)</th>
-              <th className="px-4 py-2 border">Filled</th>
-              <th className="px-4 py-2 border">Empty</th>
-              <th className="px-4 py-2 border">Cost</th>
-              <th className="px-4 py-2 border">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {defaulted_data.map((cylinder) => {
-              const isFilled = !!cylinder.number_of_filled_cylinder
-              const isEmpty = !!cylinder.number_of_empty_cylinder
-              const cost = isFilled
-                ? cylinder.cylinder?.maximum_selling_price
-                : isEmpty
-                ? cylinder.cylinder?.empty_cylinder_price
-                : "N/A"
+                    return (
+                      <tr key={cylinder.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border">
+                          {cylinder.cylinder?.gas_type ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {cylinder.cylinder?.weight ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {cylinder.number_of_filled_cylinder ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {cylinder.number_of_empty_cylinder ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">{cost ?? "N/A"}</td>
+                        <td className="px-4 py-2 border">
+                          <DateDisplay date={cylinder.date_lost} />
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="text-right text-lg font-semibold mt-4">
+              Total Lost Cylinder Cost:{" "}
+              <span className="text-red-600">
+                Ksh {totalCost.toLocaleString()}
+              </span>
+            </div>
+          </section>
+        )}
 
-              return (
-                <tr key={cylinder.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2 border">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
-                  <td className="px-4 py-2 border">{cylinder.cylinder?.weight ?? "N/A"}</td>
-                  <td className="px-4 py-2 border">{cylinder.number_of_filled_cylinder ?? "N/A"}</td>
-                  <td className="px-4 py-2 border">{cylinder.number_of_empty_cylinder ?? "N/A"}</td>
-                  <td className="px-4 py-2 border">{cost ?? "N/A"}</td>
-                  <td className="px-4 py-2 border"><DateDisplay date={cylinder.date_lost} /></td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        {/* Less Pay Cylinders */}
+        {lessPay_data.length > 0 && (
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Less Pay Cylinders
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-2 border">Gas Type</th>
+                    <th className="px-4 py-2 border">Weight (kg)</th>
+                    <th className="px-4 py-2 border">Quantity</th>
+                    <th className="px-4 py-2 border">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lessPay_data.map((cylinder) => (
+                    <tr key={cylinder.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border">
+                        {cylinder.cylinder?.gas_type ?? "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {cylinder.cylinder?.weight ?? "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        {cylinder.cylinders_less_pay ?? "N/A"}
+                      </td>
+                      <td className="px-4 py-2 border">
+                        <DateDisplay date={cylinder.date_lost} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="text-right text-lg font-semibold mt-4">
+              Total Less Pay Cost:{" "}
+              <span className="text-red-600">
+                Ksh {totalLessPay.toLocaleString()}
+              </span>
+            </div>
+          </section>
+        )}
       </div>
-      <div className="text-right text-lg font-semibold mt-4">
-        Total Lost Cylinder Cost:{" "}
-        <span className="text-red-600">Ksh {totalCost.toLocaleString()}</span>
-      </div>
-    </section>
-  )}
-
-  {/* Less Pay Cylinders */}
-  {lessPay_data.length > 0 && (
-    <section className="bg-white shadow-sm rounded-lg p-4 border">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Less Pay Cylinders</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto border text-sm text-left">
-          <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-            <tr>
-              <th className="px-4 py-2 border">Gas Type</th>
-              <th className="px-4 py-2 border">Weight (kg)</th>
-              <th className="px-4 py-2 border">Quantity</th>
-              <th className="px-4 py-2 border">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lessPay_data.map((cylinder) => (
-              <tr key={cylinder.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2 border">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
-                <td className="px-4 py-2 border">{cylinder.cylinder?.weight ?? "N/A"}</td>
-                <td className="px-4 py-2 border">{cylinder.cylinders_less_pay ?? "N/A"}</td>
-                <td className="px-4 py-2 border"><DateDisplay date={cylinder.date_lost} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  )}
-</div>
 
       {/* Footer */}
 

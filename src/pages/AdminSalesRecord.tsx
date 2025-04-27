@@ -58,6 +58,7 @@ const AdminSalesRecord = () => {
     Record<number, string>
   >({})
 
+  console.log('all sales ', allSalesData)
   const [startDate, setStartDate] = useState(() => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
@@ -102,12 +103,14 @@ const AdminSalesRecord = () => {
   const totalSalesAmount = filteredSales.reduce((total, sale) => {
     const cash = Number(sale.cashAmount) || 0
     const mpesa = Number(sale.mpesaAmount) || 0
-    return total + cash + mpesa
+    const debt = sale.debt_info?.debt_amount || 0
+    return total + cash + mpesa - debt
   }, 0)
 
   const totalAmounts = filteredSales.reduce(
     (totals, sale) => {
       const cash = Number(sale.cashAmount) || 0
+      const debt = sale.debt_info?.debt_amount || 0
       const mpesa = sale.admin_mpesa_verified
         ? Number(sale.mpesaAmount) || 0
         : 0
@@ -116,7 +119,7 @@ const AdminSalesRecord = () => {
         ? Number(sale.mpesaAmount) || 0
         : 0
       return {
-        totalCash: totals.totalCash + cash,
+        totalCash: totals.totalCash + cash - debt,
         totalMpesa: totals.totalMpesa + mpesa,
         totalUnverifiedMpesa: totals.totalUnverifiedMpesa + unverifiedMpesa,
       }
@@ -255,408 +258,168 @@ const AdminSalesRecord = () => {
       </div>
 
       {/* Sales Data */}
-      <div className=" mb-3">
-        <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSales && filteredSales.length > 0 ? (
-            filteredSales.map((sale, index) => (
-              <div
-                key={index}
-                className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition"
-              >
-                {/* Salesperson */}
-                <h3 className="text-lg font-semibold text-blue-600">
-                  Salesperson: {sale?.sales_person.first_name}{" "}
-                  {sale?.sales_person.last_name}
-                </h3>
+      <div className="mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredSales && filteredSales.length > 0 ? (
+          filteredSales.map((sale, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-2xl shadow hover:shadow-lg border border-gray-200 p-6 transition-all"
+            >
+              <h3 className="text-xl font-bold text-blue-700 mb-2">
+                {sale.sales_person?.first_name} {sale.sales_person?.last_name}
+              </h3>
+              <div className="text-gray-600 space-y-1 text-sm">
+                <p><strong>Customer:</strong> {sale.customer?.name} ({sale.customer?.sales})</p>
+                <p><strong>Phone:</strong> 0{sale.customer?.phone}</p>
+                <p><strong>Location:</strong> {sale.customer?.location?.name}</p>
+                <p><strong>Product:</strong> {sale.product?.cylinder ? `${sale.product?.gas_type} ${sale.product?.weight}kg (Qty: ${sale.quantity})` : "N/A"}</p>
+                <p><strong>Sale Type:</strong> {sale.sales_type} ({sale.sales_choice})</p>
+                <p><strong>Exchange:</strong> {sale.exchanged_with_local ? <span className="text-red-600">{sale?.cylinder_exchanged_with?.gas_type} {sale?.cylinder_exchanged_with?.weight}kg</span> : <span className="text-green-600">No</span>}</p>
+                <p><strong>Debt:</strong> {sale.debt_info ? <span className="text-red-500">{<FormattedAmount amount={sale.debt_info.debt_amount} />} (Repay by: {sale.debt_info.expected_date_to_repay})</span> : <span className="text-green-500">No Debt</span>}</p>
+              </div>
 
-                {/* Customer */}
-                <p className="mt-2 text-gray-700">
-                  <strong>Customer:</strong> {sale.customer?.name} (
-                  {sale.customer?.sales})
-                </p>
-                <p className="mt-2 text-gray-700">
-                  <strong>Customer phone:</strong> 0{sale.customer?.phone}
-                </p>
-
-                <p className="mt-2 text-gray-700">
-                  <strong>Customer Location:</strong>{" "}
-                  {sale.customer?.location?.name}
-                </p>
-                {/* Product */}
-                <p className="mt-2 text-gray-700">
-                  <strong>Product:</strong>{" "}
-                  {sale.product?.cylinder
-                    ? `${sale.product?.gas_type} ${sale.product?.weight}kg - Qty: ${sale.quantity}`
-                    : "N/A"}
-                </p>
-
-                {/* Sale Type */}
-                <p className="mt-2 text-gray-700">
-                  <strong>Type:</strong> {sale.sales_type} ({sale.sales_choice})
-                </p>
-
-                {sale.exchanged_with_local ? (
-                  <p className="mt-2 text-gray-700">
-                    <strong>
-                      Exchanged with Local:{" "}
-                      <span className=" text-red-700 ms-2">Yes</span>
-                    </strong>
-                  </p>
-                ) : (
-                  <p className="mt-2 text-gray-700">
-                    <strong>
-                      Exchanged with Local:{" "}
-                      <span className="text-green-700 ms-2">No</span>
-                    </strong>
-                  </p>
-                )}
-
-                {/* Debt Info */}
-                {sale.debt_info ? (
-                  <p className="mt-2 text-red-500">
-                    <strong>Debt:</strong>{" "}
-                    <FormattedAmount amount={sale?.debt_info?.debt_amount} /> (
-                    Repay by: {sale.debt_info.expected_date_to_repay})
-                  </p>
-                ) : (
-                  <p className="mt-2 text-green-600">
-                    <strong>No Debt</strong>
-                  </p>
-                )}
-
+              <div className="mt-3 space-y-2">
                 {sale.mpesaAmount > 0 && (
-                  <div>
-                    <p className="mt-4 text-gray-900 font-bold">
-                      Mpesa Amount:{" "}
-                      <FormattedAmount amount={sale.amount_sold_for_mpesa * sale.quantity} />
-                    </p>
-
-                    {/* Show Mpesa transaction details if they exist */}
-                    {sale.mpesa_code?.length > 0 &&
-                      sale.mpesa_code.map((txn, index) => (
-                        <div key={index} className="mt-2 text-gray-700">
-                          <p>
-                            Transaction Code:{" "}
-                            <span className="font-semibold">
-                              {txn.code || "N/A"}
-                            </span>
-                          </p>
-                          <p>
-                            Transaction Amount:{" "}
-                            <FormattedAmount amount={txn.amount} />
-                          </p>
-                        </div>
-                      ))}
+                  <div className="text-sm">
+                    <p className="font-bold text-blue-600">Mpesa: {<FormattedAmount amount={(sale.amount_sold_for_mpesa * sale.quantity) - sale.debt_info?.debt_amount} />}</p>
+                    {sale.mpesa_code?.length > 0 && sale.mpesa_code.map((txn, idx) => (
+                      <div key={idx} className="text-gray-500">
+                        <p>Txn Code: {txn.code || "N/A"}</p>
+                        <p>Txn Amount: {<FormattedAmount amount={txn.amount} />}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {sale.cashAmount > 0 && (
-                  <p className="mt-4 text-gray-900 font-bold">
-                    Cash Amount: <FormattedAmount amount={sale.amount_sold_for * sale.quantity} />
-                  </p>
+                  <p className="text-sm font-bold text-green-700">Cash: {<FormattedAmount amount={(sale.amount_sold_for * sale.quantity) - sale.debt_info?.debt_amount} />}</p>
                 )}
 
-                {/* Mpesa Verification Section */}
-                {Number(sale?.mpesaAmount) >= 1 && (
-                  <div className="mb-4">
-                    {sale?.admin_mpesa_verified ? (
-                      <div>
-                        <p className="text-green-900 text-xl">
-                          Mpesa payment verified.
-                        </p>
-                        <button
-                          onClick={() =>
-                            handleToggleVerification(sale.id, "mpesa")
-                          }
-                          className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-                        >
-                          Unverify Mpesa
-                        </button>
-                      </div>
+                {/* Verification Buttons */}
+                {sale.mpesaAmount > 0 && (
+                  <div>
+                    {sale.admin_mpesa_verified ? (
+                      <button onClick={() => handleToggleVerification(sale.id, 'mpesa')} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 w-full">
+                        Unverify Mpesa
+                      </button>
                     ) : (
-                      <div>
-                        <p className="text-red-900 text-xl">
-                          Mpesa payment not verified.
-                        </p>
-                        <button
-                          onClick={() =>
-                            handleToggleVerification(sale.id, "mpesa")
-                          }
-                          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                        >
-                          Verify Mpesa
-                        </button>
-                      </div>
+                      <button onClick={() => handleToggleVerification(sale.id, 'mpesa')} className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 w-full">
+                        Verify Mpesa
+                      </button>
                     )}
                   </div>
                 )}
 
-                {/* Cash Verification Section */}
-                {Number(sale?.cashAmount) >= 1 && (
-                  <div className="mb-4">
-                    {sale?.admin_payment_verified ? (
-                      <div>
-                        <p className="text-green-900 text-xl">
-                          Cash payment verified.
-                        </p>
-                        <button
-                          onClick={() =>
-                            handleToggleVerification(sale.id, "cash")
-                          }
-                          className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-                        >
-                          Unverify Cash
-                        </button>
-                      </div>
+                {sale.cashAmount > 0 && (
+                  <div>
+                    {sale.admin_payment_verified ? (
+                      <button onClick={() => handleToggleVerification(sale.id, 'cash')} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 w-full">
+                        Unverify Cash
+                      </button>
                     ) : (
-                      <div>
-                        <p className="text-red-900 text-xl">
-                          Cash payment not verified.
-                        </p>
-                        <button
-                          onClick={() =>
-                            handleToggleVerification(sale.id, "cash")
-                          }
-                          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                        >
-                          Verify Cash
-                        </button>
-                      </div>
+                      <button onClick={() => handleToggleVerification(sale.id, 'cash')} className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 w-full">
+                        Verify Cash
+                      </button>
                     )}
                   </div>
                 )}
 
-                {/* Timestamp */}
-                <p className="mt-2 text-sm text-gray-500">
-                  Sold on: {new Date(sale.timestamp).toLocaleDateString()}
-                </p>
-
-                {/* verified */}
-
-                {/* Payment Verified: {sale?.admin_payment_verified} */}
+                <p className="text-xs text-gray-400 mt-2">Sold on: {new Date(sale.timestamp).toLocaleDateString()}</p>
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-center col-span-full">
-              No sales data available for the selected dates.
-            </p>
-          )}
-        </div>
-        <div>
-          <div className="mt-4 p-4 bg-gray-200 rounded">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Total Cash Sales: Ksh {totalAmounts.totalCash.toLocaleString()}
-            </h2>
-            {totalAmounts.totalUnverifiedMpesa > 0 && (
-              <h2 className="text-lg font-semibold text-gray-700">
-                Total unverified Mpesa Sales: Ksh{" "}
-                {totalAmounts.totalUnverifiedMpesa.toLocaleString()}
-              </h2>
-            )}
+            </div>
+          ))
+        ) : (
+          <p className="text-center col-span-full text-gray-500">No sales data available for selected period.</p>
+        )}
+      </div>
 
-            <h2 className="text-lg font-semibold text-gray-700">
-              Total Mpesa Sales: Ksh {totalAmounts.totalMpesa.toLocaleString()}
-            </h2>
-          </div>
-          <div className="mt-4 p-4 bg-gray-200 rounded">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Total Sales Amount: Ksh {totalSalesAmount.toLocaleString()}
-            </h2>
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+        <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+          <h2 className="text-lg font-bold mb-2 text-blue-700">Sales Summary</h2>
+          <p className="text-gray-700">Total Cash: {totalAmounts.totalCash.toLocaleString()}</p>
+          <p className="text-gray-700">Total Mpesa: {totalAmounts.totalMpesa.toLocaleString()}</p>
+          {totalAmounts.totalUnverifiedMpesa > 0 && <p className="text-red-500">Unverified Mpesa: {totalAmounts.totalUnverifiedMpesa.toLocaleString()}</p>}
+          <p className="text-black font-bold mt-2">Total Sales: {totalSalesAmount.toLocaleString()}</p>
         </div>
-        <div>
-          <div className="bg-gray-500 my-2 ">
-            {filteredExpenses && filteredExpenses.length > 0 ? (
-              <div className=" px-2 mb-5">
-                <div className=" mt-4  border-t-2 border-dotted">
-                  <h5 className=" text-lg font-bold">Expenses</h5>
 
-                  <div className="mt-3">
-                    <table className="w-full border-collapse border border-gray-300 text-sm">
-                      <thead className="bg-gray-200">
-                        <tr>
-                          <th className="border px-4 py-2">Name</th>
-                          <th className="border px-4 py-2">Amount</th>
-                          <th className="border px-4 py-2">Own</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-white font-bold ">
-                        {filteredExpenses.map((expense) => (
-                          <tr key={expense.id}>
-                            <td className="border px-4 py-2">
-                              {expense.name ?? "N/A"}
-                            </td>
-                            <td className="border px-4 py-2">
-                              {expense.amount ?? "N/A"}
-                            </td>
-                            <td className="border px-4 py-2 flex items-center space-x-1 text-sm">
-                              <select
-                                value={ownerSelections[expense.id] || ""}
-                                onChange={(e) =>
-                                  handleOwnerChange(expense.id, e.target.value)
-                                }
-                                className="text-black px-2 py-1 rounded"
-                              >
-                                <option value="" disabled>
-                                  {/* {expense.employee
-                                    ? `${expense.employee.first_name} ${expense.employee.last_name}`
-                                    : "Select Owner"} */}
-                                  {expense.expense_on_choice === null &&
-                                    "Select Owner"}
-                                  {expense.expense_on_choice === "COMPANY" &&
-                                    "Company"}
-                                  {expense.expense_on_choice === "EMPLOYEE" &&
-                                  expense.employee
-                                    ? `${expense.employee.first_name} ${expense.employee.last_name}`
-                                    : null}
-                                </option>
-                                {filteredEmployees.map((emp) => (
-                                  <option key={emp.id} value={emp.id}>
-                                    {emp.first_name} {emp.last_name}
-                                  </option>
-                                ))}
-                                <option value="Company">Company</option>
-                              </select>
-                            
-                              <button
-                                onClick={() => handleSubmitOwner(expense.id)}
-                                disabled={addingAssign}
-                                className={`bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded ${
-                                  addingAssign
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                }`}
-                              >
-                                {addingAssign ? (
-                                  <>
-                                    <svg
-                                      className="animate-spin h-4 w-4 text-white"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <circle
-                                        className="opacity-25"
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="currentColor"
-                                        strokeWidth="4"
-                                      ></circle>
-                                      <path
-                                        className="opacity-75"
-                                        fill="currentColor"
-                                        d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
-                                      ></path>
-                                    </svg>
-                                    Loading...
-                                  </>
-                                ) : (
-                                  "Assign"
-                                )}
-                              </button>
-                            </td>
-                          </tr>
+        {/* Expenses */}
+        {filteredExpenses.length > 0 && (
+          <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+            <h2 className="text-lg font-bold mb-2 text-green-700">Expenses Summary</h2>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left p-2">Name</th>
+                  <th className="text-left p-2">Amount</th>
+                  <th className="text-left p-2">Owner</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredExpenses.map(exp => (
+                  <tr key={exp.id}>
+                    <td className="p-2">{exp.name}</td>
+                    <td className="p-2">{exp.amount}</td>
+                    <td className="p-2">
+                      <select
+                        className="border border-gray-300 rounded p-1"
+                        value={ownerSelections[exp.id] || ""}
+                        onChange={(e) => handleOwnerChange(exp.id, e.target.value)}
+                      >
+                        <option value="" disabled>Select Owner</option>
+                        {filteredEmployees.map(emp => (
+                          <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div className="mt-4 text-right font-semibold text-lg">
-                  <p>
-                    Total Expenses:{" "}
-                    <span className="text-red-900 font-bold">
-                      Ksh {totalExpenses.toLocaleString()}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            ) : (
-              ""
-            )}
+                        <option value="Company">Company</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="font-bold text-red-700 mt-2">Total Expenses: Ksh {totalExpenses.toLocaleString()}</p>
           </div>
-        </div>
-        <div className="px-2">
-          <h2 className="text-lg font-semibold">
-            Expected Total Cash:{" "}
-            <FormattedAmount amount={totalAmounts.totalCash - totalExpenses} />
-          </h2>
+        )}
+      </div>
 
-          {cashAtHand > 0 && (
-            <h2 className="text-lg font-semibold">
-              Total cash Default:{" "}
-              <FormattedAmount
-                amount={totalAmounts.totalCash - totalExpenses - cashAtHand}
-              />
-            </h2>
-          )}
-
-          <form className=" flex flex-col bg-gray-400 py-3 space-x-1 items-center">
-            <label className=" font-semibold">Cash at hand.</label>
+      {/* Cash Handling */}
+      <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+        <h2 className="text-lg font-bold text-purple-700 mb-4">Cash Management</h2>
+        <form className="flex flex-col gap-4">
+          <div>
+            <label className="font-semibold">Cash at Hand</label>
             <input
-              className="font-semibold px-2 py-0.5 outline-none border border-green-950"
               type="number"
-              required
+              className="w-full border border-gray-300 rounded p-2 mt-1"
               value={cashAtHand}
               onChange={(e) => setCashAtHand(e.target.value)}
             />
-            <div className=" flex flex-col">
-              <label className="font-semibold mt-2">Sales Person</label>
-              <select
-                required
-                value={selectedEmployeeId}
-                onChange={(e) => handleEmployeeChange(e.target.value)}
-                className="text-black px-2 py-1 rounded"
-              >
-                <option value="" disabled>
-                  Select Employee
-                </option>
-                {filteredEmployees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.first_name} {emp.last_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={handleLessCash}
-              disabled={addingCash}
-              className={`bg-blue-900 px-2 text-white rounded-md mt-2 flex items-center justify-center gap-2 ${
-                addingCash ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+          </div>
+          <div>
+            <label className="font-semibold">Salesperson</label>
+            <select
+              className="w-full border border-gray-300 rounded p-2 mt-1"
+              value={selectedEmployeeId}
+              onChange={(e) => handleEmployeeChange(e.target.value)}
             >
-              {addingCash ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8v4l3.5-3.5L12 0v4a8 8 0 00-8 8h4z"
-                    ></path>
-                  </svg>
-                  Loading...
-                </>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          </form>
-        </div>
+              <option value="" disabled>Select Employee</option>
+              {filteredEmployees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={handleLessCash}
+            disabled={addingCash}
+            className="bg-blue-700 text-white rounded p-2 hover:bg-blue-800"
+          >
+            {addingCash ? "Submitting..." : "Submit Cash Adjustment"}
+          </button>
+        </form>
       </div>
+    </div>
 
       {/* Footer */}
       <AdminsFooter />

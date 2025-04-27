@@ -46,6 +46,7 @@ import {
 } from "../features/defaults/advancesSlice"
 import { fetchCash, selectAllCash } from "../features/cashAtHand/cashSlice"
 import defaultPic from "../components/media/default.png"
+import AdminsFooter from "../components/AdminsFooter"
 
 const EmployeesProfileDetails = () => {
   const [showIds, setShowIds] = useState<boolean>(false)
@@ -241,8 +242,7 @@ const EmployeesProfileDetails = () => {
     (total, item) => {
       return (
         total +
-        (item.cylinder?.max_wholesale_refil_price || 0) *
-          item.cylinders_less_pay
+        (item.cylinder?.max_retail_refil_price || 0) * item.cylinders_less_pay
       )
     },
     0,
@@ -314,7 +314,7 @@ const EmployeesProfileDetails = () => {
     const isEmpty = !!cylinder.number_of_empty_cylinder
 
     const price = isFilled
-      ? cylinder.cylinder?.maximum_selling_price
+      ? cylinder.cylinder?.max_retail_selling_price
       : isEmpty
       ? cylinder.cylinder?.empty_cylinder_price
       : 0
@@ -616,6 +616,14 @@ const EmployeesProfileDetails = () => {
                 </table>
               </div>
             </div>
+            <div className="mt-4 text-right font-semibold text-lg">
+              <p>
+                Total Cash Default:{" "}
+                <span className="text-red-600">
+                  Ksh {totalCashDefault.toLocaleString()}
+                </span>
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -664,140 +672,137 @@ const EmployeesProfileDetails = () => {
       )}
       <div>
         {/* Defaults Table */}
-        <h3 className="font-semibold mt-4">Defaults</h3>
-        {employeeDefaults?.length > 0 ? (
-          <>
+
+        {employeeDefaults.length > 0 && (
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Lost Cylinders
+            </h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
                   <tr>
-                    <th className="border px-0.5 py-2 text-sm">
-                      Cylinder Name
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">
-                      Weight
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs ">
-                      Filled
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">
-                      Empty
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">
-                      Date
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap text-xs">
-                      Cleared
-                    </th>
+                    <th className="px-4 py-2 border">Gas Type</th>
+                    <th className="px-4 py-2 border">Weight (kg)</th>
+                    <th className="px-4 py-2 border">Filled</th>
+                    <th className="px-4 py-2 border">Empty</th>
+                    <th className="px-4 py-2 border">Cost</th>
+                    <th className="px-4 py-2 border">Date</th>
+                    <th className="px-4 py-2 border">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {employeeDefaults?.map((item) => (
-                    <tr key={item.id}>
-                      <td className="border px-0.5 py-2">
-                        {item.cylinder?.gas_type || "N/A"}
-                      </td>
-                      <td className="border px-0.5 py-2">
-                        {item.cylinder?.weight}kg
-                      </td>
-                      <td className="border px-0.5 py-2">
-                        {item?.number_of_filled_cylinder}
-                      </td>
-                      <td className="border px-0.5 py-2">
-                        {item?.number_of_empty_cylinder}
-                      </td>
-                      <td className="border px-0.5 py-2">
-                        <DateDisplay date={item.date_lost} />
-                      </td>
-                      <div className=" flex space-x-1">
-                        <td className="border px-3 py-2">
-                          {item.cleared ? (
-                            "Yes"
-                          ) : (
-                            <button
-                              onClick={() => handleClearDefaults(item?.id)}
-                              className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                                loading ? "opacity-50 cursor-not-allowed" : ""
-                              }`}
-                              disabled={loading}
-                            >
-                              clear
-                            </button>
-                          )}
+                  {employeeDefaults.map((cylinder) => {
+                    const isFilled = !!cylinder.number_of_filled_cylinder
+                    const isEmpty = !!cylinder.number_of_empty_cylinder
+                    const cost = isFilled
+                      ? cylinder.cylinder?.max_retail_selling_price
+                      : isEmpty
+                      ? cylinder.cylinder?.empty_cylinder_price
+                      : "N/A"
+
+                    return (
+                      <tr key={cylinder.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border">
+                          {cylinder.cylinder?.gas_type ?? "N/A"}
                         </td>
-                        <td className="border px-3 py-2">
-                          {item.cleared ? (
-                            "Yes"
-                          ) : (
-                            <button
-                              onClick={() => handleReturnDefaults(item?.id)}
-                              className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                                loading ? "opacity-50 cursor-not-allowed" : ""
-                              }`}
-                              disabled={loading}
-                            >
-                              Return
-                            </button>
-                          )}
+                        <td className="px-4 py-2 border">
+                          {cylinder.cylinder?.weight ?? "N/A"}
                         </td>
-                      </div>
-                    </tr>
-                  ))}
+                        <td className="px-4 py-2 border">
+                          {cylinder.number_of_filled_cylinder ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">
+                          {cylinder.number_of_empty_cylinder ?? "N/A"}
+                        </td>
+                        <td className="px-4 py-2 border">{cost ?? "N/A"}</td>
+                        <td className="px-4 py-2 border">
+                          <DateDisplay date={cylinder.date_lost} />
+                        </td>
+                        <td className="border px-4 py-2">
+                          <div className="flex space-x-1">
+                            {cylinder.cleared ? (
+                              "Yes"
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  handleClearDefaults(cylinder?.id)
+                                }
+                                className={`mt-2 bg-green-500 text-white py-1 px-2 rounded ${
+                                  loading ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
+                                disabled={loading}
+                              >
+                                Clear
+                              </button>
+                            )}
+                            {cylinder.cleared ? (
+                              "Yes"
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  handleReturnDefaults(cylinder?.id)
+                                }
+                                className={`mt-2 bg-green-500 text-white py-1 px-2 rounded ${
+                                  loading ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
+                                disabled={loading}
+                              >
+                                Return
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 text-right font-semibold text-lg">
-              <p>
-                Total Defaults:{" "}
-                <span className="text-blue-600">
-                  Ksh {totalCost.toLocaleString()}
-                </span>
-              </p>
+            <div className="text-right text-lg font-semibold mt-4">
+              Total Lost Cylinder Cost:{" "}
+              <span className="text-red-600">
+                Ksh {totalCost.toLocaleString()}
+              </span>
             </div>
-          </>
-        ) : (
-          <p>No default records found.</p>
+          </section>
         )}
 
         {/* Less Pays Table */}
+
         <h3 className="font-semibold mt-4">Less Pays</h3>
         {employeeLessPays?.length > 0 ? (
-          <>
+          <section className="bg-white shadow-sm rounded-lg p-4 border">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              Less Pay Records
+            </h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
+              <table className="min-w-full table-auto border text-sm text-left">
+                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
                   <tr>
-                    <th className="border px-0.5 py-2 ">Cylinder Name</th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">
-                      Weight
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">
-                      Quantity
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">
-                      Date
-                    </th>
-                    <th className="border px-0.5 py-2 whitespace-nowrap">
-                      Resolved
-                    </th>
+                    <th className="px-4 py-2 border">Cylinder Name</th>
+                    <th className="px-4 py-2 border">Weight</th>
+                    <th className="px-4 py-2 border">Quantity</th>
+                    <th className="px-4 py-2 border">Date</th>
+                    <th className="px-4 py-2 border">Resolved</th>
                   </tr>
                 </thead>
                 <tbody>
                   {employeeLessPays.map((item) => (
                     <tr key={item.id}>
-                      <td className="border px-0.5 py-2">
+                      <td className="px-4 py-2 border">
                         {item.cylinder?.gas_type || "N/A"}
                       </td>
-                      <td className="border px-0.5 py-2">
+                      <td className="px-4 py-2 border">
                         {item.cylinder?.weight}
                       </td>
-                      <td className="border px-0.5 py-2">
+                      <td className="px-4 py-2 border">
                         {item.cylinders_less_pay}
                       </td>
-                      <td className="border px-0.5 py-2">
+                      <td className="px-4 py-2 border">
                         <DateDisplay date={item.date_lost} />
                       </td>
-                      <td className="border px-3 py-2">
+                      <td className="border px-4 py-2">
                         {item.resolved ? (
                           "Yes"
                         ) : (
@@ -826,7 +831,7 @@ const EmployeesProfileDetails = () => {
                 </span>
               </p>
             </div>
-          </>
+          </section>
         ) : (
           <p>No less pay records found.</p>
         )}
@@ -944,6 +949,10 @@ const EmployeesProfileDetails = () => {
           )}
         </DialogActions>
       </Dialog>
+
+      <footer className="mt-6 text-center text-gray-500">
+        <AdminsFooter />
+      </footer>
     </div>
   )
 }

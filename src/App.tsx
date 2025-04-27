@@ -48,6 +48,7 @@ import AdminStore from "./pages/AdminStore"
 import AdminCustomer from "./pages/AdminCustomer"
 import AdminSms from "./pages/AdminSms"
 import AdminAnalysis from "./pages/AdminAnalysis"
+import EditAssignedCylinders from "./pages/EditAssignedCylinders"
 
 
 function App() {
@@ -164,6 +165,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AssigningProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/editassigned/:id"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <EditAssignedCylinders />
               </ProtectedRoute>
             }
           />

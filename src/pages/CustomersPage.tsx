@@ -109,7 +109,7 @@ console.log('Customers ', customers)
         key={customer.id}
         customer={customer.id}
         // @ts-ignore
-        customer={customer}
+        // customer={customer}
       />
     ))
   }

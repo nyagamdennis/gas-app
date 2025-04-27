@@ -24,6 +24,7 @@ const WholeSaleRecordPage = () => {
   const operationError = useAppSelector(getSalesError)
 
   const [products, setProducts] = useState([{ productId: "", quantity: 1 }])
+  const [cylinderExchaged, setCylinderExchanged] = useState("")
   const [saleType, setSaleType] = useState("REFILL")
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
@@ -140,7 +141,7 @@ const WholeSaleRecordPage = () => {
     }, 0)
   }
 
-  // console.log('Payment amount is ', paymentAmount)
+  console.log('cylinder exchanged with ', cylinderExchaged)
   const calculateDebt = () => {
     const total = calculateTotal()
     return Math.max(total - deposit, 0)
@@ -162,11 +163,11 @@ const WholeSaleRecordPage = () => {
       sales_type: saleType,
       products: products.map((product) => {
         const assignedProduct = allAssignedProducts.find(
-          (prod) => prod.id === Number(product.productId)
+          (prod) => prod.id === Number(product.productId),
         )
-      
+
         let unitPrice = 0
-      
+
         if (product.paymentAmount === "CUSTOM" && product.customPrice) {
           unitPrice = parseFloat(product.customPrice)
         } else {
@@ -183,22 +184,20 @@ const WholeSaleRecordPage = () => {
               ? assignedProduct.mid_wholesale_refil_price
               : assignedProduct.min_wholesale_refil_price
         }
-      
+
         const productPayload: any = {
           id: product.productId,
           quantity: product.quantity,
           amount_sold_for: unitPrice,
         }
-      
+
         if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
           productPayload.amount_sold_for_mpesa = unitPrice
         }
-      
+
         return productPayload
       }),
-      
-     
-      
+
       total_amount: calculateTotal(),
       partial_payment_amount:
         paymentType === "FULLY_PAID" ? calculateTotal() : deposit,
@@ -206,6 +205,7 @@ const WholeSaleRecordPage = () => {
       repayment_date: paymentType === "DEBT" ? repayDate : null,
       is_fully_paid: isFullyPaid,
       exchanged_with_local: exchangedWithLocal,
+      cylinder_exchanged_with: cylinderExchaged,
       mpesa_code: mpesaCodes,
     }
 
@@ -572,8 +572,6 @@ const WholeSaleRecordPage = () => {
                             type="radio"
                             name={`paymentAmount-${index}`}
                             value="CUSTOM"
-                            // checked={paymentAmount === "CUSTOM"}
-                            // onChange={() => setPaymentAmount("CUSTOM")}
                             checked={product.paymentAmount === "CUSTOM"}
                             onChange={() =>
                               handleProductChange(
@@ -649,9 +647,7 @@ const WholeSaleRecordPage = () => {
             </button>
 
             <div className="mb-4">
-              <label className="block text-gray-600">
-                Exchanged with local
-              </label>
+              <label className="block text-gray-600">Exchange with local</label>
               <div className="flex items-center gap-4 mt-2">
                 <label className="flex items-center gap-2">
                   <input
@@ -674,6 +670,25 @@ const WholeSaleRecordPage = () => {
                   Yes
                 </label>
               </div>
+              {exchangedWithLocal && (
+                <div className="mt-4">
+                  <label className="block text-gray-600">
+                    Select Product Exchange with
+                  </label>
+                  <select
+                    className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+                    onChange={(e) => setCylinderExchanged(e.target.value)}
+                    value={cylinderExchaged}
+                  >
+                    <option value="">Select a product</option>
+                    {allAssignedProducts.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.gas_type} {product.weight}kg
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <h2 className="text-lg font-semibold mt-4 text-gray-700">
               Payment Details
@@ -895,7 +910,6 @@ const WholeSaleRecordPage = () => {
             </button>
           </form>
         ) : (
-      
           <form
             onSubmit={handleSubmitOtherProduct}
             className="w-full max-w-lg bg-white p-6 rounded-lg shadow-lg"
