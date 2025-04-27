@@ -84,7 +84,7 @@ const AfterAssign = () => {
   setSavingReciept(true); // Start loader
   try {
     const response = await axios.post(
-    `${apiUrl}/save-receipt/`,
+    `${apiUrl}/mark-print-complete/`,
     { sales_team_id: salesTeamId?.id },
     { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
     );
@@ -99,14 +99,14 @@ const AfterAssign = () => {
   } finally {
     setSavingReciept(false); // Stop loader
   }
-    axios
-      .post(
-        `${apiUrl}/mark-print-complete/`,
-        { sales_team_id: salesTeamId?.id },
-        { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } },
-      )
-      .then(() => setPrintComplete(true))
-      .catch((err) => console.error("Error marking print complete:", err))
+    // axios
+    //   .post(
+    //     `${apiUrl}/mark-print-complete/`,
+    //     { sales_team_id: salesTeamId?.id },
+    //     { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } },
+    //   )
+    //   .then(() => setPrintComplete(true))
+    //   .catch((err) => console.error("Error marking print complete:", err))
   }
 
   const handleGeneratePDF = () => {
