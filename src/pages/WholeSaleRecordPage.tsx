@@ -15,8 +15,14 @@ import {
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
+import getApiUrl from "../getApiUrl"
+import axios from "axios"
 
 const WholeSaleRecordPage = () => {
+  const apiUrl = getApiUrl()
+  const [searchResults, setSearchResults] = useState([])
+  const [searchPhoneResults, setSearchPhoneResults] = useState([])
+  const [searchingBy, setSearchingBy] = useState("") // "name" or "phone"
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const allAssignedProducts = useAppSelector(selectAllAssignedProducts)
@@ -141,7 +147,7 @@ const WholeSaleRecordPage = () => {
     }, 0)
   }
 
-  console.log('cylinder exchanged with ', cylinderExchaged)
+  console.log("cylinder exchanged with ", cylinderExchaged)
   const calculateDebt = () => {
     const total = calculateTotal()
     return Math.max(total - deposit, 0)
@@ -343,6 +349,48 @@ const WholeSaleRecordPage = () => {
 
   // -------------------end other products sales-------------------
 
+  // Function to search customers as user types
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchingBy === "name" && customerName.length > 0) {
+        axios
+          .post(`${apiUrl}/search-customer/`, {
+            type: "name",
+            query: customerName,
+          })
+          .then((response) => {
+            setSearchResults(response.data)
+          })
+          .catch((error) => {
+            console.error("Search error:", error)
+          })
+      } else {
+        setSearchResults([])
+      }
+    }, 300) // <-- Wait 300ms after user stops typing
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [customerName, searchingBy])
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchingBy === "phone" && customerPhone.length > 0) {
+        axios
+          .post(`${apiUrl}/search-customer/`, {
+            type: "phone",
+            query: customerPhone,
+          })
+          .then((response) => {
+            setSearchPhoneResults(response.data)
+          })
+          .catch((error) => {
+            console.error("Search error:", error)
+          })
+      }
+    }, 300)
+    return () => clearTimeout(delayDebounceFn)
+  }, [customerPhone, searchingBy])
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -386,10 +434,31 @@ const WholeSaleRecordPage = () => {
               <input
                 type="text"
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
+                onChange={(e) => {
+                  setSearchingBy("name")
+                  setCustomerName(e.target.value)
+                }}
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                 // required
               />
+              {searchResults.length > 0 && (
+                <ul className="absolute bg-white border w-full mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {searchResults.map((customer) => (
+                    <li
+                      key={customer.id}
+                      onClick={() => {
+                        setCustomerName(customer.name)
+                        setCustomerPhone(customer.phone)
+                        setCustomerLocation(customer.location)
+                        setSearchResults([])
+                      }}
+                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                    >
+                      {customer.name} - {customer.phone}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-600">Customer Location</label>
@@ -406,12 +475,34 @@ const WholeSaleRecordPage = () => {
               <input
                 type="text"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => {
+                  setSearchingBy("phone")
+                  setCustomerPhone(e.target.value)
+                }}
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                 // required
               />
             </div>
 
+            {/* Autocomplete dropdown */}
+            {searchPhoneResults.length > 0 && (
+              <ul className="absolute bg-white border w-full mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                {searchPhoneResults.map((customer) => (
+                  <li
+                    key={customer.id}
+                    onClick={() => {
+                      setCustomerName(customer.name)
+                      setCustomerPhone(customer.phone)
+                      setCustomerLocation(customer.location)
+                      setSearchPhoneResults([])
+                    }}
+                    className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                  >
+                    {customer.name} - {customer.phone}
+                  </li>
+                ))}
+              </ul>
+            )}
             <h2 className="text-lg font-semibold mb-4 text-gray-700">
               Sale Details
             </h2>
