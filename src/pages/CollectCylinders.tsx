@@ -28,6 +28,7 @@ const CollectCylinders = () => {
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [assignments, setAssignments] = useState([])
   const [assignedCylinders, setAssignedCylinders] = useState([])
+  console.log("assigned ", assignedCylinders)
   const [showStacked, setShowStacked] = useState<boolean>(false)
   const [loadingReturnAll, setLoadingReturnAll] = useState(false)
   const [loadingReturnSome, setLoadingReturnSome] = useState(false)
@@ -463,7 +464,7 @@ const CollectCylinders = () => {
                         Filled lost: {cylinder.filled_lost}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Empties lost: {cylinder.empties_lost}Collect Cy
+                        Empties lost: {cylinder.empties_lost}
                       </p>
                       <p className="text-sm text-gray-700">
                         Less pay: {cylinder.less_pay}
@@ -471,6 +472,7 @@ const CollectCylinders = () => {
                       <p className="text-sm text-gray-700">
                         Spoiled: {cylinder.spoiled}
                       </p>
+
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <form
                           onSubmit={(e) => {

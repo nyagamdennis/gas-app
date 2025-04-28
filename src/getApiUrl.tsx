@@ -9,4 +9,4 @@ const getApiUrl = () => {
   return apiUrl
 }
 
-export default getApiUrl
+export default getApiUrl;

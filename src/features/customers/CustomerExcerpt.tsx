@@ -93,15 +93,20 @@ const CustomerExcerpt = ({ customer }) => {
     }
   }
 
+  console.log("Customer history ", customer)
   return (
     <div className="bg-white shadow-md rounded-2xl p-4 mb-4 border border-gray-200">
       {/* Header Section */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-blue-700">{customer.name}</h2>
+          <h2 className="text-xl font-semibold text-blue-700">
+            {customer.name}
+          </h2>
           <p className="text-sm text-gray-500 flex items-center gap-1">
-            <PhoneInTalkIcon fontSize="small" />{" "}
-            {phoneStr}
+          <PhoneInTalkIcon fontSize="small" />
+            <a href={`tel:${phoneStr}`} className="text-blue-600 hover:underline">
+              {phoneStr}
+            </a>
             {/* {phoneStr.slice(0, 3)}****{phoneStr.slice(-3)} */}
           </p>
           <p className="text-sm text-gray-500 flex items-center gap-1">
@@ -135,7 +140,13 @@ const CustomerExcerpt = ({ customer }) => {
               type="submit"
               className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
             >
-              {isSubmitting ? <CircularProgress size={20} className="text-white" /> : <><SendIcon /> Send</>}
+              {isSubmitting ? (
+                <CircularProgress size={20} className="text-white" />
+              ) : (
+                <>
+                  <SendIcon /> Send
+                </>
+              )}
             </button>
           </div>
 
@@ -186,10 +197,10 @@ const CustomerExcerpt = ({ customer }) => {
             {customer.customer_sales.map((sale, i) => (
               <div
                 key={i}
-                className="p-2 rounded-md bg-green-50 text-sm border border-green-200 mb-2"
+                className="p-2 rounCustomerExcerptded-md bg-green-50 text-sm border border-green-200 mb-2"
               >
-                <p>🧪 Product: {sale.product[0]?.name || "N/A"}</p>
-                <p>⚖️ Weight: {sale.product[0]?.weight || "N/A"}kg</p>
+                <p>🧪 Product: {sale.product?.gas_type || "N/A"}</p>
+                <p>⚖️ Weight: {sale.product?.weight || "N/A"}kg</p>
                 <p>📦 Qty: {sale.quantity}</p>
                 <p>
                   💵 Total: <FormattedAmount amount={sale.total_amount} />
@@ -199,8 +210,6 @@ const CustomerExcerpt = ({ customer }) => {
           </div>
         </div>
       )}
-
-    
     </div>
   )
 }
