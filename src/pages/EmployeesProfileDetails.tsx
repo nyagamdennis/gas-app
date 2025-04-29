@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react"
 import {
   addEmployeeSalary,
+  addEmployeeSalaryDate,
   fetchSingleEmployee,
   selectSingleEmployees,
   transferEmployee,
@@ -51,6 +52,7 @@ import AdminsFooter from "../components/AdminsFooter"
 const EmployeesProfileDetails = () => {
   const [showIds, setShowIds] = useState<boolean>(false)
   const [addingSalary, setAddingSalary] = useState<Boolean>(false)
+  const [addingSalaryDate, setAddingSalaryDate] = useState<Boolean>(false)
   const [salaryAmount, setSalaryAmount] = useState<number>(0)
   const [addingAdvance, setAddingAdvance] = useState<Boolean>(false)
   const [advanceAmount, setAdvanceAmount] = useState<number>(0)
@@ -91,6 +93,8 @@ const EmployeesProfileDetails = () => {
     setAddingSalary(false)
   }
 
+
+  
   const handleOpenIds = () => {
     setShowIds(!showIds)
   }
@@ -289,6 +293,18 @@ const EmployeesProfileDetails = () => {
     }
     setAddingSalary(false)
   }
+  const handleAddSalaryDate = async () => {
+    setAddingSalaryDate(true)
+    try {
+      const updatedEmployeeSalary = await dispatch(addEmployeeSalaryDate({ employeeId: employeeId,salaryDate: salaryDate }))
+      alert("Salary date added successfully!")
+      handleClickCloseAddSalaryDate()
+    } catch (error) {
+      console.log("error ", error)
+      alert("Failed to add salary date.", error.message)
+    }
+    setAddingSalaryDate(false)
+  }
 
   const handleAddNewAdvance = async () => {
     setAddingSalary(true)
@@ -333,509 +349,456 @@ const EmployeesProfileDetails = () => {
     <div className="max-w-4xl mx-auto p-3">
       {/* Back Button */}
       <button
-        className="mb-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-900"
-        onClick={() => navigate("/admins/employees")}
+  className="mb-6 px-5 py-2.5 bg-gray-700 text-white rounded-md hover:bg-gray-900 transition"
+  onClick={() => navigate("/admins/employees")}
+>
+  ← Back to Employees
+</button>
+
+{/* Employee Card */}
+<div className="bg-white p-6 shadow-md rounded-xl flex flex-col md:flex-row gap-6">
+  {/* Profile Image */}
+  <div className="flex flex-col items-center w-full md:w-1/3">
+    <img
+      src={employee.profile_image || defaultPic}
+      alt={`${employee.first_name} ${employee.last_name}`}
+      className="w-32 h-32 rounded-full border border-gray-300 object-cover"
+    />
+    <h2 className="text-xl font-semibold mt-3">
+      {employee.first_name} {employee.last_name}
+    </h2>
+    <p className="text-gray-500 text-sm">{employee?.user?.email}</p>
+  </div>
+
+  {/* Details Section */}
+  <div className="flex-1">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Personal Info */}
+      <section>
+        <h3 className="text-base font-bold text-gray-700 mb-2">Personal Details</h3>
+        <ul className="text-sm text-gray-600 space-y-1">
+          <li><strong>ID Number:</strong> {employee.id_number}</li>
+          <li><strong>Gender:</strong> {employee.gender}</li>
+          <li><strong>Phone:</strong> {employee.phone}</li>
+          <li><strong>Alt. Phone:</strong> {employee.alternative_phone}</li>
+        </ul>
+      </section>
+
+      {/* Sales Team */}
+      <section>
+        <h3 className="text-base font-bold text-gray-700 mb-2">Sales Team</h3>
+        <div className="flex items-center gap-3">
+          <img
+            src={employee.sales_team?.profile_image || defaultPic}
+            alt={employee.sales_team?.name}
+            className="w-12 h-12 rounded-full border border-gray-300"
+          />
+          <p className="text-sm">{employee.sales_team?.name || "Not Assigned"}</p>
+        </div>
+        <div className="mt-4">
+          <label className="block text-sm font-semibold text-gray-600 mb-1">Change Team</label>
+          <select
+            onChange={handleSalesTeamChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm"
+          >
+            <option value="">Select a new Sales Team</option>
+            {allSalesTeams.map((team) => (
+              <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </select>
+        </div>
+      </section>
+    </div>
+
+    {/* Status & Actions */}
+    <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <button
+        onClick={() => handleStatusChange(employee.id, "verified")}
+        className={`px-3 py-1 rounded-md text-white text-sm font-medium transition ${
+          employee.verified ? "bg-green-600" : "bg-gray-400"
+        }`}
       >
-        ← Back to Employees
+        {employee.verified ? "Verified ✅" : "Not Verified ❌"}
       </button>
 
-      {/* Employee Card */}
-      <div className="bg-white p-6 shadow-lg rounded-lg flex flex-col md:flex-row gap-6">
-        {/* Profile Image */}
-        <div className="flex flex-col items-center">
-          <img
-            src={employee.profile_image || defaultPic}
-            alt={`${employee.first_name} ${employee.last_name}`}
-            className="w-32 h-32 rounded-full border border-gray-400 object-cover"
-          />
-          <h2 className="text-xl font-bold mt-2">
-            {employee.first_name} {employee.last_name}
-          </h2>
-          <p className="text-gray-600">{employee?.user?.email}</p>
-        </div>
+      <div className={`px-3 py-1 rounded-md text-white text-sm font-medium text-center ${
+        employee.defaulted ? "bg-red-600" : "bg-gray-400"
+      }`}>
+        {employee.defaulted ? "Defaulted ⚠️" : "No Defaults"}
+      </div>
 
-        {/* Details Section */}
-        <div className="flex-1">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Personal Info */}
-            <div>
-              <h3 className="text-lg font-semibold">Personal Details</h3>
-              <p>
-                <strong>ID Number:</strong> {employee.id_number}
-              </p>
-              <p>
-                <strong>Gender:</strong> {employee.gender}
-              </p>
-              <p>
-                <strong>Phone:</strong> {employee.phone}
-              </p>
-              <p>
-                <strong>Alternative Phone:</strong> {employee.alternative_phone}
-              </p>
-            </div>
+      <button
+        onClick={handleClickOpenAddSalaryDate}
+        className="px-3 py-1 rounded-md bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium"
+      >
+        Payment Date
+      </button>
 
-            {/* Sales Team */}
-            <div>
-              <h3 className="text-lg font-semibold">Sales Team</h3>
-              <div className="flex items-center gap-2">
-                <img
-                  src={employee.sales_team?.profile_image || defaultPic}
-                  alt={employee.sales_team?.name}
-                  className="w-12 h-12 rounded-full border border-gray-300"
-                />
-                <p>{employee.sales_team?.name || "Not assigned"}</p>
-              </div>
-              <div className="mt-4">
-                <label className="block text-gray-700 font-semibold">
-                  Change Sales Team:
-                </label>
-                <select
-                  onChange={handleSalesTeamChange}
-                  className="border border-gray-300 rounded px-3 py-2 w-full"
+      <div className={`px-3 py-1 rounded-md text-white text-sm font-medium text-center ${
+        employee.fired ? "bg-black" : "bg-gray-400"
+      }`}>
+        {employee.fired ? "Fired 🔥" : "Employed"}
+      </div>
+
+      <button
+        onClick={handleClickOpen}
+        className="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+      >
+        Enter Salary
+      </button>
+
+      <button
+        onClick={handleClickOpenAdvance}
+        className="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
+      >
+        Add Advance
+      </button>
+    </div>
+  </div>
+</div>
+
+{/* ID Card Toggle */}
+<div className="mt-6 text-center">
+  <button
+    onClick={handleOpenIds}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition"
+  >
+    {showIds ? "Hide ID Cards" : "Show ID Cards"}
+  </button>
+</div>
+
+{/* ID Card Display */}
+{showIds && (
+  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div>
+      <h3 className="text-md font-semibold text-gray-700 mb-1">Front ID</h3>
+      <img
+        src={employee.front_id || defaultPic}
+        alt="Front ID"
+        className="w-full h-48 object-cover border border-gray-300 rounded-lg"
+      />
+    </div>
+    <div>
+      <h3 className="text-md font-semibold text-gray-700 mb-1">Back ID</h3>
+      <img
+        src={employee.back_id || defaultPic}
+        alt="Back ID"
+        className="w-full h-48 object-cover border border-gray-300 rounded-lg"
+      />
+    </div>
+  </div>
+)}
+
+
+      <div className="my-6 p-6 rounded-2xl shadow-sm border border-gray-200 bg-white space-y-4">
+  <div className="space-y-2">
+    <p className="text-sm text-gray-500">
+      <span className="font-medium text-gray-700">Payment Date:</span>{" "}
+      <DateDisplay date={employee.date_joined} />
+    </p>
+
+    <h4 className="text-base font-semibold text-blue-700">
+      Salary:{" "}
+      <span className="font-normal text-gray-800">
+        <FormattedAmount amount={employee.contract_salary} />
+      </span>
+    </h4>
+
+    <h4 className="text-base font-semibold text-yellow-700">
+      Total Advances:{" "}
+      <span className="font-normal text-gray-800">
+        <FormattedAmount amount={totalAdvances} />
+      </span>
+    </h4>
+
+    <h4 className="text-base font-semibold text-orange-600">
+      Total Expenses:{" "}
+      <span className="font-normal text-gray-800">
+        Ksh {totalExpenses.toLocaleString()}
+      </span>
+    </h4>
+
+    <h4 className="text-base font-semibold text-rose-600">
+      Total Less Pay:{" "}
+      <span className="font-normal text-gray-800">
+        Ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
+      </span>
+    </h4>
+
+    <h4 className="text-base font-semibold text-red-600">
+      Total Defaults:{" "}
+      <span className="font-normal text-gray-800">
+        Ksh {totalCost.toLocaleString()}
+      </span>
+    </h4>
+
+    <div className="text-base font-semibold text-purple-700">
+      Total Cash Default:{" "}
+      <span className="text-gray-800">
+        {totalCashDefault.toLocaleString("en-US", {
+          style: "currency",
+          currency: "KSH",
+        })}
+      </span>
+    </div>
+  </div>
+
+  <div className="pt-4 border-t">
+    <h4 className="text-lg font-bold text-green-800 flex items-center justify-between">
+      <span>Total Net Salary:</span>
+      <span>
+        <FormattedAmount
+          amount={
+            employee.contract_salary -
+            totalExpenses -
+            totalCost -
+            totalMaxWholesaleRefillLessPayPrice -
+            totalAdvances -
+            totalCashDefault
+          }
+        />
+      </span>
+    </h4>
+  </div>
+
+  <div className="flex justify-end">
+    <button className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
+      Pay
+    </button>
+  </div>
+</div>
+
+
+
+{/* Advances */}
+{advances.length > 0 && (
+  <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
+    <h3 className="text-xl font-semibold text-gray-900">Advance Payments</h3>
+    <div className="overflow-auto rounded-md border border-gray-100">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
+          <tr>
+            <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Date</th>
+            <th className="px-4 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {advances.map((advance) => (
+            <tr key={advance.id} className="hover:bg-gray-50">
+              <td className="px-4 py-2">{advance.amount ?? "N/A"}</td>
+              <td className="px-4 py-2">
+                <DateDisplay date={advance.date_issued} />
+              </td>
+              <td className="px-4 py-2">
+                <button
+                  onClick={() => handleRemoveAdvance(advance.id)}
+                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                 >
-                  <option value="">Select a new Sales Team</option>
-                  {allSalesTeams.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="text-right text-base font-semibold text-red-700">
+      Total Advances: <FormattedAmount amount={totalAdvances} />
+    </div>
+  </section>
+)}
 
-          {/* Status Indicators */}
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <span
-              onClick={() => handleStatusChange(employee.id, "verified")}
-              className={`px-3 py-1 rounded text-white text-sm text-center ${
-                employee.verified ? "bg-green-500" : "bg-gray-400"
-              }`}
-            >
-              {employee.verified ? "Verified ✅" : "Not Verified ❌"}
-            </span>
-            <span
-              className={`px-3 py-1 rounded text-white text-sm text-center ${
-                employee.defaulted ? "bg-red-500" : "bg-gray-400"
-              }`}
-            >
-              {employee.defaulted ? "Defaulted ⚠️" : "No Defaults"}
-            </span>
-            <span
-              onClick={handleClickOpenAddSalaryDate}
-              className="px-3 py-1 rounded text-white text-sm text-center bg-yellow-900"
-            >
-              payment date
-            </span>
-            <span
-              className={`px-3 py-1 rounded text-white text-sm text-center ${
-                employee.fired ? "bg-black" : "bg-gray-400"
-              }`}
-            >
-              {employee.fired ? "Fired 🔥" : "Employed"}
-            </span>
-            <span
-              onClick={handleClickOpen}
-              className="px-3 py-1 rounded text-white bg-pink-800 text-sm text-center"
-            >
-              enter salary
-            </span>
-            <span
-              onClick={handleClickOpenAdvance}
-              className="px-3 py-1 rounded text-white bg-pink-800 text-sm text-center"
-            >
-              Add Advance
-            </span>
-          </div>
-        </div>
-      </div>
+{/* Cash at Hand Defaults */}
+{filteredCash.length > 0 && (
+  <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
+    <h3 className="text-xl font-semibold text-gray-900">Cash at Hand Defaults</h3>
+    <div className="overflow-auto rounded-md border border-gray-100">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
+          <tr>
+            <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredCash.map((cash) => (
+            <tr key={cash.id} className="hover:bg-gray-50">
+              <td className="px-4 py-2">{cash.cash_default ?? "N/A"}</td>
+              <td className="px-4 py-2">
+                <DateDisplay date={cash.date} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="text-right text-base font-semibold text-red-700">
+      Total Cash Default: Ksh {totalCashDefault.toLocaleString()}
+    </div>
+  </section>
+)}
 
-      <div>
-        {/* Toggle Button */}
-        <div className=" flex justify-center">
-          <button
-            onClick={handleOpenIds}
-            className="bg-blue-500 text-white  px-4 py-2 rounded-md m-4"
-          >
-            {showIds ? "Hide ID Cards" : "Show ID Cards"}
-          </button>
-        </div>
+{/* Expenses */}
+{expense.length > 0 && (
+  <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
+    <h3 className="text-xl font-semibold text-gray-900">Expenses</h3>
+    <div className="overflow-auto rounded-md border border-gray-100">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
+          <tr>
+            <th className="px-4 py-3">Name</th>
+            <th className="px-4 py-3">Amount</th>
+            <th className="px-4 py-3">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {expense.map((expense) => (
+            <tr key={expense.id} className="hover:bg-gray-50">
+              <td className="px-4 py-2">{expense.name ?? "N/A"}</td>
+              <td className="px-4 py-2">{expense.amount ?? "N/A"}</td>
+              <td className="px-4 py-2">
+                <DateDisplay date={expense.date} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="text-right text-base font-semibold text-red-700">
+      Total Expenses: Ksh {totalExpenses.toLocaleString()}
+    </div>
+  </section>
+)}
 
-        {/* ID Cards */}
-        {showIds && (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">Front ID</h3>
-              <img
-                src={employee.front_id || defaultPic}
-                alt="Front ID"
-                className="w-full h-48 object-cover border border-gray-400 rounded-lg"
-              />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">Back ID</h3>
-              <img
-                src={employee.back_id || defaultPic}
-                alt="Back ID"
-                className="w-full h-48 object-cover border border-gray-400 rounded-lg"
-              />
-            </div>
-          </div>
-        )}
-      </div>
 
-      <div className=" my-3 p-4 border border-green-500">
-        <p>
-          Payment Date: <DateDisplay date={employee.date_joined} />{" "}
-        </p>
-        <h4>
-          Salary:{" "}
-          <span>
-            <FormattedAmount amount={employee.contract_salary} />{" "}
-          </span>
-        </h4>
-        <h4>
-          Total advances:{" "}
-          <span>
-            <FormattedAmount amount={totalAdvances} />
-          </span>
-        </h4>
-        <h4>Total Expenses: ksh {totalExpenses.toLocaleString()}</h4>
-        <h4>
-          Total Less Pay: ksh{" "}
-          {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
-        </h4>
-        <h4>Total Defaults: ksh {totalCost.toLocaleString()}</h4>
+      {/* --------------------------------------- */}
+      <div className="space-y-6">
 
-        <div className="flex items-center space-x-2">
-          <h4 className=" me-2 font-bold">Total Cash Default: </h4>
-          {totalCashDefault.toLocaleString("en-US", {
-            style: "currency",
-            currency: "KSH",
-          })}
-        </div>
+{/* Lost Cylinders Section */}
+{employeeDefaults.length > 0 && (
+  <section className="bg-white border border-gray-200 shadow-md rounded-2xl p-6">
+    <h3 className="text-xl font-semibold text-gray-900 mb-4">Lost Cylinders</h3>
+    <div className="overflow-auto rounded-md border border-gray-100">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
+          <tr>
+            <th className="px-4 py-3">Gas Type</th>
+            <th className="px-4 py-3">Weight (kg)</th>
+            <th className="px-4 py-3">Filled</th>
+            <th className="px-4 py-3">Empty</th>
+            <th className="px-4 py-3">Cost</th>
+            <th className="px-4 py-3">Date</th>
+            <th className="px-4 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {employeeDefaults.map((cylinder) => {
+            const isFilled = !!cylinder.number_of_filled_cylinder
+            const isEmpty = !!cylinder.number_of_empty_cylinder
+            const cost = isFilled
+              ? cylinder.cylinder?.max_retail_selling_price
+              : isEmpty
+              ? cylinder.cylinder?.empty_cylinder_price
+              : "N/A"
 
-        <div>
-          <h4 className=" text-lg font-bold underline ">
-            <span>Total Salary:</span>{" "}
-            <span className=" text-green-800 ">
-              <FormattedAmount
-                amount={
-                  employee.contract_salary -
-                  totalExpenses -
-                  totalCost -
-                  totalMaxWholesaleRefillLessPayPrice -
-                  totalAdvances -
-                  totalCashDefault
-                }
-              />{" "}
-            </span>
-          </h4>
-        </div>
-        <div className=" flex justify-end">
-          <button className=" bg-green-950 text-white px-2 py-0.5 rounded-md">
-            Pay
-          </button>
-        </div>
-      </div>
-
-      {advances.length > 0 && (
-        <div className=" px-2 mb-5">
-          <div className=" mt-4  border-t-2 border-dotted">
-            <h5 className=" text-lg font-bold">Advances</h5>
-
-            <div className="mt-3">
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Amount</th>
-                    <th className="border px-4 py-2">Date</th>
-                    <th className="border px-4 py-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {advances.map((advance) => (
-                    <tr key={advance.id}>
-                      <td className="border px-4 py-2">
-                        {advance.amount ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <DateDisplay date={advance.date_issued} />
-                      </td>
-                      <td className="border px-4 py-2">
+            return (
+              <tr key={cylinder.id} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-2">{cylinder.cylinder?.gas_type ?? "N/A"}</td>
+                <td className="px-4 py-2">{cylinder.cylinder?.weight ?? "N/A"}</td>
+                <td className="px-4 py-2">{cylinder.number_of_filled_cylinder ?? "N/A"}</td>
+                <td className="px-4 py-2">{cylinder.number_of_empty_cylinder ?? "N/A"}</td>
+                <td className="px-4 py-2">{cost}</td>
+                <td className="px-4 py-2"><DateDisplay date={cylinder.date_lost} /></td>
+                <td className="px-4 py-2">
+                  <div className="flex gap-2">
+                    {!cylinder.cleared && (
+                      <>
                         <button
-                          onClick={() => handleRemoveAdvance(advance?.id)}
-                          className="bg-green-800 px-1 py-0.5 text-white"
+                          onClick={() => handleClearDefaults(cylinder.id)}
+                          disabled={loading}
+                          className="bg-green-600 text-white text-xs px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
                         >
-                          Remove
+                          Clear
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="mt-4 text-right font-semibold text-lg">
-            <p>
-              Total Advances:{" "}
-              <span className="text-red-600">
-                <FormattedAmount amount={totalAdvances} />
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
+                        <button
+                          onClick={() => handleReturnDefaults(cylinder.id)}
+                          disabled={loading}
+                          className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          Return
+                        </button>
+                      </>
+                    )}
+                    {cylinder.cleared && <span className="text-green-700 font-medium">Yes</span>}
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+    <div className="text-right text-base font-medium mt-4 text-red-600">
+      Total Lost Cylinder Cost: Ksh {totalCost.toLocaleString()}
+    </div>
+  </section>
+)}
 
-      <div>
-        {filteredCash.length > 0 && (
-          <div className=" px-2 mb-5">
-            <div className=" mt-4  border-t-2 border-dotted">
-              <h5 className=" text-lg font-bold">Cash at Hand Defaults</h5>
-
-              <div className="mt-3">
-                <table className="w-full border-collapse border border-gray-300 text-sm">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      <th className="border px-4 py-2">Amount</th>
-                      <th className="border px-4 py-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCash.map((cash) => (
-                      <tr key={cash.id}>
-                        <td className="border px-4 py-2">
-                          {cash.cash_default ?? "N/A"}
-                        </td>
-                        <td className="border px-4 py-2">
-                          <DateDisplay date={cash.date} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="mt-4 text-right font-semibold text-lg">
-              <p>
-                Total Cash Default:{" "}
-                <span className="text-red-600">
-                  Ksh {totalCashDefault.toLocaleString()}
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
+{/* Less Pays Section */}
+<section className="bg-white border border-gray-200 shadow-md rounded-2xl p-6">
+  <h3 className="text-xl font-semibold text-gray-900 mb-4">Less Pay Records</h3>
+  {employeeLessPays?.length > 0 ? (
+    <>
+      <div className="overflow-auto rounded-md border border-gray-100">
+        <table className="min-w-full text-sm text-left text-gray-700">
+          <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
+            <tr>
+              <th className="px-4 py-3">Cylinder</th>
+              <th className="px-4 py-3">Weight</th>
+              <th className="px-4 py-3">Quantity</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Resolved</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employeeLessPays.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50 transition">
+                <td className="px-4 py-2">{item.cylinder?.gas_type || "N/A"}</td>
+                <td className="px-4 py-2">{item.cylinder?.weight}</td>
+                <td className="px-4 py-2">{item.cylinders_less_pay}</td>
+                <td className="px-4 py-2"><DateDisplay date={item.date_lost} /></td>
+                <td className="px-4 py-2">
+                  {item.resolved ? (
+                    <span className="text-green-700 font-medium">Yes</span>
+                  ) : (
+                    <button
+                      onClick={() => handleClearLessPay(item.id)}
+                      disabled={loading}
+                      className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      {expense.length > 0 && (
-        <div className=" px-2 mb-5">
-          <div className=" mt-4  border-t-2 border-dotted">
-            <h5 className=" text-lg font-bold">Expenses</h5>
-
-            <div className="mt-3">
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Name</th>
-                    <th className="border px-4 py-2">Amount</th>
-                    <th className="border px-4 py-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expense.map((expense) => (
-                    <tr key={expense.id}>
-                      <td className="border px-4 py-2">
-                        {expense.name ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {expense.amount ?? "N/A"}
-                      </td>
-                      <td className="border px-4 py-2">
-                        <DateDisplay date={expense.date} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="mt-4 text-right font-semibold text-lg">
-            <p>
-              Total Expenses:{" "}
-              <span className="text-red-600">
-                Ksh {totalExpenses.toLocaleString()}
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
-      <div>
-        {/* Defaults Table */}
-
-        {employeeDefaults.length > 0 && (
-          <section className="bg-white shadow-sm rounded-lg p-4 border">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              Lost Cylinders
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border text-sm text-left">
-                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-2 border">Gas Type</th>
-                    <th className="px-4 py-2 border">Weight (kg)</th>
-                    <th className="px-4 py-2 border">Filled</th>
-                    <th className="px-4 py-2 border">Empty</th>
-                    <th className="px-4 py-2 border">Cost</th>
-                    <th className="px-4 py-2 border">Date</th>
-                    <th className="px-4 py-2 border">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employeeDefaults.map((cylinder) => {
-                    const isFilled = !!cylinder.number_of_filled_cylinder
-                    const isEmpty = !!cylinder.number_of_empty_cylinder
-                    const cost = isFilled
-                      ? cylinder.cylinder?.max_retail_selling_price
-                      : isEmpty
-                      ? cylinder.cylinder?.empty_cylinder_price
-                      : "N/A"
-
-                    return (
-                      <tr key={cylinder.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 border">
-                          {cylinder.cylinder?.gas_type ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {cylinder.cylinder?.weight ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {cylinder.number_of_filled_cylinder ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-2 border">
-                          {cylinder.number_of_empty_cylinder ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-2 border">{cost ?? "N/A"}</td>
-                        <td className="px-4 py-2 border">
-                          <DateDisplay date={cylinder.date_lost} />
-                        </td>
-                        <td className="border px-4 py-2">
-                          <div className="flex space-x-1">
-                            {cylinder.cleared ? (
-                              "Yes"
-                            ) : (
-                              <button
-                                onClick={() =>
-                                  handleClearDefaults(cylinder?.id)
-                                }
-                                className={`mt-2 bg-green-500 text-white py-1 px-2 rounded ${
-                                  loading ? "opacity-50 cursor-not-allowed" : ""
-                                }`}
-                                disabled={loading}
-                              >
-                                Clear
-                              </button>
-                            )}
-                            {cylinder.cleared ? (
-                              "Yes"
-                            ) : (
-                              <button
-                                onClick={() =>
-                                  handleReturnDefaults(cylinder?.id)
-                                }
-                                className={`mt-2 bg-green-500 text-white py-1 px-2 rounded ${
-                                  loading ? "opacity-50 cursor-not-allowed" : ""
-                                }`}
-                                disabled={loading}
-                              >
-                                Return
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <div className="text-right text-lg font-semibold mt-4">
-              Total Lost Cylinder Cost:{" "}
-              <span className="text-red-600">
-                Ksh {totalCost.toLocaleString()}
-              </span>
-            </div>
-          </section>
-        )}
-
-        {/* Less Pays Table */}
-
-        <h3 className="font-semibold mt-4">Less Pays</h3>
-        {employeeLessPays?.length > 0 ? (
-          <section className="bg-white shadow-sm rounded-lg p-4 border">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              Less Pay Records
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto border text-sm text-left">
-                <thead className="bg-gray-100 text-gray-600 uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-2 border">Cylinder Name</th>
-                    <th className="px-4 py-2 border">Weight</th>
-                    <th className="px-4 py-2 border">Quantity</th>
-                    <th className="px-4 py-2 border">Date</th>
-                    <th className="px-4 py-2 border">Resolved</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employeeLessPays.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-4 py-2 border">
-                        {item.cylinder?.gas_type || "N/A"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {item.cylinder?.weight}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        {item.cylinders_less_pay}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        <DateDisplay date={item.date_lost} />
-                      </td>
-                      <td className="border px-4 py-2">
-                        {item.resolved ? (
-                          "Yes"
-                        ) : (
-                          <button
-                            onClick={() => handleClearLessPay(item.id)}
-                            className={`mt-2 w-full bg-blue-500 text-white py-1 rounded ${
-                              loading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
-                            disabled={loading}
-                          >
-                            clear
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* Display the Total Max Wholesale Refill Price */}
-            <div className="mt-4 text-right font-semibold text-lg">
-              <p>
-                Total Less Pay:{" "}
-                <span className="text-blue-600">
-                  Ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
-                </span>
-              </p>
-            </div>
-          </section>
-        ) : (
-          <p>No less pay records found.</p>
-        )}
+      <div className="mt-4 text-right font-semibold text-base text-blue-600">
+        Total Less Pay: Ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
       </div>
+    </>
+  ) : (
+    <p className="text-gray-500">No less pay records found.</p>
+  )}
+</section>
+
+</div>
+
+
+
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Enter Salary</DialogTitle>
         <DialogContent>
@@ -914,7 +877,7 @@ const EmployeesProfileDetails = () => {
         <DialogTitle>Enter Payment date.</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Enter payment dates from date 1-29.
+            Enter payment dates from date 1-28.
           </DialogContentText>
           <TextField
             required
@@ -943,7 +906,7 @@ const EmployeesProfileDetails = () => {
           {addingAdvance ? (
             <CircularProgress size={24} />
           ) : (
-            <Button onClick={handleAddSalaryData} disabled={addingAdvance}>
+            <Button onClick={handleAddSalaryDate} disabled={addingSalaryDate}>
               Add
             </Button>
           )}

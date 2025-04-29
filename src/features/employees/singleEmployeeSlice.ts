@@ -37,7 +37,6 @@ const initialState: SingleEmployeeState = {
 export const fetchSingleEmployee = createAsyncThunk<Employees[]>(
     "singleEmployee/fetchSingleEmployee",
     async ({ employeeId }: { employeeId: string }) => {
-        console.log('ids is ', employeeId)
         const response = await axios.get<Employees[]>(`${apiUrl}/employees/${employeeId}/`);
         return response.data; // Return the fetched employees data
     }
@@ -75,6 +74,29 @@ export const addEmployeeSalary = createAsyncThunk(
         return response.data;
     }
 );
+
+
+
+export const addEmployeeSalaryDate = createAsyncThunk(
+    "singleEmployee/addEmployeeSalaryDate",
+    async ({ employeeId, salaryDate }: { employeeId: number; salaryDate: number }) => {
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth(); // Note: getMonth() returns 0-based month
+        const date = new Date(year, month, salaryDate+1); // Create a proper date object with corrected month
+        const formData = { date_joined: date.toISOString().split("T")[0] }; // Format as YYYY-MM-DD
+        console.log('dates ', formData)
+        const response = await axios.patch(`${apiUrl}/salary/${employeeId}/`, formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${Cookies.get("accessToken")}`,
+                },
+            }
+        );
+        return response.data;
+    }
+);
+
 
 
 
@@ -151,6 +173,28 @@ const singleEmployeeSlice = createSlice({
                 state.status = "failed";
                 state.error = action.error.message || "Failed to add salary.";
             })
+
+            .addCase(addEmployeeSalaryDate.pending, (state) => {
+                state.status = "loading";
+            })
+
+            .addCase(addEmployeeSalaryDate.fulfilled, (state, action) => {
+                state.status = "succeeded";
+
+                // Extract updated employee from the payload
+                const updatedEmployee = action.payload;
+
+                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
+                    state.singleEmployee.date_joined = updatedEmployee.date_joined; // ✅ Update ONLY the verified field
+                }
+            })
+
+            .addCase(addEmployeeSalaryDate.rejected, (state, action) => {
+                state.status = "failed";
+                state.error = action.error.message || "Failed to add salary.";
+            })
+
+            
             // Update Employee Status
             .addCase(updateSimgleEmployeeStatus.pending, (state) => {
                 state.status = "loading";
