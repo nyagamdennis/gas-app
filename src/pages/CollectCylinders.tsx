@@ -373,61 +373,60 @@ const CollectCylinders = () => {
 
           {hasCylinders ? (
             <>
-              <div className="w-full">
-                <table className="table-auto w-full text-xs md:text-sm border-collapse border border-gray-300">
+                <div className="w-full overflow-x-auto">
+                <table className="table-auto w-full text-xs md:text-sm border-collapse border border-gray-300 sticky top-0 bg-white z-10">
                   <thead>
-                    <tr className="bg-gray-200">
-                      <th className="border px-2 py-1">Gas Type</th>
-                      <th className="border px-2 py-1">Weight (kg)</th>
-                      <th className="border px-2 py-1">Assigned</th>
-                      <th className="border px-2 py-1">Filled</th>
-                      <th className="border px-2 py-1">Empties</th>
-                      <th className="border px-2 py-1">Spoiled</th>
-                    </tr>
+                  <tr className="bg-gray-200">
+                  <th className="border px-2 py-1">Gas Type</th>
+                  <th className="border px-2 py-1">Weight (kg)</th>
+                  <th className="border px-2 py-1">Assigned</th>
+                  <th className="border px-2 py-1">Filled</th>
+                  <th className="border px-2 py-1">Empties</th>
+                  <th className="border px-2 py-1">Spoiled</th>
+                  </tr>
                   </thead>
                   <tbody>
-                    {assignedCylinders.map((cylinder) => (
-                      <tr key={cylinder.id} className="text-center">
-                        <td className="border px-2 py-1">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-2 py-1">{cylinder.weight}</td>
-                        <td className="border px-2 py-1">
-                          {cylinder.assigned_quantity}
-                        </td>
-                        <td className="border px-2 py-1 whitespace-nowrap">
-                          {cylinder.filled}
-                          {cylinder.filled_lost > 0 && (
-                            <span className="text-red-500 ml-2 font-bold">
-                              - {cylinder.filled_lost}
-                            </span>
-                          )}
-                          {cylinder.less_pay > 0 && (
-                            <span className="text-green-800 ml-2 font-bold">
-                              - {cylinder.less_pay}
-                            </span>
-                          )}
-                        </td>
-                        {/* <td className="border px-2 py-1">{cylinder.empties}</td> */}
-                        <td className="border px-2 py-1 whitespace-nowrap">
-                          {cylinder.empties}
-                          {cylinder.empties_lost > 0 && (
-                            <span className="text-red-500 ml-2 font-bold">
-                              - {cylinder.empties_lost}
-                            </span>
-                          )}
-                          {cylinder.less_pay > 0 && (
-                            <span className="text-green-800 ml-2 font-bold">
-                              + {cylinder.less_pay}
-                            </span>
-                          )}
-                        </td>
-                        <td className="border px-2 py-1">{cylinder.spoiled}</td>
-                      </tr>
-                    ))}
+                  {assignedCylinders.map((cylinder) => (
+                  <tr key={cylinder.id} className="text-center">
+                  <td className="border px-2 py-1">
+                    {cylinder.gas_type}
+                  </td>
+                  <td className="border px-2 py-1">{cylinder.weight}</td>
+                  <td className="border px-2 py-1">
+                    {cylinder.assigned_quantity}
+                  </td>
+                  <td className="border px-2 py-1 whitespace-nowrap">
+                    {cylinder.filled}
+                    {cylinder.filled_lost > 0 && (
+                    <span className="text-red-500 ml-2 font-bold">
+                    - {cylinder.filled_lost}
+                    </span>
+                    )}
+                    {cylinder.less_pay > 0 && (
+                    <span className="text-green-800 ml-2 font-bold">
+                    - {cylinder.less_pay}
+                    </span>
+                    )}
+                  </td>
+                  <td className="border px-2 py-1 whitespace-nowrap">
+                    {cylinder.empties}
+                    {cylinder.empties_lost > 0 && (
+                    <span className="text-red-500 ml-2 font-bold">
+                    - {cylinder.empties_lost}
+                    </span>
+                    )}
+                    {cylinder.less_pay > 0 && (
+                    <span className="text-green-800 ml-2 font-bold">
+                    + {cylinder.less_pay}
+                    </span>
+                    )}
+                  </td>
+                  <td className="border px-2 py-1">{cylinder.spoiled}</td>
+                  </tr>
+                  ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
               <div className="flex justify-center">
                 <button
                   className="bg-blue-400 mt-3 flex items-center text-white px-2 rounded-md "
@@ -468,6 +467,12 @@ const CollectCylinders = () => {
                       </p>
                       <p className="text-sm text-gray-700">
                         Less pay: {cylinder.less_pay}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        Complete Sale(wholesale): {cylinder.wholesale_sold}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        Complete Sale(retail): {cylinder.retail_sold}
                       </p>
                       <p className="text-sm text-gray-700">
                         Spoiled: {cylinder.spoiled}
