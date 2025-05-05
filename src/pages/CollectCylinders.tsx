@@ -17,6 +17,8 @@ import {
   selectAllEmployees,
 } from "../features/employees/employeesSlice"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
+import AdminNav from "../components/ui/AdminNav"
+import AdminsFooter from "../components/AdminsFooter"
 
 const CollectCylinders = () => {
   const dispatch = useAppDispatch()
@@ -344,7 +346,9 @@ const CollectCylinders = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100 ">
+      <AdminNav headerMessage={"Collect Cylinders"} headerText={"Collect cylinders from your retailers or wholesalers"}  />
+      <div className="p-4">
       {!selectedTeam ? (
         <div>
           <h2 className="text-xl font-bold text-center mb-4">
@@ -794,6 +798,11 @@ const CollectCylinders = () => {
           )}
         </div>
       )}
+      </div>
+      <footer className=" bottom-0">
+      <AdminsFooter />
+      </footer>
+     
     </div>
   )
 }

@@ -30,9 +30,11 @@ import requestReducer from "../features/RequestCylinders/requestedSlice"
 import cashReducer from "../features/cashAtHand/cashSlice"
 import teamExpensesReducer from "../features/expenses/teamExpensesSlice"
 import salaryReducer from "../features/monthlySalary/salarySlice"
+import subscriptionReducer from "../features/subscriptions/subscriptionSlice";
 
 export const store = configureStore({
   reducer: {
+    subscription: subscriptionReducer,
     salary: salaryReducer,
     requested: requestReducer,
     customers: customerReducer,

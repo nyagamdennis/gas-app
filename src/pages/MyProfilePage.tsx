@@ -29,18 +29,27 @@ import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew"
 import { logout } from "../features/auths/authSlice"
 import { fetchCash, selectAllCash } from "../features/cashAtHand/cashSlice"
 import { fetchSalary, selectAllSalary } from "../features/salary/salarySlice"
+import { fetchAdvances, selectAllAdvance } from "../features/defaults/advancesSlice"
 
 const MyProfilePage = () => {
   const dispatch = useAppDispatch()
   const myProfile = useAppSelector(selectMyProfile)
-
+  const advances = useAppSelector(selectAllAdvance)
   const defaulted_data = useAppSelector(selectAllDefaults);
   console.log("defaulted_data", defaulted_data)
   const lessPay_data = useAppSelector(selectAllLessPay)
   console.log("lessPay_data", lessPay_data)
   const expense = useAppSelector(selectAllExpenses)
   const allCash = useAppSelector(selectAllCash)
-  const mySalary = useAppSelector(selectAllSalary)
+  const mySalary = useAppSelector(selectAllSalary);
+  const employeeSalary = useAppSelector(selectAllSalary)
+
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+      const now = new Date()
+      return `${now.toLocaleString("default", {
+        month: "long",
+      })} ${now.getFullYear()}`
+    })
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
@@ -52,6 +61,8 @@ const MyProfilePage = () => {
     gender: "",
   })
 
+  const employeeId = myProfile?.id
+
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [frontIdImage, setFrontIdImage] = useState<File | null>(null)
   const [backIdImage, setBackIdImage] = useState<File | null>(null)
@@ -61,6 +72,9 @@ const MyProfilePage = () => {
     dispatch(fetchCash())
   }, [dispatch])
 
+
+
+  
   useEffect(() => {
     if (myProfile?.id) {
       // Fetch data only when myProfile is available
@@ -68,13 +82,16 @@ const MyProfilePage = () => {
       dispatch(fetchLessPay(myProfile.id))
       dispatch(fetchExpenses(myProfile.id))
       dispatch(fetchSalary(myProfile.id))
+      dispatch(fetchAdvances(myProfile?.id))
+      // dispatch(fetchSalary({ employeeId: Number(id) }))
     }
   }, [dispatch, myProfile])
 
-  const totalExpenses = expense.reduce(
-    (total, item) => total + (item.amount || 0),
-    0,
-  )
+
+  
+
+
+
   useEffect(() => {
     if (myProfile) {
       setFormData({
@@ -88,6 +105,54 @@ const MyProfilePage = () => {
     }
   }, [myProfile])
 
+
+
+  // +++++++++++++++++++++++++++++++++++++++++
+  const getDateRangeForSelectedMonth = (
+    selectedMonth: string,
+    salaries: Salary[],
+  ): { startDate: Date; endDate: Date } => {
+    const [monthStr, yearStr] = selectedMonth.split(" ")
+    const selectedDate = new Date(`${monthStr} 1, ${yearStr}`)
+
+    const sortedSalaries = salaries
+      .filter((s) => !!s.payment_date)
+      .map((s) => new Date(s.payment_date))
+      .sort((a, b) => a.getTime() - b.getTime())
+
+    let startDate: Date
+    let endDate: Date = new Date() // fallback to today
+
+    // Check if payment exists for selected month
+    const currentSalaryDate = sortedSalaries.find((date) => {
+      return (
+        date.getMonth() === selectedDate.getMonth() &&
+        date.getFullYear() === selectedDate.getFullYear()
+      )
+    })
+
+    if (currentSalaryDate) {
+      startDate = currentSalaryDate
+
+      const nextSalaryDate = sortedSalaries.find((d) => d > currentSalaryDate)
+      if (nextSalaryDate) endDate = nextSalaryDate
+    } else {
+      // No salary for this month, default range
+      startDate = selectedDate
+
+      const nextSalaryDate = sortedSalaries.find((d) => d > startDate)
+      if (nextSalaryDate) endDate = nextSalaryDate
+    }
+
+    return { startDate, endDate }
+  }
+
+  // -------------------------------------------------------------------
+  const { startDate, endDate } = getDateRangeForSelectedMonth(
+    selectedMonth,
+    employeeSalary,
+  )
+  // ++++++++++++++++++++++++++++++++
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -141,16 +206,39 @@ const MyProfilePage = () => {
     dispatch(logout())
   }
 
-  const employeeId = myProfile?.id
+  
+
 
   const filteredCash = allCash?.filter((cash) => {
-    return cash.employee === employeeId
+    const cashDate = new Date(cash.deficit_date)
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    )
   })
+  // const filteredCash = allCash?.filter((cash) => {
+  //   return cash.employee === employeeId
+  // })
+
+
   const totalCashDefault = filteredCash?.reduce((acc, cash) => {
     return acc + cash.cash_default
   }, 0)
 
-  const totalCost = defaulted_data.reduce((sum, cylinder) => {
+
+  const filteredtotalMaxWholesaleDefaultPrice = defaulted_data?.filter((cash) => {
+    const cashDate = new Date(cash.date_lost);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  const totalCost = filteredtotalMaxWholesaleDefaultPrice.reduce((sum, cylinder) => {
     const isFilled = !!cylinder.number_of_filled_cylinder
     const isEmpty = !!cylinder.number_of_empty_cylinder
 
@@ -163,9 +251,23 @@ const MyProfilePage = () => {
     return sum + (price || 0) // fallback in case price is undefined
   }, 0)
 
-  const totalLessPay = lessPay_data.reduce((sum, cylinder) => {
+
+
+  const filteredEmployeeLessPay = lessPay_data?.filter((cash) => {
+    const cashDate = new Date(cash.date_lost);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  const totalLessPay = filteredEmployeeLessPay.reduce((sum, cylinder) => {
     return sum + (cylinder.cylinder?.max_retail_refil_price || 0)
   }, 0)
+  console.log('less pay ', filteredEmployeeLessPay)
 
   // payment filters
   // Payment Filters - Salary Period Logic
@@ -191,11 +293,101 @@ const MyProfilePage = () => {
     }
   }
 
-  const unpaidMonths = months.filter((month) => !getMonthStatus(month).isPaid)
+
+  const filteredExpenses = expense?.filter((cash) => {
+    const cashDate = new Date(cash.date);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee?.id === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  const totalExpenses = filteredExpenses.reduce(
+    (total, item) => total + (item.amount || 0),
+    0,
+  )
+
+
+  const filteredAdvances = advances?.filter((cash) => {
+    const cashDate = new Date(cash.date_added);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  const totalAdvances = filteredAdvances.reduce(
+    (total, item) => total + (item.amount || 0),
+    0,
+  )
+
 
   const netSalary =
-    myProfile.contract_salary - totalCashDefault - totalExpenses - totalCost
+    myProfile.contract_salary - totalCashDefault - totalExpenses - totalCost - totalAdvances
 
+
+
+    const formated_payment_date = () => {
+      const today = new Date() // current date
+      const joined = new Date(myProfile?.date_joined) // original date
+      // Construct new date with current year & month, but day from `date_joined`
+      const adjusted = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        joined.getDate(),
+      )
+      return adjusted
+    }
+
+
+    const generateMonthOptions = () => {
+      const months = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ]
+  
+      const joinedDate = new Date(myProfile?.date_joined)
+      const currentDate = new Date()
+      const options = []
+  
+      for (
+        let date = new Date(joinedDate);
+        date <= currentDate;
+        date.setMonth(date.getMonth() + 1)
+      ) {
+        const label = `${months[date.getMonth()]} ${date.getFullYear()}`
+        if (label !== selectedMonth) {
+          options.push(
+            <option key={label} value={label}>
+              {label}
+            </option>,
+          )
+        }
+      }
+  
+      return options
+    }
+
+
+
+
+    
   return (
     <div className="min-h-screen min-w-full bg-gray-50 flex flex-col">
       {/* Header */}
@@ -523,142 +715,28 @@ const MyProfilePage = () => {
         )}
       </div>
 
-      {unpaidMonths.length > 0 && (
-        <div className="bg-red-50 border border-red-300 p-4 rounded-md text-red-700 mt-6">
-          <h4 className="font-semibold">Unpaid Months</h4>
-          <ul className="list-disc ml-5 mt-2 text-sm">
-            {unpaidMonths.map((month, i) => (
-              <li key={i}>{format(month, "MMMM yyyy")}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+
+     
 
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6 space-y-6">
-        {/* Period Selector */}
-        <div className="flex justify-end">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="text-sm border border-gray-300 rounded-md px-3 py-2 text-gray-700 focus:ring-blue-500"
-          >
-            {months.map((month, i) => (
-              <option key={i} value={month.toISOString()}>
-                {format(month, "MMMM yyyy")}
+        {/* Salary Info */}
+        <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">
+              <span className="font-medium text-gray-700">Payment Date:</span>{" "}
+              <DateDisplay date={formated_payment_date()} />
+            </p>
+            <select
+              className="border outline-none border-gray-300 rounded-md px-3 py-2 bg-white text-sm"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              <option value={selectedMonth} disabled hidden>
+                {selectedMonth}
               </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Salary Info */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Base Salary</span>
-            <span className="text-lg font-semibold text-gray-900">
-              <FormattedAmount amount={myProfile.contract_salary} />
-            </span>
+              {generateMonthOptions()}
+            </select>
           </div>
 
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Cash Default</span>
-            <span className="text-lg font-semibold text-red-600">
-              {filteredCash
-                .filter((item) =>
-                  isSameMonth(new Date(item.date), new Date(selectedPeriod)),
-                )
-                .reduce((sum, item) => sum + item.cash_default, 0)
-                .toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "KSH",
-                })}
-            </span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Expenses</span>
-            <span className="text-lg font-semibold text-yellow-600">
-              {expense
-                .filter((item) =>
-                  isSameMonth(new Date(item.date), new Date(selectedPeriod)),
-                )
-                .reduce((sum, item) => sum + item.amount, 0)
-                .toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "KSH",
-                })}
-            </span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-sm text-gray-500">Lost Cylinders</span>
-            <span className="text-lg font-semibold text-rose-600">
-              {defaulted_data
-                .filter((item) =>
-                  isSameMonth(
-                    new Date(item.date_lost),
-                    new Date(selectedPeriod),
-                  ),
-                )
-                .reduce((sum, cylinder) => {
-                  const isFilled = !!cylinder.number_of_filled_cylinder
-                  const isEmpty = !!cylinder.number_of_empty_cylinder
-                  const price = isFilled
-                    ? cylinder.cylinder?.maximum_selling_price
-                    : isEmpty
-                    ? cylinder.cylinder?.empty_cylinder_price
-                    : 0
-                  return sum + (price || 0)
-                }, 0)
-                .toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "KSH",
-                })}
-            </span>
-          </div>
-        </div>
-
-        {/* Net Salary */}
-        <div className="border border-dashed border-green-800 rounded-md p-4 bg-green-50">
-          <h4 className="text-md font-bold text-green-900 mb-1">Net Salary</h4>
-          <p className="text-xl font-bold text-green-700">
-            <FormattedAmount
-              amount={
-                myProfile.contract_salary -
-                filteredCash
-                  .filter((item) =>
-                    isSameMonth(new Date(item.date), new Date(selectedPeriod)),
-                  )
-                  .reduce((sum, item) => sum + item.cash_default, 0) -
-                expense
-                  .filter((item) =>
-                    isSameMonth(new Date(item.date), new Date(selectedPeriod)),
-                  )
-                  .reduce((sum, item) => sum + item.amount, 0) -
-                defaulted_data
-                  .filter((item) =>
-                    isSameMonth(
-                      new Date(item.date_lost),
-                      new Date(selectedPeriod),
-                    ),
-                  )
-                  .reduce((sum, cylinder) => {
-                    const isFilled = !!cylinder.number_of_filled_cylinder
-                    const isEmpty = !!cylinder.number_of_empty_cylinder
-                    const price = isFilled
-                      ? cylinder.cylinder?.maximum_selling_price
-                      : isEmpty
-                      ? cylinder.cylinder?.empty_cylinder_price
-                      : 0
-                    return sum + (price || 0)
-                  }, 0)
-              }
-            />
-          </p>
-        </div>
-      </div>
-
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-md p-6 space-y-6">
-        {/* Salary Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
           <div className="flex flex-col">
             <span className="text-sm text-gray-500">Base Salary</span>
@@ -760,7 +838,7 @@ const MyProfilePage = () => {
         )}
 
         {/* Expenses */}
-        {expense.length > 0 && (
+        {filteredExpenses.length > 0 && (
           <section className="bg-white shadow-sm rounded-lg p-4 border">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Expenses</h3>
             <div className="overflow-x-auto">
@@ -773,7 +851,7 @@ const MyProfilePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {expense.map((exp) => (
+                  {filteredExpenses.map((exp) => (
                     <tr key={exp.id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border">{exp.name ?? "N/A"}</td>
                       <td className="px-4 py-2 border">
@@ -797,7 +875,7 @@ const MyProfilePage = () => {
         )}
 
         {/* Lost Cylinders */}
-        {defaulted_data.length > 0 && (
+        {filteredtotalMaxWholesaleDefaultPrice.length > 0 && (
           <section className="bg-white shadow-sm rounded-lg p-4 border">
             <h3 className="text-xl font-bold text-gray-800 mb-2">
               Lost Cylinders
@@ -815,7 +893,7 @@ const MyProfilePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {defaulted_data.map((cylinder) => {
+                  {filteredtotalMaxWholesaleDefaultPrice.map((cylinder) => {
                     const isFilled = !!cylinder.number_of_filled_cylinder
                     const isEmpty = !!cylinder.number_of_empty_cylinder
                     const cost = isFilled
@@ -858,7 +936,7 @@ const MyProfilePage = () => {
         )}
 
         {/* Less Pay Cylinders */}
-        {lessPay_data.length > 0 && (
+        {filteredEmployeeLessPay.length > 0 && (
           <section className="bg-white shadow-sm rounded-lg p-4 border">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
               Less Pay Cylinders
@@ -874,7 +952,7 @@ const MyProfilePage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {lessPay_data.map((cylinder) => (
+                  {filteredEmployeeLessPay.map((cylinder) => (
                     <tr key={cylinder.id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border">
                         {cylinder.cylinder?.gas_type ?? "N/A"}

@@ -80,14 +80,14 @@ const EmployeesProfileDetails = () => {
   console.log("selected month ", selectedMonth)
 
   // const employeeSalary = useAppSelector(selectAllSalary)
-  const employeeSalary = useAppSelector(selectAllSalary);
-
+  const employeeSalary = useAppSelector(selectAllSalary)
 
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [newSalesTeam, setNewSalesTeam] = useState("")
   const [loading, setLoading] = useState(false)
   const [advanceDate, setAdvanceDate] = useState("")
   const [openAddDate, setOpenAddDate] = useState(false)
+
   // const [employeeLessPays, setEmployeeLessPays] = useState({});
 
   const [modalEmployee, setModalEmployee] = useState(null)
@@ -164,6 +164,7 @@ const EmployeesProfileDetails = () => {
     }
     setLoading(false)
   }
+  const employeeId = Number(id)
 
   const handleTransferEmployee = async () => {
     if (!newSalesTeam) {
@@ -252,19 +253,97 @@ const EmployeesProfileDetails = () => {
     setLoading(false)
   }
 
-  // Calculate the total max wholesale refill price for all Less Pays
-  const totalMaxWholesaleRefillLessPayPrice = employeeLessPays.reduce(
-    (total, item) => {
+  // ------------------------------------------------------------------
+  const getDateRangeForSelectedMonth = (
+    selectedMonth: string,
+    salaries: Salary[],
+  ): { startDate: Date; endDate: Date } => {
+    const [monthStr, yearStr] = selectedMonth.split(" ")
+    const selectedDate = new Date(`${monthStr} 1, ${yearStr}`)
+
+    const sortedSalaries = salaries
+      .filter((s) => !!s.payment_date)
+      .map((s) => new Date(s.payment_date))
+      .sort((a, b) => a.getTime() - b.getTime())
+
+    let startDate: Date
+    let endDate: Date = new Date() // fallback to today
+
+    // Check if payment exists for selected month
+    const currentSalaryDate = sortedSalaries.find((date) => {
       return (
-        total +
-        (item.cylinder?.max_retail_refil_price || 0) * item.cylinders_less_pay
+        date.getMonth() === selectedDate.getMonth() &&
+        date.getFullYear() === selectedDate.getFullYear()
       )
-    },
-    0,
+    })
+
+    if (currentSalaryDate) {
+      startDate = currentSalaryDate
+
+      const nextSalaryDate = sortedSalaries.find((d) => d > currentSalaryDate)
+      if (nextSalaryDate) endDate = nextSalaryDate
+    } else {
+      // No salary for this month, default range
+      startDate = selectedDate
+
+      const nextSalaryDate = sortedSalaries.find((d) => d > startDate)
+      if (nextSalaryDate) endDate = nextSalaryDate
+    }
+
+    return { startDate, endDate }
+  }
+
+  // -------------------------------------------------------------------
+  const { startDate, endDate } = getDateRangeForSelectedMonth(
+    selectedMonth,
+    employeeSalary,
   )
 
+  // Calculate the total max wholesale refill price for all Less Pays
+
+
+  
+  
+
+  
+
+  // ---------------------------------------
+
+  // const filteredExpenses = expense?.filter((cash) => {
+  //   const cashDate = new Date(cash.date)
+  //   return (
+  //     cash.employee === employeeId &&
+  //     cashDate >= startDate &&
+  //     cashDate < endDate
+  //   )
+  // })
+  const filteredExpenses = expense?.filter((cash) => {
+    const cashDate = new Date(cash.date);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee?.id === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  const filteredtotalMaxWholesaleDefaultPrice = employeeDefaults?.filter((cash) => {
+    const cashDate = new Date(cash.date_lost);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+  console.log('filtered totalMaxWholesaleDefaultPrice ', filteredtotalMaxWholesaleDefaultPrice)
+
+
   // Calculate total max wholesale price for defaults
-  const totalMaxWholesaleDefaultPrice = employeeDefaults.reduce(
+  const totalMaxWholesaleDefaultPrice = filteredtotalMaxWholesaleDefaultPrice.reduce(
     (total, item) => {
       const emptyPrice =
         (item.number_of_empty_cylinder || 0) *
@@ -277,16 +356,53 @@ const EmployeesProfileDetails = () => {
     0,
   )
 
-  const totalExpenses = expense.reduce(
-    (total, item) => total + (item.amount || 0),
+  const filteredEmployeeLessPay = employeeLessPays?.filter((cash) => {
+    const cashDate = new Date(cash.date_lost);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+  console.log('less pay ', employeeLessPays)
+  
+  const totalMaxWholesaleRefillLessPayPrice = filteredEmployeeLessPay.reduce(
+    (total, item) => {
+      return (
+        total +
+        (item.cylinder?.max_retail_refil_price || 0) * item.cylinders_less_pay
+      )
+    },
     0,
   )
-  const totalAdvances = advances.reduce(
+
+  const filteredAdvances = advances?.filter((cash) => {
+    const cashDate = new Date(cash.date_added);
+    if (isNaN(cashDate)) return false;
+  
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    );
+  });
+
+
+  // console.log("expenses ", expense)
+  console.log("advances ", filteredAdvances)
+  // ------------------------------
+  const totalExpenses = filteredExpenses?.reduce(
     (total, item) => total + (item.amount || 0),
     0,
   )
 
-  const employeeId = Number(id)
+  const totalAdvances = filteredAdvances.reduce(
+    (total, item) => total + (item.amount || 0),
+    0,
+  )
+
   const handleAddNewSalary = async () => {
     setAddingSalary(true)
     try {
@@ -341,7 +457,7 @@ const EmployeesProfileDetails = () => {
     setAddingAdvance(false)
   }
 
-  const totalCost = employeeDefaults.reduce((sum, cylinder) => {
+  const totalCost = filteredtotalMaxWholesaleDefaultPrice.reduce((sum, cylinder) => {
     const isFilled = !!cylinder.number_of_filled_cylinder
     const isEmpty = !!cylinder.number_of_empty_cylinder
 
@@ -354,16 +470,23 @@ const EmployeesProfileDetails = () => {
     return sum + (price || 0) // fallback in case price is undefined
   }, 0)
 
+  // const filteredCash = allCash?.filter((cash) => {
+  //   return cash.employee === employeeId
+  // })
 
   const filteredCash = allCash?.filter((cash) => {
-    return cash.employee === employeeId
+    const cashDate = new Date(cash.deficit_date)
+    return (
+      cash.employee === employeeId &&
+      cashDate >= startDate &&
+      cashDate < endDate
+    )
   })
-
-  
 
   const totalCashDefault = filteredCash?.reduce((acc, cash) => {
     return acc + cash.cash_default
   }, 0)
+  console.log("Total cash default ", filteredCash)
 
   const formated_payment_date = () => {
     const today = new Date() // current date
@@ -377,8 +500,8 @@ const EmployeesProfileDetails = () => {
     return adjusted
   }
 
-  console.log("formated date ", formated_payment_date())
-  console.log("my salary paid ", employeeSalary)
+  // console.log("formated date ", formated_payment_date())
+  // console.log("my salary paid ", employeeSalary)
 
   const generateMonthOptions = () => {
     const months = [
@@ -418,37 +541,36 @@ const EmployeesProfileDetails = () => {
     return options
   }
 
-
   const hasSalaryForSelectedMonth = () => {
-    const [monthStr, yearStr] = selectedMonth.split(" ");
-    const targetMonth = new Date(`${monthStr} 1, ${yearStr}`).getMonth();
-    const targetYear = parseInt(yearStr, 10);
-  
-    const salaryList = Array.isArray(employeeSalary) ? employeeSalary : [];
-    console.log('salary type ', Array.isArray(employeeSalary) ? 'array' : typeof employeeSalary)
-  
+    const [monthStr, yearStr] = selectedMonth.split(" ")
+    const targetMonth = new Date(`${monthStr} 1, ${yearStr}`).getMonth()
+    const targetYear = parseInt(yearStr, 10)
+
+    const salaryList = Array.isArray(employeeSalary) ? employeeSalary : []
+    console.log(
+      "salary type ",
+      Array.isArray(employeeSalary) ? "array" : typeof employeeSalary,
+    )
+
     const match = employeeSalary.find((salary) => {
-      const date = new Date(salary.payment_date);
-      const amount = salary.amount;
+      const date = new Date(salary.payment_date)
+      const amount = salary.amount
       return (
         date.getMonth() === targetMonth &&
         date.getFullYear() === targetYear &&
         amount
-      );
-    });
-  
+      )
+    })
+
     return match
       ? { paid: true, paymentDate: match.payment_date, amount: match.amount }
-      : { paid: false, paymentDate: null, amount: null };
-  };
-  
-const { paid, paymentDate, amount } = hasSalaryForSelectedMonth();
-console.log('has been paid ', paid)
-console.log('payment data ', paymentDate);
-console.log('paid amount ', amount)
+      : { paid: false, paymentDate: null, amount: null }
+  }
 
-
-
+  const { paid, paymentDate, amount } = hasSalaryForSelectedMonth()
+  console.log("has been paid ", paid)
+  console.log("payment data ", paymentDate)
+  console.log("paid amount ", amount)
 
   return (
     <div className="max-w-4xl mx-auto p-3">
@@ -688,47 +810,42 @@ console.log('paid amount ', amount)
         <div className="pt-4 border-t">
           <h4 className="text-lg font-bold text-green-800 flex items-center justify-between">
             <span>Total Net Salary:</span>
-            {paid ?(
+            {paid ? (
               <span>
-              <FormattedAmount
-                amount={
-                  amount
-                }
-              />
-            </span>
-            ):(
+                <FormattedAmount amount={amount} />
+              </span>
+            ) : (
               <span>
-              <FormattedAmount
-                amount={
-                  employee.contract_salary -
-                  totalExpenses -
-                  totalCost -
-                  totalMaxWholesaleRefillLessPayPrice -
-                  totalAdvances -
-                  totalCashDefault
-                }
-              />
-            </span>
+                <FormattedAmount
+                  amount={
+                    employee.contract_salary -
+                    totalExpenses -
+                    totalCost -
+                    totalMaxWholesaleRefillLessPayPrice -
+                    totalAdvances -
+                    totalCashDefault
+                  }
+                />
+              </span>
             )}
-            
           </h4>
         </div>
 
         <div className="flex justify-end">
           {paid ? (
             <button className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
-            paid
-          </button>
-          ): (
+              paid
+            </button>
+          ) : (
             <button className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
-            Pay
-          </button>
+              Pay
+            </button>
           )}
         </div>
       </div>
 
       {/* Advances */}
-      {advances.length > 0 && (
+      {filteredAdvances.length > 0 && (
         <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
           <h3 className="text-xl font-semibold text-gray-900">
             Advance Payments
@@ -743,7 +860,7 @@ console.log('paid amount ', amount)
                 </tr>
               </thead>
               <tbody>
-                {advances.map((advance) => (
+                {filteredAdvances.map((advance) => (
                   <tr key={advance.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2">{advance.amount ?? "N/A"}</td>
                     <td className="px-4 py-2">
@@ -801,7 +918,7 @@ console.log('paid amount ', amount)
       )}
 
       {/* Expenses */}
-      {expense.length > 0 && (
+      {filteredExpenses.length > 0 && (
         <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
           <h3 className="text-xl font-semibold text-gray-900">Expenses</h3>
           <div className="overflow-auto rounded-md border border-gray-100">
@@ -814,7 +931,7 @@ console.log('paid amount ', amount)
                 </tr>
               </thead>
               <tbody>
-                {expense.map((expense) => (
+                {filteredExpenses.map((expense) => (
                   <tr key={expense.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2">{expense.name ?? "N/A"}</td>
                     <td className="px-4 py-2">{expense.amount ?? "N/A"}</td>
@@ -835,7 +952,7 @@ console.log('paid amount ', amount)
       {/* --------------------------------------- */}
       <div className="space-y-6">
         {/* Lost Cylinders Section */}
-        {employeeDefaults.length > 0 && (
+        {filteredtotalMaxWholesaleDefaultPrice.length > 0 && (
           <section className="bg-white border border-gray-200 shadow-md rounded-2xl p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Lost Cylinders
@@ -932,7 +1049,7 @@ console.log('paid amount ', amount)
           <h3 className="text-xl font-semibold text-gray-900 mb-4">
             Less Pay Records
           </h3>
-          {employeeLessPays?.length > 0 ? (
+          {filteredEmployeeLessPay?.length > 0 ? (
             <>
               <div className="overflow-auto rounded-md border border-gray-100">
                 <table className="min-w-full text-sm text-left text-gray-700">

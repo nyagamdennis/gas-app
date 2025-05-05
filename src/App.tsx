@@ -49,6 +49,8 @@ import AdminCustomer from "./pages/AdminCustomer"
 import AdminSms from "./pages/AdminSms"
 import AdminAnalysis from "./pages/AdminAnalysis"
 import EditAssignedCylinders from "./pages/EditAssignedCylinders"
+import SubScriptionPlans from "./pages/SubScriptionPlans"
+import Settings from "./pages/Settings"
 
 
 function App() {
@@ -165,6 +167,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AssigningProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscribe"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <SubScriptionPlans />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <Settings />
               </ProtectedRoute>
             }
           />

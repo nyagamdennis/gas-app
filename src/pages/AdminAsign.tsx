@@ -4,18 +4,16 @@ import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import { useAppDispatch } from '../app/hooks';
 import { logout } from '../features/auths/authSlice';
 import AdminsFooter from '../components/AdminsFooter';
+import AdminNav from '../components/ui/AdminNav';
 
 const AdminAssign = () => {
-  const dispatch = useAppDispatch();
-
-  const handleLogOut = () => {
-    dispatch(logout());
-  };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <AdminNav headerMessage={'Admin Dashboard'} headerText={'Manage your operations with style and clarity'} />
+      {/* <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Admin Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your operations with style and clarity</p>
@@ -27,7 +25,7 @@ const AdminAssign = () => {
         >
           <PowerSettingsNewIcon fontSize="large" />
         </button>
-      </header>
+      </header> */}
 
       {/* Main Cards */}
       <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

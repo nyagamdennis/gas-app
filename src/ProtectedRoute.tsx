@@ -45,13 +45,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     // Optional: Custom redirect logic per role
     const roleRedirectMap: Record<string, string> = {
-      admin: isLargeScreen ? "/" : "/admins",
+      admin:  "/admins",
       employee: "/sales",
       regular_user: "/unverified",
     }
 
     const redirectPath = roleRedirectMap[userRole] || "/unverified"
-    console.log("Redirecting to:", redirectPath)
     return <Navigate to={redirectPath} replace />
   }
 
