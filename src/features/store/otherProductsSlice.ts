@@ -3,6 +3,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import getApiUrl from "../../getApiUrl"
+import Cookies from "cookies-js"
+
 
 const apiUrl = getApiUrl()
 const PRODUCT_URLS = `${apiUrl}/other-products/`
@@ -42,20 +44,32 @@ const initialState: otherProductsState = {
   updateOtherProductError: null,
 }
 
-export const fetchOtherProducts = createAsyncThunk<otherProducts[], void, {}>(
+export const fetchOtherProducts = createAsyncThunk<otherProducts[],{ businessId: string }, void, {}>(
   "otherProducts/fetchOtherProducts",
-  async () => {
+  async ({ businessId }) => {
     // await new Promise((resolve) => setTimeout(resolve, 5000))
-    const response = await axios.get<otherProducts[]>(PRODUCT_URLS)
+    const response = await axios.get<otherProducts[]>(`${apiUrl}/other-products/${businessId}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        },
+      }
+    )
     return response.data
   },
 )
 
 export const addNewProduct = createAsyncThunk(
   "newProduct/addNewProduct",
-  async (formData, { rejectWithValue }) => {
+  async ({businessId, formData}, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${PRODUCT_URLS}`, formData)
+      const response = await axios.post(`${apiUrl}/other-products/${businessId}/`, formData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
       return response.data
     } catch (err) {
       if (err.response && err.response.data) {
@@ -70,7 +84,13 @@ export const updateOtherProduct = createAsyncThunk(
   "newProduct/updateOtherProduct",
   async ({ dat, id }: { dat: any; id: string }, thunkAPI) => {
     try {
-      const response = await axios.patch(`${PRODUCT_URLS}${id}/`, dat)
+      const response = await axios.patch(`${PRODUCT_URLS}${id}/`, dat,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -85,7 +105,13 @@ export const deleteOtherProduct = createAsyncThunk(
   "newProduct/deleteOtherProduct",
   async ({  id }: {  id: string }, thunkAPI) => {
     try {
-      const response = await axios.delete(`${PRODUCT_URLS}${id}/`)
+      const response = await axios.delete(`${PRODUCT_URLS}${id}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -144,6 +170,25 @@ const otherProductsSlice = createSlice({
           action.error.message ||
           "Failed to add product"
       })
+
+      .addCase(deleteOtherProduct.pending, (state) => {
+        state.updateOtherProductStatus = "loading"
+      })
+      .addCase(deleteOtherProduct.fulfilled, (state, action) => {
+        state.updateOtherProductStatus = "succeeded"
+        state.otherProducts = state.otherProducts.filter(
+          (product) => product.id !== action.meta.arg.id,
+        )
+      }
+      )
+      .addCase(deleteOtherProduct.rejected, (state, action) => {
+        state.updateOtherProductStatus = "failed"
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to delete product"
+      }
+      )
   },
 })
 

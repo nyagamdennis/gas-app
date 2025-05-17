@@ -3,6 +3,8 @@ import React, { useState } from "react"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import ArrowRightIcon from "@mui/icons-material/ArrowRight"
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft"
+import FormattedAmount from "./FormattedAmount"
+import { Form } from "react-router-dom"
 
 const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
     console.log("gas", gas)
@@ -21,12 +23,12 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
       className="bg-white rounded-xl shadow-md border border-gray-200 p-5"
     >
       <div className="flex space-x-5 items-center">
-        <h3 className="text-2xl  font-bold text-blue-700">{gas.name}</h3>
+        <h3 className="text-2xl  font-bold text-blue-700 text-nowrap">{gas.name}</h3>
         <div className="flex ">
           <div className="flex items-center">
             <button
               onClick={() => onDialogOpen("add", gas)}
-              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition text-sm"
+              className="bg-blue-600 text-white px-3 py-1 text-nowrap rounded hover:bg-blue-700 transition text-sm"
             >
               Add Cylinder
             </button>
@@ -99,37 +101,52 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
                             <div>
                               <p>
                                 <strong>Min Retail Price:</strong>{" "}
-                                {cylinder.min_retail_selling_price} Ksh
+                                <FormattedAmount amount={cylinder.min_retail_selling_price} />
+                                
                               </p>
                               <p>
                                 <strong>Max Retail Price:</strong>{" "}
-                                {cylinder.max_retail_selling_price} Ksh
+                                <FormattedAmount amount={cylinder.max_retail_selling_price} />
+                                
                               </p>
                               <p>
                                 <strong>Min Wholesale:</strong>{" "}
-                                {cylinder.min_wholesale_selling_price} Ksh
+                                <FormattedAmount amount={cylinder.min_wholesale_selling_price} />
+                                
                               </p>
                               <p>
                                 <strong>Max Wholesale:</strong>{" "}
-                                {cylinder.max_wholesale_selling_price} Ksh
+                                <FormattedAmount amount={cylinder.max_wholesale_selling_price} />
+                                
                               </p>
                             </div>
                             <div>
                               <p>
                                 <strong>Min Refill (Retail):</strong>{" "}
-                                {cylinder.min_retail_refil_price} Ksh
+                                <FormattedAmount amount={cylinder.min_retail_refil_price} />
+                                
                               </p>
                               <p>
                                 <strong>Max Refill (Retail):</strong>{" "}
-                                {cylinder.max_retail_refil_price} Ksh
+                                <FormattedAmount amount={cylinder.max_retail_refil_price} />
+                                
                               </p>
                               <p>
                                 <strong>Min Refill (Wholesale):</strong>{" "}
-                                {cylinder.min_wholesale_refil_price} Ksh
+                                <FormattedAmount amount={cylinder.min_wholesale_refil_price} />
+                                
                               </p>
                               <p>
                                 <strong>Max Refill (Wholesale):</strong>{" "}
-                                {cylinder.max_wholesale_refil_price} Ksh
+                                <FormattedAmount amount={cylinder.max_wholesale_refil_price} />
+                                
+                              </p>
+
+
+                              <p>
+                                <strong>Empty Cylinder prince:</strong>{" "}
+                                <FormattedAmount amount={cylinder.empty_cylinder_price} />
+                                
                               </p>
                             </div>
                           </div>

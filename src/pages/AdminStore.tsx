@@ -28,9 +28,10 @@ import {
   deleteCylinder,
   deleteThisCylinder,
   fetchStore,
-  getStoretatus,
+  getStoreStatus,
   refillEmpties,
   selectAllStore,
+  storeRefillCylinders,
   updateTheCylinder,
   updateThisCylinder,
 } from "../features/store/storeSlice"
@@ -41,6 +42,7 @@ import {
   deleteOtherProduct,
   fetchOtherProducts,
   getOtherProductsError,
+  getOtherProductstatus,
   selectAllOtherProducts,
   updateOtherProduct,
 } from "../features/store/otherProductsSlice"
@@ -57,6 +59,9 @@ import CircularProgress from "@mui/material/CircularProgress"
 import { set } from "cookies"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import StoreCard from "../components/StoreCard"
+import planStatus from "../features/planStatus/planStatus"
+import { Link } from "react-router-dom"
+import AdminNav from "../components/ui/AdminNav"
 
 const AdminStore = () => {
   const [activeTab, setActiveTab] = useState("cylinders")
@@ -65,6 +70,7 @@ const AdminStore = () => {
   const [openSell, setOpenSell] = useState<boolean>(false)
   const [activeForm, setActiveForm] = useState<string>("cylinders")
   const addOtherProductsError = useAppSelector(getOtherProductsError)
+  const otherProductsStatus = useAppSelector(getOtherProductstatus)
 
   const store = useAppSelector(selectAllStore)
   const otherProducts = useAppSelector(selectAllOtherProducts)
@@ -74,7 +80,7 @@ const AdminStore = () => {
   const updatingCylinderError = useAppSelector(
     (state) => state.store.updateCylinderError,
   )
-  const storeStatus = useAppSelector(getStoretatus)
+  const storeStatus = useAppSelector(getStoreStatus)
   const theme = useTheme()
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"))
 
@@ -234,21 +240,45 @@ const AdminStore = () => {
   const [selectedGasCylinder, setSelectedGasCylinder] = useState(null)
   // console.log("selected gas", selectedGas)
   // console.log("selected gas data", selectedGasData);
-    const [assignments, setAssignments] = useState([]); 
+  const [storeRefill, setStoreRefill] = useState([])
+  const [storeRepair, setStoreRepair] = useState([])
 
   const [dialogOpenAgain, setDialogOpenAgain] = useState(false)
   const [dialogTypeAgain, setDialogTypeAgain] = useState(null) // 'update' | 'delete'
+
+  const [openRefill, setOpenRefill] = React.useState(false)
+
+  const handleClickOpenRefills = () => {
+    setOpenRefill(true)
+  }
+
+  const handleCloseRefills = () => {
+    setOpenRefill(false)
+  }
 
   const toggleRow = (rowId) => {
     setExpandedRow(expandedRow === rowId ? null : rowId)
   }
 
   const apiUrl = getApiUrl()
+  const {
+    isPro,
+    isTrial,
+    isExpired,
+    businessName,
+    businessId,
+    businessLogo,
+    subscriptionPlan,
+    employeeLimit,
+    planName,
+  } = planStatus()
 
   useEffect(() => {
-    dispatch(fetchOtherProducts())
-    dispatch(fetchStore())
-  }, [dispatch])
+    if (businessId) {
+      dispatch(fetchStore({ businessId }))
+      dispatch(fetchOtherProducts({ businessId }))
+    }
+  }, [businessId, dispatch])
 
   const handleCloseDeleteOtherProduct = () => {
     setOpenDeleteOtherProduct(false)
@@ -470,15 +500,13 @@ const AdminStore = () => {
   }
 
   const handleDeleteThisCylinder = async () => {
-    const id = selectedGasCylinder?.id;
+    const id = selectedGasCylinder?.id
     const cylinderWeight = selectedGasCylinder?.weight?.id
     console.log("id to delete cylinder ", selectedGasCylinder)
     console.log("cylinder weight ", cylinderWeight)
 
     try {
-      await dispatch(
-        deleteThisCylinder({ id, cylinderWeight }),
-      ).unwrap()
+      await dispatch(deleteThisCylinder({ id, cylinderWeight })).unwrap()
       setDialogOpenAgain(false)
       setDeleteCylinderId("")
       toast.success("Deleted successfully.")
@@ -794,7 +822,7 @@ const AdminStore = () => {
     }
 
     try {
-      await dispatch(addNewCylinders(formData)).unwrap()
+      await dispatch(addNewCylinders({ businessId, formData })).unwrap()
       setGasType("")
       setCylinderWeight(0)
       setMinWholeSellingPrice(0)
@@ -806,7 +834,6 @@ const AdminStore = () => {
       setMaxRetailSellingPrice(0)
       setMaxRetailRefillingPrice(0)
       setEmptyCylinderPrice(0)
-      setEmptyCylinderPrice
       setGasFilled(0)
       setGasEmpties(0)
       setGasSpoiled(0)
@@ -828,7 +855,7 @@ const AdminStore = () => {
       quantity: productQuantity,
     }
     try {
-      await dispatch(addNewProduct(formData)).unwrap()
+      await dispatch(addNewProduct({ businessId, formData })).unwrap()
       toast.success("Product added successfully!")
       setProductName("")
       setProductWholeSalePrice(0)
@@ -916,87 +943,209 @@ const AdminStore = () => {
     setGasSpoiled(e.target.value)
   }
 
-
   const handleInputChange = (storeId, cylinderId, weightId, value) => {
-    setAssignments((prev) => {
-        const updated = [...prev];
-        const index = updated.findIndex((item) => item.storeId === storeId);
+    setStoreRefill((prev) => {
+      const updated = [...prev]
+      const index = updated.findIndex((item) => item.storeId === storeId)
 
-        if (index !== -1) {
-            updated[index] = { storeId, cylinderId, weightId, assigned_quantity: parseInt(value, 10) };
-        } else {
-            updated.push({ storeId, cylinderId, weightId, assigned_quantity: parseInt(value, 10) });
+      if (index !== -1) {
+        updated[index] = {
+          storeId,
+          cylinderId,
+          weightId,
+          refill_quantity: parseInt(value, 10),
         }
+      } else {
+        updated.push({
+          storeId,
+          cylinderId,
+          weightId,
+          refill_quantity: parseInt(value, 10),
+        })
+      }
 
-        return updated.filter((item) => item.assigned_quantity > 0); // Remove items with 0 quantity
-    });
-};
+      return updated.filter((item) => item.refill_quantity > 0) // Remove items with 0 quantity
+    })
+  }
+
+  const handleInputRepairChange = (storeId, cylinderId, weightId, value) => {
+    setStoreRepair((prev) => {
+      const updated = [...prev]
+      const index = updated.findIndex((item) => item.storeId === storeId)
+
+      if (index !== -1) {
+        updated[index] = {
+          storeId,
+          cylinderId,
+          weightId,
+          repair_quantity: parseInt(value, 10),
+        }
+      } else {
+        updated.push({
+          storeId,
+          cylinderId,
+          weightId,
+          repair_quantity: parseInt(value, 10),
+        })
+      }
+
+      return updated.filter((item) => item.repair_quantity > 0) // Remove items with 0 quantity
+    })
+  }
+
+  const handleAddRefill = () => {
+    // setLoadingAssign(true)
+    console.log("Store refill here..", storeRefill)
+    const payload = storeRefill.map((item) => ({
+      // sales_team: selectedTeam?.id,
+      cylinder: item.cylinderId,
+      refill_quantity: item.refill_quantity,
+    }))
+    console.log("Refills ", payload)
+    dispatch(storeRefillCylinders({ payload }))
+    // .then(() =>
+    //   navigate(`/admins/afterassign/${selectedTeam?.id}`, {
+    //     state: { salesTeamName: selectedTeam?.name },
+    //   }),
+    // )
+    // .catch((error) => console.error("Error in cylinder assignment:", error))
+    // .finally(() => setLoadingAssign(false))
+  }
+
+  const handleRepairs = () => {
+    // setLoadingAssign(true)
+    const payload = storeRepair.map((item) => ({
+      sales_team: selectedTeam?.id,
+      cylinder: item.cylinderId,
+      repair_quantity: item.repair_quantity,
+    }))
+    console.log("Repairs ", payload)
+    // dispatch(assignCylinders(payload))
+    //   .then(() =>
+    //     navigate(`/admins/afterassign/${selectedTeam?.id}`, {
+    //       state: { salesTeamName: selectedTeam?.name },
+    //     }),
+    //   )
+    //   .catch((error) => console.error("Error in cylinder assignment:", error))
+    //   .finally(() => setLoadingAssign(false))
+  }
 
   const renderContent = () => {
     switch (activeTab) {
       case "cylinders":
         return (
           <div className="p-2 space-y-6">
-            {store.map((gas) => (
+            {storeStatus === "loading" && (
+              <div className="flex justify-center items-center h-screen">
+                <CircularProgress />
+              </div>
+            )}
+
+            {storeStatus === "failed" && (
+              <div className="flex justify-center items-center h-screen">
+                <p className="text-red-500">Error loading data</p>
+              </div>
+            )}
+
+            {storeStatus === "succeeded" && store.length === 0 && (
+              <div className="col-span-2 text-center text-gray-500">
+                No cylinders added to store.
+              </div>
+            )}
+            {storeStatus === "succeeded" && store.length > 0 && (
+              <div>
+                {store.map((gas) => (
+                  <StoreCard
+                    gas={gas}
+                    onDialogOpen={handleOpenDialog}
+                    onDialogOpenAgain={handleOpenDialogAgain}
+                  />
+                ))}
+              </div>
+            )}
+            {/* {store.map((gas) => (
               <StoreCard
                 gas={gas}
                 onDialogOpen={handleOpenDialog}
                 onDialogOpenAgain={handleOpenDialogAgain}
               />
-            ))}
+            ))} */}
           </div>
         )
       case "others":
         return (
           <div className="p-1">
-            <table className="mt-2 w-full border text-xs">
-              <thead>
-                <tr className="bg-gray-200 text-left">
-                  <th className="border px-2 py-1">product</th>
-                  <th className="border px-2 py-1">quantity</th>
-                  <th className="border px-2 py-1">Retail Price</th>
-                  <th className="border px-2 py-1">Wholesale Price</th>
-                  <th className="border px-2 py-1">Assign</th>
-                </tr>
-              </thead>
-              <tbody>
-                {otherProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td className="border px-2 py-1 text-center">
-                      {product.name}
-                    </td>
-                    <td className="border px-2 py-1 text-center">
-                      {product.quantity}
-                    </td>
-                    <td className="border px-2 py-1 text-center">
-                      <FormattedAmount amount={product.retail_sales_price} />
-                    </td>
-                    <td className="border px-2 py-1 text-center">
-                      <FormattedAmount amount={product.whole_sales_price} />{" "}
-                    </td>
+            {otherProductsStatus === "loading" && (
+              <div className="flex justify-center items-center h-screen">
+                <CircularProgress />
+              </div>
+            )}
+            {otherProductsStatus === "failed" && (
+              <div className="flex justify-center items-center h-screen">
+                <p className="text-red-500">Error loading data</p>
+              </div>
+            )}
+            {otherProductsStatus === "succeeded" &&
+              otherProducts.length === 0 && (
+                <div className="col-span-2 text-center text-gray-500">
+                  No other products added to store.
+                </div>
+              )}
+            {otherProductsStatus === "succeeded" &&
+              otherProducts.length > 0 && (
+                <table className="mt-2 w-full border text-xs">
+                  <thead>
+                    <tr className="bg-gray-200 text-left">
+                      <th className="border px-2 py-1">product</th>
+                      <th className="border px-2 py-1">quantity</th>
+                      <th className="border px-2 py-1">Retail Price</th>
+                      <th className="border px-2 py-1">Wholesale Price</th>
+                      <th className="border px-2 py-1">Assign</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {otherProducts.map((product) => (
+                      <tr key={product.id}>
+                        <td className="border px-2 py-1 text-center">
+                          {product.name}
+                        </td>
+                        <td className="border px-2 py-1 text-center">
+                          {product.quantity}
+                        </td>
+                        <td className="border px-2 py-1 text-center">
+                          <FormattedAmount
+                            amount={product.retail_sales_price}
+                          />
+                        </td>
+                        <td className="border px-2 py-1 text-center">
+                          <FormattedAmount amount={product.whole_sales_price} />{" "}
+                        </td>
 
-                    <td className="border py-1 flex flex-wrap justify-center items-center space-x-1 space-y-1 text-center">
-                      <button
-                        onClick={() =>
-                          handleClickOpenUpdateOtherProduct(product)
-                        }
-                        className="bg-blue-500 text-white px-1 py-1 rounded"
-                      >
-                        Update
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleClickOpenDeleteOtherProduct(product)
-                        }
-                        className="bg-red-500 text-white px-1 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <td className="border py-1  text-center">
+                          <div className=" flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleClickOpenUpdateOtherProduct(product)
+                              }
+                              className="bg-blue-500 text-white px-1 py-1 rounded"
+                            >
+                              Update
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleClickOpenDeleteOtherProduct(product)
+                              }
+                              className="bg-red-500 text-white px-1 py-1 rounded"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
             <Dialog
               open={openUpdateOtherProduct}
@@ -1093,6 +1242,7 @@ const AdminStore = () => {
             </Dialog>
           </div>
         )
+
       case "add":
         return (
           <div className="p-6">
@@ -1310,68 +1460,129 @@ const AdminStore = () => {
           </div>
         )
       case "depot":
-        return <div className="p-6">
-          <div className="min-h-screen bg-gray-100">
-          
-              
-                    <div>
-                        {store.map((gas) => (
-                            <div key={gas.id} className="mb-4 bg-white p-3 rounded-lg shadow-md">
-                                <h3 className="text-lg font-semibold text-blue-600">{gas.name}</h3>
-                                {gas.cylinders.map((cylinder) => (
-                                    <div key={cylinder.id} className="mt-3">
-                                        <h4 className="text-base font-semibold">
-                                            Cylinder Weight: {cylinder.weight.weight}kg
-                                        </h4>
-                                        {cylinder.stores.length > 0 ? (
-                                            <table className="mt-2 w-full border text-sm">
-                                                <thead>
-                                                    <tr className="bg-gray-200 text-left">
-                                                        <th className="border px-2 py-1">Filled</th>
-                                                        <th className="border px-2 py-1">Empties</th>
-                                                        <th className="border px-2 py-1">Spoiled</th>
-                                                        <th className="border px-2 py-1">Total</th>
-                                                        <th className="border px-2 py-1">Assign</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {cylinder.stores.map((storeItem) => (
-                                                        <tr key={storeItem.id}>
-                                                            <td className="border px-2 py-1 text-center">{storeItem.filled}</td>
-                                                            <td className="border px-2 py-1 text-center">{storeItem.empties}</td>
-                                                            <td className="border px-2 py-1 text-center">{storeItem.spoiled}</td>
-                                                            <td className="border px-2 py-1 text-center">
-                                                                {storeItem.total_cylinders}
-                                                            </td>
-                                                            <td className="border px-2 py-1 text-center">
-                                                                <input
-                                                                    type="number"
-                                                                    min="0"
-                                                                    max={storeItem.filled}
-                                                                    className="w-full border px-1 py-1"
-                                                                    onChange={(e) =>
-                                                                        handleInputChange(
-                                                                            storeItem.id,
-                                                                            storeItem.id,
-                                                                            cylinder.weight.id,
-                                                                            e.target.value
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        ) : (
-                                            <p className="text-gray-600 mt-2">No stores available for this cylinder.</p>
-                                        )}
-                                    </div>
+        return (
+          <div className="p-6">
+            <div className="min-h-screen bg-gray-100">
+              <div>
+                {storeStatus === "loading" && (
+                  <div className="flex justify-center items-center h-screen">
+                    <CircularProgress />
+                  </div>
+                )}
+                {storeStatus === "failed" && (
+                  <div className="flex justify-center items-center h-screen">
+                    <p className="text-red-500">Error loading data</p>
+                  </div>
+                )}
+
+                {storeStatus === "succeeded" && store.length === 0 && (
+                  <div className="col-span-2 text-center text-gray-500">
+                    No cylinders added to store.
+                  </div>
+                )}
+                {storeStatus === "succeeded" &&
+                  store.length > 0 &&
+                  store.map((gas) => (
+                    <div
+                      key={gas.id}
+                      className="mb-4 bg-white p-1 rounded-lg shadow-md"
+                    >
+                      <h3 className="text-lg font-semibold text-blue-600">
+                        {gas.name}
+                      </h3>
+                      {gas.cylinders.map((cylinder) => (
+                        <div key={cylinder.id} className="mt-3">
+                          <h4 className="text-base font-semibold">
+                            Cylinder Weight: {cylinder.weight.weight}kg
+                          </h4>
+                          {cylinder.stores.length > 0 ? (
+                            <table className="mt-2 w-full border text-sm">
+                              <thead>
+                                <tr className="bg-gray-200 text-left">
+                                  <th className="border px-2 py-1">Filled</th>
+                                  <th className="border px-2 py-1">Empties</th>
+                                  <th className="border px-2 py-1">Spoiled</th>
+                                  <th className="border px-2 py-1">Total</th>
+                                  <th className="border px-2 py-1">Refill</th>
+                                  <th className="border px-2 py-1">Repair</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {cylinder.stores.map((storeItem) => (
+                                  <tr key={storeItem.id}>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.filled}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.empties}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.spoiled}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.total_cylinders}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={storeItem.empties}
+                                        className="w-full border px-1 py-1"
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            storeItem.id,
+                                            storeItem.id,
+                                            cylinder.weight.id,
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={storeItem.spoiled}
+                                        className="w-full border px-1 py-1"
+                                        onChange={(e) =>
+                                          handleInputRepairChange(
+                                            storeItem.id,
+                                            storeItem.id,
+                                            cylinder.weight.id,
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                  </tr>
                                 ))}
-                            </div>
-                        ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <p className="text-gray-600 mt-2">
+                              No stores available for this cylinder.
+                            </p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    {/* <div className="mt-6 text-center">
+                  ))}
+                <div className=" flex space-x-1 items-center justify-center">
+                  <button
+                    onClick={handleClickOpenRefills}
+                    className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow"
+                  >
+                    repair
+                  </button>
+                  <button
+                    onClick={handleClickOpenRefills}
+                    className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow"
+                  >
+                    refill
+                  </button>
+                </div>
+              </div>
+              {/* <div className="mt-6 text-center">
                         <button
                             className={`bg-blue-500 text-white px-6 py-2 rounded-lg shadow ${loadingAssign ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'} transition`}
                             onClick={handleAssign}
@@ -1380,10 +1591,10 @@ const AdminStore = () => {
                             {loadingAssign ? 'Assigning...' : 'Assign Cylinders'}
                         </button>
                     </div> */}
-                </div>
-            
-        </div>
-        
+            </div>
+          </div>
+        )
+
       default:
         return null
     }
@@ -1391,15 +1602,49 @@ const AdminStore = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-    <ToastContainer />
+      <ToastContainer />
       {/* Header */}
-      <header className="px-6 py-6 bg-white border-b border-gray-200 shadow-sm">
-        <h1 className="text-4xl font-extrabold tracking-tight">Admin Store</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Switch between product layouts and depot view
-        </p>
-      </header>
-      
+
+      <AdminNav
+        headerMessage={"Admin Store"}
+        headerText={"Switch between product layouts and depot view"}
+      />
+
+      {/* dialogue refills */}
+      <Dialog
+        open={openRefill}
+        onClose={handleCloseRefills}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Use Google's location service?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            refill this cylinder
+            <div className="flex flex-col space-y-2">
+              {storeRefill.map((item) => (
+                console.log("storeRefill", item),
+                <div key={item.storeId} className="flex items-center">
+                  <span className="mr-2">{item.storeId}</span>
+                  <span className="mr-2">{item.weightId}</span>
+                  <span className="mr-2">{item.refill_quantity}</span>
+                </div>
+                // cylinder: item.cylinderId,
+                // refill_quantity: item.refill_quantity,
+              ))}
+            </div>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseRefills}>Cancel</Button>
+          <Button onClick={handleAddRefill} autoFocus>
+            Refill
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* dialogue refills */}
 
       <Dialog
         open={dialogOpen}
@@ -1769,7 +2014,9 @@ const AdminStore = () => {
           {dialogTypeAgain === "update" && (
             <Button
               variant="contained"
-              onClick={() => handleUpdateCylinderData(selectedGasCylinder?.id)}
+              onClick={() =>
+                handleUpdateCylinderData(selectedGasCylinder?.stores[0].id)
+              }
               disabled={isUpdating}
             >
               {isUpdating ? <CircularProgress size={24} /> : "Update"}
@@ -1782,7 +2029,7 @@ const AdminStore = () => {
       <nav className="flex justify-center gap-4 bg-white shadow-sm border-b border-gray-200 px-4 py-3">
         <button
           onClick={() => setActiveTab("cylinders")}
-          className={`px-4 py-2 rounded-md font-medium transition ${
+          className={`px-4 py-2 rounded-md font-medium transition text-xs ${
             activeTab === "cylinders"
               ? "bg-blue-600 text-white shadow"
               : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -1792,7 +2039,7 @@ const AdminStore = () => {
         </button>
         <button
           onClick={() => setActiveTab("others")}
-          className={`px-4 py-2 rounded-md font-medium transition ${
+          className={`px-4 py-2 rounded-md font-medium text-xs transition ${
             activeTab === "others"
               ? "bg-blue-600 text-white shadow"
               : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -1802,7 +2049,7 @@ const AdminStore = () => {
         </button>
         <button
           onClick={() => setActiveTab("add")}
-          className={`px-4 py-2 rounded-md font-medium transition ${
+          className={`px-4 py-2 rounded-md text-xs font-medium transition ${
             activeTab === "add"
               ? "bg-blue-600 text-white shadow"
               : "bg-gray-100 hover:bg-gray-200 text-gray-700"
@@ -1812,7 +2059,7 @@ const AdminStore = () => {
         </button>
         <button
           onClick={() => setActiveTab("depot")}
-          className={`px-4 py-2 rounded-md font-medium transition ${
+          className={`px-4 py-2 rounded-md font-medium transition text-xs ${
             activeTab === "depot"
               ? "bg-blue-600 text-white shadow"
               : "bg-gray-100 hover:bg-gray-200 text-gray-700"

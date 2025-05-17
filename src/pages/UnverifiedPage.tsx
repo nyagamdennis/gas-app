@@ -17,50 +17,7 @@ const UnverifiedPage = () => {
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const apiUrl = getApiUrl();
 
-    // useEffect(() => {
-    //     if (isAuthenticated) {
-    //         const checkUserStatus = async () => {
-    //             try {
-    //                 const response = await axios.get(`${apiUrl}/check-user-status/`, {
-    //                     headers: {
-    //                         Authorization: `Bearer ${document.cookie.split("accessToken=")[1]}`,
-    //                     },
-    //                 });
-    
-    //                 const {
-    //                     has_employee_profile,
-    //                     is_verified,
-    //                     is_admin,
-    //                 } = response.data;
-    
-    //                 if (is_admin) {
-    //                     console.log("is admin");
-    //                     navigate("/", { state: { message: "Welcome, Admin!" } });
-    //                 } else if (has_employee_profile && is_verified) {
-    //                     navigate("/sales", {
-    //                         state: { message: "Your profile is verified." },
-    //                     });
-    //                 } else if (!has_employee_profile) {
-    //                     navigate("/createprofile", {
-    //                         state: { message: "Please create your employee profile to continue." },
-    //                     });
-    //                 }
-    //             } catch (error) {
-    //                 if (error.response?.status === 401) {
-    //                     // Call the logout function if the status code is 401
-    //                     console.log("Unauthorized user. Logging out...");
-    //                     dispatch(logout());
-    //                 } else {
-    //                     setErrMsg("Failed to verify user status. Please try again.");
-    //                     dispatch(logout());
-    //                 }
-    //             }
-    //         };
-    //         checkUserStatus();
-    //     }
-    // }, [isAuthenticated, navigate, apiUrl, dispatch]); // Include dispatch in the dependency array
-
-
+   
     return (
         <div className="min-h-screen bg-yellow-50 flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">

@@ -8,18 +8,24 @@ import { Link } from "react-router-dom"
 import HomeIcon from "@mui/icons-material/Home"
 import Person2Icon from "@mui/icons-material/Person2"
 import SettingsIcon from "@mui/icons-material/Settings"
-import NextPlanIcon from '@mui/icons-material/NextPlan';
+import NextPlanIcon from "@mui/icons-material/NextPlan"
+import planStatus from "../features/planStatus/planStatus"
 
 const RightNav = ({ isOpen, onClose }) => {
-  const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch()
+  const {
+    isExpired,
+    businessName,
+    businessLogo,
+    subscriptionPlan,
+    isTrial,
 
-  
-
+    planName,
+  } = planStatus()
 
   const handleLogOut = () => {
     dispatch(logout())
   }
-
 
   return (
     <>
@@ -39,7 +45,21 @@ const RightNav = ({ isOpen, onClose }) => {
         aria-modal="true"
       >
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Navigation</h2>
+          <div>
+            <img
+              src={businessLogo || "defaultLogo.png"}
+              alt="Business Logo"
+              className="h-10 w-10 rounded-full"
+            />
+            <h2 className="text-lg font-semibold text-gray-800">
+              {businessName}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {isTrial ? "Trial" : subscriptionPlan} Plan({planName})
+            </p>
+            <h2 className="text-lg font-semibold">{businessName}</h2>
+          </div>
+
           <button
             onClick={onClose}
             aria-label="Close menu"
@@ -55,7 +75,7 @@ const RightNav = ({ isOpen, onClose }) => {
             className="flex space-x-2 p-3 rounded-md hover:bg-gray-100 text-gray-800 items-center"
           >
             <HomeIcon fontSize="small" />
-            <span>Home</span> 
+            <span>Home</span>
           </Link>
           <Link
             to="/subscribe"
@@ -63,7 +83,6 @@ const RightNav = ({ isOpen, onClose }) => {
           >
             <NextPlanIcon fontSize="small" />
             <span>Subscription plans</span>
-            
           </Link>
 
           <Link
@@ -72,7 +91,6 @@ const RightNav = ({ isOpen, onClose }) => {
           >
             <Person2Icon fontSize="small" />
             <span>Profile</span>
-            
           </Link>
 
           <Link
@@ -81,7 +99,6 @@ const RightNav = ({ isOpen, onClose }) => {
           >
             <SettingsIcon fontSize="small" />
             <span>Settings</span>
-            
           </Link>
 
           <button
@@ -91,7 +108,6 @@ const RightNav = ({ isOpen, onClose }) => {
           >
             <PowerSettingsNewIcon fontSize="small" />
             <span>Logout</span>
-            
           </button>
         </nav>
       </div>

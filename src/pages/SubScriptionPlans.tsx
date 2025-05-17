@@ -1,33 +1,79 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import React, { useEffect, useState } from "react"
+import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
+  addFreeTrial,
+  addSubscription,
   fetchSubscription,
   selectAllSubscription,
-} from "../features/subscriptions/subscriptionSlice";
-import AdminsFooter from "../components/AdminsFooter";
-import AdminNav from "../components/ui/AdminNav";
-import FormattedAmount from "../components/FormattedAmount";
+} from "../features/subscriptions/subscriptionSlice"
+import AdminsFooter from "../components/AdminsFooter"
+import AdminNav from "../components/ui/AdminNav"
+import FormattedAmount from "../components/FormattedAmount"
+import { useSearchParams } from "react-router-dom"
+import {
+  fetchBusiness,
+  selectAllBusiness,
+} from "../features/business/businnesSlice"
+import DateDisplay from "../components/DateDisplay"
+import Datetime from "../components/Datetime"
+import SubscriptionCountdownTimer from "../components/SubscriptionCountdownTimer"
 
 const SubScriptionPlans = () => {
-  const dispatch = useAppDispatch();
-  const all_subscription = useAppSelector(selectAllSubscription);
+  const dispatch = useAppDispatch()
+  const my_business = useAppSelector(selectAllBusiness)
+  const all_subscription = useAppSelector(selectAllSubscription)
+  const [searchParams] = useSearchParams()
+
+  const [subscribing, setSubscribing] = useState(false)
+  const [paymentNumber, setPaymentNumber] = useState("")
+  const [paymentNumberInput, setPaymentNumberInput] = useState(false)
+  const [selectedMonths, setSelectedMonths] = useState({})
 
   useEffect(() => {
-    dispatch(fetchSubscription());
-  }, [dispatch]);
+    dispatch(fetchSubscription())
+    dispatch(fetchBusiness())
+  }, [dispatch])
 
-  // State to store month selection per plan
-  const [selectedMonths, setSelectedMonths] = useState({});
+  const business = my_business
+  const hasPlan = business?.subscription_plan !== null
+  const planName = business?.subscription_plan?.name
+  const expiryDate = business?.subscription_plan_expiry
+    ? new Date(business.subscription_plan_expiry)
+    : null
+  const isExpired = business?.is_expired
+  const isTrial = business?.is_trial
+  const trialEndsIn = business?.trial_ends_in
+  const daysRemaining = business?.days_remaining
 
   const handleMonthChange = (planName, months) => {
-    setSelectedMonths((prev) => ({ ...prev, [planName]: months }));
-  };
+    setSelectedMonths((prev) => ({ ...prev, [planName]: months }))
+  }
 
   const calculateTotal = (priceString, months) => {
-    const numericPrice = parseFloat(priceString.replace(/[^0-9.]/g, ""));
-    return <FormattedAmount amount={numericPrice * months} /> ;
-  };
+    const numericPrice = parseFloat(priceString.replace(/[^0-9.]/g, ""))
+    return <FormattedAmount amount={numericPrice * months} />
+  }
+
+  const handleSubscription = (id) => {
+    const formData = {
+      months: selectedMonths || 1,
+      paymentNumber: paymentNumber,
+    }
+    try {
+      dispatch(addSubscription({ formData, id }))
+    } catch (error) {
+      alert("Error adding subscription")
+    }
+  }
+
+  const handleAddFreeTrial = async (id) => {
+    try {
+      await dispatch(addFreeTrial({ id }))
+    } catch (error) {
+      alert("Error starting free trial")
+    }
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -35,12 +81,66 @@ const SubScriptionPlans = () => {
         headerMessage="Manage your subscription plans"
         headerText="Subscription Plans"
       />
+
       <div className="max-w-6xl mx-auto px-4 py-1">
-        <h2 className="text-xl font-bold text-center mb-8">Choose Your Plan</h2>
+        <h2 className="text-xl font-bold text-center mb-6">Choose Your Plan</h2>
+
+        {business && (
+          <div className="mb-6 p-4 border rounded-md shadow bg-white space-y-2">
+            {!hasPlan && !isTrial && (
+              <p className="text-green-700 font-semibold">
+                🎉 You're eligible for a free trial.
+              </p>
+            )}
+            {isTrial && trialEndsIn !== null && (
+              <p className="text-blue-600 font-semibold">
+                You're on a <strong>free trial</strong>. It ends in{" "}
+                <strong>{trialEndsIn} day(s)</strong> on{" "}
+                <strong>
+                  <Datetime date={expiryDate} showTime />
+                  
+                </strong>
+                .
+              </p>
+            )}
+            {hasPlan && !isTrial && (
+              <>
+                <p className="text-gray-800">
+                  You're on the <strong>{planName}</strong> plan.{" "}
+                  {expiryDate && (
+                    <p className="text-sm text-gray-700 mt-2">
+                      ⏰ Expires in:{" "}
+                      <SubscriptionCountdownTimer expiryDate={expiryDate} />
+                      
+                    </p>
+                  )}
+                  {isExpired ? (
+                    <span className="text-red-600">
+                      It expired on{" "}
+                      <strong>
+                        <Datetime date={expiryDate} showTime />
+                      </strong>
+                      .
+                    </span>
+                  ) : (
+                    <span>
+                      It expires in <strong>{daysRemaining} day(s)</strong> on{" "}
+                      <strong>
+                        <DateDisplay date={expiryDate} showTime />
+                      </strong>
+                      .
+                    </span>
+                  )}
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {all_subscription.map((plan) => {
-            const months = selectedMonths[plan.name] || 1;
-            const isContact = plan.price.toLowerCase().includes("contact");
+            const months = selectedMonths[plan.name] || 1
+            const isContact = plan.price.toLowerCase().includes("contact")
             return (
               <div
                 key={plan.name}
@@ -57,14 +157,16 @@ const SubScriptionPlans = () => {
                 )}
                 <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                 <div className="text-2xl font-bold text-gray-800 mb-2">
-                  {plan.price}
+                  <FormattedAmount amount={plan.price} />
+                  <span className="text-sm">/month</span>
                 </div>
                 <p className="text-gray-600 mb-4">{plan.description}</p>
 
                 <ul className="flex-1 space-y-2 mb-4">
                   {plan.features?.map((feature, index) => (
                     <li key={index} className="text-gray-700 flex items-center">
-                      <span className="mr-2 text-blue-500">✔</span> {feature.name}
+                      <span className="mr-2 text-blue-500">✔</span>
+                      {feature.name}
                     </li>
                   ))}
                 </ul>
@@ -96,17 +198,58 @@ const SubScriptionPlans = () => {
                   </>
                 )}
 
-                <button
-                  className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                    plan.highlight
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-gray-700 hover:bg-gray-800"
-                  }`}
-                >
-                  {isContact ? "Get in Touch" : "Choose Plan"}
-                </button>
+                {!hasPlan && !isTrial && (
+                  <button
+                    onClick={() => handleAddFreeTrial(plan.id)}
+                    className="w-full py-2 px-4 rounded-md text-white font-medium bg-green-600 hover:bg-green-700 mb-2"
+                  >
+                    Start 10-Day Free Trial
+                  </button>
+                )}
+
+                {paymentNumberInput && (
+                  <div>
+                    <input
+                      type="text"
+                      value={paymentNumber}
+                      onChange={(e) => setPaymentNumber(e.target.value)}
+                      placeholder="Enter payment number"
+                      className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
+                    />
+                    <div className="flex justify-between gap-2 mb-2">
+                      <button
+                        onClick={() => setPaymentNumberInput(false)}
+                        className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPaymentNumberInput(false)
+                          handleSubscription(plan.id)
+                        }}
+                        className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700"
+                      >
+                        Make Payment
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!paymentNumberInput && (
+                  <button
+                    onClick={() => setPaymentNumberInput(true)}
+                    className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+                      plan.highlight
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-700 hover:bg-gray-800"
+                    }`}
+                  >
+                    {isExpired ? "Renew Plan" : "Renew in Advance"}
+                  </button>
+                )}
               </div>
-            );
+            )
           })}
         </div>
       </div>
@@ -114,7 +257,7 @@ const SubScriptionPlans = () => {
         <AdminsFooter />
       </footer>
     </div>
-  );
-};
+  )
+}
 
-export default SubScriptionPlans;
+export default SubScriptionPlans

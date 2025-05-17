@@ -7,6 +7,8 @@ import defaultProfile from "../components/media/default.png"
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew"
 import { logout } from "../features/auths/authSlice"
 import AdminsFooter from "../components/AdminsFooter"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
+import EmployeeNav from "../components/ui/EmployeeNav"
 
 const SalesRecordPage = () => {
   const navigate = useNavigate()
@@ -64,32 +66,8 @@ const SalesRecordPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-blue-700">{myProfile?.sales_team?.name || "Sales Team"}</h1>
-          <p className="text-sm text-gray-500 mt-1">Quick access to your sales functions</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link to="/myprofile" className="flex items-center gap-2">
-            <img
-              src={myProfile?.profile_image || defaultProfile}
-              alt="Profile"
-              className="w-10 h-10 rounded-full border object-cover"
-            />
-            <div>
-              <p className="text-sm font-medium">{myProfile?.first_name} {myProfile?.last_name}</p>
-              <p className="text-xs text-gray-500">View Profile</p>
-            </div>
-          </Link>
-          <button
-            onClick={handleLogOut}
-            className="text-red-500 hover:text-red-600 transition"
-            title="Log out"
-          >
-            <PowerSettingsNewIcon fontSize="large" />
-          </button>
-        </div>
-      </header>
+      <EmployeeNav headerMessage={myProfile?.sales_team?.name || "Sales Team"} headerText={"Quick access to your sales functions"} myProfile={myProfile} />
+   
 
       {/* Main Menu */}
       <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -106,7 +84,7 @@ const SalesRecordPage = () => {
       </main>
 
       {/* Footer */}
-      <AdminsFooter />
+      <EmployeeFooter />
     </div>
   )
 }

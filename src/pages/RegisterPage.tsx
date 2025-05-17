@@ -1,264 +1,203 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ClipLoader } from "react-spinners";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
-import LockIcon from "@mui/icons-material/Lock";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import Alert from "@mui/material/Alert";
-import axios from "axios";
-import getApiUrl from "../getApiUrl";
+// @ts-nocheck
+import React, { useState } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { ClipLoader } from "react-spinners"
+import MailOutlineIcon from "@mui/icons-material/MailOutline"
+import LocalPhoneIcon from "@mui/icons-material/LocalPhone"
+import VisibilityIcon from "@mui/icons-material/Visibility"
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
+import Alert from "@mui/material/Alert"
+import axios from "axios"
+import getApiUrl from "../getApiUrl"
 
 const RegisterPage = () => {
-  const navigate = useNavigate();
-  const apiUrl = getApiUrl();
+  const navigate = useNavigate()
+  const apiUrl = getApiUrl()
+  const [searchParams] = useSearchParams()
+  const refData = searchParams.get("ref")
+  let businessInfo = null
 
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setLoading] = useState(false);
-  const [successful, setSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [countdown, setCountdown] = useState(3);
-  const [passVisibility, setPasswordVisibility] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  try {
+    businessInfo = JSON.parse(atob(decodeURIComponent(refData)))
+  } catch (err) {
+    console.warn("Invalid referral data", err)
+  }
 
-  // const handleEmailInput = (e:any) => setEmail(e.target.value);
-  const handleEmailInput = (e: any) => {
-    const value = e.target.value;
-    setEmail(value);
+  console.log('business info ', businessInfo)
 
-    // Basic email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      setError("Please enter a valid email address.");
-    } else {
-      setError("");
-    }
-  };
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setLoading] = useState(false)
+  const [successful, setSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [countdown, setCountdown] = useState(3)
+  const [passVisibility, setPasswordVisibility] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
-  const handlePhone = (e: any) => setPhone(e.target.value);
-  const handlePwdInput = (e: any) => setPassword(e.target.value);
-  const handleConfirmPwdInput = (e: any) => setConfirmPassword(e.target.value);
-  const handleTermsChange = (e: any) => setTermsAccepted(e.target.checked);
-
-  const handleSubmit = async (event: any) => {
-    event.preventDefault();
-    setLoading(true);
+  const handleSubmit = async (e: any) => {
+    e.preventDefault()
+    setLoading(true)
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      setLoading(false);
-      return;
+      setError("Passwords do not match.")
+      setLoading(false)
+      return
     }
 
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("password", password);
-    formData.append("phone_number", phone);
+    const formData = new FormData()
+    formData.append("email", email)
+    formData.append("password", password)
+    formData.append("phone_number", phone)
+
+    if (businessInfo !== null){
+      formData.append('businessId', businessInfo.id)
+    }
 
     try {
-      await axios.post(`${apiUrl}/users/register/`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      await axios.post(`${apiUrl}/users/register/`, formData)
 
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setPhone("");
-      setError("");
-      setLoading(false);
-      setSuccess(true);
-      setSuccessMessage("Registration successful! Redirecting to login...");
+      setSuccess(true)
+      setSuccessMessage("Registration successful! Redirecting to login...")
 
-      let counter = 3;
       const interval = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-        counter -= 1;
-
-        if (counter === 0) {
-          clearInterval(interval);
-          navigate("/login", {
-            state: { successMessage: "Registration successful. Please log in." },
-          });
-        }
-      }, 1000);
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval)
+            navigate("/login", {
+              state: { successMessage: "Registration successful. Please log in." },
+            })
+          }
+          return prev - 1
+        })
+      }, 1000)
     } catch (error: any) {
-      setLoading(false);
-      setSuccess(false);
+      console.error("Registration error:", error)
       setError(
-        error.response?.data?.detail || "An error occurred during registration."
-      );
+        error.response?.data?.error || "An error occurred during registration."
+      )
+    } finally {
+      setLoading(false)
     }
-  };
-
-  const handlePasswordVisibility = () => {
-    setPasswordVisibility(!passVisibility);
-  };
-
-
-  const canSubmit = [
-    email,
-    phone,
-    password,
-    confirmPassword,
-    termsAccepted,
-    !error,
-  ].every(Boolean);
+  }
 
 
   return (
     <section className="h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-white to-green-100">
-      <div className="bg-white p-6 rounded-lg shadow-md w-11/12 sm:w-96">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <h1 className="text-3xl font-bold text-center text-gray-800">Register</h1>
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md w-[95%] sm:w-[400px] space-y-4">
+        <h1 className="text-2xl font-bold text-center text-gray-800">Register</h1>
+        {businessInfo && (
+          <p className="text-center text-sm text-gray-600 mb-2">
+            You're registering under <strong>{businessInfo.name}</strong>
+          </p>
+        )}
 
-          {error && (
-            <Alert severity="error" className="text-sm">
-              {error}
-            </Alert>
-          )}
+        {error && <Alert severity="error">{error}</Alert>}
+        {successful && (
+          <Alert severity="success">
+            {successMessage} (Redirecting in {countdown}s)
+          </Alert>
+        )}
 
-          {successful && (
-            <Alert severity="success" className="text-sm">
-              {successMessage} (Redirecting in {countdown} seconds)
-            </Alert>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <div className="relative">
-              <input
-                id="email"
-                type="text"
-                placeholder="example@gmail.com"
-                // className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
-                className={`block w-full p-3 rounded border-gray-300 shadow-sm ${error && error.includes("email") ? "border-red-500" : ""
-                  } focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50`}
-                onChange={handleEmailInput}
-                required
-              />
-              <span className="absolute inset-y-0 right-3 flex items-center text-gray-400">
-                <MailOutlineIcon />
-              </span>
-            </div>
-            {error && error.includes("email") && (
-              <p className="text-red-500 text-sm mt-1">{error}</p>
-            )}
-          </div>
-
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number
-            </label>
-            <div className="relative">
-              <input
-                id="phone"
-                type="text"
-                placeholder="Phone number"
-                className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
-                onChange={handlePhone}
-                required
-              />
-              <span className="absolute inset-y-0 right-3 flex items-center text-gray-400">
-                <LocalPhoneIcon />
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={passVisibility ? "text" : "password"}
-                placeholder="Type your password"
-                className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
-                onChange={handlePwdInput}
-                required
-              />
-              <button
-                type="button"
-                onClick={handlePasswordVisibility}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 focus:outline-none"
-              >
-                {passVisibility ? <VisibilityIcon /> : <VisibilityOffIcon />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                id="confirm-password"
-                type={passVisibility ? "text" : "password"}
-                placeholder="Confirm your password"
-                className="block w-full p-3 rounded border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-300 focus:ring-opacity-50"
-                onChange={handleConfirmPwdInput}
-                required
-              />
-              <button
-                type="button"
-                onClick={handlePasswordVisibility}
-                className="absolute inset-y-0 right-3 flex items-center text-gray-400 focus:outline-none"
-              >
-                {passVisibility ? <VisibilityIcon /> : <VisibilityOffIcon />}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Email */}
+          <div className="relative">
             <input
-              id="terms"
-              type="checkbox"
-              className="h-4 w-4 text-green-500 focus:ring-green-400 border-gray-300 rounded"
-              onChange={handleTermsChange}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full border px-3 py-2 rounded-md shadow-sm pr-10"
               required
             />
-            <label htmlFor="terms" className="text-sm text-gray-600">
-              By signing up, I accept the
-              <Link to="" className="text-green-500 underline ml-1">
-                Terms of Use
-              </Link>
-              and
-              <Link to="" className="text-green-500 underline ml-1">
+            <MailOutlineIcon className="absolute right-3 top-2.5 text-gray-400" />
+          </div>
+
+          {/* Phone */}
+          <div className="relative">
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone"
+              className="w-full border px-3 py-2 rounded-md shadow-sm pr-10"
+              required
+            />
+            <LocalPhoneIcon className="absolute right-3 top-2.5 text-gray-400" />
+          </div>
+
+          {/* Password */}
+          <div className="relative">
+            <input
+              type={passVisibility ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              className="w-full border px-3 py-2 rounded-md shadow-sm pr-10"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setPasswordVisibility(!passVisibility)}
+              className="absolute right-3 top-2.5 text-gray-400"
+            >
+              {passVisibility ? <VisibilityIcon /> : <VisibilityOffIcon />}
+            </button>
+          </div>
+
+          {/* Confirm Password */}
+          <div className="relative">
+            <input
+              type={passVisibility ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm Password"
+              className="w-full border px-3 py-2 rounded-md shadow-sm pr-10"
+              required
+            />
+          </div>
+
+          {/* Terms */}
+          <div className="flex items-center space-x-2 text-sm">
+            <input
+              type="checkbox"
+              className="h-4 w-4 text-green-600"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              required
+            />
+            <span className="text-gray-600">
+              I agree to the{" "}
+              <Link to="#" className="text-green-500 underline">
+                Terms
+              </Link>{" "}
+              &{" "}
+              <Link to="#" className="text-green-500 underline">
                 Privacy Policy
               </Link>
-              .
-            </label>
+            </span>
           </div>
 
           <button
             type="submit"
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded shadow focus:outline-none focus:ring focus:ring-green-300 focus:ring-opacity-50 disabled:opacity-50"
-            // disabled={!termsAccepted || isLoading}
-            disabled={!canSubmit || isLoading}
+            disabled={!email || !phone || !password || !confirmPassword || !termsAccepted || isLoading}
+            className="w-full bg-green-600 text-white py-2 rounded-md shadow hover:bg-green-700 disabled:opacity-50"
           >
-            {isLoading ? <ClipLoader size={20} color="#ffffff" /> : "Sign Up"}
+            {isLoading ? <ClipLoader size={20} color="#fff" /> : "Sign Up"}
           </button>
-
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-green-500 font-medium hover:underline">
-              Login
-            </Link>
-          </p>
         </form>
+
+        <p className="text-center text-sm text-gray-600 mt-2">
+          Already have an account?{" "}
+          <Link to="/login" className="text-green-500 hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </section>
-  );
-};
+  )
+}
 
-export default RegisterPage;
+export default RegisterPage

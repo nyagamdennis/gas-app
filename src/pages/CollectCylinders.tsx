@@ -19,6 +19,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import AdminNav from "../components/ui/AdminNav"
 import AdminsFooter from "../components/AdminsFooter"
+import planStatus from "../features/planStatus/planStatus"
 
 const CollectCylinders = () => {
   const dispatch = useAppDispatch()
@@ -50,11 +51,35 @@ const CollectCylinders = () => {
   const [selectedEmployeeFilled, setSelectedEmployeeFilled] = useState({})
   const [selectedEmployeeLessPay, setSelectedEmployeeLessPay] = useState({})
 
+
+  const {
+    isPro,
+    isTrial,
+    isExpired,
+    businessName,
+    businessId,
+    businessLogo,
+    subscriptionPlan,
+    employeeLimit,
+    planName,
+  } = planStatus()
+
   useEffect(() => {
-    dispatch(fetchSalesTeam())
-    dispatch(fetchStore())
-    dispatch(fetchEmployees())
-  }, [dispatch])
+      if (businessId) {
+        dispatch(fetchSalesTeam({ businessId }));
+        dispatch(fetchEmployees({ businessId }))
+      }
+    }, [dispatch, businessId])
+  
+    
+    useEffect(() => {
+      if (selectedTeam && businessId) {
+        dispatch(fetchStore({ businessId }))
+      }
+    }, [selectedTeam, businessId, dispatch])
+
+  
+
 
   useEffect(() => {
     if (selectedTeam) {
@@ -346,7 +371,8 @@ const CollectCylinders = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gray-100 ">
+    <div className="bg-gray-100 min-h-screen flex flex-col ">
+      <main className="flex-grow">
       <AdminNav headerMessage={"Collect Cylinders"} headerText={"Collect cylinders from your retailers or wholesalers"}  />
       <div className="p-4">
       {!selectedTeam ? (
@@ -799,6 +825,8 @@ const CollectCylinders = () => {
         </div>
       )}
       </div>
+      </main>
+      
       <footer className=" bottom-0">
       <AdminsFooter />
       </footer>

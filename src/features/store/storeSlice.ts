@@ -3,6 +3,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import getApiUrl from "../../getApiUrl"
+import Cookies from "cookies-js"
 
 const apiUrl = getApiUrl()
 const PRODUCT_URLS = `${apiUrl}/store/`
@@ -63,6 +64,10 @@ interface storeState {
 
   deleteCylinderStatus: Status
   deleteCyinderError: string | null | undefined
+
+
+  storeRefillStatus: Status
+  storeRefillError: string | null | undefined
 }
 
 const initialState: storeState = {
@@ -84,13 +89,19 @@ const initialState: storeState = {
 
   deleteCylinderStatus: "idle",
   deleteCyinderError: null,
+
+  storeRefillStatus: 'idle',
+  storeRefillError: null,
 }
 
-export const fetchStore = createAsyncThunk<store[], void, {}>(
+export const fetchStore = createAsyncThunk<store[],{ businessId: string }, {}>(
   "store/fetchStore",
-  async () => {
-    // await new Promise((resolve) => setTimeout(resolve, 5000))
-    const response = await axios.get<store[]>(PRODUCT_URLS)
+  async ({ businessId }) => {
+    const response = await axios.get<store[]>(`${apiUrl}/store/${businessId}`, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      },
+    })
     return response.data
   },
 )
@@ -98,16 +109,28 @@ export const fetchStore = createAsyncThunk<store[], void, {}>(
 export const refillEmpties = createAsyncThunk(
   "empties/refillEmpties",
   async (formData) => {
-    const response = await axios.post(`${apiUrl}/refill/`, formData)
+    const response = await axios.post(`${apiUrl}/refill/`, formData,
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        },
+      }
+    )
     return response.data
   },
 )
 
 export const addNewCylinders = createAsyncThunk(
   "cylinders/ addNewCylinders",
-  async (formData, { rejectWithValue }) => {
+  async ({businessId, formData}, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${apiUrl}/addnewcylinder/`, formData)
+      const response = await axios.post(`${apiUrl}/addnewcylinder/${businessId}/`, formData,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
       console.log("response data", response.data)
       return response.data
     } catch (err: any) {
@@ -126,6 +149,11 @@ export const addAnotherCylinder = createAsyncThunk(
       const response = await axios.post(
         `${apiUrl}/addanothercylinder/${id}/`,
         dat,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
       )
       console.log("response data", response.data)
       return response.data
@@ -146,6 +174,11 @@ export const updateTheCylinder = createAsyncThunk(
     try {
       const response = await axios.put(`${apiUrl}/updateCylinder/${id}/`, {
         name,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        },
       })
       return response.data
     } catch (err: any) {
@@ -163,8 +196,13 @@ export const deleteCylinder = createAsyncThunk(
   "deleteCylinder/deleteCylinder",
   async ({ id }: { id: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.delete(`${apiUrl}/addanothercylinder/${id}/`)
-      console.log("response data", response.data)
+      const response = await axios.delete(`${apiUrl}/addanothercylinder/${id}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -184,6 +222,11 @@ export const updateThisCylinder = createAsyncThunk(
       const response = await axios.put(
         `${apiUrl}/updateThisCylinder/${id}/`,
         dat,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
       )
       console.log("response data", response.data)
       return response.data
@@ -205,10 +248,14 @@ export const deleteThisCylinder = createAsyncThunk(
     const formData = {
       weight: cylinderWeight,
     }
-console.log("Id to delete ", id)
     try {
       const response = await axios.delete(
         `${apiUrl}/updateThisCylinder/${id}/${cylinderWeight}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
       )
       console.log("response data", response.data)
       return response.data
@@ -222,6 +269,37 @@ console.log("Id to delete ", id)
     }
   },
 )
+
+
+
+
+export const storeRefillCylinders = createAsyncThunk(
+  "cylinders/storeRefillCylinders",
+  async ({ payload }: { payload: any; }, { rejectWithValue }) => {
+    console.log("payload", payload)
+    try {
+      const response = await axios.post(
+        `${apiUrl}/deport-refill/`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("accessToken")}`,
+          },
+        }
+      )
+      console.log("response data", response.data)
+      return response.data
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        return rejectWithValue(err.response.data.message)
+      }
+      return rejectWithValue(
+        "An unexpected error occurred while adding another cylinder.",
+      )
+    }
+  },
+)
+
 
 const storeSlice = createSlice({
   name: "store",
@@ -375,12 +453,39 @@ const storeSlice = createSlice({
       .addCase(deleteThisCylinder.rejected, (state, action) => {
         state.deleteCyinderError = action.error.message || "Failed to delete"
       })
+
+      .addCase(storeRefillCylinders.pending, (state) => {
+        state.storeRefillStatus = "loading"
+      })
+      .addCase(storeRefillCylinders.fulfilled, (state, action) => {
+        state.storeRefillStatus = "succeeded"
+
+        const updatedStore = state.store.map((storeItem) => {
+          return {
+            ...storeItem,
+            cylinders: storeItem.cylinders.map((cylinder) => {
+              if (cylinder.id === action.payload.data.id) {
+                return {
+                  ...cylinder,
+                  ...action.payload.data,
+                }
+              }
+              return cylinder
+            }),
+          }
+        })
+
+        state.store = updatedStore
+      })
+      .addCase(storeRefillCylinders.rejected, (state, action) => {
+        state.storeRefillError = action.error.message ?? 'failed to refill cylinders.'
+      })
   },
 })
 
 export const selectAllStore = (state: { store: storeState }) =>
   state.store.store
-export const getStoretatus = (state: { store: storeState }) =>
+export const getStoreStatus = (state: { store: storeState }) =>
   state.store.status
 export const getStoreError = (state: { store: storeState }) => state.store.error
 

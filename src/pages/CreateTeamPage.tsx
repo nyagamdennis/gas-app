@@ -22,6 +22,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import defaultPic from "../images/shop.png"
 
 import { set } from "cookies"
+import AdminNav from "../components/ui/AdminNav"
 
 const CreateTeamPage = () => {
   const url = getApiUrl()
@@ -125,14 +126,8 @@ const CreateTeamPage = () => {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
       <>
         {/* Header */}
-        <header className="px-6 py-6 bg-white border-b border-gray-200 shadow-sm">
-          <h1 className="text-4xl font-extrabold tracking-tight">
-            Create New Team
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Upload a team profile and assign its type
-          </p>
-        </header>
+    
+        <AdminNav headerMessage={'Create New Team'} headerText={'Upload a team profile and assign its type'} />
 
         {/* Main */}
         <main className="flex-grow flex justify-center items-center py-10">
@@ -207,8 +202,8 @@ const CreateTeamPage = () => {
                 required
               >
                 <option value="">-- Select Team Type --</option>
-                <option value="Retail Shop">Retail Shop</option>
-                <option value="Distributor">Distributor</option>
+                <option value="Retail Shop">Retail</option>
+                <option value="Distributor">WholeSale</option>
               </select>
             </div>
 

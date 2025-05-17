@@ -20,7 +20,7 @@ import ForgotPassword from "./pages/ForgotPassword"
 import OnboardingPage from "./pages/OnboardingPage"
 import Store from "./pages/Store"
 import Employee from "./pages/Employee"
-import AdminAsign from "./pages/AdminAsign"
+import AdminAsign from "./pages/AdminHome"
 import AssignProducts from "./components/AssignProducts"
 import AfterAssign from "./pages/AfterAssign"
 import CollectCylinders from "./pages/CollectCylinders"
@@ -51,10 +51,22 @@ import AdminAnalysis from "./pages/AdminAnalysis"
 import EditAssignedCylinders from "./pages/EditAssignedCylinders"
 import SubScriptionPlans from "./pages/SubScriptionPlans"
 import Settings from "./pages/Settings"
+import { useEffect } from "react"
+import { fetchBusiness } from "./features/business/businnesSlice"
+import { useAppDispatch } from "./app/hooks"
+import useVerificationPolling from "./features/employees/useVerificationPolling"
 
 
 function App() {
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    dispatch(fetchBusiness())
+  }, [dispatch])
+  
+  // console.log('business ')
   useTokenAutoRefresher()
+
+  useVerificationPolling()
   return (
     <div>
       <Router>
@@ -65,18 +77,18 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Admin-only routes */}
-          <Route
+          {/* <Route
             path="/"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <HomePage />
               </ProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="/sendsms"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <SendSmsPage />
               </ProtectedRoute>
             }
@@ -84,7 +96,7 @@ function App() {
           <Route
             path="/admins/sms"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AdminSms />
               </ProtectedRoute>
             }
@@ -92,7 +104,7 @@ function App() {
           <Route
           path="/admins/analysis"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="is_owner">
               <AdminAnalysis />
             </ProtectedRoute>
           }
@@ -101,7 +113,7 @@ function App() {
           <Route
             path="/customers"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <CustomersPage />
               </ProtectedRoute>
             }
@@ -109,7 +121,7 @@ function App() {
           <Route
             path="/admin/sales"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AdminSalesRecord />
               </ProtectedRoute>
             }
@@ -117,7 +129,7 @@ function App() {
           <Route
             path="/employees"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <Employee />
               </ProtectedRoute>
             }
@@ -125,7 +137,7 @@ function App() {
           <Route
             path="/createteam"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <CreateTeamPage />
               </ProtectedRoute>
             }
@@ -133,7 +145,7 @@ function App() {
           <Route
             path="/admins"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AdminAsign />
               </ProtectedRoute>
             }
@@ -141,7 +153,7 @@ function App() {
           <Route
             path="/transactions"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <Transactions />
               </ProtectedRoute>
             }
@@ -149,7 +161,7 @@ function App() {
           <Route
             path="/admins/employees"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <EmployeesProfile />
               </ProtectedRoute>
             }
@@ -157,7 +169,7 @@ function App() {
           <Route
             path="/admins/employees/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <EmployeesProfileDetails />
               </ProtectedRoute>
             }
@@ -165,7 +177,7 @@ function App() {
           <Route
             path="/admins/assign"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AssigningProducts />
               </ProtectedRoute>
             }
@@ -173,7 +185,7 @@ function App() {
           <Route
             path="/subscribe"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <SubScriptionPlans />
               </ProtectedRoute>
             }
@@ -181,7 +193,7 @@ function App() {
           <Route
             path="/settings"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <Settings />
               </ProtectedRoute>
             }
@@ -189,7 +201,7 @@ function App() {
           <Route
             path="/admins/editassigned/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <EditAssignedCylinders />
               </ProtectedRoute>
             }
@@ -197,7 +209,7 @@ function App() {
           <Route
             path="/admins/afterassign/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AfterAssign />
               </ProtectedRoute>
             }
@@ -205,7 +217,7 @@ function App() {
           <Route
             path="/admins/printcollect/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AfterCollection />
               </ProtectedRoute>
             }
@@ -213,7 +225,7 @@ function App() {
           <Route
             path="/admins/assignothers"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AssigningOtherProducts />
               </ProtectedRoute>
             }
@@ -221,7 +233,7 @@ function App() {
           <Route
             path="/admins/afterassignothers/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AfterAssignOthers />
               </ProtectedRoute>
             }
@@ -229,7 +241,7 @@ function App() {
           <Route
             path="/admins/printallcollect/:id"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AfterCollectionAll />
               </ProtectedRoute>
             }
@@ -237,7 +249,7 @@ function App() {
           <Route
             path="/admins/collect"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <CollectCylinders />
               </ProtectedRoute>
             }
@@ -245,7 +257,7 @@ function App() {
           <Route
             path="/admins/customers"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <AdminCustomer />
               </ProtectedRoute>
             }
@@ -253,7 +265,7 @@ function App() {
           <Route
           path="/admins/store"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="is_owner">
               <AdminStore />
             </ProtectedRoute>
           }
@@ -262,7 +274,7 @@ function App() {
           <Route
             path="/debtors"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <DebtorsPage />
               </ProtectedRoute>
             }
@@ -271,7 +283,7 @@ function App() {
           <Route
             path="/overduedebtors"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRole="is_owner">
                 <OverDueDebtorsPage />
               </ProtectedRoute>
             }
@@ -281,7 +293,7 @@ function App() {
           <Route
             path="/sales"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <SalesRecordPage />
               </ProtectedRoute>
             }
@@ -289,7 +301,7 @@ function App() {
           <Route
             path="/request"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <CylinderRequest />
               </ProtectedRoute>
             }
@@ -297,7 +309,7 @@ function App() {
           <Route
             path="/wholesalesrecord"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <WholeSaleRecordPage />
               </ProtectedRoute>
             }
@@ -305,7 +317,7 @@ function App() {
           <Route
             path="/retailsalesrecord"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <RetailSalesRecordPage />
               </ProtectedRoute>
             }
@@ -313,7 +325,7 @@ function App() {
           <Route
             path="/teamsales"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <TeamSalesPage />
               </ProtectedRoute>
             }
@@ -321,7 +333,7 @@ function App() {
           {/* <Route
             path="/teamotherssales"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <TeamOthersSalesPage />
               </ProtectedRoute>
             }
@@ -329,7 +341,7 @@ function App() {
           <Route
             path="/otherproducts"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <OtherProductsSale />
               </ProtectedRoute>
             }
@@ -337,7 +349,7 @@ function App() {
           <Route
             path="/salesteamcylinders"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <SalesTeamCylinders />
               </ProtectedRoute>
             }
@@ -345,7 +357,7 @@ function App() {
           <Route
             path="/add_customer"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <AddCustomerPage />
               </ProtectedRoute>
             }
@@ -353,7 +365,7 @@ function App() {
           <Route
             path="/debtors"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <DebtorsPage />
               </ProtectedRoute>
             }
@@ -361,7 +373,7 @@ function App() {
           <Route
             path="/overduedebtors"
             element={
-              <ProtectedRoute requiredRole="employee">
+              <ProtectedRoute requiredRole="is_employee">
                 <OverDueDebtorsPage />
               </ProtectedRoute>
             }
@@ -387,7 +399,7 @@ function App() {
           <Route
             path="/myprofile"
             element={
-              <ProtectedRoute requiredRole={["employee", "regular_user"]}>
+              <ProtectedRoute requiredRole={["is_employee", "unverified_employee"]}>
                 <MyProfilePage />
               </ProtectedRoute>
             }
@@ -405,7 +417,7 @@ function App() {
           <Route
             path="/unverified"
             element={
-              <ProtectedRoute requiredRole="regular_user">
+              <ProtectedRoute requiredRole="unverified_employee">
                 <UnverifiedPage />
               </ProtectedRoute>
             }

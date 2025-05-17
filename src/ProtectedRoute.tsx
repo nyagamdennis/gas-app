@@ -5,26 +5,30 @@ import { useAppDispatch, useAppSelector } from "./app/hooks"
 import {
   selectIsAuthenticated,
   selectUserRole,
+  selectUserStatus,
 } from "./features/auths/authSlice"
-import useMediaQuery from "@mui/material/useMediaQuery"
 import getApiUrl from "./getApiUrl"
+import { selectEmployeeVerified } from "./features/employees/employeeStatusSlice"
+console.log(' selectEmployeeVerified', selectEmployeeVerified)
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   requiredRole?:
-    | "admin"
-    | "employee"
-    | "regular_user"
-    | Array<"admin" | "employee" | "regular_user">
+    | "is_owner"
+    | "is_employee"
+    | "unverified_employee"
+    | Array<"is_owner" | "is_employee" | "unverified_employee">
 }
+
+
+
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRole,
 }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const userRole = useAppSelector(selectUserRole)
-  const isLargeScreen = useMediaQuery("(min-width:960px)")
+  const userRole = useAppSelector(selectUserStatus)
   const dispatch = useAppDispatch()
   const apiUrl = getApiUrl()
 
@@ -40,14 +44,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     ? [requiredRole]
     : null
 
-  console.log("User role:", userRole)
   // Check if user role is allowed
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     // Optional: Custom redirect logic per role
     const roleRedirectMap: Record<string, string> = {
-      admin:  "/admins",
-      employee: "/sales",
-      regular_user: "/unverified",
+      is_owner:  "/admins",
+      is_employee: "/sales",
+      unverified_employee: "/unverified",
     }
 
     const redirectPath = roleRedirectMap[userRole] || "/unverified"

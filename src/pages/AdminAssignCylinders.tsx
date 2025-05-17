@@ -7,9 +7,9 @@ const AdminAssignCylinders = () => {
 
     const allSalesTeam = useAppSelector(selectAllSalesTeam)
 
-    useEffect(() => {
-        dispatch(fetchSalesTeam())
-    }, [dispatch])
+    // useEffect(() => {
+    //     dispatch(fetchSalesTeam())
+    // }, [dispatch])
 
   return (
     <div>

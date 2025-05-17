@@ -32,10 +32,15 @@ const initialState: EmployeesState = {
   error: null,
 };
 
-export const fetchEmployees = createAsyncThunk<Employees[]>(
+export const fetchEmployees = createAsyncThunk<Employees[], { businessId: string },{}>(
   "employees/fetchEmployees",
-  async () => {
-    const response = await axios.get<Employees[]>(EMPLOYEES_URLS);
+  async ({ businessId }) => {
+    const response = await axios.get<Employees[]>(`${apiUrl}/all_employees/${businessId}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        },
+      }
+    );
     return response.data; // Return the fetched employees data
   }
 );

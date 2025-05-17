@@ -11,7 +11,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { addAnotherCylinder, addNewCylinders, deleteCylinder, fetchStore, getStoretatus, refillEmpties, selectAllStore, updateTheCylinder } from '../features/store/storeSlice';
+import { addAnotherCylinder, addNewCylinders, deleteCylinder, fetchStore, getStoreStatus, refillEmpties, selectAllStore, updateTheCylinder } from '../features/store/storeSlice';
 import { TransitionProps } from '@mui/material/transitions';
 import Slide from '@mui/material/Slide';
 import { addNewProduct, fetchOtherProducts, selectAllOtherProducts } from '../features/store/otherProductsSlice';
@@ -22,6 +22,7 @@ import Cookies from "cookies-js";
 import "react-toastify/dist/ReactToastify.css";
 import getApiUrl from '../getApiUrl';
 import { toast, ToastContainer } from 'react-toastify';
+import planStatus from '../features/planStatus/planStatus';
 
 
 
@@ -46,7 +47,7 @@ const Store = () => {
     const otherProducts = useAppSelector(selectAllOtherProducts);
     const updatingCylinderStatus = useAppSelector(state => state.store.updateCylinderStatus);
     const updatingCylinderError = useAppSelector(state => state.store.updateCylinderError);
-    const storeStatus = useAppSelector(getStoretatus);
+    const storeStatus = useAppSelector(getStoreStatus);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -129,7 +130,17 @@ const Store = () => {
     const [updateCylinderDataRetailSelling, setUpdateCylinderDataRetailSelling] = useState<number>();
     const [updateCylinderDataRetailRefill, setUpdateCylinderDataRetailRefill] = useState<number>();
 
-
+    const {
+        isPro,
+        isTrial,
+        isExpired,
+        businessName,
+        businessId,
+        businessLogo,
+        subscriptionPlan,
+        employeeLimit,
+        planName,
+      } = planStatus()
 
     const handleCustomerNameInput = (e: any) => setCustomerName(e.target.value)
     const handleCustomerPhoneInput = (e: any) => setCustomerPhone(e.target.value)
@@ -546,6 +557,7 @@ const Store = () => {
     }
 
     const addOtherProducts = async (e: any) => {
+        
         e.preventDefault()
         const formData = {
             name: productName,
@@ -554,7 +566,8 @@ const Store = () => {
             quantity: productQuantity
         }
         try {
-            await dispatch(addNewProduct(formData)).unwrap()
+            console.log('business id', businessId)
+            await dispatch(addNewProduct({ businessId ,formData})).unwrap()
         } catch (error) {
             alert("failed to save, try again.")
         }

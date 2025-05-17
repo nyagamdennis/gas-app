@@ -2,6 +2,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import getApiUrl from "../../getApiUrl"
+import Cookies from "cookies-js"
 
 const apiUrl = getApiUrl()
 const SALESTeam_URLS = `${apiUrl}/getsalesteam/`
@@ -25,13 +26,18 @@ const initialState: SalesTeamState = {
   error: null,
 }
 
-export const fetchSalesTeam = createAsyncThunk<SalesTeam[], void, {}>(
+export const fetchSalesTeam = createAsyncThunk<SalesTeam[], { businessId: string }, {}>(
   "salesTeam/fetchSalesTeam",
-  async () => {
-    const response = await axios.get<SalesTeam[]>(SALESTeam_URLS)
-    return response.data // Corrected the return statement
+  async ({ businessId }) => {
+    console.log("businessId ", businessId)
+    const response = await axios.get<SalesTeam[]>(`${apiUrl}/getsalesteam/${businessId}/`, {
+      headers: {
+        Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      },
+    });
+    return response.data; // Corrected the return statement
   },
-)
+);
 
 export const deleteSalesTeam = createAsyncThunk(
   "deleteSalesTeam/salesTeam",
