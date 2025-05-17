@@ -31,9 +31,9 @@ const AssignProducts = () => {
 
   const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    dispatch(fetchSalesTeam())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(fetchSalesTeam())
+  // }, [dispatch])
 
   useEffect(() => {
     dispatch(fetchProducts())
