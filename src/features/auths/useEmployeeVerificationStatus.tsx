@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import getApiUrl from "../../getApiUrl"
 
 const useEmployeeVerificationStatus = ({
   employeeId,

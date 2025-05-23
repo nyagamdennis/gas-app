@@ -3,7 +3,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import jwt_decode from "jwt-decode"
 import cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl"
+import api from "../../../utils/api"
 
 interface User {
   email: string
@@ -59,7 +59,6 @@ const initialState: AuthState = {
   isAuthenticated: !!accessToken,
 }
 
-const apiUrl = getApiUrl()
 
 import { createSelector } from "@reduxjs/toolkit"
 import { RootState } from "../../app/store" // adjust path as needed
@@ -133,7 +132,8 @@ export const { loginStart, loginFailure, loginSuccess, logoutSuccess } =
 export const login = (credentials: any) => async (dispatch: any) => {
   try {
     dispatch(loginStart())
-    const response = await axios.post(`${apiUrl}/users/token/`, credentials)
+    // const response = await axios.post(`${apiUrl}/users/token/`, credentials)
+    const response = await api.post("users/token/", credentials)
     const accessToken = response.data.access
     const refreshToken = response.data.refresh
     const decodedToken: any = jwt_decode(accessToken)
@@ -181,9 +181,10 @@ export const refreshAccessToken =
     try {
       const newrefreshToken = cookies.get("refreshToken")
 
-      const response = await axios.post(`${apiUrl}/users/token/refresh/`, {
-        refresh: newrefreshToken,
-      })
+      // const response = await axios.post(`${apiUrl}/users/token/refresh/`, {
+      //   refresh: newrefreshToken,
+      // })
+      const response = await api.post("users/token/refresh/", {refresh: newrefreshToken})
       const accessToken = response.data.access
       const refreshToken = response.data.refresh
       const decodedToken = jwt_decode(accessToken)

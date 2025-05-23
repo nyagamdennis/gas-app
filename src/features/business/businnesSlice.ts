@@ -1,13 +1,10 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import getApiUrl from "../../getApiUrl";
 import Cookies from "cookies-js"
 import api from "../../../utils/api"
 
 
-const apiUrl = getApiUrl()
-const URLS = `${apiUrl}/business/`;
 
 
 interface Business {
