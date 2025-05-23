@@ -1,11 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
-
-const apiUrl = getApiUrl();
-const EXPENSES_URLS = `${apiUrl}/expenses/`;
+import api from "../../../utils/api"
 
 interface Expenses {
   id: number;
@@ -38,14 +33,15 @@ export const fetchTeamExpenses = createAsyncThunk(
   "expenses/fetchExpenses",
   async ({salesTeamId}:{salesTeamId: string}) => {
     // const response = await axios.get<Expenses[]>(EXPENSES_URLS);
-    console.log('id team ', salesTeamId)
-    const response = await axios.get(`${apiUrl}/team-expenses/${salesTeamId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // console.log('id team ', salesTeamId)
+    // const response = await axios.get(`${apiUrl}/team-expenses/${salesTeamId}`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.get(`/team-expenses/${salesTeamId}`);
     return response.data; // Return the fetched expenses data
   }
 );
@@ -61,13 +57,14 @@ export const postExpenses = createAsyncThunk(
           sales_team: salesTeamId,
         }
         console.log('data sent ', formData)
-    const response = await axios.post(`${apiUrl}/expenses/${employeeId}/`, formData,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(`${apiUrl}/expenses/${employeeId}/`, formData,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post(`/expenses/${employeeId}/`, formData);
     return response.data; // Return the fetched expenses data
   }
 );
@@ -78,14 +75,17 @@ export const postExpenses = createAsyncThunk(
 export const updateExpensesStatus = createAsyncThunk(
   "expenses/updateExpensesStatus",
   async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
+    // const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
+    //   status_field: statusField,
+    // },{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    // console.log('STatus functions', response.data)
+    const response = await api.patch(`/update-expense/${employeeId}/`, {
       status_field: statusField,
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
     });
-    console.log('STatus functions', response.data)
     return response.data; // Return the updated employee data
     // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
   }

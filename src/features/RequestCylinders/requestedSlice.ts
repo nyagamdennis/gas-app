@@ -1,11 +1,7 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
-
-const apiUrl = getApiUrl();
+import api from "../../../utils/api"
 
 
 interface Requested {
@@ -29,13 +25,14 @@ const initialState: RequestedState = {
 export const fetchRequests = createAsyncThunk<Requested[]>(
   "requested/fetchRequests",
   async ({ salesTeamId }) => {
-    const response = await axios.get<Requested[]>(`${apiUrl}/cylinder-request-get/${salesTeamId}/`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // const response = await axios.get<Requested[]>(`${apiUrl}/cylinder-request-get/${salesTeamId}/`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
+    const response = await api.get(`/cylinder-request-get/${salesTeamId}/`)
     return response.data; // Return the fetched employees data
   }
 );
@@ -45,13 +42,14 @@ export const fetchRequests = createAsyncThunk<Requested[]>(
 export const fetchAllRequests = createAsyncThunk<Requested[]>(
   "requested/fetchAllRequests",
   async () => {
-    const response = await axios.get<Requested[]>(`${apiUrl}/all-request/`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // const response = await axios.get<Requested[]>(`${apiUrl}/all-request/`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
+    const response = await api.get("/all-request/")
     return response.data; // Return the fetched employees data
   }
 );
@@ -62,16 +60,17 @@ export const fetchAllRequests = createAsyncThunk<Requested[]>(
 export const clearRequested = createAsyncThunk(
   "requested/clearRequested",
   async ({ cylinderId }) => {
-    const response = await axios.post(
-      `${apiUrl}/cylinder-request-clear/${cylinderId}/`,
-      {}, // Empty body
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   `${apiUrl}/cylinder-request-clear/${cylinderId}/`,
+    //   {}, // Empty body
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // );
+    const response = await api.post(`/cylinder-request-clear/${cylinderId}/`)
     return response.data
   }
 )
@@ -88,12 +87,13 @@ export const addRequest = createAsyncThunk(
     };
 
     try {
-      const response = await axios.post(`${apiUrl}/cylinder-request/`, formData, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // const response = await axios.post(`${apiUrl}/cylinder-request/`, formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
+      const response = await api.post("/cylinder-request/", formData)
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || "Failed to add request.");
@@ -104,15 +104,16 @@ export const addRequest = createAsyncThunk(
 export const approveRequest = createAsyncThunk(
   "requested/approveRequest",
   async ({cylinderId}) => {
-    const response = await axios.post(`${apiUrl}/approve-request/${cylinderId}/`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json"
-        }
-      }
-    )
+    // const response = await axios.post(`${apiUrl}/approve-request/${cylinderId}/`,
+    //   {},
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "application/json"
+    //     }
+    //   }
+    // )
+    const response = await api.post(`/approve-request/${cylinderId}/`)
     return response.data
   }
 )

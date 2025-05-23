@@ -1,10 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
-
-const apiUrl = getApiUrl();
+import api from "../../../utils/api"
 
 
 interface AdminSalesTeamData {
@@ -33,13 +29,14 @@ const initialState: adminSalesTeamDataState = {
 export const fetchAdminSalesTeamData = createAsyncThunk(
   "adminSalesTeamData/fetchAdminSalesTeamData",
   async () => {
-    const response = await axios.get(`${apiUrl}/adminsalesteamdata`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.get(`${apiUrl}/adminsalesteamdata`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.get("/adminsalesteamdata");
     return response.data; // Corrected the return statement
   }
 );
@@ -50,15 +47,18 @@ export const toggleVerification = createAsyncThunk(
   "adminSalesTeamData/toggleVerification",
   async ({saleId, paymentType}:{saleId: string; paymentType:string}) => {
   
-      const response = await axios.patch(
-          `${apiUrl}/adminsverifyalesteamdata/${saleId}/`,
-          {paymentType:paymentType},
-          {
-              headers: {
-                  Authorization: `Bearer ${Cookies.get("accessToken")}`,
-              },
-          }
-      );
+      // const response = await axios.patch(
+      //     `${apiUrl}/adminsverifyalesteamdata/${saleId}/`,
+      //     {paymentType:paymentType},
+      //     {
+      //         headers: {
+      //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //         },
+      //     }
+      // );
+      const response = await api.patch(`/adminsverifyalesteamdata/${saleId}/`, {
+        paymentType: paymentType,
+      });
       return response.data; // Return the updated sale
   }
 );

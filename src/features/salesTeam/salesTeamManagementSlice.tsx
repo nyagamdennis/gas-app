@@ -1,10 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-
-const apiUrl = getApiUrl()
-const SALESTeamManagement_URLS = `${apiUrl}/sales-team-management/`;
+import api from "../../../utils/api"
 
 
 interface SalesTeamManagement {
@@ -85,7 +81,8 @@ const initialState: SalesTeamManagementState = {
 export const fetchSalesTeamManagement = createAsyncThunk<SalesTeamManagement[], void, {}>(
     "salesTeamManagement/fetchSalesTeamManagement",
     async () => {
-      const response = await axios.get<SalesTeamManagement[]>(SALESTeamManagement_URLS);
+      // const response = await axios.get<SalesTeamManagement[]>(SALESTeamManagement_URLS);
+      const response = await api.get("sales-team-management");
       return response.data; 
     }
   );
@@ -102,12 +99,17 @@ export const fetchSalesTeamManagement = createAsyncThunk<SalesTeamManagement[], 
         cylinder: string
         assigned_quantity: number
     }) => {
-      const response = await axios.post(`${apiUrl}/addassignedcylinder/`, {
+      // const response = await axios.post(`${apiUrl}/addassignedcylinder/`, {
+      //   sales_team,
+      //   cylinder,
+      //   assigned_quantity,
+      // })
+      // console.log('Response.data ', response.data)
+      const response = await api.post(`/addassignedcylinder/`, {
         sales_team,
         cylinder,
         assigned_quantity,
-      })
-      console.log('Response.data ', response.data)
+      });
       return response.data
     },
   )

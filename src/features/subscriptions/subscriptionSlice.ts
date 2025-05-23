@@ -4,10 +4,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import axios from "axios"
 import getApiUrl from "../../getApiUrl"
 import { JSX } from "react/jsx-runtime"
-import Cookies from "cookies-js"
-
-const apiUrl = getApiUrl()
-const PRODUCT_URLS = `${apiUrl}/store/`
+import api from "../../../utils/api"
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
@@ -71,14 +68,15 @@ export const fetchSubscription = createAsyncThunk<Subscription[], void, {}>(
   "subscription/fetchSubscription",
   async () => {
     // await new Promise((resolve) => setTimeout(resolve, 5000))
-    const response = await axios.get<Subscription[]>(`${apiUrl}/business/`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    )
+    // const response = await axios.get<Subscription[]>(`${apiUrl}/business/`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   }
+    // )
+    const response = await api.get<Subscription[]>("/business/");
     return response.data
   },
 )
@@ -91,14 +89,15 @@ export const fetchSubscription = createAsyncThunk<Subscription[], void, {}>(
 export const addSubscription = createAsyncThunk(
   "subscription/addSubscription",
   async ({formData, id}) => {
-    const response = await axios.post(`${apiUrl}/business/subscription/${id}/`, formData,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    )
+    // const response = await axios.post(`${apiUrl}/business/subscription/${id}/`, formData,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   }
+    // )
+    const response = await api.post(`/business/subscription/${id}/`, formData);
     return response.data
   },
 )
@@ -108,14 +107,15 @@ export const addFreeTrial = createAsyncThunk(
   "subscription/addFreeTrial",
   async ({ id }: { id: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${apiUrl}/business/subscription-free-trial/${id}/`, null,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      )
+      // const response = await axios.post(`${apiUrl}/business/subscription-free-trial/${id}/`, null,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // )
+      const response = await api.post(`/business/subscription-free-trial/${id}/`, null);
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {

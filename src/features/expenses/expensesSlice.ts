@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import { compose, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
-const EXPENSES_URLS = `${apiUrl}/expenses/`;
+
 
 interface Expenses {
   id: number;
@@ -36,13 +33,15 @@ export const fetchExpenses = createAsyncThunk<Expenses[]>(
   "expenses/fetchExpenses",
   async (employeeId) => {
     // const response = await axios.get<Expenses[]>(EXPENSES_URLS);
-    const response = await axios.get<Expenses[]>(`${apiUrl}/expenses/${employeeId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.get<Expenses[]>(`${apiUrl}/expenses/${employeeId}`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    // console.log('fetch expenses ', response.data)
+    const response = await api.get<Expenses[]>(`/expenses/${employeeId}`);
     return response.data; // Return the fetched expenses data
   }
 );
@@ -53,14 +52,17 @@ export const fetchExpenses = createAsyncThunk<Expenses[]>(
 export const updateExpensesStatus = createAsyncThunk(
   "expenses/updateExpensesStatus",
   async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
+    // const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
+    //   status_field: statusField,
+    // },{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    // console.log('STatus functions', response.data)
+    const response = await api.patch(`/update-expense/${employeeId}/`, {
       status_field: statusField,
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
     });
-    console.log('STatus functions', response.data)
     return response.data; // Return the updated employee data
     // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
   }
@@ -70,14 +72,17 @@ export const updateExpensesStatus = createAsyncThunk(
 export const updateExpenseOwner = createAsyncThunk(
   "expenses/updateExpenseOwner",
   async ({ expenseId, selectedOwner}: { expenseId: string; selectedOwner: string}) => {
-    const response = await axios.post(`${apiUrl}/update-owner-expense/${expenseId}/`, {
-      owner: selectedOwner
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
+    // const response = await axios.post(`${apiUrl}/update-owner-expense/${expenseId}/`, {
+    //   owner: selectedOwner
+    // },{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    // console.log('Status functions', response.data)
+    const response = await api.post(`/update-owner-expense/${expenseId}/`, {
+      owner: selectedOwner,
     });
-    console.log('Status functions', response.data)
     return response.data; // Return the updated employee data
     // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
   }

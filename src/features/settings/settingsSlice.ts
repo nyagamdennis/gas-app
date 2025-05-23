@@ -1,11 +1,7 @@
 // @ts-nocheck
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import axios from "axios"
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl"
-
-const apiUrl = getApiUrl()
+import api from "../../../utils/api"
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
@@ -33,13 +29,14 @@ const initialState: settingsState = {
 export const fetchSettings = createAsyncThunk<settings[], void, {}>(
   "settings/fetchSettings",
   async () => {
-    const response = await axios.get<settings[]>(`${apiUrl}/business/operation/`, {
-      headers: {
+    // const response = await axios.get<settings[]>(`${apiUrl}/business/operation/`, {
+    //   headers: {
         
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
         
-      },
-    })
+    //   },
+    // })
+    const response = await api.get<Settings[]>("/business/operation/");
     return response.data
   },
 )
@@ -49,17 +46,18 @@ export const addSettings = createAsyncThunk(
   async ({ dat }: { dat: any; }, { rejectWithValue }) => {
     console.log('data ', dat)
     try {
-      const response = await axios.post(
-        `${apiUrl}/business/operation/`,
-        dat,
-        {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("accessToken")}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-      )
-      console.log("response data", response.data)
+      // const response = await axios.post(
+      //   `${apiUrl}/business/operation/`,
+      //   dat,
+      //   {
+      //       headers: {
+      //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //         "Content-Type": "multipart/form-data",
+      //       },
+      //     }
+      // )
+      // console.log("response data", response.data)
+      const response = await api.post("/business/operation/", dat);
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -77,17 +75,18 @@ export const updateSettings = createAsyncThunk(
     "settings/updateAnotherCylinder",
     async ({ dat, id }: { dat: any; id: string}, { rejectWithValue }) => {
       try {
-        const response = await axios.post(
-          `${apiUrl}/business/operation/${id}/`,
-          dat,
-          {
-              headers: {
-                Authorization: `Bearer ${Cookies.get("accessToken")}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-        )
-        console.log("response data", response.data)
+        // const response = await axios.post(
+        //   `${apiUrl}/business/operation/${id}/`,
+        //   dat,
+        //   {
+        //       headers: {
+        //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        //         "Content-Type": "multipart/form-data",
+        //       },
+        //     }
+        // )
+        // console.log("response data", response.data)
+        const response = await api.put(`/business/operation/${id}/`, dat);
         return response.data
       } catch (err: any) {
         if (err.response && err.response.data) {

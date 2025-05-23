@@ -1,11 +1,9 @@
 // @ts-nocheck
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import axios from "axios"
-import getApiUrl from "../../getApiUrl"
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
+
 
 interface Assigns {
   id: string
@@ -29,14 +27,15 @@ const initialState: AssignsState = {
 export const fetchAssignedCylinders = createAsyncThunk(
   "assignedCylinders/fetchAssignedCylinders",
   async (salesTeamId) => {
-    const response = await axios.get(`${apiUrl}/print-assigned-cylinders/`, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-      params: {
-        sales_team: salesTeamId,
-      },
-    })
+    // const response = await axios.get(`${apiUrl}/print-assigned-cylinders/`, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    //   params: {
+    //     sales_team: salesTeamId,
+    //   },
+    // })
+    const response = await api.get("/print-assigned-cylinders/", {params : {sales_team: salesTeamId}})
     return response.data
   },
 )
@@ -44,12 +43,7 @@ export const fetchAssignedCylinders = createAsyncThunk(
 export const assignCylinders = createAsyncThunk(
   "assignCylinders/assignCylinders",
   async (payload) => {
-    const response = await axios.post(`${apiUrl}/assign-cylinders/`, payload, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        "Content-Type": "application/json",
-      },
-    })
+    const response = await api.post("/assign-cylinders/", payload)
     return response.data
   },
 )
@@ -57,16 +51,8 @@ export const assignCylinders = createAsyncThunk(
 export const assignedCylindersUpdate = createAsyncThunk(
   "assignedCylinders/assignedCylindersUpdate",
   async (payload) => {
-    const response = await axios.put(
-      `${apiUrl}/assign-update-cylinders/`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      },
-    )
+  
+    const response = await api.put("/assign-update-cylinders/", payload)
     return response.data
   },
 )

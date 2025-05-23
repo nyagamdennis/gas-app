@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
 
 
 interface LessPay {
@@ -28,7 +25,8 @@ const initialState: LessPayState = {
 export const fetchLessPay = createAsyncThunk<LessPay[]>(
   "lessPay/fetchLessPay",
   async (employeeId) => {
-    const response = await axios.get<LessPay[]>(`${apiUrl}/less-pay/${employeeId}`);
+    // const response = await axios.get<LessPay[]>(`${apiUrl}/less-pay/${employeeId}`);
+    const response = await api.get(`/less-pay/${employeeId}`)
     return response.data; // Return the fetched employees data
   }
 );
@@ -38,7 +36,8 @@ export const fetchLessPay = createAsyncThunk<LessPay[]>(
 export const clearLessPay = createAsyncThunk(
   "lessPay/clearClearLessPay",
   async (lessPayId) => {
-    const response = await axios.patch(`${apiUrl}/cylinder-less_pay/${lessPayId}/resolve/`);
+    // const response = await axios.patch(`${apiUrl}/cylinder-less_pay/${lessPayId}/resolve/`);
+    const response = await api.patch(`/cylinder-less_pay/${lessPayId}/resolve/`)
     return response.data
   }
 )

@@ -1,12 +1,8 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
-const EMPLOYEES_URLS = `${apiUrl}/employees/`;
 
 interface Salary {
     id: string;
@@ -29,8 +25,16 @@ const initialState: SalaryState = {
 export const fetchSalary = createAsyncThunk<Salary[]>(
     "salary/fetchSalary",
     async ({ employeeId }: { employeeId: string }) => {
-        console.log('id s ', employeeId)
-        const response = await axios.get<Salary[]>(`${apiUrl}/employee-monthly-salary/${employeeId}/`);
+        // console.log('id s ', employeeId)
+        // const response = await axios.get<Salary[]>(`${apiUrl}/employee-monthly-salary/${employeeId}/`,
+        //     {
+        //           headers: {
+        //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        //             "Content-Type": "multipart/form-data",
+        //           },
+        //         }
+        // );
+        const response = await api.get(`/employee-monthly-salary/${employeeId}/`)
         return response.data; // Return the fetched employees data
     }
 );
@@ -43,14 +47,15 @@ export const paySalary = createAsyncThunk(
     "salary/paySalary",
     async ({ employeeId, salaryAmount }: { employeeId: number; salaryAmount: number }) => {
         const formData = { contract_salary: salaryAmount };
-        const response = await axios.post(`${apiUrl}/monthly-salary/${employeeId}/`, formData,
-            {
-                headers: {
-                    Authorization: `Bearer ${Cookies.get("accessToken")}`,
-                },
-            }
-        );
-        console.log('response ', response.data)
+        // const response = await axios.post(`${apiUrl}/monthly-salary/${employeeId}/`, formData,
+        //     {
+        //         headers: {
+        //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        //         },
+        //     }
+        // );
+        // console.log('response ', response.data)
+        const response = await api.post(`/monthly-salary/${employeeId}/`, formData)
         return response.data;
     }
 );
@@ -63,14 +68,15 @@ export const paySalary = createAsyncThunk(
 export const updateSimgleEmployeeStatus = createAsyncThunk(
     "employees/updateSimgleEmployeeStatus",
     async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-        const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
-            status_field: statusField,
-        }, {
-            headers: {
-                Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
-        });
-        console.log('STatus functions', response.data)
+        // const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
+        //     status_field: statusField,
+        // }, {
+        //     headers: {
+        //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        //     },
+        // });
+        // console.log('STatus functions', response.data)
+        const response = await api.patch(`/update-status/${employeeId}/`, {status_field:statusField})
         return response.data; // Return the updated employee data
         // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
     }

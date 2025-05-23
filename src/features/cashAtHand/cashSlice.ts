@@ -1,10 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
 
 interface Cash {
   id: number;
@@ -26,14 +23,14 @@ const initialState: CashState = {
 export const fetchCash = createAsyncThunk<Cash[]>(
   "cash/fetchCash",
   async () => {
-    // const response = await axios.get<cash[]>(cash_URLS);
-    const response = await axios.get<Cash[]>(`${apiUrl}/cash/`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    const response = await api.get("/cash/")
+    // const response = await axios.get<Cash[]>(`${apiUrl}/cash/`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
     return response.data; // Return the fetched cash data
   }
 );
@@ -49,13 +46,14 @@ export const postCash = createAsyncThunk(
       sales_team: salesTeamId,
       date: endDate,
     }
-    const response = await axios.post(`${apiUrl}/cash/${selectedEmployeeId}/`,formData,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(`${apiUrl}/cash/${selectedEmployeeId}/`,formData,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post(`/cash/${selectedEmployeeId}/`, formData)
     return response.data; // Return the fetched cash data
   }
 );
@@ -65,13 +63,14 @@ export const postCash = createAsyncThunk(
 export const updateCashStatus = createAsyncThunk(
   "cash/updateCashStatus",
   async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
-      status_field: statusField,
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    });
+    // const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
+    //   status_field: statusField,
+    // },{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    const response = await api.patch(`/update-expense/${employeeId}/`, {status_field: statusField})
     return response.data; // Return the updated employee data
     // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
   }

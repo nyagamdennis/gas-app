@@ -5,9 +5,9 @@ import axios from "axios"
 import getApiUrl from "../../getApiUrl"
 import { JSX } from "react/jsx-runtime"
 import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const PRODUCT_URLS = `${apiUrl}/store/`
+
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
@@ -62,15 +62,16 @@ const initialState: paymentsState = {
 export const fetchPayments = createAsyncThunk<Payments[], void, {}>(
   "payments/fetchPayments",
   async () => {
-    // await new Promise((resolve) => setTimeout(resolve, 5000))
-    const response = await axios.get<Payments[]>(`${apiUrl}/business/payments/${id}/`,
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    )
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+    // const response = await axios.get<Payments[]>(`${apiUrl}/business/payments/${id}/`,
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //       "Content-Type": "multipart/form-data",
+    //     },
+    //   }
+    // )
+    const response = await api.get<Payments[]>("/business/payments/");
     return response.data
   },
 )

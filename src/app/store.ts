@@ -30,13 +30,17 @@ import requestReducer from "../features/RequestCylinders/requestedSlice"
 import cashReducer from "../features/cashAtHand/cashSlice"
 import teamExpensesReducer from "../features/expenses/teamExpensesSlice"
 import salaryReducer from "../features/monthlySalary/salarySlice"
-import subscriptionReducer from "../features/subscriptions/subscriptionSlice";
-import settingsReducer from "../features/settings/settingsSlice";
-import paymentsReducer from "../features/subscriptions/paymentsSlice";
-import employeeStatusReducer from "../features/employees/employeeStatusSlice";
+import subscriptionReducer from "../features/subscriptions/subscriptionSlice"
+import settingsReducer from "../features/settings/settingsSlice"
+import paymentsReducer from "../features/subscriptions/paymentsSlice"
+import employeeStatusReducer from "../features/employees/employeeStatusSlice"
+import analysisReducer from "../features/analysis/analysisSlice"
+import companyExpensesReducer from "../features/expenses/companyExpensesSlice"
 
 export const store = configureStore({
   reducer: {
+    companyExpenses: companyExpensesReducer,
+    analysis: analysisReducer,
     employeeStatus: employeeStatusReducer,
     payments: paymentsReducer,
     settings: settingsReducer,

@@ -9,8 +9,20 @@ import { fetchProducts, selectAllProducts } from '../features/product/productSli
 import { fetchOtherProducts, selectAllOtherProducts } from '../features/store/otherProductsSlice';
 import { assignOthers } from '../features/assigns/assignsOthersSlice';
 import FormattedAmount from '../components/FormattedAmount';
+import planStatus from '../features/planStatus/planStatus';
 
 const AssigningOtherProducts = () => {
+    const {
+        isPro,
+        isTrial,
+        isExpired,
+        businessName,
+        businessId,
+        businessLogo,
+        subscriptionPlan,
+        employeeLimit,
+        planName,
+      } = planStatus()
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -22,8 +34,8 @@ const AssigningOtherProducts = () => {
     const [loadingAssign, setLoadingAssign] = useState(false);
 
     useEffect(() => {
-        dispatch(fetchSalesTeam());
-        dispatch(fetchOtherProducts());
+        dispatch(fetchSalesTeam({ businessId }));
+        dispatch(fetchOtherProducts( { businessId }));
     }, [dispatch]);
 
     const handleSelectTeam = (team) => {

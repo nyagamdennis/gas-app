@@ -8,6 +8,11 @@ import getApiUrl from '../getApiUrl';
 import Cookies from "cookies-js";
 import axios from 'axios';
 import { addRequest, approveRequest, clearRequested, fetchRequests, selectAllRequests } from '../features/RequestCylinders/requestedSlice';
+// import jwtDecode from 'jwt-decode';
+import cookies from "cookies-js"
+import jwt_decode from "jwt-decode"
+import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+import EmployeeNav from '../components/ui/EmployeeNav';
 
 const CylinderRequest = () => {
     const apiUrl = getApiUrl();
@@ -16,6 +21,7 @@ const CylinderRequest = () => {
 
     const allSalesTeam = useAppSelector(selectAllSalesTeam);
     const allRequests = useAppSelector(selectAllRequests);
+    const myProfile = useAppSelector(selectMyProfile)
     const store = useAppSelector(selectAllStore);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [assignedCylinders, setAssignedCylinders] = useState([]);
@@ -23,15 +29,26 @@ const CylinderRequest = () => {
     const [loadingRequest, setLoadingRequest] = useState({});
     const salesTeamId = selectedTeam?.id;
 
-    console.log('requests ', allRequests)
-    console.log('cylinders ', assignedCylinders)
 
+    const businessId = myProfile.business
+    
     useEffect((salesTeamId) => {
-        dispatch(fetchSalesTeam());
-        dispatch(fetchStore());
+        dispatch(fetchSalesTeam({businessId}));
+        dispatch(fetchStore({businessId}));
+        dispatch(fetchMyProfile())
 
     }, [dispatch, salesTeamId]);
+    console.log('my profile ', myProfile)
 
+
+    //   useEffect(() => {
+    //     dispatch(fetchAssignedProducts())
+    //     dispatch(fetchMyProfile())
+    //     dispatch(fetchOtherProducts())
+    //     dispatch(fetchAllRequests())
+    //   }, [dispatch])
+   
+    
     useEffect(() => {
         if (selectedTeam) {
             axios
@@ -109,6 +126,7 @@ const CylinderRequest = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">
+            {/* <EmployeeNav headerMessage={"ddd"} headerText='' /> */}
             {!selectedTeam ? (
                 <div>
                     <h2 className="text-xl font-bold text-center mb-4">Select a Sales Team</h2>

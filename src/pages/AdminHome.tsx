@@ -16,37 +16,13 @@ const AdminHome = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { isPro, isTrial, isExpired } = planStatus();
+
+  useEffect(() => {
+      dispatch(fetchBusiness())
+    }, [dispatch])
+    
   
-//   const my_business = useAppSelector(selectAllBusiness)
-// console.log("my_business", my_business)
-//   useEffect(() => {
-//     dispatch(fetchBusiness())
-//   }, [dispatch])
 
-//   const business = my_business
-
-//   const hasPlan = business?.subscription_plan !== null
-//   const expiryDate = business?.subscription_plan_expiry
-//     ? new Date(business.subscription_plan_expiry)
-//     : null
-
-//   const isExpired =
-//     expiryDate instanceof Date && !isNaN(expiryDate)
-//       ? new Date() > expiryDate
-//       : true // Treat invalid or null expiry as expired
-
-
-
-//   useEffect(() => {
-//     if (!business) return;
-  
-//     if (!hasPlan || isExpired) {
-//       if (location.pathname !== "/subscribe") {
-//         navigate("/subscribe", { replace: true });
-//       }
-//     }
-//   }, [business, hasPlan, isExpired, navigate])
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
@@ -121,6 +97,12 @@ const AdminHome = () => {
             to: "/admins/analysis",
             title: "Analysis",
             subtitle: "Analyze sales and performance data",
+            color: "blue",
+          },
+          {
+            to: "/admin/expenses",
+            title: "Company Expenses",
+            subtitle: "Manage company expenses",
             color: "blue",
           },
         ].map(({ to, title, subtitle, color }, index) =>

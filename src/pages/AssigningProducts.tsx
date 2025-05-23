@@ -154,7 +154,7 @@ const AssigningProducts = () => {
                       >
                         <h3 className="text-lg font-semibold">{team.name}</h3>
                         <p className="text-sm mt-1">
-                          Type {team.type_of_sales_team?.name || "N/A"}
+                          Type: {team.type_of_sales_team?.name || "N/A"}
                         </p>
                       </div>
                     ))}
@@ -308,14 +308,19 @@ const AssigningProducts = () => {
                                           min="0"
                                           max={storeItem.filled}
                                           className="w-full border px-1 py-1"
-                                          onChange={(e) =>
-                                            handleInputChange(
-                                              storeItem.id,
-                                              storeItem.id,
-                                              cylinder.weight.id,
-                                              e.target.value,
-                                            )
-                                          }
+                                          onChange={(e) => {
+                                            const value = parseInt(e.target.value, 10);
+                                            if (value <= storeItem.filled) {
+                                              handleInputChange(
+                                                storeItem.id,
+                                                storeItem.id,
+                                                cylinder.weight.id,
+                                                value,
+                                              );
+                                            } else {
+                                              alert(`Assigned quantity cannot exceed ${storeItem.filled}`);
+                                            }
+                                          }}
                                         />
                                       </td>
                                     </tr>

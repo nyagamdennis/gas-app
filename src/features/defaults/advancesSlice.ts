@@ -1,11 +1,9 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
+
 
 
 interface Advances {
@@ -28,7 +26,13 @@ const initialState: AdvancesState = {
 export const fetchAdvances = createAsyncThunk<Advances[]>(
   "advances/fetchAdvances",
   async (employeeId) => {
-    const response = await axios.get<Advances[]>(`${apiUrl}/advances/${employeeId}`);
+    // const response = await axios.get<Advances[]>(`${apiUrl}/advances/${employeeId}`,{
+    //       headers: {
+    //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //         "Content-Type": "multipart/form-data",
+    //       },
+    //     });
+    const response = await api.get(`/advances/${employeeId}`)
     return response.data; // Return the fetched employees data
   }
 );
@@ -36,8 +40,13 @@ export const fetchAdvances = createAsyncThunk<Advances[]>(
 export const clearAdvances = createAsyncThunk(
   "advances/clearAdvances",
   async (advanceId) => {
-    const response = await axios.patch(`${apiUrl}/clear-advances/${advanceId}/resolve/`);
-   
+    // const response = await axios.patch(`${apiUrl}/clear-advances/${advanceId}/resolve/`,{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     "Content-Type": "multipart/form-data",
+    //   },
+    // });
+   const response = await api.patch(`/clear-advances/${advanceId}/resolve/`)
     return response.data
   }
 )
@@ -48,14 +57,15 @@ export const addEmployeeAdvance = createAsyncThunk(
   "advances/addEmployeeAdvance",
   async ({ employeeId, amount, date_issued }: { employeeId: number; amount: number, date_issued: string }) => {
       const formData = { amount: amount, date_issued: date_issued, employee: employeeId };
-      const response = await axios.post(`${apiUrl}/advances/${employeeId}/`, formData,
-          {
-              headers: {
-                  Authorization: `Bearer ${Cookies.get("accessToken")}`,
-              },
-          }
-      );
-      console.log('response ', response.data)
+      // const response = await axios.post(`${apiUrl}/advances/${employeeId}/`, formData,
+      //     {
+      //         headers: {
+      //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //         },
+      //     }
+      // );
+      // console.log('response ', response.data)
+      const response = await api.post(`/advances/${employeeId}/`, formData)
       return response.data;
   }
 );

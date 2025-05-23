@@ -13,7 +13,7 @@ const EmployeeNav = ({headerMessage, headerText, myProfile}:{headerMessage: stri
     return (
         <div className="relative">
       {/* Header with toggle button */}
-      <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      <header className=" text-blue-700  bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
       <div>
           <h1 className="text-3xl font-extrabold tracking-tight">{headerMessage}</h1>
           <p className="text-sm text-gray-500 mt-1">{headerText}</p>

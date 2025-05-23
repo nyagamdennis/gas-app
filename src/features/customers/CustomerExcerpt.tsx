@@ -4,10 +4,8 @@ import { useAppSelector } from "../../app/hooks"
 import { selectAllLocations } from "../location/locationSlice"
 import { selectAllProducts } from "../product/productSlice"
 import { selectAllSales } from "../sales/salesSlice"
-import axios from "axios"
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 import FormattedAmount from "../../components/FormattedAmount"
-import getApiUrl from "../../getApiUrl"
 
 import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
@@ -69,13 +67,14 @@ const CustomerExcerpt = ({ customer }) => {
         location: [customer.location.id],
       }
 
-      const response = await axios.post(`${apiUrl}/sendsms/`, formData, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      })
+      // const response = await axios.post(`${apiUrl}/sendsms/`, formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // })
 
+      const response = await api.post("/sendsms/", formData)
       if (response.status === 201) {
         setShowAlert(true)
         if (messageTextareaRef.current) {
@@ -93,7 +92,6 @@ const CustomerExcerpt = ({ customer }) => {
     }
   }
 
-  console.log("Customer history ", customer)
   return (
     <div className="bg-white shadow-md rounded-2xl p-4 mb-4 border border-gray-200">
       {/* Header Section */}

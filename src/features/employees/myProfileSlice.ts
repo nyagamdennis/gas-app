@@ -1,10 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
 
 
 
@@ -47,13 +44,14 @@ const initialState: MyProfileState = {
 export const fetchMyProfile = createAsyncThunk<MyProfile[], void, {}>(
     "myProfile/fetchMyProfile",
     async () => {
-      const response = await axios.get<MyProfile[]>(`${apiUrl}/myprofile/`,
-        {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
-          }
-      );
+      // const response = await axios.get<MyProfile[]>(`${apiUrl}/myprofile/`,
+      //   {
+      //       headers: {
+      //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       },
+      //     }
+      // );
+      const response = await api.get("/myprofile/")
       return response.data;
     }
   );
@@ -62,13 +60,14 @@ export const fetchMyProfile = createAsyncThunk<MyProfile[], void, {}>(
 export const updateMyProfile = createAsyncThunk(
     "myProfile/updateMyProfile",
     async (formData) => {
-      const response = await axios.put(`${apiUrl}/myprofile/`, formData,
-        {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
-          }
-      );
+      // const response = await axios.put(`${apiUrl}/myprofile/`, formData,
+      //   {
+      //       headers: {
+      //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       },
+      //     }
+      // );
+      const response = await api.put("/myprofile/", formData);
       return response.data;
     }
   );
@@ -77,13 +76,14 @@ export const updateMyProfile = createAsyncThunk(
 export const createMyProfile = createAsyncThunk(
     "myProfile/createMyProfile",
     async (formData) => {
-      const response = await axios.post(`${apiUrl}/myprofile/`, formData,
-        {
-            headers: {
-              Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
-          }
-      );
+      // const response = await axios.post(`${apiUrl}/myprofile/`, formData,
+      //   {
+      //       headers: {
+      //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       },
+      //     }
+      // );
+      const response = await api.post("/myprofile/", formData);
       return response.data;
     }
   );

@@ -1,10 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
-
-const apiUrl = getApiUrl();
+import api from "../../../utils/api"
 
 
 interface SalesTeamData {
@@ -33,13 +29,14 @@ const initialState: SalesTeamDataState = {
 export const fetchSalesTeamData = createAsyncThunk(
     "salesTeamData/fetchSalesTeamData",
     async () => {
-      const response = await axios.get(`${apiUrl}/salesteamdata`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          },
-        }
-      );
+      // const response = await axios.get(`${apiUrl}/salesteamdata`,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //     },
+      //   }
+      // );
+      const response = await api.get("/salesteamdata");
       return response.data; // Corrected the return statement
     }
   );

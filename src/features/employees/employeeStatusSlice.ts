@@ -1,10 +1,6 @@
 // features/auths/employeeStatusSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import axios from "axios"
-import getApiUrl from "../../getApiUrl"
-import Cookies from "cookies-js"
-
-const apiUrl = getApiUrl()
+import api from "../../../utils/api"
 
 interface State {
   verified: boolean | null
@@ -23,11 +19,12 @@ export const fetchEmployeeVerificationStatus = createAsyncThunk(
   async (_, thunkAPI) => {
     const { rejectWithValue } = thunkAPI
     try {
-      const response = await axios.get(`${apiUrl}/check-user-status/`,{
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      })
+      // const response = await axios.get(`${apiUrl}/check-user-status/`,{
+      //   headers: {
+      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //   },
+      // })
+      const response = await api.get("/check-user-status/")
       return response.data.is_verified
     } catch (err: any) {
       return rejectWithValue(err.response?.data || "Failed to fetch status")

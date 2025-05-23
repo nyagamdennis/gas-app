@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const PRODUCT_URLS = `${apiUrl}/assignedproduct/`;
+
 
 
 
@@ -59,11 +56,12 @@ const initialState: assignedOtherProductsState = {
 export const fetchAssignedOtherProducts = createAsyncThunk<assignedOtherProducts[], void, {}>(
   "assignedOtherProducts/fetchAssignedOtherProducts",
   async () => {
-    const response = await axios.get<assignedOtherProducts[]>(PRODUCT_URLS, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    });
+    // const response = await axios.get<assignedOtherProducts[]>(PRODUCT_URLS, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    const response = await api.get("/assignedproduct/")
     return response.data;
   }
 );
@@ -84,15 +82,16 @@ export const fetchAssignedOtherProducts = createAsyncThunk<assignedOtherProducts
 export const addSpoiledCylinder = createAsyncThunk(
   "assignedOtherProducts/addSpoiledCylinder",
   async ({ id, spoiled }: { id: string; spoiled: number }) => {
-    const response = await axios.post(
-      `${apiUrl}/addspoiled/`, // Add correct endpoint
-      { id, spoiled },
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   `${apiUrl}/addspoiled/`, // Add correct endpoint
+    //   { id, spoiled },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post("/addspoiled/", {id, spoiled})
     return response.data;
   }
 );
@@ -100,15 +99,16 @@ export const addSpoiledCylinder = createAsyncThunk(
 export const updateSpoiledCylinder = createAsyncThunk(
   "assignedOtherProducts/updateSpoiledCylinder",
   async ({ id, spoiled }: { id: string; spoiled: number }) => {
-    const response = await axios.post(
-      `${apiUrl}/updatespoiled/`, // Add correct endpoint
-      { id, spoiled },
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   `${apiUrl}/updatespoiled/`, // Add correct endpoint
+    //   { id, spoiled },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post("/updatespoiled/", {id, spoiled})
     return response.data;
   }
 );

@@ -1,11 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const TRANSACTIONS_URLS = `${apiUrl}/mpesa/transactions/`;
 
 
 
@@ -34,11 +30,12 @@ const initialState: transactionsState = {
 export const fetchTransactions = createAsyncThunk<transactions[], void, {}>(
     "transactions/fetchTransactions",
     async () => {
-        const response = await axios.get<transactions[]>(TRANSACTIONS_URLS, {
-            headers: {
-                Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
-        });
+        // const response = await axios.get<transactions[]>(TRANSACTIONS_URLS, {
+        //     headers: {
+        //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
+        //     },
+        // });
+        const response = await api.get<transactions[]>("/mpesa/transactions/");
         return response.data;
     }
 );

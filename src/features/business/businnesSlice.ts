@@ -3,6 +3,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import getApiUrl from "../../getApiUrl";
 import Cookies from "cookies-js"
+import api from "../../../utils/api"
+
 
 const apiUrl = getApiUrl()
 const URLS = `${apiUrl}/business/`;
@@ -38,15 +40,8 @@ const initialState: BusinessState = {
 export const fetchBusiness = createAsyncThunk<Business[], void, {}>(
     "business/fetchBusiness",
     async () => {
-      const response = await axios.get<Business[]>(`${apiUrl}/business/operation/`,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
+      // const response = await axios.get<Business[]>(`${apiUrl}/business/operation/`,
+      const response = await api.get('/business/operation/');
       return response.data;
     }
   );

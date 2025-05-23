@@ -1,10 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const LOCATION_URLS = `${apiUrl}/locations/`;
 
 
 interface Locations {
@@ -31,7 +28,8 @@ const initialState: LocationsState = {
 export const fetchLocations = createAsyncThunk<Locations[], void, {}>(
     "customers/fetchLocations",
     async () => {
-      const response = await axios.get<Locations[]>(LOCATION_URLS);
+     
+      const response = await api.get("/locations/")
       return response.data; // Corrected the return statement
     }
   );

@@ -7,7 +7,7 @@ import FormattedAmount from "./FormattedAmount"
 import { Form } from "react-router-dom"
 
 const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
-    console.log("gas", gas)
+    // console.log("gas", gas)
   const [expandedRow, setExpandedRow] = useState(null)
   const [expanded, setExpanded] = useState(false)
 
@@ -146,6 +146,12 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
                               <p>
                                 <strong>Empty Cylinder prince:</strong>{" "}
                                 <FormattedAmount amount={cylinder.empty_cylinder_price} />
+                                
+                              </p>
+                              {/* depot_refill_price */}
+                              <p>
+                                <strong>Depot Refill prince:</strong>{" "}
+                                <FormattedAmount amount={cylinder.depot_refill_price } />
                                 
                               </p>
                             </div>

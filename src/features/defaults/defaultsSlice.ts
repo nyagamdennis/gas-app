@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
 
 
 interface Defaults {
@@ -28,7 +25,8 @@ const initialState: DefaultsState = {
 export const fetchDefaults = createAsyncThunk<Defaults[]>(
   "defaults/fetchDefaults",
   async (employeeId) => {
-    const response = await axios.get<Defaults[]>(`${apiUrl}/defaults/${employeeId}`);
+    // const response = await axios.get<Defaults[]>(`${apiUrl}/defaults/${employeeId}`);
+    const response = await api.get(`/defaults/${employeeId}`)
     return response.data; // Return the fetched employees data
   }
 );
@@ -36,8 +34,9 @@ export const fetchDefaults = createAsyncThunk<Defaults[]>(
 export const clearDefault = createAsyncThunk(
   "defaults/clearDefault",
   async (defaultId) => {
-    const response = await axios.patch(`${apiUrl}/cylinder-lost/${defaultId}/resolve/`);
-    console.log('error here ', response.data)
+    // const response = await axios.patch(`${apiUrl}/cylinder-lost/${defaultId}/resolve/`);
+    // console.log('error here ', response.data)
+    const response = await api.patch(`/cylinder-lost/${defaultId}/resolve/`)
     return response.data
   }
 )
@@ -46,8 +45,9 @@ export const clearDefault = createAsyncThunk(
 export const ReturnDefault = createAsyncThunk(
   "defaults/returnDefault",
   async (defaultId) => {
-    const response = await axios.patch(`${apiUrl}/return-lost/${defaultId}/return/`);
-    console.log('error here ', response.data)
+    // const response = await axios.patch(`${apiUrl}/return-lost/${defaultId}/return/`);
+    // console.log('error here ', response.data)
+    const response = await api.patch(`/return-lost/${defaultId}/return/`)
     return response.data
   }
 )

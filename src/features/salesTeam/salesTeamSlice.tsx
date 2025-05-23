@@ -1,11 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import axios from "axios"
-import getApiUrl from "../../getApiUrl"
-import Cookies from "cookies-js"
-
-const apiUrl = getApiUrl()
-const SALESTeam_URLS = `${apiUrl}/getsalesteam/`
+import api from "../../../utils/api"
 
 interface SalesTeam {
   id: string
@@ -29,12 +24,13 @@ const initialState: SalesTeamState = {
 export const fetchSalesTeam = createAsyncThunk<SalesTeam[], { businessId: string }, {}>(
   "salesTeam/fetchSalesTeam",
   async ({ businessId }) => {
-    console.log("businessId ", businessId)
-    const response = await axios.get<SalesTeam[]>(`${apiUrl}/getsalesteam/${businessId}/`, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    });
+    // console.log("businessId ", businessId)
+    // const response = await axios.get<SalesTeam[]>(`${apiUrl}/getsalesteam/${businessId}/`, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    const response = await api.get(`/getsalesteam/${businessId}/`);
     return response.data; // Corrected the return statement
   },
 );
@@ -42,7 +38,12 @@ export const fetchSalesTeam = createAsyncThunk<SalesTeam[], { businessId: string
 export const deleteSalesTeam = createAsyncThunk(
   "deleteSalesTeam/salesTeam",
   async (id: string) => {
-    const response = await axios.delete(`${apiUrl}/getsalesteam/${id}/`)
+    // const response = await axios.delete(`${apiUrl}/getsalesteam/${id}/`,{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // })
+    const response = await api.delete(`/getsalesteam/${id}/`);
     return response.data
   },
 )
@@ -52,11 +53,16 @@ export const updateSalesTeam = createAsyncThunk(
   async ({ id, name }: { id: string; name: string }) => {
     const formData = new FormData()
     formData.append("name", name)
-    const response = await axios.patch(`${apiUrl}/getsalesteam/${id}/`, formData, {
+    // const response = await axios.patch(`${apiUrl}/getsalesteam/${id}/`, formData, {
+    //   headers: {
+    //     "Content-Type": "multipart/form-data",
+    //   },
+    // })
+    const response = await api.patch(`/getsalesteam/${id}/`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    })
+    });
     return response.data
   },
 )
@@ -64,22 +70,30 @@ export const updateSalesTeam = createAsyncThunk(
 interface AddSalesTeamParams {
   profile_image: File
   name: string
+  teamType: string
 }
 
 export const addSalesTeam = createAsyncThunk(
   "addSalesTeam/addSalesTeam",
   async (params: AddSalesTeamParams) => {
-    const { profile_image, name } = params
+    const { profile_image, name, teamType } = params
 
     const formData = new FormData()
     formData.append("profile_image", profile_image)
     formData.append("name", name)
+    formData.append('type', teamType)
 
-    const response = await axios.post(`${apiUrl}/createteam/`, formData, {
+    // const response = await axios.post(`${apiUrl}/createteam/`, formData, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     "Content-Type": "multipart/form-data",
+    //   },
+    // })
+    const response = await api.post("/createteam/", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    })
+    });
     return response.data
   },
 )
@@ -91,7 +105,8 @@ export const changeSalesTeamMember = createAsyncThunk(
     formData.append("employeeId", userId)
     formData.append("teamId", teamsId)
     console.log("submited data ", userId)
-    const response = await axios.post(`${apiUrl}/users/transfer/`, formData)
+    // const response = await axios.post(`${apiUrl}/users/transfer/`, formData)
+    const response = await api.post("/users/transfer/", formData);
     return response.data
   },
 )

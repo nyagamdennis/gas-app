@@ -1,10 +1,9 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
 
-const apiUrl = getApiUrl()
-const CUSTOMERS_URLS = `${apiUrl}/customer/`;
+import api from "../../../utils/api"
+
+// const CUSTOMERS_URLS = `${apiUrl}/customer/`;
 
 
 interface Customers {
@@ -34,7 +33,8 @@ const initialState: CustomersState = {
 export const fetchCustomers = createAsyncThunk<Customers[], void, {}>(
     "customers/fetchCustomers",
     async () => {
-      const response = await axios.get<Customers[]>(CUSTOMERS_URLS);
+      // const response = await axios.get<Customers[]>(CUSTOMERS_URLS);
+      const response = await api.get("/customer/")
       return response.data; // Corrected the return statement
     }
   );

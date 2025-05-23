@@ -1,11 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
-
-const apiUrl = getApiUrl()
-const PRODUCT_URLS = `${apiUrl}/assignedcylider/`;
+import api from "../../../utils/api"
 
 
 
@@ -62,11 +57,12 @@ const initialState: assignedProductsState = {
 export const fetchAssignedProducts = createAsyncThunk<assignedProducts[], void, {}>(
   "assignedProducts/fetchAssignedProducts",
   async () => {
-    const response = await axios.get<assignedProducts[]>(PRODUCT_URLS, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    });
+    // const response = await axios.get<assignedProducts[]>(PRODUCT_URLS, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    const response = await api.get("/assignedcylider/")
     return response.data;
   }
 );
@@ -87,15 +83,16 @@ export const fetchAssignedProducts = createAsyncThunk<assignedProducts[], void, 
 export const addSpoiledCylinder = createAsyncThunk(
   "assignedProducts/addSpoiledCylinder",
   async ({ id, spoiled }: { id: string; spoiled: number }) => {
-    const response = await axios.post(
-      `${apiUrl}/addspoiled/`, // Add correct endpoint
-      { id, spoiled },
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   `${apiUrl}/addspoiled/`, // Add correct endpoint
+    //   { id, spoiled },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post("/addspoiled/", {id, spoiled})
     return response.data;
   }
 );
@@ -103,15 +100,16 @@ export const addSpoiledCylinder = createAsyncThunk(
 export const updateSpoiledCylinder = createAsyncThunk(
   "assignedProducts/updateSpoiledCylinder",
   async ({ id, spoiled }: { id: string; spoiled: number }) => {
-    const response = await axios.post(
-      `${apiUrl}/updatespoiled/`, // Add correct endpoint
-      { id, spoiled },
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.post(
+    //   `${apiUrl}/updatespoiled/`, // Add correct endpoint
+    //   { id, spoiled },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.post("/updatespoiled/", {id, spoiled})
     return response.data;
   }
 );

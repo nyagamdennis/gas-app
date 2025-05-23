@@ -1,10 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
 
 
 
@@ -33,15 +30,16 @@ const initialState: CollectionsState = {
 export const fetchCollectedCylinders = createAsyncThunk(
   "collectedCylinders/fetchCollectedCylinders",
   async (salesTeamId) => {
-    const response = await axios.get(`${apiUrl}/after-return/`, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-      params: {
-        sales_team: salesTeamId,
-      },
+    // const response = await axios.get(`${apiUrl}/after-return/`, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    //   params: {
+    //     sales_team: salesTeamId,
+    //   },
       
-    });
+    // });
+    const response = await api.get("/after-return/", {params:{sales_team:salesTeamId}})
     return response.data;
   }
 );

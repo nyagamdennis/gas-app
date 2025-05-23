@@ -23,6 +23,7 @@ import defaultPic from "../images/shop.png"
 
 import { set } from "cookies"
 import AdminNav from "../components/ui/AdminNav"
+import planStatus from "../features/planStatus/planStatus"
 
 const CreateTeamPage = () => {
   const url = getApiUrl()
@@ -39,9 +40,26 @@ const CreateTeamPage = () => {
   const [deletingTeam, setDeletingTeam] = useState(false)
 
   const all_salesTeam = useAppSelector(selectAllSalesTeam)
+  
+
+  const {
+      isPro,
+      isTrial,
+      isExpired,
+      businessName,
+      businessId,
+      businessLogo,
+      subscriptionPlan,
+      employeeLimit,
+      planName,
+    } = planStatus()
+
+
   useEffect(() => {
-    dispatch(fetchSalesTeam())
-  }, [dispatch])
+      if (businessId) {
+        dispatch(fetchSalesTeam({ businessId }))
+      }
+    }, [dispatch, businessId])
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -66,7 +84,7 @@ const CreateTeamPage = () => {
         addSalesTeam({
           profile_image: file,
           name: teamName,
-          type: teamType,
+          teamType: teamType,
         }),
       )
       setAddingTeam(false)
@@ -202,8 +220,8 @@ const CreateTeamPage = () => {
                 required
               >
                 <option value="">-- Select Team Type --</option>
-                <option value="Retail Shop">Retail</option>
-                <option value="Distributor">WholeSale</option>
+                <option value="retail">Retail</option>
+                <option value="wholesale">WholeSale</option>
               </select>
             </div>
 

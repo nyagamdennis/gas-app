@@ -1,11 +1,10 @@
 /* eslint-disable prettier/prettier */
 // @ts-nocheck
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
-const DEBTORS_URL = `${apiUrl}/debtors/`;
+
+// const DEBTORS_URL = `${apiUrl}/debtors/`;
 
 type Status = "idle" | "loading" | "succeeded" | "failed";
 
@@ -37,7 +36,8 @@ const initialState: DebtorsState = {
 export const fetchDebtors = createAsyncThunk<Debtors[], void>(
   "debtors/fetchDebtors",
   async () => {
-    const response = await axios.get<Debtors[]>(DEBTORS_URL);
+    // const response = await axios.get<Debtors[]>(DEBTORS_URL);
+    const response = await api.get("/debtors/")
     return response.data;
   }
 );
@@ -45,7 +45,8 @@ export const fetchDebtors = createAsyncThunk<Debtors[], void>(
 export const clearDebtors = createAsyncThunk<void, number>(
   "debtors/clearDebtors",
   async (pk) => {
-    await axios.post(`${apiUrl}/clear_debt/${pk}/`);
+    // await axios.post(`${apiUrl}/clear_debt/${pk}/`);
+    await api.post(`/clear_debt/${pk}/`)
     return pk;
   }
 );

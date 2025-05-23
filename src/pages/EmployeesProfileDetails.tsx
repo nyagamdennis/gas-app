@@ -81,6 +81,7 @@ const EmployeesProfileDetails = () => {
 
   // const employeeSalary = useAppSelector(selectAllSalary)
   const employeeSalary = useAppSelector(selectAllSalary)
+  // console.log('employee sala ', employeeSalary)
 
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [newSalesTeam, setNewSalesTeam] = useState("")
@@ -522,6 +523,7 @@ const EmployeesProfileDetails = () => {
     const joinedDate = new Date(employee?.date_joined)
     const currentDate = new Date()
     const options = []
+    
 
     for (
       let date = new Date(joinedDate);
@@ -571,7 +573,12 @@ const EmployeesProfileDetails = () => {
   console.log("has been paid ", paid)
   console.log("payment data ", paymentDate)
   console.log("paid amount ", amount)
+  console.log('employee data ', employeeSalary)
 
+
+  const handlePayment = () => {
+
+  }
   return (
     <div className="max-w-4xl mx-auto p-3">
       {/* Back Button */}
@@ -837,7 +844,7 @@ const EmployeesProfileDetails = () => {
               paid
             </button>
           ) : (
-            <button className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
+            <button onClick={handlePayment} className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
               Pay
             </button>
           )}

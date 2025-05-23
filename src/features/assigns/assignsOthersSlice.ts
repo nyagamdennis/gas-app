@@ -1,10 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
+
 
 
 
@@ -33,16 +31,9 @@ const initialState: AssignsOthersState = {
 export const fetchAssignedOthers = createAsyncThunk(
   "assignedOthers/fetchAssignedOthers",
   async (salesTeamId) => {
-    console.log('params ', salesTeamId)
-    const response = await axios.get(`${apiUrl}/print-assigned-otherproduct/`, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-      params: {
-        sales_team: salesTeamId,
-      },
-      
-    });
+   
+    const response = await api.get("/print-assigned-otherproduct/")
+    console.log('fetched other products ', response.data, { params: { sales_team: salesTeamId } });
     return response.data;
   }
 );
@@ -51,12 +42,8 @@ export const fetchAssignedOthers = createAsyncThunk(
 export const assignOthers = createAsyncThunk(
     'assignOthers/assignOthers',
     async (payload) => {
-      const response = await axios.post(`${apiUrl}/assign-others/`, payload, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get('accessToken')}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      
+      const response = await api.post("assign-others/", payload)
       return response.data;
     }
   );

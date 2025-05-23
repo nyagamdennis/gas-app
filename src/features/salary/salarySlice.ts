@@ -1,12 +1,8 @@
 // @ts-nocheck
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
-import axios from "axios"
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const PRODUCT_URLS = `${apiUrl}/store/`
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
@@ -64,11 +60,12 @@ const initialState: salaryState = {
 export const fetchSalary = createAsyncThunk<salary[], void, {}>(
   "salary/fetchSalary",
   async (pk) => {
-    const response = await axios.get<salary[]>(`${apiUrl}/monthly-salary/${pk}/`, {
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
-    })
+    // const response = await axios.get<salary[]>(`${apiUrl}/monthly-salary/${pk}/`, {
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // })
+    const response = await api.get(`/monthly-salary/${pk}/`)
     return response.data
   },
 )
@@ -107,12 +104,13 @@ export const addAnotherCylinder = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       }
-      const response = await axios.post(
-        `${apiUrl}/addanothercylinder/${id}/`,
-        dat,
-        config,
-      )
-      console.log("response data", response.data)
+      // const response = await axios.post(
+      //   `${apiUrl}/addanothercylinder/${id}/`,
+      //   dat,
+      //   config,
+      // )
+      // console.log("response data", response.data)
+      const response = await api.post(`/addanothercylinder/${id}/`, dat)
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {

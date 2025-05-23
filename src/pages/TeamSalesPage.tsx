@@ -13,7 +13,12 @@ import {
 import defaultProfile from "../components/media/default.png"
 import FormattedAmount from "../components/FormattedAmount"
 import AdminsFooter from "../components/AdminsFooter"
-import { fetchTeamExpenses, postExpenses, selectAllTeamExpenses } from "../features/expenses/teamExpensesSlice"
+import {
+  fetchTeamExpenses,
+  postExpenses,
+  selectAllTeamExpenses,
+} from "../features/expenses/teamExpensesSlice"
+import { CircularProgress } from "@mui/material"
 
 const TeamSalesPage = () => {
   const dispatch = useAppDispatch()
@@ -26,7 +31,7 @@ const TeamSalesPage = () => {
   const [expenseDate, setExpenseDate] = useState<string>("")
   const [filteredSales, setFilteredSales] = useState([])
   const [filteredExpenses, setFilteredExpenses] = useState([])
-
+  const [addingExpenses, setAddingExpenses] = useState(false)
   const [startDate, setStartDate] = useState(() => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
@@ -37,21 +42,29 @@ const TeamSalesPage = () => {
   })
 
   const id = myProfile?.id
-  
+
   const salesTeamId = myProfile?.sales_team?.id
   const employeeId = myProfile?.id
   const handleAddExpenses = (e) => {
     e.preventDefault()
-
-    dispatch(
-      postExpenses({ employeeId, salesTeamId, expenseName, expenseAmount }),
-    )
+    setAddingExpenses(true)
+    try {
+      dispatch(
+        postExpenses({ employeeId, salesTeamId, expenseName, expenseAmount }),
+      )
+      setExpenseName('')
+      setExpenseAmount()
+      setAddingExpenses(false)
+    } catch (error) {
+      setAddingExpenses(false)
+    }
+    
   }
 
   useEffect(() => {
     dispatch(fetchMyProfile())
     dispatch(fetchSalesTeamData())
-    dispatch(fetchTeamExpenses({salesTeamId}))
+    dispatch(fetchTeamExpenses({ salesTeamId }))
   }, [dispatch, salesTeamId])
 
   useEffect(() => {
@@ -71,7 +84,6 @@ const TeamSalesPage = () => {
     })
     setFilteredExpenses(filteredExpenses)
   }, [expense, startDate, endDate])
-
 
   const totalSalesAmount = filteredSales.reduce((total, sale) => {
     const cash = Number(sale.cashAmount) || 0
@@ -98,10 +110,11 @@ const TeamSalesPage = () => {
     { totalCash: 0, totalMpesa: 0, totalUnverifiedMpesa: 0 },
   )
 
+  const totalExpenses = filteredExpenses.reduce(
+    (total, item) => total + (item.amount || 0),
+    0,
+  )
 
-  const totalExpenses = filteredExpenses.reduce((total, item) => total + (item.amount || 0), 0);
-
-  
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -274,11 +287,11 @@ const TeamSalesPage = () => {
           </div>
         </div>
         <div className="px-2">
-        
-            <h2 className="text-lg font-semibold">
-              Expected total cash: <FormattedAmount amount={totalSalesAmount - totalExpenses} /> 
-            </h2>
-          
+          <h2 className="text-lg font-semibold">
+            Expected total cash:{" "}
+            <FormattedAmount amount={totalSalesAmount - totalExpenses} />
+          </h2>
+
           <div className="bg-gray-500 my-2 p-2">
             {filteredExpenses && filteredExpenses.length > 0 ? (
               <div className=" px-2 mb-5">
@@ -321,7 +334,7 @@ const TeamSalesPage = () => {
                   </p>
                 </div>
               </div>
-            ):(
+            ) : (
               ""
             )}
 
@@ -351,9 +364,10 @@ const TeamSalesPage = () => {
               <div className=" flex justify-center">
                 <button
                   onClick={handleAddExpenses}
+                  disabled={addingExpenses}
                   className="bg-blue-900 px-2 mt-2 text-white rounded-md"
                 >
-                  submit
+                  {addingExpenses ? <CircularProgress size={20} /> : "submit"}
                 </button>
               </div>
             </form>

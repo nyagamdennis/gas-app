@@ -55,16 +55,13 @@ import { useEffect } from "react"
 import { fetchBusiness } from "./features/business/businnesSlice"
 import { useAppDispatch } from "./app/hooks"
 import useVerificationPolling from "./features/employees/useVerificationPolling"
+import Expenses from "./pages/Expenses"
 
 
 function App() {
   const dispatch = useAppDispatch()
-  useEffect(() => {
-    dispatch(fetchBusiness())
-  }, [dispatch])
   
-  // console.log('business ')
-  useTokenAutoRefresher()
+  // useTokenAutoRefresher()
 
   useVerificationPolling()
   return (
@@ -77,14 +74,14 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Admin-only routes */}
-          {/* <Route
+          <Route
             path="/"
             element={
               <ProtectedRoute requiredRole="is_owner">
-                <HomePage />
+                 <AdminAsign />
               </ProtectedRoute>
             }
-          /> */}
+          />
           <Route
             path="/sendsms"
             element={
@@ -123,6 +120,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_owner">
                 <AdminSalesRecord />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/expenses"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <Expenses />
               </ProtectedRoute>
             }
           />

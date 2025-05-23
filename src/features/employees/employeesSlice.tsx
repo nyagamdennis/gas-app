@@ -1,11 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
-import getApiUrl from "../../getApiUrl";
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl();
-const EMPLOYEES_URLS = `${apiUrl}/employees/`;
+
 
 interface Employees {
   id: number;
@@ -35,12 +32,13 @@ const initialState: EmployeesState = {
 export const fetchEmployees = createAsyncThunk<Employees[], { businessId: string },{}>(
   "employees/fetchEmployees",
   async ({ businessId }) => {
-    const response = await axios.get<Employees[]>(`${apiUrl}/all_employees/${businessId}`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
+    // const response = await axios.get<Employees[]>(`${apiUrl}/all_employees/${businessId}`, {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    const response = await api.get(`/all_employees/${businessId}`)
     return response.data; // Return the fetched employees data
   }
 );
@@ -49,14 +47,15 @@ export const transferEmployee = createAsyncThunk(
   "employees/transferEmployee",
   async ({ employeeId, salesTeamId }: { employeeId: number; salesTeamId: number }) => {
     const formData = { sales_team_id: salesTeamId };
-    const response = await axios.patch(`${apiUrl}/transfer/${employeeId}/`, formData, 
-      {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        },
-      }
-    );
-    console.log('after transfer ', response.data)
+    // const response = await axios.patch(`${apiUrl}/transfer/${employeeId}/`, formData, 
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //     },
+    //   }
+    // );
+    // console.log('after transfer ', response.data)
+    const response = await api.patch(`/transfer/${employeeId}/`, formData);
     return response.data; // Return the updated employee data
   }
 );
@@ -64,14 +63,17 @@ export const transferEmployee = createAsyncThunk(
 export const updateEmployeeStatus = createAsyncThunk(
   "employees/updateEmployeeStatus",
   async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
+    // const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
+    //   status_field: statusField,
+    // },{
+    //   headers: {
+    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+    //   },
+    // });
+    // console.log('STatus functions', response.data)
+    const response = await api.patch(`/update-status/${employeeId}/`, {
       status_field: statusField,
-    },{
-      headers: {
-        Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      },
     });
-    console.log('STatus functions', response.data)
     return response.data; // Return the updated employee data
     // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
   }

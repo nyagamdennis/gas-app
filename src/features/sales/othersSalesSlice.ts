@@ -1,11 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import getApiUrl from "../../getApiUrl";
-import Cookies from "cookies-js"
+import api from "../../../utils/api"
 
-const apiUrl = getApiUrl()
-const SALES_URLS = `${apiUrl}/sales/`;
 
 
 interface OthersSales {
@@ -31,7 +27,8 @@ const initialState: OthersSalesState = {
 export const fetchOthersSales = createAsyncThunk<OthersSales[], void, {}>(
     "othersSales/fetchOthersSales",
     async () => {
-      const response = await axios.get<OthersSales[]>(SALES_URLS);
+      // const response = await axios.get<OthersSales[]>(SALES_URLS);
+      const response = await api.get("/sales/")
       return response.data; // Corrected the return statement
     }
   );
@@ -41,16 +38,17 @@ export const recordOthersSales = createAsyncThunk(
   "othersSales/recordOthersSales",
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${apiUrl}/recordOtherssales/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   `${apiUrl}/recordOtherssales/`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //   }
+      // );
+      const response = await api.post("/recordOtherssales/", formData)
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.data) {
