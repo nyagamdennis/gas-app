@@ -16,11 +16,9 @@ import {
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
-import getApiUrl from "../getApiUrl"
-import axios from "axios"
+
 
 const RetailSalesRecordPage = () => {
-  const apiUrl = getApiUrl()
   const [searchResults, setSearchResults] = useState([])
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
   const [searchingBy, setSearchingBy] = useState("")

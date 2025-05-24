@@ -16,7 +16,8 @@ import { useDispatch } from "react-redux"
 import { IoPerson } from "react-icons/io5"
 import { MdOutlineVisibility, MdOutlineVisibilityOff } from "react-icons/md"
 import Alert from "@mui/material/Alert"
-import getApiUrl from "../getApiUrl"
+import api from "../../utils/api"
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState("")
@@ -26,7 +27,6 @@ const LoginPage = () => {
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const apiUrl = getApiUrl()
 
   const isLoading = useAppSelector(selectAuthLoading)
   const isAuthenticated = useAppSelector(selectIsAuthenticated)

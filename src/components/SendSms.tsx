@@ -5,15 +5,13 @@ import RightContent from './RightContent';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchLocations, selectAllLocations } from '../features/location/locationSlice';
 import React, { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
-import Cookies from 'cookies-js';
-import getApiUrl from '../getApiUrl';
+import api from "../../utils/api"
+
 
 
 const SendSms: React.FC = () => {
-  const apiUrl = getApiUrl()
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const locations = useAppSelector(selectAllLocations);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,16 +40,17 @@ const SendSms: React.FC = () => {
         message: messageTextareaRef.current?.value,
       }
       console.log('selected_location', formData)
-      const response = await axios.post(
-        `${apiUrl}/sendbulksms/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-        },
-      )
+      // const response = await axios.post(
+      //   `${apiUrl}/sendbulksms/`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //   },
+      // )
+      const response = await api.post("/sendbulksms/", formData)
       if (response.status === 201) {
         setShowAlert(true);
         if (messageTextareaRef.current) {

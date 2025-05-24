@@ -8,9 +8,7 @@ import {
   getAssignsStatus,
   selectAllAssigns,
 } from "../features/assigns/assignsSlice"
-import getApiUrl from "../getApiUrl"
-import axios from "axios"
-import Cookies from "cookies-js";
+import api from "../../utils/api"
 import CircularProgress from '@mui/material/CircularProgress';
 
 const AfterAssign = () => {
@@ -29,16 +27,16 @@ const AfterAssign = () => {
     dispatch(fetchAssignedCylinders(salesTeamId?.id))
   }, [dispatch])
 
-  const apiUrl = getApiUrl()
 
   const handlePrint = () => {
     // if (!printComplete) {
-    axios
-      .post(
-        `${apiUrl}/mark-print-complete/`,
-        { sales_team_id: salesTeamId?.id },
-        { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } },
-      )
+    // axios
+    //   .post(
+    //     `${apiUrl}/mark-print-complete/`,
+    //     { sales_team_id: salesTeamId?.id },
+    //     { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } },
+    //   )
+    api.post("/mark-print-complete/", {sales_team_id: salesTeamId?.id})
       .then(() => setPrintComplete(true))
       .catch((err) => console.error("Error marking print complete:", err))
     // } else {
@@ -83,11 +81,12 @@ const AfterAssign = () => {
   const handleSaveReciet = async () => {
   setSavingReciept(true); // Start loader
   try {
-    const response = await axios.post(
-    `${apiUrl}/mark-print-complete/`,
-    { sales_team_id: salesTeamId?.id },
-    { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
-    );
+    // const response = await axios.post(
+    // `${apiUrl}/mark-print-complete/`,
+    // { sales_team_id: salesTeamId?.id },
+    // { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
+    // );
+    const response = await api.post("mark-print-complete/", {sales_team_id: salesTeamId?.id})
     if (response.status === 200) {
     alert("Receipt saved successfully.");
     } else {

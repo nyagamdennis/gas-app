@@ -17,10 +17,8 @@ import Slide from '@mui/material/Slide';
 import { addNewProduct, fetchOtherProducts, selectAllOtherProducts } from '../features/store/otherProductsSlice';
 import FormattedAmount from '../components/FormattedAmount';
 import AddBoxIcon from '@mui/icons-material/AddBox';
-import axios from 'axios';
-import Cookies from "cookies-js";
+
 import "react-toastify/dist/ReactToastify.css";
-import getApiUrl from '../getApiUrl';
 import { toast, ToastContainer } from 'react-toastify';
 import planStatus from '../features/planStatus/planStatus';
 

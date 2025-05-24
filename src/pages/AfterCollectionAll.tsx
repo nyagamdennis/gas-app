@@ -12,10 +12,9 @@ import {
   fetchCollectedCylinders,
   selectAllCollections,
 } from "../features/collections/collectionsSlice"
-import getApiUrl from "../getApiUrl"
-import axios from "axios"
-import Cookies from "cookies-js"
+
 import CircularProgress from "@mui/material/CircularProgress"
+import api from "../../utils/api"
 
 const AfterCollectionAll = () => {
   const [printComplete, setPrintComplete] = useState(false)
@@ -34,8 +33,6 @@ const AfterCollectionAll = () => {
     dispatch(fetchCollectedCylinders(salesTeamId?.id))
   }, [dispatch])
 
-  const apiUrl = getApiUrl()
-  console.log("all collections ", cylinders)
 
   const navigate = useNavigate()
 
@@ -43,13 +40,14 @@ const AfterCollectionAll = () => {
     if (!printComplete) {
       setPrintComplete(true)
       try {
-        await axios.post(
-          `${apiUrl}/mark-print-return-complete/`,
-          { sales_team_id: salesTeamId?.id },
-          {
-            headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-          },
-        )
+        // await axios.post(
+        //   `${apiUrl}/mark-print-return-complete/`,
+        //   { sales_team_id: salesTeamId?.id },
+        //   {
+        //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+        //   },
+        // )
+        await api.post("/mark-print-return-complete/", {sales_team_is: salesTeamId?.id})
         setIsPrinting(false)
         setPrintComplete(true)
       } catch (error) {
@@ -122,13 +120,14 @@ const AfterCollectionAll = () => {
     if (!printComplete) {
       setIsSaving(true)
       try {
-        await axios.post(
-          `${apiUrl}/mark-print-return-complete/`,
-          { sales_team_id: salesTeamId?.id },
-          {
-            headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-          },
-        )
+        // await axios.post(
+        //   `${apiUrl}/mark-print-return-complete/`,
+        //   { sales_team_id: salesTeamId?.id },
+        //   {
+        //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+        //   },
+        // )
+        api.post("/mark-print-return-complete/", {sales_team_id: salesTeamId?.id})
         setIsSaving(false)
         setPrintComplete(true)
       } catch (error) {

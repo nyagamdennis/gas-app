@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
-import getApiUrl from '../getApiUrl';
 import { logout, selectIsAuthenticated } from '../features/auths/authSlice';
 import axios from 'axios';
 import Person2Icon from '@mui/icons-material/Person2';
@@ -15,7 +14,6 @@ const UnverifiedPage = () => {
     const [errMsg, setErrMsg] = useState("");
 
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
-    const apiUrl = getApiUrl();
 
    
     return (

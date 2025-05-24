@@ -7,12 +7,11 @@ import LocalPhoneIcon from "@mui/icons-material/LocalPhone"
 import VisibilityIcon from "@mui/icons-material/Visibility"
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 import Alert from "@mui/material/Alert"
-import axios from "axios"
-import getApiUrl from "../getApiUrl"
+import api from "../../utils/api"
+
 
 const RegisterPage = () => {
   const navigate = useNavigate()
-  const apiUrl = getApiUrl()
   const [searchParams] = useSearchParams()
   const refData = searchParams.get("ref")
   let businessInfo = null
@@ -23,7 +22,6 @@ const RegisterPage = () => {
     console.warn("Invalid referral data", err)
   }
 
-  console.log('business info ', businessInfo)
 
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -57,7 +55,8 @@ const RegisterPage = () => {
     }
 
     try {
-      await axios.post(`${apiUrl}/users/register/`, formData)
+      await api.post("/users/register/", formData)
+      // await axios.post(`${apiUrl}/users/register/`, formData)
 
       setSuccess(true)
       setSuccessMessage("Registration successful! Redirecting to login...")

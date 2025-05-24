@@ -15,11 +15,10 @@ import {
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
-import getApiUrl from "../getApiUrl"
-import axios from "axios"
+import api from "../../utils/api"
+
 
 const WholeSaleRecordPage = () => {
-  const apiUrl = getApiUrl()
   const [searchResults, setSearchResults] = useState([])
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
   const [searchingBy, setSearchingBy] = useState("") // "name" or "phone"

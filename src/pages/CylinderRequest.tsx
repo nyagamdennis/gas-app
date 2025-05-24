@@ -4,18 +4,16 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useNavigate } from 'react-router-dom';
 import { fetchSalesTeam, selectAllSalesTeam } from '../features/salesTeam/salesTeamSlice';
 import { fetchStore, selectAllStore } from '../features/store/storeSlice';
-import getApiUrl from '../getApiUrl';
-import Cookies from "cookies-js";
-import axios from 'axios';
+
 import { addRequest, approveRequest, clearRequested, fetchRequests, selectAllRequests } from '../features/RequestCylinders/requestedSlice';
 // import jwtDecode from 'jwt-decode';
 import cookies from "cookies-js"
 import jwt_decode from "jwt-decode"
 import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 import EmployeeNav from '../components/ui/EmployeeNav';
+import api from "../../utils/api"
 
 const CylinderRequest = () => {
-    const apiUrl = getApiUrl();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -51,11 +49,12 @@ const CylinderRequest = () => {
     
     useEffect(() => {
         if (selectedTeam) {
-            axios
-                .get(`${apiUrl}/the-assigned-cylinders/`, {
-                    headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-                    params: { sales_team: selectedTeam.id },
-                })
+            // axios
+            //     .get(`${apiUrl}/the-assigned-cylinders/`, {
+            //         headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+            //         params: { sales_team: selectedTeam.id },
+            //     })
+            api.get("/the-assigned-cylinders/", {params: {sales_team: selectedTeam.id}})
                 .then((response) => setAssignedCylinders(response.data))
                 .catch((error) => console.error("Error fetching assigned cylinders:", error));
         }

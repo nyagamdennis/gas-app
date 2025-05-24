@@ -7,9 +7,7 @@ import {
   selectAllSalesTeam,
 } from "../features/salesTeam/salesTeamSlice"
 import { fetchStore, selectAllStore } from "../features/store/storeSlice"
-import axios from "axios"
-import getApiUrl from "../getApiUrl"
-import Cookies from "cookies-js"
+
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import {
@@ -20,6 +18,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import AdminNav from "../components/ui/AdminNav"
 import AdminsFooter from "../components/AdminsFooter"
 import planStatus from "../features/planStatus/planStatus"
+import api from "../../utils/api"
 
 const CollectCylinders = () => {
   const dispatch = useAppDispatch()
@@ -31,7 +30,6 @@ const CollectCylinders = () => {
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [assignments, setAssignments] = useState([])
   const [assignedCylinders, setAssignedCylinders] = useState([])
-  console.log("assigned ", assignedCylinders)
   const [showStacked, setShowStacked] = useState<boolean>(false)
   const [loadingReturnAll, setLoadingReturnAll] = useState(false)
   const [loadingReturnSome, setLoadingReturnSome] = useState(false)
@@ -40,7 +38,6 @@ const CollectCylinders = () => {
   const [loadingLosses, setLoadingLosses] = useState({})
   const [loadingLossesFilled, setLoadingLossesFilled] = useState({})
   const [loadingLessPay, setLoadingLessPay] = useState({})
-  const apiUrl = getApiUrl()
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState({})
   const [showEmployeeLessPayDropdown, setShowEmployeeLessPayDropdown] =
     useState({})
@@ -83,11 +80,12 @@ const CollectCylinders = () => {
 
   useEffect(() => {
     if (selectedTeam) {
-      axios
-        .get(`${apiUrl}/the-assigned-cylinders/`, {
-          headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-          params: { sales_team: selectedTeam.id },
-        })
+      // axios
+      //   .get(`${apiUrl}/the-assigned-cylinders/`, {
+      //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+      //     params: { sales_team: selectedTeam.id },
+      //   })
+      api.get("/the-assigned-cylinders/", {params:{sales_team:selectedTeam.id}})
         .then((response) => setAssignedCylinders(response.data))
         .catch((error) =>
           console.error("Error fetching assigned cylinders:", error),
@@ -200,10 +198,11 @@ const CollectCylinders = () => {
       ],
     }
 
-    axios
-      .post(`${apiUrl}/report-cylinder-losses/`, payload, {
-        headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-      })
+    // axios
+    //   .post(`${apiUrl}/report-cylinder-losses/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/report-cylinder-losses/", payload)
       .then((response) => {
         // Update frontend dynamically
         setAssignedCylinders((prev) =>
@@ -249,10 +248,11 @@ const CollectCylinders = () => {
       ],
     }
 
-    axios
-      .post(`${apiUrl}/report-cylinder-losses/`, payload, {
-        headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-      })
+    // axios
+    //   .post(`${apiUrl}/report-cylinder-losses/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/report-cylinder-losses/", payload)
       .then((response) => {
         // Update frontend dynamically
         setAssignedCylinders((prev) =>
@@ -298,10 +298,11 @@ const CollectCylinders = () => {
       ],
     }
 
-    axios
-      .post(`${apiUrl}/report-less_pay/`, payload, {
-        headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-      })
+    // axios
+    //   .post(`${apiUrl}/report-less_pay/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/report-less_pay/", payload)
       .then((response) => {
         // Update frontend dynamically
         setAssignedCylinders((prev) =>
@@ -325,10 +326,11 @@ const CollectCylinders = () => {
     setLoadingReturnSome(true)
     const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
 
-    axios
-      .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
-        headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-      })
+    // axios
+    //   .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/return-assigned-cylinders/", payload)
       .then(() =>
         navigate(`/admins/printcollect/${selectedTeam?.id}`, {
           state: { salesTeamName: selectedTeam?.name },
@@ -342,10 +344,11 @@ const CollectCylinders = () => {
     setLoadingReturnAll(true)
     const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
 
-    axios
-      .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
-        headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-      })
+    // axios
+    //   .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/return-all-assigned-cylinders/", payload)
       .then(() =>
         navigate(`/admins/printallcollect/${selectedTeam?.id}`, {
           state: { salesTeamName: selectedTeam?.name },

@@ -7,9 +7,7 @@ import {
   selectUserRole,
   selectUserStatus,
 } from "./features/auths/authSlice"
-import getApiUrl from "./getApiUrl"
 import { selectEmployeeVerified } from "./features/employees/employeeStatusSlice"
-console.log(' selectEmployeeVerified', selectEmployeeVerified)
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -30,7 +28,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
   const userRole = useAppSelector(selectUserStatus)
   const dispatch = useAppDispatch()
-  const apiUrl = getApiUrl()
 
 
   if (!isAuthenticated) {

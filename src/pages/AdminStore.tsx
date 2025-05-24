@@ -49,10 +49,8 @@ import {
 } from "../features/store/otherProductsSlice"
 import FormattedAmount from "../components/FormattedAmount"
 import AddBoxIcon from "@mui/icons-material/AddBox"
-import axios from "axios"
-import Cookies from "cookies-js"
+
 import "react-toastify/dist/ReactToastify.css"
-import getApiUrl from "../getApiUrl"
 import { toast, ToastContainer } from "react-toastify"
 import AdminsFooter from "../components/AdminsFooter"
 import Input from "../components/Input"
@@ -63,6 +61,7 @@ import StoreCard from "../components/StoreCard"
 import planStatus from "../features/planStatus/planStatus"
 import { Link } from "react-router-dom"
 import AdminNav from "../components/ui/AdminNav"
+import api from "../../utils/api"
 
 const AdminStore = () => {
   const [refillingCylinders, setRefillingCylinders] = useState(false);
@@ -264,7 +263,6 @@ const AdminStore = () => {
     setExpandedRow(expandedRow === rowId ? null : rowId)
   }
 
-  const apiUrl = getApiUrl()
   const {
     isPro,
     isTrial,
@@ -668,12 +666,13 @@ const AdminStore = () => {
         total_amount: totalPaid,
       }
 
-      const response = await axios.post(`${apiUrl}/recordsales/`, formData, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      })
+      // const response = await axios.post(`${apiUrl}/recordsales/`, formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // })
+      const response  = api.post("/recordsales/", formData)
       if (response.status === 201) {
         console.log("Form submitted successfully!")
       } else {

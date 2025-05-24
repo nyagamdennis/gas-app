@@ -11,7 +11,6 @@ import {
   updateSalesTeam,
 } from "../features/salesTeam/salesTeamSlice"
 import AdminsFooter from "../components/AdminsFooter"
-import getApiUrl from "../getApiUrl"
 import Button from "@mui/material/Button"
 import Dialog from "@mui/material/Dialog"
 import DialogActions from "@mui/material/DialogActions"
@@ -26,7 +25,6 @@ import AdminNav from "../components/ui/AdminNav"
 import planStatus from "../features/planStatus/planStatus"
 
 const CreateTeamPage = () => {
-  const url = getApiUrl()
   const dispatch = useAppDispatch()
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null)

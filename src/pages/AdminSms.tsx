@@ -3,18 +3,16 @@ import React, { useEffect, useRef, useState } from "react"
 import SendIcon from "@mui/icons-material/Send"
 import CircularProgress from "@mui/material/CircularProgress"
 import Box from "@mui/material/Box"
-import Cookies from "cookies-js"
-import axios from "axios"
+
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
   fetchLocations,
   selectAllLocations,
 } from "../features/location/locationSlice"
 import AdminsFooter from "../components/AdminsFooter"
-import getApiUrl from "../getApiUrl"
+import api from "../../utils/api"
 
 const AdminSms = () => {
-  const apiUrl = getApiUrl()
   const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   const locations = useAppSelector(selectAllLocations)
@@ -41,12 +39,13 @@ const AdminSms = () => {
         message: messageTextareaRef.current?.value,
       }
 
-      const response = await axios.post(`${apiUrl}/sendbulksms/`, formData, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      })
+      // const response = await axios.post(`${apiUrl}/sendbulksms/`, formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // })
+      const response = await api.post("/sendbulksms/", formData)
 
       if (response.status === 201) {
         if (messageTextareaRef.current) messageTextareaRef.current.value = ""

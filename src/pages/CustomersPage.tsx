@@ -11,16 +11,14 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
 import { Alert } from "@mui/material"
 import { fetchCustomers, getCustomerError, getCustomersStatus, selectAllCustomers } from '../features/customers/customerSlice'
-import getApiUrl from '../getApiUrl'
 import { fetchLocations } from '../features/location/locationSlice'
 import { fetchProducts } from '../features/product/productSlice'
 import { fetchSales } from '../features/sales/salesSlice'
 import CustomerExcerpt from '../features/customers/CustomerExcerpt'
-import axios from 'axios'
 import ShortCuts from '../components/ShortCuts'
 import AddIcon from "@mui/icons-material/Add"
 import SaveAsIcon from '@mui/icons-material/SaveAs';
-import Cookies from "cookies-js"
+import api from "../../utils/api"
 
 const CustomersPage = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
@@ -39,7 +37,6 @@ const CustomersPage = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('')
   const [location, setLocation] = useState('')
-  const apiUrl = getApiUrl()
   // const handleSearchInputChange = (event:any) => {
   //   setSearchInput(event.target.value);
   // };
@@ -136,16 +133,17 @@ console.log('Customers ', customers)
         location: {name: location}
       }
       console.log('Save this data ', formData)
-      const response = await axios.post(
-        `${apiUrl}/addcustomer/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-        },
-      )
+      // const response = await axios.post(
+      //   `${apiUrl}/addcustomer/`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //   },
+      // )
+      const response = await api.post("/addcustomer/", formData)
 
       console.log('Made a request already!')
       if (response.status === 201) {
@@ -201,16 +199,17 @@ console.log('Customers ', customers)
         phone: phone,
         location: {name:location}
       }
-      const response = await axios.post(
-        `${apiUrl}/addcustomer/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-        },
-      )
+      // const response = await axios.post(
+      //   `${apiUrl}/addcustomer/`,
+      //   formData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
+      //       "Content-Type": "application/json",
+      //     },
+      //   },
+      // )
+      const response = await api.post("addcustomer/", formData)
 
       if (response.status === 201) {
           dispatch(fetchCustomers())
