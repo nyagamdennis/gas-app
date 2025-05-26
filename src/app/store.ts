@@ -36,9 +36,11 @@ import paymentsReducer from "../features/subscriptions/paymentsSlice"
 import employeeStatusReducer from "../features/employees/employeeStatusSlice"
 import analysisReducer from "../features/analysis/analysisSlice"
 import companyExpensesReducer from "../features/expenses/companyExpensesSlice"
+import aiAnalysisReducer from "../features/ai/aiAnalysisSlice"
 
 export const store = configureStore({
   reducer: {
+    analysisAi: aiAnalysisReducer,
     companyExpenses: companyExpensesReducer,
     analysis: analysisReducer,
     employeeStatus: employeeStatusReducer,

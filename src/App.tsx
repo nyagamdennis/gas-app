@@ -56,6 +56,7 @@ import { fetchBusiness } from "./features/business/businnesSlice"
 import { useAppDispatch } from "./app/hooks"
 import useVerificationPolling from "./features/employees/useVerificationPolling"
 import Expenses from "./pages/Expenses"
+import AiPredict from "./pages/AiPredict"
 
 
 function App() {
@@ -224,6 +225,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_owner">
                 <AfterCollection />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/prediction"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AiPredict />
               </ProtectedRoute>
             }
           />

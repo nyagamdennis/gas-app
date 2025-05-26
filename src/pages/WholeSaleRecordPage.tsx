@@ -17,7 +17,6 @@ import {
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
 import api from "../../utils/api"
 
-
 const WholeSaleRecordPage = () => {
   const [searchResults, setSearchResults] = useState([])
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
@@ -352,8 +351,12 @@ const WholeSaleRecordPage = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchingBy === "name" && customerName.length > 0) {
-        axios
-          .post(`${apiUrl}/search-customer/`, {
+        // axios
+        //   .post(`${apiUrl}/search-customer/`, {
+        //     type: "name",
+        //     query: customerName,
+        //   })
+        api.post("/search-customer/", {
             type: "name",
             query: customerName,
           })
@@ -374,8 +377,13 @@ const WholeSaleRecordPage = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchingBy === "phone" && customerPhone.length > 0) {
-        axios
-          .post(`${apiUrl}/search-customer/`, {
+        // axios
+        //   .post(`${apiUrl}/search-customer/`, {
+        //     type: "phone",
+        //     query: customerPhone,
+        //   })
+        api
+          .post("/search-customer/", {
             type: "phone",
             query: customerPhone,
           })

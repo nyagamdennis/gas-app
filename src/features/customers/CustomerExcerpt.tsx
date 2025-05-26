@@ -17,7 +17,7 @@ import Alert from "@mui/material/Alert"
 import Stack from "@mui/material/Stack"
 
 const CustomerExcerpt = ({ customer }) => {
-  const apiUrl = getApiUrl()
+  // const apiUrl = getApiUrl()
   const [smsState, setSmsState] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [message, setMessage] = useState("")

@@ -17,11 +17,13 @@ const RegisterPage = () => {
   let businessInfo = null
 
   try {
-    businessInfo = JSON.parse(atob(decodeURIComponent(refData)))
+    if (refData) {
+      const decoded = atob(decodeURIComponent(refData))
+      businessInfo = JSON.parse(decoded)
+    }
   } catch (err) {
     console.warn("Invalid referral data", err)
   }
-
 
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")

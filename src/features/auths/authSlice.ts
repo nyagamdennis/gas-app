@@ -197,16 +197,31 @@ export const refreshAccessToken =
     }
   }
 
-export const selectDecodedUserFromToken = (state: { auth: AuthState }) => {
-  const token = state.auth.accessToken
-  if (!token) return null
+// export const selectDecodedUserFromToken = (state: { auth: AuthState }) => {
+//   const token = state.auth.accessToken
+//   if (!token) return null
 
-  try {
-    return jwt_decode(token) as User
-  } catch (error) {
-    return null
+//   try {
+//     return jwt_decode(token) as User
+//   } catch (error) {
+//     return null
+//   }
+// }
+const selectAccessToken = (state: { auth: AuthState }) => state.auth.accessToken
+
+
+export const selectDecodedUserFromToken = createSelector(
+  [selectAccessToken],
+  (token) => {
+    if (!token) return null
+
+    try {
+      return jwt_decode(token) as User
+    } catch {
+      return null
+    }
   }
-}
+)
 
 // Memoized selector for user data
 export const selectUserData = createSelector(

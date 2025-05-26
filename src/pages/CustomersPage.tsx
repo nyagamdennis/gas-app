@@ -1,23 +1,28 @@
 /* eslint-disable prettier/prettier */
-import React, { useEffect, useState } from 'react'
-import LeftNav from '../components/ui/LeftNav'
-import NavBar from '../components/ui/NavBar'
-import Customers from '../components/Customers'
-import { selectIsAuthenticated } from '../features/auths/authSlice'
-import { useAppDispatch, useAppSelector } from '../app/hooks'
-import Login from '../components/Login'
-import { useMediaQuery } from 'react-responsive'
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box';
+import React, { useEffect, useState } from "react"
+import LeftNav from "../components/ui/LeftNav"
+import NavBar from "../components/ui/NavBar"
+import Customers from "../components/Customers"
+import { selectIsAuthenticated } from "../features/auths/authSlice"
+import { useAppDispatch, useAppSelector } from "../app/hooks"
+import Login from "../components/Login"
+import { useMediaQuery } from "react-responsive"
+import CircularProgress from "@mui/material/CircularProgress"
+import Box from "@mui/material/Box"
 import { Alert } from "@mui/material"
-import { fetchCustomers, getCustomerError, getCustomersStatus, selectAllCustomers } from '../features/customers/customerSlice'
-import { fetchLocations } from '../features/location/locationSlice'
-import { fetchProducts } from '../features/product/productSlice'
-import { fetchSales } from '../features/sales/salesSlice'
-import CustomerExcerpt from '../features/customers/CustomerExcerpt'
-import ShortCuts from '../components/ShortCuts'
+import {
+  fetchCustomers,
+  getCustomerError,
+  getCustomersStatus,
+  selectAllCustomers,
+} from "../features/customers/customerSlice"
+import { fetchLocations } from "../features/location/locationSlice"
+import { fetchProducts } from "../features/product/productSlice"
+import { fetchSales } from "../features/sales/salesSlice"
+import CustomerExcerpt from "../features/customers/CustomerExcerpt"
+import ShortCuts from "../components/ShortCuts"
 import AddIcon from "@mui/icons-material/Add"
-import SaveAsIcon from '@mui/icons-material/SaveAs';
+import SaveAsIcon from "@mui/icons-material/SaveAs"
 import api from "../../utils/api"
 
 const CustomersPage = () => {
@@ -34,9 +39,9 @@ const CustomersPage = () => {
   const [showAlert, setShowAlert] = useState(false)
   const [showError, setShowError] = useState(false)
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('')
-  const [location, setLocation] = useState('')
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [location, setLocation] = useState("")
   // const handleSearchInputChange = (event:any) => {
   //   setSearchInput(event.target.value);
   // };
@@ -53,9 +58,10 @@ const CustomersPage = () => {
 
   const filteredCustomers = filterCustomers(searchInput)
 
-  const handleSHowAddRetailCustomer = () => setAddRetailCustomer(!addRetailCustomer)
-  const handleSHowAddWholeSaleCustomer = () => setAddWholeSaleCustomer(!addWholeSaleCustomer)
-
+  const handleSHowAddRetailCustomer = () =>
+    setAddRetailCustomer(!addRetailCustomer)
+  const handleSHowAddWholeSaleCustomer = () =>
+    setAddWholeSaleCustomer(!addWholeSaleCustomer)
 
   const handleSearchInputChange = (event: any) => {
     const searchText = event.target.value
@@ -71,13 +77,11 @@ const CustomersPage = () => {
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    dispatch(fetchCustomers());
-    dispatch(fetchLocations());
-    dispatch(fetchProducts());
+    dispatch(fetchCustomers())
+    dispatch(fetchLocations())
+    dispatch(fetchProducts())
     dispatch(fetchSales())
   }, [dispatch])
-
-console.log('Customers ', customers)
 
   let retail_content
   let wholesale_content
@@ -111,16 +115,8 @@ console.log('Customers ', customers)
     ))
   }
 
-  // const filterCustomers = (searchText) => {
-  //   return customers.filter((customer) => {
-  //     const nameMatch = customer.name.toLowerCase().includes(searchText.toLowerCase());
-  //     const phoneMatch = customer.phone.toString().includes(searchText);
-  //     return nameMatch || phoneMatch;
-  //   });
-  // };
-
   const handleRetailSubmit = async (e: any) => {
-    console.log('Am called to add retail customer!')
+    console.log("Am called to add retail customer!")
     e.preventDefault()
 
     setIsSubmitting(true)
@@ -130,9 +126,9 @@ console.log('Customers ', customers)
         sales: "RETAIL",
         name: name,
         phone: phone,
-        location: {name: location}
+        location: { name: location },
       }
-      console.log('Save this data ', formData)
+      console.log("Save this data ", formData)
       // const response = await axios.post(
       //   `${apiUrl}/addcustomer/`,
       //   formData,
@@ -145,45 +141,41 @@ console.log('Customers ', customers)
       // )
       const response = await api.post("/addcustomer/", formData)
 
-      console.log('Made a request already!')
+      console.log("Made a request already!")
       if (response.status === 201) {
-
-        dispatch(fetchCustomers());
-          setShowAlert(true);
-          setTimeout(() => {
-            setShowAlert(false);
-          }, 5000);
-       
+        dispatch(fetchCustomers())
+        setShowAlert(true)
+        setTimeout(() => {
+          setShowAlert(false)
+        }, 5000)
       } else {
-        console.log('Error here!')
+        console.log("Error here!")
         if (response.status === 400) {
-          console.error("Bad Request: The submitted data is invalid");
+          console.error("Bad Request: The submitted data is invalid")
         } else if (response.status === 401) {
-          console.error("Unauthorized: User is not authenticated");
+          console.error("Unauthorized: User is not authenticated")
         } else {
-          console.error("Form submission failed with status:", response.status);
+          console.error("Form submission failed with status:", response.status)
         }
       }
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.response.status === 401) {
-        console.error("Error occurred while submitting the form:", error);
-        setShowError(true);
+        console.error("Error occurred while submitting the form:", error)
+        setShowError(true)
         setTimeout(() => {
-          setShowError(false);
-        }, 5000);
+          setShowError(false)
+        }, 5000)
       } else {
-        console.error("Error occurred while submitting the form:", error);
+        console.error("Error occurred while submitting the form:", error)
       }
-
     } finally {
-      setName("");
-        setPhone("");
-        setLocation("");
-      setIsSubmitting(false);
+      setName("")
+      setPhone("")
+      setLocation("")
+      setIsSubmitting(false)
       setTimeout(() => {
-        setAddRetailCustomer(false);
-      }, 6000);
-      
+        setAddRetailCustomer(false)
+      }, 6000)
     }
   }
   const handleWholeSaleSubmit = async (e: any) => {
@@ -197,7 +189,7 @@ console.log('Customers ', customers)
         sales: "WHOLESALE",
         name: name,
         phone: phone,
-        location: {name:location}
+        location: { name: location },
       }
       // const response = await axios.post(
       //   `${apiUrl}/addcustomer/`,
@@ -212,138 +204,146 @@ console.log('Customers ', customers)
       const response = await api.post("addcustomer/", formData)
 
       if (response.status === 201) {
-          dispatch(fetchCustomers())
-          setShowAlert(true);
-          setTimeout(() => {
-            setShowAlert(false);
-          }, 5000);
-        setName("");
-        setPhone("");
-        setLocation("");
-       
+        dispatch(fetchCustomers())
+        setShowAlert(true)
+        setTimeout(() => {
+          setShowAlert(false)
+        }, 5000)
+        setName("")
+        setPhone("")
+        setLocation("")
       } else {
         // Handle specific error status codes
         if (response.status === 400) {
-          console.error("Bad Request: The submitted data is invalid");
+          console.error("Bad Request: The submitted data is invalid")
         } else if (response.status === 401) {
-          console.error("Unauthorized: User is not authenticated");
+          console.error("Unauthorized: User is not authenticated")
         } else {
-          console.error("Form submission failed with status:", response.status);
+          console.error("Form submission failed with status:", response.status)
         }
       }
-    } catch (error:any) {
+    } catch (error: any) {
       if (error.response === 401) {
-        console.error("Error occurred while submitting the form:", error);
-        setShowError(true);
+        console.error("Error occurred while submitting the form:", error)
+        setShowError(true)
         setTimeout(() => {
-          setShowError(false);
-        }, 5000);
+          setShowError(false)
+        }, 5000)
       } else {
-        console.error("Error occurred while submitting the form:", error);
+        console.error("Error occurred while submitting the form:", error)
       }
     } finally {
-      
-      setIsSubmitting(false);
+      setIsSubmitting(false)
       setTimeout(() => {
-        setAddWholeSaleCustomer(false);
-      }, 6000);
-      
+        setAddWholeSaleCustomer(false)
+      }, 6000)
     }
   }
 
   return (
     <div>
-        {isAuthenticated ? (
-          <div className='flex gap-1 bg-slate-900 text-white'>
-          <div className=' w-1/6'>
-              <LeftNav  />
+      {isAuthenticated ? (
+        <div className="flex gap-1 bg-slate-900 text-white">
+          <div className=" w-1/6">
+            <LeftNav />
           </div>
-          <div className=' w-full'>
-              <NavBar  />
-              <div>
-      <ShortCuts />
-      <div className="mt-5 mx-3 flex flex-col space-y-3">
-        <h1 className=" font-extrabold text-2xl">Customers</h1>
-        <div className=" grid grid-cols-2 gap-4 h-96">
-          <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-            <h4 className=" text-xl font-bold underline mb-3">
-              Retail Customers
-            </h4>
-            <div className=" flex justify-between">
-              <form onSubmit={handleSearchInputChange}>
-                <div className=" flex">
-                  <input
-                    type="text"
-                    placeholder="search customer.."
-                    className="ms-1 mb-2 outline-none text-black px-1"
-                    required
-                  />
-                  <button className=" bg-slate-400 px-2 h-6 ">search</button>
-                </div>
-              </form>
-              <div
-                className="flex items-center cursor-pointer"
-                onClick={handleSHowAddRetailCustomer}
-              >
-                <p>Add Retail Customer</p>
-                <AddIcon className=" " />
-              </div>
-            </div>
-            {addRetailCustomer && (
-              <div>
-                <form className=" flex gap-2 px-1 mb-2 flex-wrap" onSubmit={ handleRetailSubmit}>
-                  <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                    placeholder="Customer Name"
-                    type="text"
-                    className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
-                    required
-                  />
-                  <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone Number"
-                    type="number"
-                    className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
-                    required
-                  />
-                  <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Location"
-                    type="text"
-                    className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
-                    required
-                  />
-                 
-                  <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
-                {isSubmitting ?
-                ( <Box sx={{ display: 'flex' }}>
-                <CircularProgress className=" !text-white" />
-              </Box>): (<>Add <SaveAsIcon /></>)
-                }
-                
-              </button>
-                </form>
-                { showAlert && (
-                  <Alert severity="success" className=" mb-2">Successfully Added the Customer!</Alert>
-                )}
-                { showError && (
-                  <Alert severity="error" className=" mb-2">There was an error, try again!</Alert>
-                )}
-                
-              </div>
-            )}
+          <div className=" w-full">
+            <NavBar />
+            <div>
+              <ShortCuts />
+              <div className="mt-5 mx-3 flex flex-col space-y-3">
+                <h1 className=" font-extrabold text-2xl">Customers</h1>
+                <div className=" grid grid-cols-2 gap-4 h-96">
+                  <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
+                    <h4 className=" text-xl font-bold underline mb-3">
+                      Retail Customers
+                    </h4>
+                    <div className=" flex justify-between">
+                      <form onSubmit={handleSearchInputChange}>
+                        <div className=" flex">
+                          <input
+                            type="text"
+                            placeholder="search customer.."
+                            className="ms-1 mb-2 outline-none text-black px-1"
+                            required
+                          />
+                          <button className=" bg-slate-400 px-2 h-6 ">
+                            search
+                          </button>
+                        </div>
+                      </form>
+                      <div
+                        className="flex items-center cursor-pointer"
+                        onClick={handleSHowAddRetailCustomer}
+                      >
+                        <p>Add Retail Customer</p>
+                        <AddIcon className=" " />
+                      </div>
+                    </div>
+                    {addRetailCustomer && (
+                      <div>
+                        <form
+                          className=" flex gap-2 px-1 mb-2 flex-wrap"
+                          onSubmit={handleRetailSubmit}
+                        >
+                          <input
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Customer Name"
+                            type="text"
+                            className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
+                            required
+                          />
+                          <input
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Phone Number"
+                            type="number"
+                            className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
+                            required
+                          />
+                          <input
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Location"
+                            type="text"
+                            className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
+                            required
+                          />
 
-            {retail_content}
-          </div>
-          <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-            <h4 className=" text-xl font-bold underline mb-3">
-              WholeSale Customers
-            </h4>
+                          <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
+                            {isSubmitting ? (
+                              <Box sx={{ display: "flex" }}>
+                                <CircularProgress className=" !text-white" />
+                              </Box>
+                            ) : (
+                              <>
+                                Add <SaveAsIcon />
+                              </>
+                            )}
+                          </button>
+                        </form>
+                        {showAlert && (
+                          <Alert severity="success" className=" mb-2">
+                            Successfully Added the Customer!
+                          </Alert>
+                        )}
+                        {showError && (
+                          <Alert severity="error" className=" mb-2">
+                            There was an error, try again!
+                          </Alert>
+                        )}
+                      </div>
+                    )}
 
-            {/* <div className=" flex">
+                    {retail_content}
+                  </div>
+                  <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
+                    <h4 className=" text-xl font-bold underline mb-3">
+                      WholeSale Customers
+                    </h4>
+
+                    {/* <div className=" flex">
               <input
                 type="text"
                 placeholder="search customer.."
@@ -351,86 +351,95 @@ console.log('Customers ', customers)
               />
               <button className=" bg-slate-400 px-2 h-6 ">search</button>
             </div> */}
-            <div className=" flex justify-between">
-              <form onSubmit={handleSearchInputChange}>
-                <div className=" flex">
-                  <input
-                    type="text"
-                    placeholder="search customer.."
-                    className="ms-1 mb-2 outline-none text-black px-1"
-                    required
-                  />
-                  <button className=" bg-slate-400 px-2 h-6 ">search</button>
+                    <div className=" flex justify-between">
+                      <form onSubmit={handleSearchInputChange}>
+                        <div className=" flex">
+                          <input
+                            type="text"
+                            placeholder="search customer.."
+                            className="ms-1 mb-2 outline-none text-black px-1"
+                            required
+                          />
+                          <button className=" bg-slate-400 px-2 h-6 ">
+                            search
+                          </button>
+                        </div>
+                      </form>
+                      <div
+                        className="flex items-center cursor-pointer"
+                        onClick={handleSHowAddWholeSaleCustomer}
+                      >
+                        <p>Add a Wholesale Customer</p>
+                        <AddIcon className=" " />
+                      </div>
+                    </div>
+                    {addWholeSaleCustomer && (
+                      <div>
+                        <form
+                          className=" flex gap-2 px-1 mb-2 flex-wrap"
+                          onSubmit={handleWholeSaleSubmit}
+                        >
+                          <input
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Customer Name"
+                            type="text"
+                            className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
+                            required
+                          />
+                          <input
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="Phone Number"
+                            type="number"
+                            className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
+                            required
+                          />
+                          <input
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="Location"
+                            type="text"
+                            className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
+                            required
+                          />
+                          <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
+                            {isSubmitting ? (
+                              <Box sx={{ display: "flex" }}>
+                                <CircularProgress className=" !text-white" />
+                              </Box>
+                            ) : (
+                              <>
+                                Add <SaveAsIcon />
+                              </>
+                            )}
+                          </button>
+                        </form>
+                        {showAlert && (
+                          <Alert severity="success" className=" mb-2">
+                            Successfully Added the Customer!
+                          </Alert>
+                        )}
+                        {showError && (
+                          <Alert severity="error" className=" mb-2">
+                            There was an error, try again!
+                          </Alert>
+                        )}
+                      </div>
+                    )}
+                    {wholesale_content}
+                  </div>
                 </div>
-              </form>
-              <div
-                className="flex items-center cursor-pointer"
-                onClick={handleSHowAddWholeSaleCustomer}
-              >
-                <p>Add a Wholesale Customer</p>
-                <AddIcon className=" " />
               </div>
             </div>
-            {addWholeSaleCustomer && (
-              <div>
-                <form className=" flex gap-2 px-1 mb-2 flex-wrap" onSubmit={ handleWholeSaleSubmit}>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                    placeholder="Customer Name"
-                    type="text"
-                    className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
-                    required
-                  />
-                  <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone Number"
-                    type="number"
-                    className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
-                    required
-                  />
-                  <input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Location"
-                    type="text"
-                    className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
-                    required
-                  />
-                  <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
-                {isSubmitting ?
-                ( <Box sx={{ display: 'flex' }}>
-                <CircularProgress className=" !text-white" />
-              </Box>): (<>Add <SaveAsIcon /></>)
-                }
-                
-              </button>
-                </form>
-                { showAlert && (
-                  <Alert severity="success" className=" mb-2">Successfully Added the Customer!</Alert>
-                )}
-                { showError && (
-                  <Alert severity="error" className=" mb-2">There was an error, try again!</Alert>
-                )}
-              </div>
-            )}
-            {wholesale_content}
           </div>
         </div>
-      </div>
+      ) : (
+        <div>
+          <Login />
+        </div>
+      )}
     </div>
-          </div>
-
-      </div>
-        ) : (
-          <div >
-            <Login />
-          </div>
-        )}
-      </div>
-
-    
   )
 }
 

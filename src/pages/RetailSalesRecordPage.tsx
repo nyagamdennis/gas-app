@@ -15,11 +15,13 @@ import {
   fetchAssignedOtherProducts,
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
+import api from "../../utils/api"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
 
 
 const RetailSalesRecordPage = () => {
   const [searchResults, setSearchResults] = useState([])
+  console.log('results ', searchResults)
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
   const [searchingBy, setSearchingBy] = useState("")
   const navigate = useNavigate()
@@ -68,7 +70,6 @@ const RetailSalesRecordPage = () => {
   const [mpesaPayments, setMpesaPayments] = useState([{ code: "", amount: "" }])
   const [mpesaCodes, setMpesaCodes] = useState([{ code: "", amount: 0 }])
 
-  console.log("cash is ", cashAmount)
   // const handleNumDepositsChange = (e) => {
   //   const numDeposits = parseInt(e.target.value, 10)
   //   setNumMpesaDeposits(numDeposits)
@@ -402,11 +403,15 @@ const RetailSalesRecordPage = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchingBy === "name" && customerName.length > 0) {
-        axios
-          .post(`${apiUrl}/search-customer/`, {
-            type: "name",
-            query: customerName,
-          })
+        // axios
+        //   .post(`${apiUrl}/search-customer/`, {
+        //     type: "name",
+        //     query: customerName,
+        //   })
+        api.post("/search-customer/", {
+          type: "name",
+          query: customerName
+        })
           .then((response) => {
             setSearchResults(response.data)
           })
@@ -424,11 +429,15 @@ const RetailSalesRecordPage = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchingBy === "phone" && customerPhone.length > 0) {
-        axios
-          .post(`${apiUrl}/search-customer/`, {
-            type: "phone",
-            query: customerPhone,
-          })
+        // axios
+        //   .post(`${apiUrl}/search-customer/`, {
+        //     type: "phone",
+        //     query: customerPhone,
+        //   })
+        api.post("/search-customer/", {
+          type: "phone",
+          query: customerPhone
+        })
           .then((response) => {
             setSearchPhoneResults(response.data)
           })
@@ -493,6 +502,7 @@ const RetailSalesRecordPage = () => {
               {searchResults.length > 0 && (
                 <ul className="absolute bg-white border w-full mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
                   {searchResults.map((customer) => (
+                    
                     <li
                       key={customer.id}
                       onClick={() => {
