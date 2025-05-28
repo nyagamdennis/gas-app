@@ -7,6 +7,7 @@ import {
   addSettings,
   fetchSettings,
   selectAllSettings,
+  updateSettings,
 } from "../features/settings/settingsSlice"
 import { Link } from "react-router-dom"
 
@@ -20,7 +21,7 @@ const Settings = () => {
   const my_settings = useAppSelector(selectAllSettings)
   const [editing, setEditing] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
-
+console.log("my_settings", my_settings)
   useEffect(() => {
     dispatch(fetchSettings())
   }, [dispatch])
@@ -35,6 +36,7 @@ const Settings = () => {
 
   const handleSubmitSettings = async (e: any) => {
     e.preventDefault()
+    // console.log('det ', logoFile)
     try {
       setAddingSettings(true)
       const dat = {
@@ -61,8 +63,8 @@ const Settings = () => {
   }
 
   const handleOpenUpdate = () => {
-    setBusinessName(my_settings[0].name)
-    setLogoPreview(my_settings[0].business_logo)
+    setBusinessName(my_settings.name)
+    setLogoPreview(my_settings.business_logo)
     setLogoFile(null)
     // Switch to edit mode
     setEditing(true)
@@ -76,14 +78,15 @@ const Settings = () => {
     setEditing(false)
   }
 
-  const handleUpdateBusiness = async (id: string) => {
+  const handleUpdateBusiness = async (e,id: string) => {
+    e.preventDefault()
     try {
       setAddingSettings(true)
       const dat = {
         name: businessName,
         business_logo: logoFile,
       }
-      await dispatch(updateSettings({ id, dat }))
+      await dispatch(updateSettings({ dat }))
     } catch (error) {
       alert(`Failed to update settings: ${error}`)
     } finally {
@@ -101,17 +104,17 @@ const Settings = () => {
       <main className="flex-1 max-w-4xl mx-auto px-4 py-10">
         <h2 className="text-3xl font-bold text-gray-800 mb-8">Business Settings</h2>
   
-        {my_settings.length > 0 ? (
+        {my_settings && my_settings?.name ? (
           <div className="bg-white p-6 rounded-2xl shadow-md border">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900">{my_settings[0].name}</h3>
+                <h3 className="text-2xl font-semibold text-gray-900">{my_settings?.name}</h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Plan: <strong>{my_settings[0].subscription_plan?.name || "No Plan"}</strong>
+                  Plan: <strong>{my_settings.subscription_plan?.name || "No Plan"}</strong>
                 </p>
   
-                {my_settings[0].subscription_plan ? (
-                  <Link className="mt-2 text-sm text-blue-600 hover:underline" to={`/subscribe?current_plan=${my_settings[0].subscription_plan.id}`}>Change Plan</Link>
+                {my_settings.subscription_plan ? (
+                  <Link className="mt-2 text-sm text-blue-600 hover:underline" to={`/subscribe?current_plan=${my_settings.subscription_plan.id}`}>Change Plan</Link>
                  
                 ) : (
                     <Link to='/subscribe?eligibleForFreeTrial=true' className="mt-2 text-sm text-green-600 hover:underline">Subscribe to a Plan</Link>
@@ -120,7 +123,7 @@ const Settings = () => {
               </div>
   
               <img
-                src={my_settings[0].business_logo}
+                src={my_settings.business_logo}
                 alt="Business Logo"
                 className="h-20 w-20 object-contain border rounded-lg"
               />
@@ -153,7 +156,7 @@ const Settings = () => {
   
             {editing && (
               <form
-                onSubmit={handleSubmitSettings}
+                onSubmit={handleUpdateBusiness}
                 className="mt-8 border-t pt-6 space-y-6"
               >
                 <h4 className="text-lg font-semibold text-gray-800 mb-2">Update Info</h4>

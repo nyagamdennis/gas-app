@@ -37,8 +37,10 @@ const initialState: BusinessState = {
 export const fetchBusiness = createAsyncThunk<Business[], void, {}>(
     "business/fetchBusiness",
     async () => {
+      console.log("Fetching business data...");
       // const response = await axios.get<Business[]>(`${apiUrl}/business/operation/`,
       const response = await api.get('/business/operation/');
+      console.log("Business data fetched:", response.data);
       return response.data;
     }
   );

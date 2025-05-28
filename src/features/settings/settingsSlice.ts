@@ -57,7 +57,12 @@ export const addSettings = createAsyncThunk(
       //     }
       // )
       // console.log("response data", response.data)
-      const response = await api.post("/business/operation/", dat);
+      // console.log('sss ', dat)
+      const formData = new FormData();
+        Object.keys(dat).forEach((key) => {
+          formData.append(key, dat[key]);
+        });
+      const response = await api.post("/business/operation/", formData);
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -73,7 +78,7 @@ export const addSettings = createAsyncThunk(
 
 export const updateSettings = createAsyncThunk(
     "settings/updateAnotherCylinder",
-    async ({ dat, id }: { dat: any; id: string}, { rejectWithValue }) => {
+    async ({ id, dat }: { dat: any; id: string}, { rejectWithValue }) => {
       try {
         // const response = await axios.post(
         //   `${apiUrl}/business/operation/${id}/`,
@@ -86,7 +91,13 @@ export const updateSettings = createAsyncThunk(
         //     }
         // )
         // console.log("response data", response.data)
-        const response = await api.put(`/business/operation/${id}/`, dat);
+        console.log('data ', dat)
+        const formData = new FormData();
+        Object.keys(dat).forEach((key) => {
+          formData.append(key, dat[key]);
+        });
+        // console.log('formData ', id)
+        const response = await api.patch(`/business/operation/`, formData);
         return response.data
       } catch (err: any) {
         if (err.response && err.response.data) {
@@ -135,12 +146,13 @@ const settingsSlice = createSlice({
       })
       .addCase(updateSettings.fulfilled, (state, action) => {
         state.status = "succeeded"
-        const updatedSettingIndex = state.settings.findIndex(
-          (setting) => setting.id === action.payload.id
-        )
-        if (updatedSettingIndex !== -1) {
-          state.settings[updatedSettingIndex] = action.payload
-        }
+        state.settings = [action.payload];
+        // const updatedSettingIndex = state.settings.findIndex(
+        //   (setting) => setting.id === action.payload.id
+        // )
+        // if (updatedSettingIndex !== -1) {
+        //   state.settings[updatedSettingIndex] = action.payload
+        // }
       })
       .addCase(updateSettings.rejected, (state, action) => {
         state.status = "failed"

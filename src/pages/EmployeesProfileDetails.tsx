@@ -176,7 +176,7 @@ const EmployeesProfileDetails = () => {
     try {
       await dispatch(
         transferEmployee({
-          employeeId: selectedEmployee.id,
+          employeeId: selectedEmployee?.id,
           salesTeamId: newSalesTeam,
         }),
       ).unwrap()
@@ -594,12 +594,12 @@ const EmployeesProfileDetails = () => {
         {/* Profile Image */}
         <div className="flex flex-col items-center w-full md:w-1/3">
           <img
-            src={employee.profile_image || defaultPic}
-            alt={`${employee.first_name} ${employee.last_name}`}
+            src={employee?.profile_image || defaultPic}
+            alt={`${employee?.first_name} ${employee?.last_name}`}
             className="w-32 h-32 rounded-full border border-gray-300 object-cover"
           />
           <h2 className="text-xl font-semibold mt-3">
-            {employee.first_name} {employee.last_name}
+            {employee?.first_name} {employee?.last_name}
           </h2>
           <p className="text-gray-500 text-sm">{employee?.user?.email}</p>
         </div>
@@ -614,16 +614,16 @@ const EmployeesProfileDetails = () => {
               </h3>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>
-                  <strong>ID Number:</strong> {employee.id_number}
+                  <strong>ID Number:</strong> {employee?.id_number}
                 </li>
                 <li>
-                  <strong>Gender:</strong> {employee.gender}
+                  <strong>Gender:</strong> {employee?.gender}
                 </li>
                 <li>
-                  <strong>Phone:</strong> {employee.phone}
+                  <strong>Phone:</strong> {employee?.phone}
                 </li>
                 <li>
-                  <strong>Alt. Phone:</strong> {employee.alternative_phone}
+                  <strong>Alt. Phone:</strong> {employee?.alternative_phone}
                 </li>
               </ul>
             </section>
@@ -635,12 +635,12 @@ const EmployeesProfileDetails = () => {
               </h3>
               <div className="flex items-center gap-3">
                 <img
-                  src={employee.sales_team?.profile_image || defaultPic}
-                  alt={employee.sales_team?.name}
+                  src={employee?.sales_team?.profile_image || defaultPic}
+                  alt={employee?.sales_team?.name}
                   className="w-12 h-12 rounded-full border border-gray-300"
                 />
                 <p className="text-sm">
-                  {employee.sales_team?.name || "Not Assigned"}
+                  {employee?.sales_team?.name || "Not Assigned"}
                 </p>
               </div>
               <div className="mt-4">
@@ -665,17 +665,17 @@ const EmployeesProfileDetails = () => {
           {/* Status & Actions */}
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <button
-              onClick={() => handleStatusChange(employee.id, "verified")}
+              onClick={() => handleStatusChange(employee?.id, "verified")}
               className={`px-3 py-1 rounded-md text-white text-sm font-medium transition ${
-                employee.verified ? "bg-green-600" : "bg-gray-400"
+                employee?.verified ? "bg-green-600" : "bg-gray-400"
               }`}
             >
-              {employee.verified ? "Verified ✅" : "Not Verified ❌"}
+              {employee?.verified ? "Verified ✅" : "Not Verified ❌"}
             </button>
 
             <div
               className={`px-3 py-1 cursor-pointer rounded-md text-white text-sm font-medium text-center ${
-                employee.defaulted ? "bg-red-600" : "bg-gray-400"
+                employee?.defaulted ? "bg-red-600" : "bg-gray-400"
               }`}
             >
               Terminate
@@ -690,10 +690,10 @@ const EmployeesProfileDetails = () => {
 
             <div
               className={`px-3 py-1 rounded-md text-white text-sm font-medium text-center ${
-                employee.fired ? "bg-black" : "bg-gray-400"
+                employee?.fired ? "bg-black" : "bg-gray-400"
               }`}
             >
-              {employee.fired ? "Fired 🔥" : "Employed"}
+              {employee?.fired ? "Fired 🔥" : "Employed"}
             </div>
 
             <button
@@ -731,7 +731,7 @@ const EmployeesProfileDetails = () => {
               Front ID
             </h3>
             <img
-              src={employee.front_id || defaultPic}
+              src={employee?.front_id || defaultPic}
               alt="Front ID"
               className="w-full h-48 object-cover border border-gray-300 rounded-lg"
             />
@@ -741,7 +741,7 @@ const EmployeesProfileDetails = () => {
               Back ID
             </h3>
             <img
-              src={employee.back_id || defaultPic}
+              src={employee?.back_id || defaultPic}
               alt="Back ID"
               className="w-full h-48 object-cover border border-gray-300 rounded-lg"
             />
@@ -771,7 +771,7 @@ const EmployeesProfileDetails = () => {
           <h4 className="text-base font-semibold text-blue-700">
             Salary:{" "}
             <span className="font-normal text-gray-800">
-              <FormattedAmount amount={employee.contract_salary} />
+              <FormattedAmount amount={employee?.contract_salary} />
             </span>
           </h4>
 
@@ -825,7 +825,7 @@ const EmployeesProfileDetails = () => {
               <span>
                 <FormattedAmount
                   amount={
-                    employee.contract_salary -
+                    employee?.contract_salary -
                     totalExpenses -
                     totalCost -
                     totalMaxWholesaleRefillLessPayPrice -

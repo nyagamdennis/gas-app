@@ -14,7 +14,6 @@ const NavBar = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
 
   const user = useAppSelector((state) => state.auth.user)
-
   const dispatch = useDispatch();
 
   const handleLogout = () => {

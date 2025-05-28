@@ -8,6 +8,8 @@ import {
 import { fetchMyProfile, selectMyProfile } from "../features/employees/myProfileSlice";
 import { Link } from "react-router-dom";
 import defaultProfile from "../components/media/default.png";
+import EmployeeNav from "../components/ui/EmployeeNav";
+import EmployeeFooter from "../components/ui/EmployeeFooter";
 
 const OtherProductsSale = () => {
   const dispatch = useAppDispatch();
@@ -21,26 +23,13 @@ const OtherProductsSale = () => {
 
   console.log("Other Products:", otherProducts);
 
+  const salesTeamName = myProfile?.sales_team?.name || "Sales Team";
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
-        <div>
-          <h1 className="text-3xl font-bold">{myProfile?.sales_team?.name}</h1>
-          <p className="mt-1 text-sm">Make sales the easy way.</p>
-        </div>
-        <Link to="/myprofile" className="flex items-center space-y-2 flex-col">
-          <img
-            src={myProfile.profile_image || defaultProfile}
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-          />
-          <span className="text-white text-sm">
-            {myProfile?.first_name} {myProfile?.last_name}
-          </span>
-        </Link>
-      </div>
-
+      <EmployeeNav headerMessage={"Other Products Sale"} 
+          headerText={"Manage and view your assigned products"} salesTeamName={salesTeamName} myProfile={myProfile} />
+     
       {/* Product Grid Section */}
       <div className="flex-grow p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {otherProducts.map((product) => (
@@ -66,11 +55,12 @@ const OtherProductsSale = () => {
       </div>
 
       {/* Footer Section */}
-      <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
+      <EmployeeFooter />
+      {/* <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
         <Link className="hover:underline" to="/sales">
           Back to Sales
         </Link>
-      </div>
+      </div> */}
     </div>
   );
 };

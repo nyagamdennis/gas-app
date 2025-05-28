@@ -20,7 +20,7 @@ const RightNav = ({ isOpen, onClose }) => {
     subscriptionPlan,
     isTrial,
 
-    planName,
+    planName
   } = planStatus()
 
   const handleLogOut = () => {

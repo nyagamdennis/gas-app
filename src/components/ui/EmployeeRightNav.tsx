@@ -22,6 +22,7 @@ const EmployeeRightNav = ({ myProfile, isOpen, onClose }) => {
       }
 
       // console.log('my profile is ', myProfile)
+      
   return (
     <>
           {/* Overlay */}

@@ -57,6 +57,8 @@ import { useAppDispatch } from "./app/hooks"
 import useVerificationPolling from "./features/employees/useVerificationPolling"
 import Expenses from "./pages/Expenses"
 import AiPredict from "./pages/AiPredict"
+import AdminOtherProductsSalesRecord from "./pages/AdminOtherProductsSalesRecord"
+import ProsessingPayment from "./pages/ProsessingPayment"
 
 
 function App() {
@@ -73,6 +75,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/processing" element={<ProsessingPayment />} />
 
           {/* Admin-only routes */}
           <Route
@@ -121,6 +124,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_owner">
                 <AdminSalesRecord />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/otherssales"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AdminOtherProductsSalesRecord />
               </ProtectedRoute>
             }
           />
@@ -196,6 +207,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/settings"
             element={

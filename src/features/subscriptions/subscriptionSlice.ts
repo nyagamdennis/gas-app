@@ -67,15 +67,7 @@ const initialState: subscriptionState = {
 export const fetchSubscription = createAsyncThunk<Subscription[], void, {}>(
   "subscription/fetchSubscription",
   async () => {
-    // await new Promise((resolve) => setTimeout(resolve, 5000))
-    // const response = await axios.get<Subscription[]>(`${apiUrl}/business/`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   }
-    // )
+   
     const response = await api.get<Subscription[]>("/business/");
     return response.data
   },
@@ -89,14 +81,7 @@ export const fetchSubscription = createAsyncThunk<Subscription[], void, {}>(
 export const addSubscription = createAsyncThunk(
   "subscription/addSubscription",
   async ({formData, id}) => {
-    // const response = await axios.post(`${apiUrl}/business/subscription/${id}/`, formData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   }
-    // )
+   
     const response = await api.post(`/business/subscription/${id}/`, formData);
     return response.data
   },

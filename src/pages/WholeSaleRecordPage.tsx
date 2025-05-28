@@ -1025,10 +1025,31 @@ const WholeSaleRecordPage = () => {
               <input
                 type="text"
                 value={otherCustomerName}
-                onChange={(e) => setOtherCustomerName(e.target.value)}
+                onChange={(e) => {
+                  setSearchingBy("name")
+                  setOtherCustomerName(e.target.value)}}
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                 // required
+                
               />
+              {searchResults.length > 0 && (
+                <ul className="absolute bg-white border w-full mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                  {searchResults.map((customer) => (
+                    <li
+                      key={customer.id}
+                      onClick={() => {
+                        setCustomerName(customer.name)
+                        setCustomerPhone(customer.phone)
+                        setCustomerLocation(customer.location)
+                        setSearchResults([])
+                      }}
+                      className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                    >
+                      {customer.name} - {customer.phone}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             <div className="mb-4">
               <label className="block text-gray-600">Customer Location</label>
@@ -1045,10 +1066,31 @@ const WholeSaleRecordPage = () => {
               <input
                 type="tel"
                 value={otherCustomerPhone}
-                onChange={(e) => setOtherCustomerPhone(e.target.value)}
+                onChange={(e) => {
+                  setSearchingBy("phone")
+                  setOtherCustomerPhone(e.target.value)}}
+                
                 className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                 // required
               />
+              {searchPhoneResults.length > 0 && (
+              <ul className="absolute bg-white border w-full mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                {searchPhoneResults.map((customer) => (
+                  <li
+                    key={customer.id}
+                    onClick={() => {
+                      setCustomerName(customer.name)
+                      setCustomerPhone(customer.phone)
+                      setCustomerLocation(customer.location)
+                      setSearchPhoneResults([])
+                    }}
+                    className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
+                  >
+                    {customer.name} - {customer.phone}
+                  </li>
+                ))}
+              </ul>
+            )}
             </div>
             {otherProducts.map((product, index) => {
               const selectedProduct = allOtherProducts.find(

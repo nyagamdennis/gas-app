@@ -10,7 +10,7 @@ import {
 import AdminsFooter from "../components/AdminsFooter"
 import AdminNav from "../components/ui/AdminNav"
 import FormattedAmount from "../components/FormattedAmount"
-import { useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import {
   fetchBusiness,
   selectAllBusiness,
@@ -24,10 +24,13 @@ const SubScriptionPlans = () => {
   const my_business = useAppSelector(selectAllBusiness)
   const all_subscription = useAppSelector(selectAllSubscription)
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   const [subscribing, setSubscribing] = useState(false)
   const [paymentNumber, setPaymentNumber] = useState("")
   const [paymentNumberInput, setPaymentNumberInput] = useState(false)
+  const [activePlanId, setActivePlanId] = useState(null)
+
   const [selectedMonths, setSelectedMonths] = useState({})
 
   useEffect(() => {
@@ -55,17 +58,42 @@ const SubScriptionPlans = () => {
     return <FormattedAmount amount={numericPrice * months} />
   }
 
-  const handleSubscription = (id) => {
+  
+  const handleSubscription = async (id) => {
+    const selected = selectedMonths[planName] || 1
     const formData = {
-      months: selectedMonths || 1,
+      months: selected,
       paymentNumber: paymentNumber,
     }
+  
     try {
-      dispatch(addSubscription({ formData, id }))
+      setSubscribing(true)
+  
+      const response = await dispatch(addSubscription({ formData, id })).unwrap()
+  
+      // Check if the backend response has a 'processing' status
+      if (response.status === "processing" && response.checkoutRequestId) {
+        const plan = all_subscription.find(p => p.id === id)
+  
+        navigate("/processing", {
+          state: {
+            planName: plan?.name || "Subscription Plan",
+            months: selected,
+            amount: parseFloat(plan?.price || "0") * selected,
+            checkoutRequestId: response.checkoutRequestId,
+          },
+        })
+      } else {
+        alert("Payment process could not be started.")
+      }
     } catch (error) {
-      alert("Error adding subscription")
+      console.error("Subscription error:", error)
+      alert("Something went wrong while processing your payment.")
+    } finally {
+      setSubscribing(false)
     }
   }
+  
 
   const handleAddFreeTrial = async (id) => {
     try {
@@ -203,12 +231,13 @@ const SubScriptionPlans = () => {
                     onClick={() => handleAddFreeTrial(plan.id)}
                     className="w-full py-2 px-4 rounded-md text-white font-medium bg-green-600 hover:bg-green-700 mb-2"
                   >
-                    Start 10-Day Free Trial
+                    Start 5-Day Free Trial
                   </button>
                 )}
 
-                {paymentNumberInput && (
-                  <div>
+                {/* {paymentNumberInput && (
+                  <div >
+                    <p className=" text-xs font-bold mb-2">Enter mpesa number to pay with</p>
                     <input
                       type="text"
                       value={paymentNumber}
@@ -216,7 +245,7 @@ const SubScriptionPlans = () => {
                       placeholder="Enter payment number"
                       className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
                     />
-                    <div className="flex justify-between gap-2 mb-2">
+                    <div className="flex justify-between gap-2 flex-col-reverse mb-2">
                       <button
                         onClick={() => setPaymentNumberInput(false)}
                         className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
@@ -224,19 +253,57 @@ const SubScriptionPlans = () => {
                         Cancel
                       </button>
                       <button
-                        onClick={() => {
-                          setPaymentNumberInput(false)
-                          handleSubscription(plan.id)
-                        }}
-                        className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700"
-                      >
-                        Make Payment
-                      </button>
+  onClick={() => {
+    
+    handleSubscription(plan.id)
+  }}
+  disabled={subscribing}
+  className={`flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700 ${
+    subscribing ? "opacity-50 cursor-not-allowed" : ""
+  }`}
+>
+  {subscribing ? "Processing..." : "Make Payment"}
+</button>
+
                     </div>
                   </div>
-                )}
+                )} */}
+                {activePlanId === plan.id && (
+  <div>
+    <p className="text-xs font-bold mb-2">Enter mpesa number to pay with</p>
+    <form>
+    <input
+      type="text"
+      required
+      value={paymentNumber}
+      onChange={(e) => setPaymentNumber(e.target.value)}
+      placeholder="Enter payment number"
+      className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
+    />
+    <div className="flex justify-between gap-2 flex-col-reverse mb-2">
+      <button
+        onClick={() => setActivePlanId(null)}
+        className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={() => handleSubscription(plan.id)}
+        disabled={subscribing}
+        className={`flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700 ${
+          subscribing ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+      >
+        {subscribing ? "Processing..." : "Make Payment"}
+      </button>
+    </div>
+    </form>
+    
+  </div>
+)}
 
-                {!paymentNumberInput && (
+
+                {/* {!paymentNumberInput && (
                   <button
                     onClick={() => setPaymentNumberInput(true)}
                     className={`w-full py-2 px-4 rounded-md text-white font-medium ${
@@ -247,7 +314,20 @@ const SubScriptionPlans = () => {
                   >
                     {isExpired ? "Renew Plan" : "Renew in Advance"}
                   </button>
-                )}
+                )} */}
+                {activePlanId !== plan.id && (
+            <button
+              onClick={() => setActivePlanId(plan.id)}
+              className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+                plan.highlight
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-700 hover:bg-gray-800"
+              }`}
+            >
+              {isExpired ? "Renew Plan" : "Renew in Advance"}
+            </button>
+)}
+
               </div>
             )
           })}

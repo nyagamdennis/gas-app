@@ -15,6 +15,7 @@ import planStatus from "../features/planStatus/planStatus"
 const AdminHome = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const allBusiness = useAppSelector(selectAllBusiness)
   const { isPro, isTrial, isExpired } = planStatus();
 
   useEffect(() => {
@@ -22,7 +23,7 @@ const AdminHome = () => {
     }, [dispatch])
     
   
-
+console.log('all business ', allBusiness)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
@@ -52,14 +53,14 @@ const AdminHome = () => {
             color: "blue",
           },
           {
-            to: "",
+            to: "/admin/otherssales",
             title: "Other Product Sales",
             subtitle: "Monitor and track sales of additional items.",
             color: "green",
           },
           {
             to: "/admin/sales",
-            title: "Sales Insights",
+            title: "Cylinder Sales Insights",
             subtitle: "Dive into detailed sales analytics.",
             color: "green",
           },

@@ -42,189 +42,190 @@ import planStatus from "../features/planStatus/planStatus"
 import AdminNav from "../components/ui/AdminNav"
 import { CircularProgress } from "@mui/material"
 
-const AdminSalesRecord = () => {
-  const dispatch = useAppDispatch()
-  const myProfile = useAppSelector(selectMyProfile)
-  const allSalesData = useAppSelector(selectAllAdminSalesTeamData)
-  const expense = useAppSelector(selectAllTeamExpenses)
-  const employees = useAppSelector(selectAllEmployees)
-  const allCash = useAppSelector(selectAllCash)
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
-  const [cashAtHand, setCashAtHand] = useState<number>(0)
-  const [filteredSales, setFilteredSales] = useState([])
-  const [selectedTeam, setSelectedTeam] = useState("all")
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
-  const [filteredExpenses, setFilteredExpenses] = useState([])
-  const [addingCash, setAddingCash] = useState(false)
-  const [addingAssign, setAddingAssign] = useState(false)
-  const [ownerSelections, setOwnerSelections] = useState<
-    Record<number, string>
-  >({})
-  const [submittingOwner, setSubmittingOwner] = useState(false)
 
-  const [startDate, setStartDate] = useState(() => {
-    const today = new Date()
-    return today.toISOString().split("T")[0] // Default to today's date
-  })
-  const [endDate, setEndDate] = useState(() => {
-    const today = new Date()
-    return today.toISOString().split("T")[0] // Default to today's date
-  })
-  // const salesTeamId = selectedTeam === "all" ? null : selectedTeam;
-  const salesTeamId =
-    selectedTeam && selectedTeam !== "all" ? selectedTeam : null
-  const {
-    isPro,
-    isTrial,
-    isExpired,
-    businessName,
-    businessId,
-    businessLogo,
-    subscriptionPlan,
-    employeeLimit,
-    planName,
-  } = planStatus()
-
-  useEffect(() => {
-    if (businessId) {
-      dispatch(fetchAdminSalesTeamData())
-      dispatch(fetchSalesTeam({ businessId }))
-      dispatch(fetchEmployees({ businessId }))
-      dispatch(fetchCash())
-    }
-  }, [dispatch, businessId])
-
-  useEffect(() => {
-    if (salesTeamId) {
-      dispatch(fetchTeamExpenses({ salesTeamId }))
-    }
-  }, [dispatch, salesTeamId])
-
-  useEffect(() => {
-    const filtered = allSalesData.filter((sale) => {
-      const saleDate = new Date(sale.timestamp).toISOString().split("T")[0]
-      const dateMatch = saleDate >= startDate && saleDate <= endDate
-      const teamMatch =
-        selectedTeam === "all" ||
-        String(sale.sales_team) === String(selectedTeam)
-      return dateMatch && teamMatch
-    })
-    setFilteredSales(filtered)
-  }, [allSalesData, startDate, endDate, selectedTeam])
-
-  const handleToggleVerification = async (saleId, paymentType) => {
-    dispatch(toggleVerification({ saleId, paymentType }))
-  }
-
-  const totalSalesAmount = filteredSales.reduce((total, sale) => {
-    const cash = Number(sale.cashAmount) || 0
-    const mpesa = Number(sale.mpesaAmount) || 0
-    const debt = sale.debt_info?.debt_amount || 0
-    return total + cash + mpesa - debt
-  }, 0)
-
-  const totalAmounts = filteredSales.reduce(
-    (totals, sale) => {
-      const cash = Number(sale.cashAmount) || 0
-      const debt = sale.debt_info?.debt_amount || 0
-      const mpesa = sale.admin_mpesa_verified
-        ? Number(sale.mpesaAmount) || 0
-        : 0
-
-      const unverifiedMpesa = !sale.admin_mpesa_verified
-        ? Number(sale.mpesaAmount) || 0
-        : 0
-      return {
-        totalCash: totals.totalCash + cash - debt,
-        totalMpesa: totals.totalMpesa + mpesa,
-        totalUnverifiedMpesa: totals.totalUnverifiedMpesa + unverifiedMpesa,
+const AdminOtherProductsSalesRecord = () => {
+    const dispatch = useAppDispatch()
+      const myProfile = useAppSelector(selectMyProfile)
+      const allSalesData = useAppSelector(selectAllAdminSalesTeamData)
+      const expense = useAppSelector(selectAllTeamExpenses)
+      const employees = useAppSelector(selectAllEmployees)
+      const allCash = useAppSelector(selectAllCash)
+      const allSalesTeam = useAppSelector(selectAllSalesTeam)
+      const [cashAtHand, setCashAtHand] = useState<number>(0)
+      const [filteredSales, setFilteredSales] = useState([])
+      const [selectedTeam, setSelectedTeam] = useState("all")
+      const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
+      const [filteredExpenses, setFilteredExpenses] = useState([])
+      const [addingCash, setAddingCash] = useState(false)
+      const [addingAssign, setAddingAssign] = useState(false)
+      const [ownerSelections, setOwnerSelections] = useState<
+        Record<number, string>
+      >({})
+      const [submittingOwner, setSubmittingOwner] = useState(false)
+    
+      const [startDate, setStartDate] = useState(() => {
+        const today = new Date()
+        return today.toISOString().split("T")[0] // Default to today's date
+      })
+      const [endDate, setEndDate] = useState(() => {
+        const today = new Date()
+        return today.toISOString().split("T")[0] // Default to today's date
+      })
+      // const salesTeamId = selectedTeam === "all" ? null : selectedTeam;
+      const salesTeamId =
+        selectedTeam && selectedTeam !== "all" ? selectedTeam : null
+      const {
+        isPro,
+        isTrial,
+        isExpired,
+        businessName,
+        businessId,
+        businessLogo,
+        subscriptionPlan,
+        employeeLimit,
+        planName,
+      } = planStatus()
+    
+      useEffect(() => {
+        if (businessId) {
+          dispatch(fetchAdminSalesTeamData())
+          dispatch(fetchSalesTeam({ businessId }))
+          dispatch(fetchEmployees({ businessId }))
+          dispatch(fetchCash())
+        }
+      }, [dispatch, businessId])
+    
+      useEffect(() => {
+        if (salesTeamId) {
+          dispatch(fetchTeamExpenses({ salesTeamId }))
+        }
+      }, [dispatch, salesTeamId])
+    
+      useEffect(() => {
+        const filtered = allSalesData.filter((sale) => {
+          const saleDate = new Date(sale.timestamp).toISOString().split("T")[0]
+          const dateMatch = saleDate >= startDate && saleDate <= endDate
+          const teamMatch =
+            selectedTeam === "all" ||
+            String(sale.sales_team) === String(selectedTeam)
+          return dateMatch && teamMatch
+        })
+        setFilteredSales(filtered)
+      }, [allSalesData, startDate, endDate, selectedTeam])
+    
+      const handleToggleVerification = async (saleId, paymentType) => {
+        dispatch(toggleVerification({ saleId, paymentType }))
       }
-    },
-    { totalCash: 0, totalMpesa: 0, totalUnverifiedMpesa: 0 },
-  )
-
-  const handleCashAtHand = (e) => {
-    e.preventDefault()
-  }
-
-  useEffect(() => {
-    // Filter sales data by date range
-    const filteredExpenses = expense.filter((expe) => {
-      const expeDate = new Date(expe.date).toISOString().split("T")[0]
-      return expeDate >= startDate && expeDate <= endDate
-    })
-    setFilteredExpenses(filteredExpenses)
-  }, [expense, startDate, endDate])
-
-  const totalExpenses = filteredExpenses.reduce(
-    (total, item) => total + (item.amount || 0),
-    0,
-  )
-
-  const handleOwnerChange = (expenseId: number, newOwner: string) => {
-    setOwnerSelections((prev) => ({
-      ...prev,
-      [expenseId]: newOwner,
-    }))
-  }
-
-  const handleEmployeeChange = (employeeId: string) => {
-    setSelectedEmployeeId(employeeId)
-    // Optionally submit here or elsewhere
-  }
-  const handleSubmitOwner = async (
-    expenseId: number,
-    selectedOwner: string,
-  ) => {
-    console.log("submitting...", selectedOwner)
-    if (!selectedOwner) return
-
-    setAddingAssign(true)
-    try {
-      await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
-    } catch (error) {
-      console.error("Error assigning owner:", error)
-    }
-    setAddingAssign(false)
-  }
-
-  const filteredEmployees = salesTeamId
-    ? employees.filter(
-        (employee) => employee.sales_team?.id === Number(salesTeamId),
+    
+      const totalSalesAmount = filteredSales.reduce((total, sale) => {
+        const cash = Number(sale.cashAmount) || 0
+        const mpesa = Number(sale.mpesaAmount) || 0
+        const debt = sale.debt_info?.debt_amount || 0
+        return total + cash + mpesa - debt
+      }, 0)
+    
+      const totalAmounts = filteredSales.reduce(
+        (totals, sale) => {
+          const cash = Number(sale.cashAmount) || 0
+          const debt = sale.debt_info?.debt_amount || 0
+          const mpesa = sale.admin_mpesa_verified
+            ? Number(sale.mpesaAmount) || 0
+            : 0
+    
+          const unverifiedMpesa = !sale.admin_mpesa_verified
+            ? Number(sale.mpesaAmount) || 0
+            : 0
+          return {
+            totalCash: totals.totalCash + cash - debt,
+            totalMpesa: totals.totalMpesa + mpesa,
+            totalUnverifiedMpesa: totals.totalUnverifiedMpesa + unverifiedMpesa,
+          }
+        },
+        { totalCash: 0, totalMpesa: 0, totalUnverifiedMpesa: 0 },
       )
-    : employees // show all when "all" is selected
-
-  const totalDefaultCash = totalAmounts.totalCash - totalExpenses - cashAtHand
-
-  const handleLessCash = async (e) => {
-    e.preventDefault()
-    setAddingCash(true)
-    try {
-      await dispatch(
-        postCash({
-          selectedEmployeeId,
-          totalDefaultCash,
-          cashAtHand,
-          salesTeamId,
-          endDate,
-        }),
+    
+      const handleCashAtHand = (e) => {
+        e.preventDefault()
+      }
+    
+      useEffect(() => {
+        // Filter sales data by date range
+        const filteredExpenses = expense.filter((expe) => {
+          const expeDate = new Date(expe.date).toISOString().split("T")[0]
+          return expeDate >= startDate && expeDate <= endDate
+        })
+        setFilteredExpenses(filteredExpenses)
+      }, [expense, startDate, endDate])
+    
+      const totalExpenses = filteredExpenses.reduce(
+        (total, item) => total + (item.amount || 0),
+        0,
       )
-      alert("Cash posted successfully.")
-    } catch (error) {
-      alert("Failed to post cash.")
-    }
-    setAddingCash(false)
-  }
-
+    
+      const handleOwnerChange = (expenseId: number, newOwner: string) => {
+        setOwnerSelections((prev) => ({
+          ...prev,
+          [expenseId]: newOwner,
+        }))
+      }
+    
+      const handleEmployeeChange = (employeeId: string) => {
+        setSelectedEmployeeId(employeeId)
+        // Optionally submit here or elsewhere
+      }
+      const handleSubmitOwner = async (
+        expenseId: number,
+        selectedOwner: string,
+      ) => {
+        console.log("submitting...", selectedOwner)
+        if (!selectedOwner) return
+    
+        setAddingAssign(true)
+        try {
+          await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
+        } catch (error) {
+          console.error("Error assigning owner:", error)
+        }
+        setAddingAssign(false)
+      }
+    
+      const filteredEmployees = salesTeamId
+        ? employees.filter(
+            (employee) => employee.sales_team?.id === Number(salesTeamId),
+          )
+        : employees // show all when "all" is selected
+    
+      const totalDefaultCash = totalAmounts.totalCash - totalExpenses - cashAtHand
+    
+      const handleLessCash = async (e) => {
+        e.preventDefault()
+        setAddingCash(true)
+        try {
+          await dispatch(
+            postCash({
+              selectedEmployeeId,
+              totalDefaultCash,
+              cashAtHand,
+              salesTeamId,
+              endDate,
+            }),
+          )
+          alert("Cash posted successfully.")
+        } catch (error) {
+          alert("Failed to post cash.")
+        }
+        setAddingCash(false)
+      }
+    
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      
-        <AdminNav
-          headerMessage={"Others Sales Dashboard"}
-          headerText={"Monitor and manage your team's sales"}
-        />
+      {/* Header */}
+      <AdminNav
+         headerMessage={"Other Products Sales Dashboard"}
+         headerText={"Monitor and manage your team's sales effectively"}
+      />
 
-        {/* Filter Section */}
+      {/* Filter Section */}
       <div className="bg-white shadow-md p-1 flex justify-between items-center mb-2">
         <div className="flex flex-col space-y-2 items-center  md:flex md:justify-between">
           <div className="flex items-center space-x-2">
@@ -565,4 +566,4 @@ const AdminSalesRecord = () => {
   )
 }
 
-export default AdminSalesRecord
+export default AdminOtherProductsSalesRecord
