@@ -39,7 +39,7 @@ const SubScriptionPlans = () => {
   }, [dispatch])
 
   const business = my_business
-  const hasPlan = business?.subscription_plan !== null
+  const hasPlan = business?.subscription_plan
   const planName = business?.subscription_plan?.name
   const expiryDate = business?.subscription_plan_expiry
     ? new Date(business.subscription_plan_expiry)
@@ -49,6 +49,9 @@ const SubScriptionPlans = () => {
   const trialEndsIn = business?.trial_ends_in
   const daysRemaining = business?.days_remaining
 
+
+  console.log('has plan ', hasPlan, business)
+  console.log('is trial ', isTrial)
   const handleMonthChange = (planName, months) => {
     setSelectedMonths((prev) => ({ ...prev, [planName]: months }))
   }
@@ -235,39 +238,7 @@ const SubScriptionPlans = () => {
                   </button>
                 )}
 
-                {/* {paymentNumberInput && (
-                  <div >
-                    <p className=" text-xs font-bold mb-2">Enter mpesa number to pay with</p>
-                    <input
-                      type="text"
-                      value={paymentNumber}
-                      onChange={(e) => setPaymentNumber(e.target.value)}
-                      placeholder="Enter payment number"
-                      className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
-                    />
-                    <div className="flex justify-between gap-2 flex-col-reverse mb-2">
-                      <button
-                        onClick={() => setPaymentNumberInput(false)}
-                        className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
-                      >
-                        Cancel
-                      </button>
-                      <button
-  onClick={() => {
-    
-    handleSubscription(plan.id)
-  }}
-  disabled={subscribing}
-  className={`flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700 ${
-    subscribing ? "opacity-50 cursor-not-allowed" : ""
-  }`}
->
-  {subscribing ? "Processing..." : "Make Payment"}
-</button>
-
-                    </div>
-                  </div>
-                )} */}
+              
                 {activePlanId === plan.id && (
   <div>
     <p className="text-xs font-bold mb-2">Enter mpesa number to pay with</p>
@@ -302,19 +273,6 @@ const SubScriptionPlans = () => {
   </div>
 )}
 
-
-                {/* {!paymentNumberInput && (
-                  <button
-                    onClick={() => setPaymentNumberInput(true)}
-                    className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                      plan.highlight
-                        ? "bg-blue-600 hover:bg-blue-700"
-                        : "bg-gray-700 hover:bg-gray-800"
-                    }`}
-                  >
-                    {isExpired ? "Renew Plan" : "Renew in Advance"}
-                  </button>
-                )} */}
                 {activePlanId !== plan.id && (
             <button
               onClick={() => setActivePlanId(plan.id)}

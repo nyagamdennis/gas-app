@@ -28,6 +28,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   const {
     isExpired,
+    businessId,
+    businessName,
+    businessLogo,
     subscriptionPlan,
   } = planStatus()
 
@@ -42,7 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     ? [requiredRole]
     : null
 
-  // Role-based access
+  // Check if user role is allowed
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     const roleRedirectMap: Record<string, string> = {
       is_owner: "/admins",
@@ -54,12 +57,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectPath} replace />
   }
 
-  // ⛔ Block is_owner if no subscription OR plan is expired — except on allowed pages
+  // 🛑 Block owners with NO business from all pages except /setting
+  const noBusiness = userRole === "is_owner" && !businessId
+  const restrictedToSettingsOnly = noBusiness && location.pathname !== "/settings"
+  if (restrictedToSettingsOnly) {
+    return <Navigate to="/settings" replace />
+  }
+
+  // ⛔ Block owners with no subscription or expired plan from everything except /subscribe or /setting
   const isOwnerRestricted =
     userRole === "is_owner" &&
     (!subscriptionPlan || isExpired) &&
     location.pathname !== "/subscribe" &&
-    location.pathname !== "/setting"
+    location.pathname !== "/settings"
 
   if (isOwnerRestricted) {
     return <Navigate to="/subscribe" replace />
