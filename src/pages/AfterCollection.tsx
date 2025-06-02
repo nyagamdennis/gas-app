@@ -32,7 +32,7 @@ const AfterCollection = () => {
             //     { sales_team_id: salesTeamId?.id },
             //     { headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` } }
             // )
-            api.post("/mark-print-return-complete/")
+            api.post("/mark-print-return-complete/", { sales_team_id: salesTeamId?.id })
             .then(() => setPrintComplete(true))
                 .catch(err => console.error("Error marking print complete:", err));
         } else {
@@ -143,6 +143,20 @@ const AfterCollection = () => {
             alert("AndroidBridge is not available");
         }
     };
+
+
+    const handleSaveRecipt = async() => {
+        if (!printComplete) {
+            
+            await api.post("/mark-print-return-complete/", { sales_team_id: salesTeamId?.id })
+            .then(() => setPrintComplete(true))
+                .catch(err => console.error("Error marking print complete:", err));
+        } else {
+            alert("Print already completed. No need to reprint.");
+        }
+        
+    };
+
 
     const handleGeneratePDF = () => {
         alert("Generate PDF functionality can be added here.");
@@ -329,6 +343,12 @@ const AfterCollection = () => {
                     onClick={handlePrint}
                 >
                     Print
+                </button>
+                <button
+                    className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600"
+                    onClick={handleSaveRecipt}
+                >
+                    Save
                 </button>
             </div>
         </div>

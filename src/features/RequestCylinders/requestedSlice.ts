@@ -6,7 +6,6 @@ import api from "../../../utils/api"
 
 interface Requested {
   id: number;
-
 }
 
 interface RequestedState {
@@ -70,7 +69,7 @@ export const clearRequested = createAsyncThunk(
     //     },
     //   }
     // );
-    const response = await api.post(`/cylinder-request-clear/${cylinderId}/`)
+    const response = await api.delete(`/approve-request/${cylinderId}/`)
     return response.data
   }
 )

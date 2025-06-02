@@ -34,9 +34,11 @@ const initialState: SingleEmployeeState = {
 
 export const fetchSingleEmployee = createAsyncThunk<Employees[]>(
     "singleEmployee/fetchSingleEmployee",
-    async ({ employeeId }: { employeeId: string }) => {
+    async ({ id }: { id: string }) => {
         // const response = await axios.get<Employees[]>(`${apiUrl}/employees/${employeeId}/`);
-        const response = api.get(`/employees/${employeeId}/`)
+        const response = await api.get(`/employees/${id}/`)
+        // alert('fetched ', response.data)
+        // console.log('results of employees ', response.data)
         return response.data; // Return the fetched employees data
     }
 );

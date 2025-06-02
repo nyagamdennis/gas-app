@@ -145,16 +145,7 @@ export const addAnotherCylinder = createAsyncThunk(
   "cylinders/addAnotherCylinder",
   async ({ dat, id }: { dat: any; id: string }, { rejectWithValue }) => {
     try {
-      // const response = await axios.post(
-      //   `${apiUrl}/addanothercylinder/${id}/`,
-      //   dat,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //     },
-      //   },
-      // )
-      // console.log("response data", response.data)
+   
       const response = await api.post(`/addanothercylinder/${id}/`, dat);
       return response.data
     } catch (err: any) {

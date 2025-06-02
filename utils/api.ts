@@ -18,7 +18,6 @@ api.interceptors.request.use(async (config) => {
   try {
     const { exp } = jwtDecode<{ exp: number }>(token)
     const now = Date.now() / 1000
-
     if (exp - now < 120) {
 
       if (!isRefreshing) {

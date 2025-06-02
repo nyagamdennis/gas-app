@@ -94,7 +94,7 @@ const CylinderRequest = () => {
 
         try {
             await dispatch(addRequest({
-                employee: Cookies.get("employeeId"), // assuming this is stored in cookies
+                employee: cookies.get("employeeId"), // assuming this is stored in cookies
                 sales_team_id: selectedTeam.id,
                 assigned_cylinder_id: cylinderId,
                 quantity: requestDetails.request_quantity

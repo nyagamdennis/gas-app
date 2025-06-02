@@ -26,6 +26,7 @@ import {
   fetchRequests,
   selectAllRequests,
 } from "../features/RequestCylinders/requestedSlice"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
 
 const SalesTeamCylinders = () => {
   const dispatch = useAppDispatch()
@@ -183,7 +184,7 @@ console.log('all cylinders ', assigned_cylinders)
                     Deny
                   </button>
                   <div className="ms-10">
-                    <h6>========={requestData.requesting_team.name}</h6>
+                    <h6>====={requestData.requesting_team.name}</h6>
                   </div>
                 </div>
               ) : (
@@ -315,11 +316,10 @@ console.log('all cylinders ', assigned_cylinders)
       </div>
 
       {/* Footer */}
-      <div className="bg-blue-600 text-white py-3 text-center shadow-inner">
-        <Link className="hover:underline" to="/sales">
+        {/* <Link className="hover:underline" to="/sales">
           Home
-        </Link>
-      </div>
+        </Link> */}
+        <EmployeeFooter />
     </div>
   )
 }

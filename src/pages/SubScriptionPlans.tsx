@@ -31,6 +31,7 @@ const SubScriptionPlans = () => {
   const [paymentNumberInput, setPaymentNumberInput] = useState(false)
   const [activePlanId, setActivePlanId] = useState(null)
 
+  const [addingFreeTrial, setAddingFreeTrial ] = useState(false)
   const [selectedMonths, setSelectedMonths] = useState({})
 
   useEffect(() => {
@@ -41,17 +42,14 @@ const SubScriptionPlans = () => {
   const business = my_business
   const hasPlan = business?.subscription_plan
   const planName = business?.subscription_plan?.name
-  const expiryDate = business?.subscription_plan_expiry
-    ? new Date(business.subscription_plan_expiry)
-    : null
+  const expiryDate = business?.subscription_plan_expiry  ? new Date(business.subscription_plan_expiry)  : null
   const isExpired = business?.is_expired
   const isTrial = business?.is_trial
   const trialEndsIn = business?.trial_ends_in
   const daysRemaining = business?.days_remaining
 
 
-  console.log('has plan ', hasPlan, business)
-  console.log('is trial ', isTrial)
+  
   const handleMonthChange = (planName, months) => {
     setSelectedMonths((prev) => ({ ...prev, [planName]: months }))
   }
@@ -77,7 +75,7 @@ const SubScriptionPlans = () => {
       // Check if the backend response has a 'processing' status
       if (response.status === "processing" && response.checkoutRequestId) {
         const plan = all_subscription.find(p => p.id === id)
-  
+
         navigate("/processing", {
           state: {
             planName: plan?.name || "Subscription Plan",
@@ -91,7 +89,7 @@ const SubScriptionPlans = () => {
       }
     } catch (error) {
       console.error("Subscription error:", error)
-      alert("Something went wrong while processing your payment.")
+      alert("Something went wrong while processing your payment. Try again later.")
     } finally {
       setSubscribing(false)
     }
@@ -100,9 +98,12 @@ const SubScriptionPlans = () => {
 
   const handleAddFreeTrial = async (id) => {
     try {
+      setAddingFreeTrial(true)
       await dispatch(addFreeTrial({ id }))
+      setAddingFreeTrial(false)
     } catch (error) {
-      alert("Error starting free trial")
+      console.log('error')
+      // alert("Error starting free trial")
     }
   }
 

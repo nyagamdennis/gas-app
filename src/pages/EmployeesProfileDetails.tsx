@@ -64,6 +64,7 @@ const EmployeesProfileDetails = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const employee = useAppSelector(selectSingleEmployees)
+  console.log('fetched employee ', employee)
   const allSalesTeams = useAppSelector(selectAllSalesTeam)
   const employeeDefaults = useAppSelector(selectAllDefaults)
   const employeeLessPays = useAppSelector(selectAllLessPay)
@@ -141,7 +142,7 @@ const EmployeesProfileDetails = () => {
   console.log("fetch id ", id)
   useEffect(() => {
     if (id) {
-      dispatch(fetchSingleEmployee({ employeeId: Number(id) }))
+      dispatch(fetchSingleEmployee({ id }))
       dispatch(fetchSalesTeam())
       dispatch(fetchDefaults(id))
       dispatch(fetchLessPay(id))

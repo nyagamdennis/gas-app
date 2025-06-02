@@ -43,37 +43,29 @@ export const fetchSettings = createAsyncThunk<settings[], void, {}>(
 
 export const addSettings = createAsyncThunk(
   "settings/addAnotherCylinder",
-  async ({ dat }: { dat: any; }, { rejectWithValue }) => {
-    console.log('data ', dat)
+  async ({ dat }: { dat: any }, { rejectWithValue }) => {
     try {
-      // const response = await axios.post(
-      //   `${apiUrl}/business/operation/`,
-      //   dat,
-      //   {
-      //       headers: {
-      //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //         "Content-Type": "multipart/form-data",
-      //       },
-      //     }
-      // )
-      // console.log("response data", response.data)
-      // console.log('sss ', dat)
       const formData = new FormData();
-        Object.keys(dat).forEach((key) => {
+
+      Object.keys(dat).forEach((key) => {
+        if (dat[key] !== null && dat[key] !== undefined) {
           formData.append(key, dat[key]);
-        });
+        }
+      });
+
       const response = await api.post("/business/operation/", formData);
-      return response.data
+      return response.data;
     } catch (err: any) {
       if (err.response && err.response.data) {
-        return rejectWithValue(err.response.data.message)
+        return rejectWithValue(err.response.data.message);
       }
       return rejectWithValue(
-        "An unexpected error occurred while adding business.",
-      )
+        "An unexpected error occurred while adding business."
+      );
     }
-  },
-)
+  }
+);
+
 
 
 export const updateSettings = createAsyncThunk(

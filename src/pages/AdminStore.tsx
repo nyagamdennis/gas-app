@@ -171,6 +171,7 @@ const AdminStore = () => {
     anotherCylinderEmptyCylinderPrice,
     setAnotherCylinderEmptyCylinderPrice,
   ] = useState<number>(0)
+  const [anotherCylinderCylinderDepotRefillPrice ,setAnotherCylinderCylinderDepotRefillPrice] = useState<number>()
   const [anotherCylinderMaxRetailSelling, setAnotherCylinderMaxRetailSelling] =
     useState<number>()
   const [anotherCylinderSpoiled, setAnotherCylinderSpoiled] = useState<number>()
@@ -567,6 +568,7 @@ const AdminStore = () => {
       max_retail_selling_price: anotherCylinderMaxRetailSelling,
       max_retail_refill_price: anotherCylinderMaxRetailRefill,
       empty_cylinder_price: anotherCylinderEmptyCylinderPrice,
+      depot_refill_price: anotherCylinderCylinderDepotRefillPrice
     }
     try {
       await dispatch(
@@ -588,6 +590,7 @@ const AdminStore = () => {
       setAnotherCylinderMaxRetailSelling(0)
       setAnotherCylinderMaxRetailRefill(0)
       setAnotherCylinderEmptyCylinderPrice(0)
+      setAnotherCylinderCylinderDepotRefillPrice(0)
       setOpenAddAnotherCylinder(false)
 
       toast.success("Added successfully.")
@@ -1923,6 +1926,14 @@ const AdminStore = () => {
                 onChange={(e) =>
                   setAnotherCylinderEmptyCylinderPrice(e.target.value)
                 }
+              />
+              <Input 
+              label="depot refill price"
+              type="number"
+              value={anotherCylinderCylinderDepotRefillPrice}
+              onChange={(e) => 
+                setAnotherCylinderCylinderDepotRefillPrice(e.target.value)
+              }
               />
             </form>
           )}
