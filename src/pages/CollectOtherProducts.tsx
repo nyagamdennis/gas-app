@@ -1,117 +1,131 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react"
-import { useAppDispatch, useAppSelector } from "../app/hooks"
-import { useNavigate } from "react-router-dom"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
-import { fetchStore, selectAllStore } from "../features/store/storeSlice"
-
+import React, { useEffect, useState } from 'react'
+import AdminNav from '../components/ui/AdminNav'
+import planStatus from '../features/planStatus/planStatus'
+import { fetchSalesTeam, selectAllSalesTeam } from '../features/salesTeam/salesTeamSlice'
+import { fetchStore } from '../features/store/storeSlice'
+import { useAppDispatch, useAppSelector } from '../app/hooks'
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
-import {
-  fetchEmployees,
-  selectAllEmployees,
-} from "../features/employees/employeesSlice"
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
-import AdminNav from "../components/ui/AdminNav"
-import AdminsFooter from "../components/AdminsFooter"
-import planStatus from "../features/planStatus/planStatus"
-import api from "../../utils/api"
+import AdminsFooter from '../components/AdminsFooter'
+import api from '../../utils/api'
+import { fetchEmployees, selectAllEmployees } from '../features/employees/employeesSlice'
 
-const CollectCylinders = () => {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
-  const store = useAppSelector(selectAllStore)
-  const employees = useAppSelector(selectAllEmployees)
-  const [selectedTeam, setSelectedTeam] = useState(null)
-  const [assignments, setAssignments] = useState([])
-  const [assignedCylinders, setAssignedCylinders] = useState([])
-  const [showStacked, setShowStacked] = useState<boolean>(false)
-  const [loadingReturnAll, setLoadingReturnAll] = useState(false)
-  const [loadingReturnSome, setLoadingReturnSome] = useState(false)
-  const [losses, setLosses] = useState({})
-  const [lesses, setLesses] = useState({})
-  const [loadingLosses, setLoadingLosses] = useState({})
-  const [loadingLossesFilled, setLoadingLossesFilled] = useState({})
-  const [loadingLessPay, setLoadingLessPay] = useState({})
-  const [showEmployeeDropdown, setShowEmployeeDropdown] = useState({})
-  const [showEmployeeLessPayDropdown, setShowEmployeeLessPayDropdown] =
-    useState({})
-  const [showEmployeeFilledDropdown, setShowEmployeeFilledDropdown] = useState(
-    {},
-  )
-  const [selectedEmployee, setSelectedEmployee] = useState({})
-  const [selectedEmployeeFilled, setSelectedEmployeeFilled] = useState({})
-  const [selectedEmployeeLessPay, setSelectedEmployeeLessPay] = useState({})
+const CollectOtherProducts = () => {
+      const [selectedTeam, setSelectedTeam] = useState(null)
+      const dispatch = useAppDispatch()
+      const allSalesTeam = useAppSelector(selectAllSalesTeam)
+      const employees = useAppSelector(selectAllEmployees)
+      const [showStacked, setShowStacked] = useState<boolean>(false)
+      const [loadingReturnAll, setLoadingReturnAll] = useState(false)
+      const [loadingReturnSome, setLoadingReturnSome] = useState(false)
+      const [assignedProducts, setAssignedProducts] = useState([])
+      console.log("Assigned Products:", assignedProducts)
+      const [selectedEmployee, setSelectedEmployee] = useState({})
+      const [selectedEmployeeFilled, setSelectedEmployeeFilled] = useState({})
+      const [selectedEmployeeLessPay, setSelectedEmployeeLessPay] = useState({})
+      const [losses, setLosses] = useState({})
+      const [lesses, setLesses] = useState({})
+      const [showEmployeeDropdown, setShowEmployeeDropdown] = useState({})
+      const [loadingLosses, setLoadingLosses] = useState({})
+      const [showEmployeeFilledDropdown, setShowEmployeeFilledDropdown] = useState({},)
+      const [loadingLossesFilled, setLoadingLossesFilled] = useState({})
+      const [showEmployeeLessPayDropdown, setShowEmployeeLessPayDropdown] = useState({})
+      const [loadingLessPay, setLoadingLessPay] = useState({})
+      
 
 
-  const {
-    isPro,
-    isTrial,
-    isExpired,
-    businessName,
-    businessId,
-    businessLogo,
-    subscriptionPlan,
-    employeeLimit,
-    planName,
-  } = planStatus()
-
-  useEffect(() => {
-      if (businessId) {
-        dispatch(fetchSalesTeam({ businessId }));
-        dispatch(fetchEmployees({ businessId }))
-      }
-    }, [dispatch, businessId])
-  
+      const {
+          isPro,
+          isTrial,
+          isExpired,
+          businessName,
+          businessId,
+          businessLogo,
+          subscriptionPlan,
+          employeeLimit,
+          planName,
+        } = planStatus()
+      
+        useEffect(() => {
+            if (businessId) {
+              dispatch(fetchSalesTeam({ businessId }));
+              dispatch(fetchEmployees({ businessId }))
+            }
+          }, [dispatch, businessId])
+        
+          
+          useEffect(() => {
+            if (selectedTeam && businessId) {
+              dispatch(fetchStore({ businessId }))
+            }
+          }, [selectedTeam, businessId, dispatch])
+      
     
-    useEffect(() => {
-      if (selectedTeam && businessId) {
-        dispatch(fetchStore({ businessId }))
-      }
-    }, [selectedTeam, businessId, dispatch])
 
-  
+            const hasProducts = assignedProducts.length > 0
 
-
-  useEffect(() => {
+            useEffect(() => {
     if (selectedTeam) {
       
-      api.get("/the-assigned-cylinders/", {params:{sales_team:selectedTeam.id}})
-        .then((response) => setAssignedCylinders(response.data))
+      api.get("/the-assigned-products/", {params:{sales_team:selectedTeam.id}})
+        .then((response) => setAssignedProducts(response.data))
         .catch((error) =>
-          console.error("Error fetching assigned cylinders:", error),
+          console.error("Error fetching assigned products:", error),
         )
     }
   }, [selectedTeam])
 
-  // Handle dropdown toggle
-  const handleToggleDropdown = (cylinderId) => {
-    setShowEmployeeDropdown((prev) => ({
-      ...prev,
-      [cylinderId]: !prev[cylinderId],
-    }))
+
+
+    const handleSelectTeam = (team) => {
+    setSelectedTeam(team)
   }
 
-  const handleFilledToggleDropdown = (cylinderId) => {
-    setShowEmployeeFilledDropdown((prev) => ({
-      ...prev,
-      [cylinderId]: !prev[cylinderId],
-    }))
+  const handleShowStacked = () => {
+    setShowStacked(!showStacked)
   }
 
-  const handleLessPayToggleDropdown = (cylinderId) => {
-    setShowEmployeeLessPayDropdown((prev) => ({
-      ...prev,
-      [cylinderId]: !prev[cylinderId],
-    }))
+
+   const handleReturnAllCylinders = () => {
+      setLoadingReturnAll(true)
+      const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
+  
+      // axios
+      //   .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
+      //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+      //   })
+      api.post("/return-all-assigned-cylinders/", payload)
+        .then(() =>
+          navigate(`/admins/printallcollect/${selectedTeam?.id}`, {
+            state: { salesTeamName: selectedTeam?.name },
+          }),
+        )
+        .catch((error) => console.error("Error in cylinder Collection.", error))
+        .finally(() => setLoadingReturnAll(false))
+    }
+  
+
+    const handleReturnCylinders = () => {
+    setLoadingReturnSome(true)
+    const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
+
+    // axios
+    //   .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
+    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
+    //   })
+    api.post("/return-assigned-cylinders/", payload)
+      .then(() =>
+        navigate(`/admins/printcollect/${selectedTeam?.id}`, {
+          state: { salesTeamName: selectedTeam?.name },
+        }),
+      )
+      .catch((error) => console.error("Error in cylinder Collection.", error))
+      .finally(() => setLoadingReturnSome(false))
   }
 
-  // Handle employee selection
+
   const handleSelectEmployee = (cylinderId, employeeId) => {
     setSelectedEmployee((prev) => ({
       ...prev,
@@ -155,222 +169,21 @@ const CollectCylinders = () => {
     }))
   }
 
-  const handleLossFilledChange = (cylinderId, field, value) => {
-    setLosses((prev) => ({
+
+  const handleToggleDropdown = (cylinderId) => {
+    setShowEmployeeDropdown((prev) => ({
       ...prev,
-      [cylinderId]: {
-        ...prev[cylinderId],
-        [field]: parseInt(value, 10) || 0,
-      },
+      [cylinderId]: !prev[cylinderId],
     }))
   }
 
-  const handleLessPayChange = (cylinderId, field, value) => {
-    setLesses((prev) => ({
-      ...prev,
-      [cylinderId]: {
-        ...prev[cylinderId],
-        [field]: parseInt(value, 10) || 0,
-      },
-    }))
-  }
-
-  const handleSubmitLosses = (cylinderId) => {
-    const lossData = losses[cylinderId]
-    const employeeId = selectedEmployee[cylinderId]
-
-    if (!lossData) return
-    setLoadingLosses((prev) => ({ ...prev, [cylinderId]: true }))
-
-    const payload = {
-      sales_team_id: selectedTeam.id,
-      losses: [
-        {
-          cylinder_id: cylinderId,
-          filled_lost: lossData.filled_lost,
-          empties_lost: lossData.empties_lost,
-          employee_id: employeeId,
-        },
-      ],
-    }
-
-    // axios
-    //   .post(`${apiUrl}/report-cylinder-losses/`, payload, {
-    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-    //   })
-    api.post("/report-cylinder-losses/", payload)
-      .then((response) => {
-        // Update frontend dynamically
-        setAssignedCylinders((prev) =>
-          prev.map((cylinder) =>
-            cylinder.cylinder === cylinderId
-              ? {
-                  ...cylinder,
-                  filled_lost: lossData.filled_lost,
-                  empties_lost: lossData.empties_lost,
-                }
-              : cylinder,
-          ),
-        )
-        setLosses((prev) => ({
-          ...prev,
-          [cylinderId]: { filled_lost: 0, empties_lost: 0 },
-        }))
-      })
-      .catch((error) =>
-        console.error("Error reporting cylinder losses:", error),
-      )
-      .finally(() =>
-        setLoadingLosses((prev) => ({ ...prev, [cylinderId]: false })),
-      )
-  }
-
-  const handleSubmitMissingFilled = (cylinderId) => {
-    const lossData = losses[cylinderId]
-    const employeeId = selectedEmployeeFilled[cylinderId]
-
-    if (!lossData) return
-    setLoadingLossesFilled((prev) => ({ ...prev, [cylinderId]: true }))
-
-    const payload = {
-      sales_team_id: selectedTeam.id,
-      losses: [
-        {
-          cylinder_id: cylinderId,
-          filled_lost: lossData.filled_lost,
-          empties_lost: lossData.empties_lost,
-          employee_id: employeeId,
-        },
-      ],
-    }
-
-    // axios
-    //   .post(`${apiUrl}/report-cylinder-losses/`, payload, {
-    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-    //   })
-    api.post("/report-cylinder-losses/", payload)
-      .then((response) => {
-        // Update frontend dynamically
-        setAssignedCylinders((prev) =>
-          prev.map((cylinder) =>
-            cylinder.cylinder === cylinderId
-              ? {
-                  ...cylinder,
-                  filled_lost: lossData.filled_lost,
-                  empties_lost: lossData.empties_lost,
-                }
-              : cylinder,
-          ),
-        )
-        setLosses((prev) => ({
-          ...prev,
-          [cylinderId]: { filled_lost: 0, empties_lost: 0 },
-        }))
-      })
-      .catch((error) =>
-        console.error("Error reporting cylinder losses:", error),
-      )
-      .finally(() =>
-        setLoadingLossesFilled((prev) => ({ ...prev, [cylinderId]: false })),
-      )
-  }
-
-  const handleSubmitLessPay = (cylinderId) => {
-    const lessData = lesses[cylinderId]
-    const employeeId = selectedEmployeeLessPay[cylinderId]
-    console.log("less pay employee id ", employeeId)
-
-    if (!lessData) return
-    setLoadingLessPay((prev) => ({ ...prev, [cylinderId]: true }))
-
-    const payload = {
-      sales_team_id: selectedTeam.id,
-      lesses: [
-        {
-          cylinder_id: cylinderId,
-          less_pay: lessData.less_pay,
-          employee_id: employeeId,
-        },
-      ],
-    }
-
-    // axios
-    //   .post(`${apiUrl}/report-less_pay/`, payload, {
-    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-    //   })
-    api.post("/report-less_pay/", payload)
-      .then((response) => {
-        // Update frontend dynamically
-        setAssignedCylinders((prev) =>
-          prev.map((cylinder) =>
-            cylinder.cylinder === cylinderId
-              ? { ...cylinder, less_pay: lessData.less_pay }
-              : cylinder,
-          ),
-        )
-        setLesses((prev) => ({ ...prev, [cylinderId]: { less_pay: 0 } }))
-      })
-      .catch((error) =>
-        console.error("Error reporting cylinder lesses:", error),
-      )
-      .finally(() =>
-        setLoadingLessPay((prev) => ({ ...prev, [cylinderId]: false })),
-      )
-  }
-
-  const handleReturnCylinders = () => {
-    setLoadingReturnSome(true)
-    const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
-
-    // axios
-    //   .post(`${apiUrl}/return-assigned-cylinders/`, payload, {
-    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-    //   })
-    api.post("/return-assigned-cylinders/", payload)
-      .then(() =>
-        navigate(`/admins/printcollect/${selectedTeam?.id}`, {
-          state: { salesTeamName: selectedTeam?.name },
-        }),
-      )
-      .catch((error) => console.error("Error in cylinder Collection.", error))
-      .finally(() => setLoadingReturnSome(false))
-  }
-
-  const handleReturnAllCylinders = () => {
-    setLoadingReturnAll(true)
-    const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
-
-    // axios
-    //   .post(`${apiUrl}/return-all-assigned-cylinders/`, payload, {
-    //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-    //   })
-    api.post("/return-all-assigned-cylinders/", payload)
-      .then(() =>
-        navigate(`/admins/printallcollect/${selectedTeam?.id}`, {
-          state: { salesTeamName: selectedTeam?.name },
-        }),
-      )
-      .catch((error) => console.error("Error in cylinder Collection.", error))
-      .finally(() => setLoadingReturnAll(false))
-  }
-
-  const handleSelectTeam = (team) => {
-    setSelectedTeam(team)
-  }
-
-  const handleShowStacked = () => {
-    setShowStacked(!showStacked)
-  }
-
-  const hasCylinders = assignedCylinders.length > 0
-
-  const filteredEmployees = employees.filter(
+const filteredEmployees = employees.filter(
     (employee) =>
       employee.sales_team && employee.sales_team.id === selectedTeam?.id,
   )
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col ">
+     <div className="bg-gray-100 min-h-screen flex flex-col ">
       <main className="flex-grow">
       <AdminNav headerMessage={"Collect Cylinders"} headerText={"Collect cylinders from your retailers or wholesalers"}  />
       <div className="p-4">
@@ -397,60 +210,48 @@ const CollectCylinders = () => {
       ) : (
         <div>
           <h2 className="text-xl font-bold text-center mb-4">
-            Collect Cylinders from {selectedTeam.name}
+            Other products from {selectedTeam.name}
           </h2>
 
-          {hasCylinders ? (
+          {hasProducts ? (
             <>
                 <div className="w-full overflow-x-auto">
                 <table className="table-auto w-full text-xs md:text-sm border-collapse border border-gray-300 sticky top-0 bg-white z-10">
                   <thead>
                   <tr className="bg-gray-200">
-                  <th className="border px-2 py-1">Gas Type</th>
-                  <th className="border px-2 py-1">Weight (kg)</th>
-                  <th className="border px-2 py-1">Assigned</th>
-                  <th className="border px-2 py-1">Filled</th>
-                  <th className="border px-2 py-1">Empties</th>
+                  <th className="border px-2 py-1">Product name</th>
+                  <th className="border px-2 py-1">Assigned quantity</th>
+                  <th className="border px-2 py-1">Retail Sold</th>
+                  <th className="border px-2 py-1">Wholesale Sold</th>
+                  <th className="border px-2 py-1">Lost</th>
                   <th className="border px-2 py-1">Spoiled</th>
                   </tr>
                   </thead>
                   <tbody>
-                  {assignedCylinders.map((cylinder) => (
-                  <tr key={cylinder.id} className="text-center">
+                  {assignedProducts.map((product) => (
+                  <tr key={product.id} className="text-center">
                   <td className="border px-2 py-1">
-                    {cylinder.gas_type}
+                    {product?.product?.name}
                   </td>
-                  <td className="border px-2 py-1">{cylinder.weight}</td>
+                  <td className="border px-2 py-1">{product?.assigned_quantity}</td>
                   <td className="border px-2 py-1">
-                    {cylinder.assigned_quantity}
+                    {product.assigned_quantity}
                   </td>
                   <td className="border px-2 py-1 whitespace-nowrap">
-                    {cylinder.filled}
-                    {cylinder.filled_lost > 0 && (
+                    {product.retail_sold}
+                    {product.retail_sold > 0 && (
                     <span className="text-red-500 ml-2 font-bold">
-                    - {cylinder.filled_lost}
+                    - {product.retail_sold}
                     </span>
                     )}
-                    {cylinder.less_pay > 0 && (
+                    {product.less_pay > 0 && (
                     <span className="text-green-800 ml-2 font-bold">
-                    - {cylinder.less_pay}
+                    - {product.less_pay}
                     </span>
                     )}
                   </td>
-                  <td className="border px-2 py-1 whitespace-nowrap">
-                    {cylinder.empties}
-                    {cylinder.empties_lost > 0 && (
-                    <span className="text-red-500 ml-2 font-bold">
-                    - {cylinder.empties_lost}
-                    </span>
-                    )}
-                    {cylinder.less_pay > 0 && (
-                    <span className="text-green-800 ml-2 font-bold">
-                    + {cylinder.less_pay}
-                    </span>
-                    )}
-                  </td>
-                  <td className="border px-2 py-1">{cylinder.spoiled}</td>
+                  
+                  <td className="border px-2 py-1">{product.spoiled}</td>
                   </tr>
                   ))}
                   </tbody>
@@ -468,62 +269,53 @@ const CollectCylinders = () => {
 
               {showStacked && (
                 <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
-                  {assignedCylinders.map((cylinder) => (
+                  {assignedProducts.map((product) => (
                     <div
-                      key={cylinder.id}
+                      key={product.id}
                       className="bg-white border border-gray-300 rounded-lg shadow-md p-4"
                     >
                       <h3 className="text-lg font-bold text-blue</p>-600 mb-2">
-                        {cylinder.gas_type}
+                        {product.gas_type}
                       </h3>
                       <p className="text-sm text-gray-700">
-                        Weight: {cylinder.weight} kg
+                        Product name: {product.product?.name} kg
                       </p>
                       <p className="text-sm text-gray-700">
-                        Assigned: {cylinder.assigned_quantity}
+                        Assigned: {product.assigned_quantity}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Filled: {cylinder.filled}
+                        Retail sold: {product.retail_sold}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Empties: {cylinder.empties}
+                        wholesale sold: {product.wholesale_sold}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Filled lost: {cylinder.filled_lost}
+                        Lost: {product.missing_products}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Empties lost: {cylinder.empties_lost}
+                        Spoiled: {product.spoiled}
                       </p>
                       <p className="text-sm text-gray-700">
-                        Less pay: {cylinder.less_pay}
+                        Less pay: {product.less_pay}
                       </p>
-                      <p className="text-sm text-gray-700">
-                        Complete Sale(wholesale): {cylinder.wholesale_sold}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        Complete Sale(retail): {cylinder.retail_sold}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        Spoiled: {cylinder.spoiled}
-                      </p>
+                      
 
                       <div className="mt-4 grid grid-cols-2 gap-2">
                         <form
                           onSubmit={(e) => {
                             e.preventDefault()
-                            // handleSubmitLosses(cylinder.cylinder);
-                            e.preventDefault()
+                            // handleSubmitLosses(product.product);
                             if (
-                              selectedEmployee[cylinder.cylinder] &&
-                              losses[cylinder.cylinder]?.empties_lost > 0
+                              selectedEmployee[product.product] &&
+                              losses[product.product]?.empties_lost > 0
                             ) {
-                              handleSubmitLosses(cylinder.cylinder)
+                              handleSubmitLosses(product.product)
                             }
                           }}
                         >
                           <label className="block text-sm font-semibold">
-                            Missing Empties
-                            {selectedEmployee[cylinder.cylinder] && (
+                            Missing products
+                            {selectedEmployee[product.missing_products] && (
                               <span className="text-blue-600">
                                 {" "}
                                 (
@@ -531,7 +323,7 @@ const CollectCylinders = () => {
                                   filteredEmployees.find(
                                     (emp) =>
                                       emp.id ===
-                                      selectedEmployee[cylinder.cylinder],
+                                      selectedEmployee[product.product],
                                   )?.first_name
                                 }
                                 )
@@ -542,15 +334,15 @@ const CollectCylinders = () => {
                             <input
                               type="number"
                               min={0}
-                              max={cylinder.empties}
+                              max={product.empties}
                               className="w-full p-1 border rounded-md"
                               placeholder="Enter amount"
                               value={
-                                losses[cylinder.cylinder]?.empties_lost || ""
+                                losses[product.product]?.empties_lost || ""
                               }
                               onChange={(e) =>
                                 handleLossChange(
-                                  cylinder.cylinder,
+                                  product.product,
                                   "empties_lost",
                                   e.target.value,
                                 )
@@ -558,24 +350,24 @@ const CollectCylinders = () => {
                             />
                             <KeyboardArrowDownIcon
                               onClick={() =>
-                                handleToggleDropdown(cylinder.cylinder)
+                                handleToggleDropdown(product.product)
                               }
                               className="cursor-pointer"
                             />
-                            {showEmployeeDropdown[cylinder.cylinder] && (
+                            {showEmployeeDropdown[product.product] && (
                               <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
                                 {filteredEmployees.map((employee) => (
                                   <div
                                     key={employee.id}
                                     className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                                      selectedEmployee[cylinder.cylinder] ===
+                                      selectedEmployee[product.product] ===
                                       employee.id
                                         ? "bg-gray-200"
                                         : ""
                                     }`}
                                     onClick={() =>
                                       handleSelectEmployee(
-                                        cylinder.cylinder,
+                                        product.product,
                                         employee.id,
                                       )
                                     }
@@ -590,18 +382,18 @@ const CollectCylinders = () => {
                           <button
                             type="submit"
                             className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                              loadingLosses[cylinder.cylinder]
+                              loadingLosses[product.product]
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
                             }`}
-                            // disabled={loadingLosses[cylinder.cylinder]}
+                            // disabled={loadingLosses[product.product]}
                             disabled={
-                              !selectedEmployee[cylinder.cylinder] ||
-                              !losses[cylinder.cylinder]?.empties_lost ||
-                              loadingLosses[cylinder.cylinder]
+                              !selectedEmployee[product.product] ||
+                              !losses[product.product]?.empties_lost ||
+                              loadingLosses[product.product]
                             }
                           >
-                            {loadingLosses[cylinder.cylinder]
+                            {loadingLosses[product.product]
                               ? "Processing..."
                               : "Add"}
                           </button>
@@ -610,12 +402,12 @@ const CollectCylinders = () => {
                         <form
                           onSubmit={(e) => {
                             e.preventDefault()
-                            handleSubmitMissingFilled(cylinder.cylinder)
+                            handleSubmitMissingFilled(product.product)
                           }}
                         >
                           <label className="block text-sm font-semibold">
                             Missing Filled
-                            {selectedEmployeeFilled[cylinder.cylinder] && (
+                            {selectedEmployeeFilled[product.product] && (
                               <span className="text-blue-600">
                                 {" "}
                                 (
@@ -623,7 +415,7 @@ const CollectCylinders = () => {
                                   filteredEmployees.find(
                                     (emp) =>
                                       emp.id ===
-                                      selectedEmployeeFilled[cylinder.cylinder],
+                                      selectedEmployeeFilled[product.product],
                                   )?.first_name
                                 }
                                 )
@@ -634,15 +426,15 @@ const CollectCylinders = () => {
                             <input
                               type="number"
                               min={0}
-                              max={cylinder.filled}
+                              max={product.filled}
                               className="w-full p-1 border rounded-md"
                               placeholder="Enter amount"
                               value={
-                                losses[cylinder.cylinder]?.filled_lost || ""
+                                losses[product.product]?.filled_lost || ""
                               }
                               onChange={(e) =>
                                 handleLossFilledChange(
-                                  cylinder.cylinder,
+                                  product.product,
                                   "filled_lost",
                                   e.target.value,
                                 )
@@ -650,25 +442,25 @@ const CollectCylinders = () => {
                             />
                             <KeyboardArrowDownIcon
                               onClick={() =>
-                                handleFilledToggleDropdown(cylinder.cylinder)
+                                handleFilledToggleDropdown(product.product)
                               }
                               className="cursor-pointer"
                             />
-                            {showEmployeeFilledDropdown[cylinder.cylinder] && (
+                            {showEmployeeFilledDropdown[product.product] && (
                               <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
                                 {filteredEmployees.map((employee) => (
                                   <div
                                     key={employee.id}
                                     className={`p-2 cursor-pointer hover:bg-gray-100 ${
                                       selectedEmployeeFilled[
-                                        cylinder.cylinder
+                                        product.product
                                       ] === employee.id
                                         ? "bg-gray-200"
                                         : ""
                                     }`}
                                     onClick={() =>
                                       handleSelectEmployeeFilled(
-                                        cylinder.cylinder,
+                                        product.product,
                                         employee.id,
                                       )
                                     }
@@ -683,13 +475,13 @@ const CollectCylinders = () => {
                           <button
                             type="submit"
                             className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                              loadingLossesFilled[cylinder.cylinder]
+                              loadingLossesFilled[product.product]
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
                             }`}
-                            disabled={loadingLossesFilled[cylinder.cylinder]}
+                            disabled={loadingLossesFilled[product.product]}
                           >
-                            {loadingLossesFilled[cylinder.cylinder]
+                            {loadingLossesFilled[product.product]
                               ? "Processing..."
                               : "Add"}
                           </button>
@@ -698,12 +490,12 @@ const CollectCylinders = () => {
                         <form
                           onSubmit={(e) => {
                             e.preventDefault()
-                            handleSubmitLessPay(cylinder.cylinder)
+                            handleSubmitLessPay(product.product)
                           }}
                         >
                           <label className="block text-sm font-semibold">
                             Less Payment
-                            {selectedEmployeeLessPay[cylinder.cylinder] && (
+                            {selectedEmployeeLessPay[product.product] && (
                               <span className="text-blue-600">
                                 {" "}
                                 (
@@ -712,7 +504,7 @@ const CollectCylinders = () => {
                                     (emp) =>
                                       emp.id ===
                                       selectedEmployeeLessPay[
-                                        cylinder.cylinder
+                                        product.product
                                       ],
                                   )?.first_name
                                 }
@@ -724,13 +516,13 @@ const CollectCylinders = () => {
                             <input
                               type="number"
                               min={0}
-                              max={cylinder.filled + cylinder.empties}
+                              max={product.filled + product.empties}
                               className="w-full p-1 border rounded-md"
                               placeholder="Enter amount"
-                              value={lesses[cylinder.cylinder]?.less_pay || ""}
+                              value={lesses[product.product]?.less_pay || ""}
                               onChange={(e) =>
                                 handleLessPayChange(
-                                  cylinder.cylinder,
+                                  product.product,
                                   "less_pay",
                                   e.target.value,
                                 )
@@ -739,25 +531,25 @@ const CollectCylinders = () => {
                             />
                             <KeyboardArrowDownIcon
                               onClick={() =>
-                                handleLessPayToggleDropdown(cylinder.cylinder)
+                                handleLessPayToggleDropdown(product.product)
                               }
                               className="cursor-pointer"
                             />
-                            {showEmployeeLessPayDropdown[cylinder.cylinder] && (
+                            {showEmployeeLessPayDropdown[product.product] && (
                               <div className="absolute z-10 w-full bg-white border rounded shadow-md mt-1">
                                 {filteredEmployees.map((employee) => (
                                   <div
                                     key={employee.id}
                                     className={`p-2 cursor-pointer hover:bg-gray-100 ${
                                       selectedEmployeeLessPay[
-                                        cylinder.cylinder
+                                        product.product
                                       ] === employee.id
                                         ? "bg-gray-200"
                                         : ""
                                     }`}
                                     onClick={() =>
                                       handleSelectEmployeeLessPay(
-                                        cylinder.cylinder,
+                                        product.product,
                                         employee.id,
                                       )
                                     }
@@ -772,13 +564,13 @@ const CollectCylinders = () => {
                           <button
                             type="submit"
                             className={`mt-2 w-full bg-green-500 text-white py-1 rounded ${
-                              loadingLessPay[cylinder.cylinder]
+                              loadingLessPay[product.product]
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
                             }`}
-                            disabled={loadingLessPay[cylinder.cylinder]}
+                            disabled={loadingLessPay[product.product]}
                           >
-                            {loadingLessPay[cylinder.cylinder]
+                            {loadingLessPay[product.product]
                               ? "Processing..."
                               : "Add"}
                           </button>
@@ -799,7 +591,7 @@ const CollectCylinders = () => {
                   onClick={handleReturnAllCylinders}
                   disabled={loadingReturnAll}
                 >
-                  {loadingReturnAll ? "Processing..." : "Return all Cylinders"}
+                  {loadingReturnAll ? "Processing..." : "Return all Products"}
                 </button>
                 <button
                   className={`bg-blue-500 text-white font-bold px-6 py-2 rounded-lg shadow ${
@@ -812,13 +604,13 @@ const CollectCylinders = () => {
                 >
                   {loadingReturnSome
                     ? "Processing..."
-                    : "Return empty & spoiled Cylinders"}
+                    : "Return spoiled "}
                 </button>
               </div>
             </>
           ) : (
             <p className="text-center mt-4 text-gray-600">
-              No data available for assigned cylinders.
+              No data available for assigned products.
             </p>
           )}
         </div>
@@ -834,4 +626,4 @@ const CollectCylinders = () => {
   )
 }
 
-export default CollectCylinders
+export default CollectOtherProducts

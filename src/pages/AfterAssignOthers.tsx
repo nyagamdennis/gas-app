@@ -23,8 +23,8 @@ const AfterAssignOthers = () => {
   const { state } = useLocation() // Get the state object passed via navigate
   const [printComplete, setPrintComplete] = useState(false)
   const salesTeamName = state?.salesTeamName
+  const [savingPrint, setSavingPrint] = useState(false)
 
-  console.log("products ", products)
   useEffect(() => {
     // Fetch all assigned cylinders (optionally filter by sales team)
     // dispatch(fetchAssignedCylinders(salesTeamId));

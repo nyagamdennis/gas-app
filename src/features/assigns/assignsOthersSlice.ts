@@ -32,8 +32,7 @@ export const fetchAssignedOthers = createAsyncThunk(
   "assignedOthers/fetchAssignedOthers",
   async (salesTeamId) => {
    
-    const response = await api.get("/print-assigned-otherproduct/")
-    console.log('fetched other products ', response.data, { params: { sales_team: salesTeamId } });
+    const response = await api.get(`/print-assigned-otherproduct/${salesTeamId}/`)
     return response.data;
   }
 );

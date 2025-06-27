@@ -285,9 +285,10 @@ const WholeSaleRecordPage = () => {
       const assignedProduct = allOtherProducts.find(
         (prod) => prod.id === Number(product.productId),
       )
+      console.log('assgined others prices ', assignedProduct)
 
       if (assignedProduct) {
-        const price = assignedProduct?.product?.wholesale_sales_price
+        const price = assignedProduct?.product?.whole_sales_price
 
         return total + price * product.quantity
       }
@@ -295,6 +296,9 @@ const WholeSaleRecordPage = () => {
       return <FormattedAmount amount={total} />
     }, 0)
   }
+
+
+  
 
   const calculateOtherDebt = () => {
     const total = calculateOtherTotal()

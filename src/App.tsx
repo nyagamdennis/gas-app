@@ -59,6 +59,7 @@ import Expenses from "./pages/Expenses"
 import AiPredict from "./pages/AiPredict"
 import AdminOtherProductsSalesRecord from "./pages/AdminOtherProductsSalesRecord"
 import ProsessingPayment from "./pages/ProsessingPayment"
+import CollectOtherProducts from "./pages/CollectOtherProducts"
 
 
 function App() {
@@ -83,6 +84,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_owner">
                  <AdminAsign />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/collectothersproducts"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <CollectOtherProducts />
               </ProtectedRoute>
             }
           />
