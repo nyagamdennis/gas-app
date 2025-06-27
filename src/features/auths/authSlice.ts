@@ -192,7 +192,7 @@ export const refreshAccessToken =
 
       dispatch(loginSuccess({ user, accessToken, refreshToken }))
     } catch (error) {
-      alert(error)
+      
       dispatch(logout())
     }
   }

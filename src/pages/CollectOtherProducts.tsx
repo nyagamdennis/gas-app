@@ -238,19 +238,20 @@ const filteredEmployees = employees.filter(
                     {product.assigned_quantity}
                   </td>
                   <td className="border px-2 py-1 whitespace-nowrap">
-                    {product.retail_sold}
+                    {/* {product.retail_sold} */}
                     {product.retail_sold > 0 && (
                     <span className="text-red-500 ml-2 font-bold">
                     - {product.retail_sold}
                     </span>
                     )}
-                    {product.less_pay > 0 && (
+                 
                     <span className="text-green-800 ml-2 font-bold">
-                    - {product.less_pay}
+                    {product.wholesale_sold}
                     </span>
-                    )}
+                    
                   </td>
                   
+                  <td className="border px-2 py-1">{product.missing_products}</td>
                   <td className="border px-2 py-1">{product.spoiled}</td>
                   </tr>
                   ))}
