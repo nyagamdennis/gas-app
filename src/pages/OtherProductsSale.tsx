@@ -17,6 +17,7 @@ const OtherProductsSale = () => {
   const myProfile = useAppSelector(selectMyProfile);
     const [spoiledInput, setSpoiledInput] = useState({})
   
+  // console.log("Other Products:", otherProducts);
 
   useEffect(() => {
     dispatch(fetchMyProfile());
@@ -71,13 +72,19 @@ const OtherProductsSale = () => {
               <strong>Assigned Quantity:</strong> {product.assigned_quantity}
             </p>
              <p className="text-gray-600 mt-1">
-              <strong>Sold:</strong> {product.assigned_quantity}
+              <strong>Retail Sold:</strong> {product.retail_sold}
+            </p>
+            <p className="text-gray-600 mt-1">
+              <strong>Wholesale Sold:</strong> {product.wholesale_sold}
             </p>
              <p className="text-gray-600 mt-1">
+              <strong>Missing:</strong> {product.missing_products}
+            </p>
+            <p className="text-gray-600 mt-1">
               <strong>Remaining:</strong> {product.assigned_quantity}
             </p>
             <p className="text-gray-600 mt-1">
-              <strong>Spoiled:</strong> {product.assigned_quantity}
+              <strong>Spoiled:</strong> {product.spoiled}
             </p>
             <p className="text-gray-600 mt-1 text-sm">
               <strong>Wholesale Price:</strong> Ksh {product.product.whole_sales_price}

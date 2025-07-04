@@ -338,8 +338,8 @@ const AdminSalesRecord = () => {
                         {
                           <FormattedAmount
                             amount={
-                              sale.amount_sold_for_mpesa * sale.quantity -
-                              sale.debt_info?.debt_amount
+                              sale.mpesaAmount * sale.quantity -
+                              (sale.debt_info?.debt_amount ||0)
                             }
                           />
                         }
@@ -347,11 +347,11 @@ const AdminSalesRecord = () => {
                       {sale.mpesa_code?.length > 0 &&
                         sale.mpesa_code.map((txn, idx) => (
                           <div key={idx} className="text-gray-500">
-                            <p>Txn Code: {txn.code || "N/A"}</p>
+                            {/* <p>Txn Code: {txn.code || "N/A"}</p>
                             <p>
                               Txn Amount:{" "}
                               {<FormattedAmount amount={txn.amount} />}
-                            </p>
+                            </p> */}
                           </div>
                         ))}
                     </div>
@@ -363,7 +363,7 @@ const AdminSalesRecord = () => {
                       {
                         <FormattedAmount
                           amount={
-                            sale.amount_sold_for * sale.quantity -
+                            sale.cashAmount * sale.quantity -
                             (sale.debt_info?.debt_amount || 0)
                           }
                         />
