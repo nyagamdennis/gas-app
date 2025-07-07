@@ -16,14 +16,13 @@ const AdminHome = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const allBusiness = useAppSelector(selectAllBusiness)
-  const { isPro, isTrial, isExpired } = planStatus();
+  const { isPro, isTrial, isExpired } = planStatus()
 
   useEffect(() => {
-      dispatch(fetchBusiness())
-    }, [dispatch])
-    
-  
-console.log('all business ', allBusiness)
+    dispatch(fetchBusiness())
+  }, [dispatch])
+
+  console.log("all business ", allBusiness)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
@@ -69,6 +68,18 @@ console.log('all business ', allBusiness)
             title: "Employee Management",
             subtitle: "Organize and manage employee data.",
             color: "yellow",
+          },
+          {
+            to: "#",
+            title: "Delivery Management",
+            subtitle: "Track deliveries and assign delivery personnel.",
+            color: "yellow", // Blue for logistics/delivery
+          },
+          {
+            to: "#",
+            title: "Order Management",
+            subtitle: "Monitor and manage customer orders efficiently.",
+            color: "yellow", // Yellow is fine for alerts/orders
           },
           {
             to: "/createteam",
