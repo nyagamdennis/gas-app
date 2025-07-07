@@ -67,6 +67,8 @@ const TeamSalesPage = () => {
     dispatch(fetchTeamExpenses({ salesTeamId }))
   }, [dispatch, salesTeamId])
 
+  
+
   useEffect(() => {
     // Filter sales data by date range
     const filtered = allSalesData.filter((sale) => {
@@ -114,6 +116,8 @@ const TeamSalesPage = () => {
     (total, item) => total + (item.amount || 0),
     0,
   )
+
+  // console.log("filtered sales data", filteredSales)
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -248,9 +252,16 @@ const TeamSalesPage = () => {
               )}
 
               {/* Timestamp */}
-              <p className="mt-2 text-sm text-gray-500">
+              <div className="flex justify-between items-center">
+                <p className="mt-2 text-sm text-gray-500">
                 Sold on: {new Date(sale.timestamp).toLocaleDateString()}
               </p>
+              <Link to={`/salesrecordedit/${sale.id}`}>
+              <button className="bg-blue-500 text-white px-2  rounded-md ">Edit</button>
+              </Link>
+              
+              </div>
+              
 
               {/* verified */}
 

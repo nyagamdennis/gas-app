@@ -651,7 +651,7 @@ const RetailSalesRecordPage = () => {
                           </p>
                         </label>
 
-                        <label className="flex items-center gap-2">
+                        {/* <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             name={`paymentAmount-${index}`}
@@ -678,7 +678,7 @@ const RetailSalesRecordPage = () => {
                               />
                             )}
                           </p>
-                        </label>
+                        </label> */}
 
                         <label className="flex items-center gap-2">
                           <input
@@ -796,7 +796,7 @@ const RetailSalesRecordPage = () => {
 
             <div className="mb-4">
               <label className="block text-gray-600">
-                Exchanged with local
+                Exchanged with another cylinder?
               </label>
               <div className="flex items-center gap-4 mt-2">
                 <label className="flex items-center gap-2">
