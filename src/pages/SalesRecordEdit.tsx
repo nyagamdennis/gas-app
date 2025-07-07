@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 import { fetchSingleSalesTeamData, selectSingleSalesTeamData } from '../features/salesTeam/singleSalesTeamDataSlice';
 import defaultProfile from "../components/media/default.png";
+import { fetchAssignedProducts, selectAllAssignedProducts } from '../features/product/assignedProductsSlice';
 
 const mockProducts = [
   { id: 1, label: "Gas A - 6kg", gas_type: "Gas A", weight: 6 },
@@ -17,6 +18,8 @@ const mockProducts = [
 const SalesRecordEdit = () => {
   const myProfile = useAppSelector(selectMyProfile);
   const sale = useAppSelector(selectSingleSalesTeamData);
+  console.log("Sale data:", sale);
+  const allAssignedProducts = useAppSelector(selectAllAssignedProducts)
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
 
@@ -31,10 +34,8 @@ const SalesRecordEdit = () => {
 
   useEffect(() => {
     dispatch(fetchMyProfile());
+    dispatch(fetchAssignedProducts())
     if (id) dispatch(fetchSingleSalesTeamData({ id }));
-  }, [dispatch, id]);
-
-  useEffect(() => {
     if (sale?.customer) {
       setCustomerName(sale.customer.name);
       setCustomerPhone(sale.customer.phone);
@@ -45,7 +46,21 @@ const SalesRecordEdit = () => {
       setIsExchanged(!!sale.exchanged_with_local);
       setTotalAmount(sale.total_amount || 0);
     }
-  }, [sale]);
+  }, [dispatch, id, sale]);
+
+
+  // useEffect(() => {
+  //   if (sale?.customer) {
+  //     setCustomerName(sale.customer.name);
+  //     setCustomerPhone(sale.customer.phone);
+  //     setCustomerLocation(sale.customer.location?.name);
+  //     setSelectedProductId(sale.product?.id || '');
+  //     setSalesType(sale.sales_type || 'retail');
+  //     setQuantity(sale.quantity || 1);
+  //     setIsExchanged(!!sale.exchanged_with_local);
+  //     setTotalAmount(sale.total_amount || 0);
+  //   }
+  // }, [sale]);
 
   const handleSaveChanges = () => {
     const payload = {
@@ -115,15 +130,22 @@ const SalesRecordEdit = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Product</label>
-              <select value={selectedProductId} onChange={e => setSelectedProductId(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="">Select product</option>
-                {mockProducts.map(prod => (
-                  <option key={prod.id} value={prod.id}>{prod.label}</option>
-                ))}
-              </select>
+            
+              <div>
+  <label className="block text-sm font-medium mb-1">Product</label>
+  <select
+    value={selectedProductId}
+    onChange={e => setSelectedProductId(e.target.value)}
+    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+  >
+    <option value="">Select product</option>
+    {allAssignedProducts?.map(prod => (
+      <option key={prod.id} value={prod.id}>
+        {prod.gas_type} - {prod.weight}kg
+      </option>
+    ))}
+  </select>
+</div>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Sales Type</label>

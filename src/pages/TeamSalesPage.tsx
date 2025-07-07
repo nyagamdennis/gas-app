@@ -256,9 +256,13 @@ const TeamSalesPage = () => {
                 <p className="mt-2 text-sm text-gray-500">
                 Sold on: {new Date(sale.timestamp).toLocaleDateString()}
               </p>
-              <Link to={`/salesrecordedit/${sale.id}`}>
+              <div className="flex space-x-2">
+                <button className="bg-red-500 px-2 rounded-md text-white">Delete</button>
+                <Link to={`/salesrecordedit/${sale.id}`}>
               <button className="bg-blue-500 text-white px-2  rounded-md ">Edit</button>
               </Link>
+              </div>
+              
               
               </div>
               

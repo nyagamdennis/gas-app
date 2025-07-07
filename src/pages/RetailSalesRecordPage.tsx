@@ -34,7 +34,6 @@ const RetailSalesRecordPage = () => {
 
   const [products, setProducts] = useState([{ productId: "", quantity: 1 }])
   const [otherProducts, setOtherProducts] = useState([
-    // { productId: "", quantity: 1 },
     { productId: "", quantity: 1, paymentAmount: "MINIMUM", customPrice: "" },
   ])
   const [saleType, setSaleType] = useState("REFILL")
