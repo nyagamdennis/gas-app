@@ -262,21 +262,21 @@ const RetailSalesRecordPage = () => {
           unitPrice =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_wholesale_selling_price
+                ? assignedProduct.max_retail_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_wholesale_selling_price
-                : assignedProduct.min_wholesale_selling_price
+                ? assignedProduct.mid_retail_selling_price
+                : assignedProduct.min_retail_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_wholesale_refil_price
+              ? assignedProduct.max_retail_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_wholesale_refil_price
-              : assignedProduct.min_wholesale_refil_price
+              ? assignedProduct.mid_retail_refil_price
+              : assignedProduct.min_retail_refil_price
         }
 
         const productPayload: any = {
           id: product.productId,
           quantity: product.quantity,
-          amount_sold_for: unitPrice,
+          amount_sold_for: unitPrice * product.quantity, // Calculate total for this product
         }
 
         if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {

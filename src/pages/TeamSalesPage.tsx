@@ -53,7 +53,8 @@ const TeamSalesPage = () => {
         postExpenses({ employeeId, salesTeamId, expenseName, expenseAmount }),
       )
       setExpenseName('')
-      setExpenseAmount()
+      setExpenseAmount(0)
+      
       setAddingExpenses(false)
     } catch (error) {
       setAddingExpenses(false)
@@ -88,14 +89,14 @@ const TeamSalesPage = () => {
   }, [expense, startDate, endDate])
 
   const totalSalesAmount = filteredSales.reduce((total, sale) => {
-    const cash = Number(sale.cashAmount) || 0
+    const cash = Number(sale.amount_sold_for) || 0
     const mpesa = Number(sale.mpesaAmount) || 0
     return total + cash + mpesa
   }, 0)
 
   const totalAmounts = filteredSales.reduce(
     (totals, sale) => {
-      const cash = Number(sale.cashAmount) || 0
+      const cash = Number(sale.amount_sold_for) || 0
       const mpesa = sale.admin_mpesa_verified
         ? Number(sale.mpesaAmount) || 0
         : 0
@@ -239,7 +240,7 @@ const TeamSalesPage = () => {
 
               {/* Total Amount */}
               <p className="mt-4 text-gray-900 font-bold">
-                Total Amount: <FormattedAmount amount={sale.total_amount} />
+                Total Amount: <FormattedAmount amount={sale.amount_sold_for} />
               </p>
               {sale?.admin_payment_verified ? (
                 <div>
