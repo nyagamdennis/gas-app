@@ -31,8 +31,9 @@ const CustomerExcerpt = ({ customer }) => {
   const salesProduct = useAppSelector(selectAllSales)
 
   const location = locations.find((l) => l.id === customer.location.id)
-  const phoneStr = customer.phone.toString()
+  const phoneStr = customer?.phone?.toString();
 
+  
   const toggleSMS = () => setSmsState(!smsState)
   const toggleHistory = () => setShowHistory(!showHistory)
 

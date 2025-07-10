@@ -34,7 +34,6 @@ const RetailSalesRecordPage = () => {
 
   const [products, setProducts] = useState([{ productId: "", quantity: 1 }])
   const [otherProducts, setOtherProducts] = useState([
-    // { productId: "", quantity: 1 },
     { productId: "", quantity: 1, paymentAmount: "MINIMUM", customPrice: "" },
   ])
   const [saleType, setSaleType] = useState("REFILL")
@@ -263,21 +262,21 @@ const RetailSalesRecordPage = () => {
           unitPrice =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_wholesale_selling_price
+                ? assignedProduct.max_retail_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_wholesale_selling_price
-                : assignedProduct.min_wholesale_selling_price
+                ? assignedProduct.mid_retail_selling_price
+                : assignedProduct.min_retail_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_wholesale_refil_price
+              ? assignedProduct.max_retail_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_wholesale_refil_price
-              : assignedProduct.min_wholesale_refil_price
+              ? assignedProduct.mid_retail_refil_price
+              : assignedProduct.min_retail_refil_price
         }
 
         const productPayload: any = {
           id: product.productId,
           quantity: product.quantity,
-          amount_sold_for: unitPrice,
+          amount_sold_for: unitPrice * product.quantity, // Calculate total for this product
         }
 
         if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
@@ -651,7 +650,7 @@ const RetailSalesRecordPage = () => {
                           </p>
                         </label>
 
-                        <label className="flex items-center gap-2">
+                        {/* <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             name={`paymentAmount-${index}`}
@@ -678,7 +677,7 @@ const RetailSalesRecordPage = () => {
                               />
                             )}
                           </p>
-                        </label>
+                        </label> */}
 
                         <label className="flex items-center gap-2">
                           <input
@@ -796,7 +795,7 @@ const RetailSalesRecordPage = () => {
 
             <div className="mb-4">
               <label className="block text-gray-600">
-                Exchanged with local
+                Exchanged with another cylinder?
               </label>
               <div className="flex items-center gap-4 mt-2">
                 <label className="flex items-center gap-2">

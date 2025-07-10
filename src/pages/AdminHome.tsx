@@ -123,6 +123,13 @@ const AdminHome = () => {
             subtitle: "Utilize AI for strategic business forecasting.",
             color: "blue",
           },
+          {
+            to: "/admins/collectothersproducts",
+            title: "Other Products Collection",
+            subtitle: "Streamline collection of other products.",
+            color: "blue",
+            
+          },
         ].map(({ to, title, subtitle, color }, index) =>
           to ? (
             <Link

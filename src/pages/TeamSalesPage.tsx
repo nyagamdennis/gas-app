@@ -41,6 +41,7 @@ const TeamSalesPage = () => {
     return today.toISOString().split("T")[0] // Default to today's date
   })
 
+  console.log('all sales data', allSalesData)
   const id = myProfile?.id
 
   const salesTeamId = myProfile?.sales_team?.id
@@ -66,6 +67,8 @@ const TeamSalesPage = () => {
     dispatch(fetchSalesTeamData())
     dispatch(fetchTeamExpenses({ salesTeamId }))
   }, [dispatch, salesTeamId])
+
+  
 
   useEffect(() => {
     // Filter sales data by date range
@@ -114,6 +117,8 @@ const TeamSalesPage = () => {
     (total, item) => total + (item.amount || 0),
     0,
   )
+
+  // console.log("filtered sales data", filteredSales)
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -234,10 +239,35 @@ const TeamSalesPage = () => {
               )}
 
               {/* Total Amount */}
+            
               <p className="mt-4 text-gray-900 font-bold">
                 Total Amount: <FormattedAmount amount={sale.total_amount} />
               </p>
-              {sale?.admin_payment_verified ? (
+
+              {/* ----- */}
+                <div className="mt-2">
+                  {sale?.cashAmount ? (
+                    <p>
+                      Cash Payment Verified:{" "}
+                      {sale.admin_payment_verified ? (
+                        <span className="text-green-700 font-bold">Yes</span>
+                      ) : (
+                        <span className="text-red-700 font-bold">No</span>
+                      )}
+                    </p>
+                  ) : null}
+                  {sale?.mpesaAmount ? (
+                    <p>
+                      Mpesa Payment Verified:{" "}
+                      {sale.admin_mpesa_verified ? (
+                        <span className="text-green-700 font-bold">Yes</span>
+                      ) : (
+                        <span className="text-red-700 font-bold">No</span>
+                      )}
+                    </p>
+                  ) : null}
+                </div>
+              {/* {sale?.admin_payment_verified ? (
                 <div>
                   <p className=" text-green-900 text-xl">payment verified.</p>
                 </div>
@@ -245,12 +275,23 @@ const TeamSalesPage = () => {
                 <div>
                   <p className=" text-red-900 text-xl">payment not verified.</p>
                 </div>
-              )}
+              )} */}
 
               {/* Timestamp */}
-              <p className="mt-2 text-sm text-gray-500">
+              <div className="flex justify-between items-center">
+                <p className="mt-2 text-sm text-gray-500">
                 Sold on: {new Date(sale.timestamp).toLocaleDateString()}
               </p>
+              <div className="flex space-x-2">
+                <button className="bg-red-500 px-2 rounded-md text-white">Delete</button>
+                <Link to={`/salesrecordedit/${sale.id}`}>
+              <button className="bg-blue-500 text-white px-2  rounded-md ">Edit</button>
+              </Link>
+              </div>
+              
+          
+              </div>
+              
 
               {/* verified */}
 
@@ -289,7 +330,7 @@ const TeamSalesPage = () => {
         <div className="px-2">
           <h2 className="text-lg font-semibold">
             Expected total cash:{" "}
-            <FormattedAmount amount={totalSalesAmount - totalExpenses} />
+            <FormattedAmount amount={totalAmounts.totalCash - totalExpenses} />
           </h2>
 
           <div className="bg-gray-500 my-2 p-2">

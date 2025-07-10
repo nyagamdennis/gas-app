@@ -17,6 +17,8 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
   const toggleRow = (rowId) => {
     setExpandedRow(expandedRow === rowId ? null : rowId)
   }
+
+  // console.log("gas", gas)
   return (
     <div
       key={gas.id}

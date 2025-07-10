@@ -285,9 +285,10 @@ const WholeSaleRecordPage = () => {
       const assignedProduct = allOtherProducts.find(
         (prod) => prod.id === Number(product.productId),
       )
+      console.log('assgined others prices ', assignedProduct)
 
       if (assignedProduct) {
-        const price = assignedProduct?.product?.wholesale_sales_price
+        const price = assignedProduct?.product?.whole_sales_price
 
         return total + price * product.quantity
       }
@@ -295,6 +296,9 @@ const WholeSaleRecordPage = () => {
       return <FormattedAmount amount={total} />
     }, 0)
   }
+
+
+  
 
   const calculateOtherDebt = () => {
     const total = calculateOtherTotal()
@@ -601,7 +605,7 @@ const WholeSaleRecordPage = () => {
                           </p>
                         </label>
 
-                        <label className="flex items-center gap-2">
+                        {/* <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             name={`paymentAmount-${index}`}
@@ -630,7 +634,7 @@ const WholeSaleRecordPage = () => {
                               />
                             )}
                           </p>
-                        </label>
+                        </label> */}
 
                         <label className="flex items-center gap-2">
                           <input
@@ -745,7 +749,7 @@ const WholeSaleRecordPage = () => {
             </button>
 
             <div className="mb-4">
-              <label className="block text-gray-600">Exchange with local</label>
+              <label className="block text-gray-600">Exchange with another cylinder?</label>
               <div className="flex items-center gap-4 mt-2">
                 <label className="flex items-center gap-2">
                   <input
