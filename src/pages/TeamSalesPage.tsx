@@ -41,6 +41,7 @@ const TeamSalesPage = () => {
     return today.toISOString().split("T")[0] // Default to today's date
   })
 
+  console.log('all sales data', allSalesData)
   const id = myProfile?.id
 
   const salesTeamId = myProfile?.sales_team?.id
@@ -53,8 +54,7 @@ const TeamSalesPage = () => {
         postExpenses({ employeeId, salesTeamId, expenseName, expenseAmount }),
       )
       setExpenseName('')
-      setExpenseAmount(0)
-      
+      setExpenseAmount()
       setAddingExpenses(false)
     } catch (error) {
       setAddingExpenses(false)
@@ -89,14 +89,14 @@ const TeamSalesPage = () => {
   }, [expense, startDate, endDate])
 
   const totalSalesAmount = filteredSales.reduce((total, sale) => {
-    const cash = Number(sale.amount_sold_for) || 0
+    const cash = Number(sale.cashAmount) || 0
     const mpesa = Number(sale.mpesaAmount) || 0
     return total + cash + mpesa
   }, 0)
 
   const totalAmounts = filteredSales.reduce(
     (totals, sale) => {
-      const cash = Number(sale.amount_sold_for) || 0
+      const cash = Number(sale.cashAmount) || 0
       const mpesa = sale.admin_mpesa_verified
         ? Number(sale.mpesaAmount) || 0
         : 0
@@ -239,10 +239,35 @@ const TeamSalesPage = () => {
               )}
 
               {/* Total Amount */}
+            
               <p className="mt-4 text-gray-900 font-bold">
-                Total Amount: <FormattedAmount amount={sale.amount_sold_for} />
+                Total Amount: <FormattedAmount amount={sale.total_amount} />
               </p>
-              {sale?.admin_payment_verified ? (
+
+              {/* ----- */}
+                <div className="mt-2">
+                  {sale?.cashAmount ? (
+                    <p>
+                      Cash Payment Verified:{" "}
+                      {sale.admin_payment_verified ? (
+                        <span className="text-green-700 font-bold">Yes</span>
+                      ) : (
+                        <span className="text-red-700 font-bold">No</span>
+                      )}
+                    </p>
+                  ) : null}
+                  {sale?.mpesaAmount ? (
+                    <p>
+                      Mpesa Payment Verified:{" "}
+                      {sale.admin_mpesa_verified ? (
+                        <span className="text-green-700 font-bold">Yes</span>
+                      ) : (
+                        <span className="text-red-700 font-bold">No</span>
+                      )}
+                    </p>
+                  ) : null}
+                </div>
+              {/* {sale?.admin_payment_verified ? (
                 <div>
                   <p className=" text-green-900 text-xl">payment verified.</p>
                 </div>
@@ -250,7 +275,7 @@ const TeamSalesPage = () => {
                 <div>
                   <p className=" text-red-900 text-xl">payment not verified.</p>
                 </div>
-              )}
+              )} */}
 
               {/* Timestamp */}
               <div className="flex justify-between items-center">
@@ -264,7 +289,7 @@ const TeamSalesPage = () => {
               </Link>
               </div>
               
-              
+          
               </div>
               
 
@@ -305,7 +330,7 @@ const TeamSalesPage = () => {
         <div className="px-2">
           <h2 className="text-lg font-semibold">
             Expected total cash:{" "}
-            <FormattedAmount amount={totalSalesAmount - totalExpenses} />
+            <FormattedAmount amount={totalAmounts.totalCash - totalExpenses} />
           </h2>
 
           <div className="bg-gray-500 my-2 p-2">
