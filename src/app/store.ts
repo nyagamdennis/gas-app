@@ -15,6 +15,7 @@ import otherProductsReducer from "../features/store/otherProductsSlice"
 import assignsReducer from "../features/assigns/assignsSlice"
 import myProfileReducer from "../features/employees/myProfileSlice"
 import salesTeamDataReducer from "../features/salesTeam/salesTeamDataSlice"
+import singleSalesTeamDataReducer from "../features/salesTeam/singleSalesTeamDataSlice";
 import assignedOtherProductsReducer from "../features/product/assignedOtherProductsSlice"
 import adminSalesTeamDataReducer from "../features/salesTeam/adminSalesTeamDataSlice"
 import collectionsReducer from "../features/collections/collectionsSlice"
@@ -65,6 +66,7 @@ export const store = configureStore({
     assigns: assignsReducer,
     myProfile: myProfileReducer,
     salesTeamData: salesTeamDataReducer,
+    singleSalesTeamData: singleSalesTeamDataReducer,
     assignedOtherProducts: assignedOtherProductsReducer,
     adminSalesTeamData: adminSalesTeamDataReducer,
     collections: collectionsReducer,
