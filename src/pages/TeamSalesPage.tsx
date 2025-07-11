@@ -241,7 +241,7 @@ const TeamSalesPage = () => {
               {/* Total Amount */}
             
               <p className="mt-4 text-gray-900 font-bold">
-                Total Amount: <FormattedAmount amount={sale.total_amount} />
+                Total Amount: <FormattedAmount amount={sale.amount_sold_for} />
               </p>
 
               {/* ----- */}
