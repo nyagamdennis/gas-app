@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
+import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+
 import {
   fetchAssignedProducts,
   selectAllAssignedProducts,
@@ -16,8 +18,13 @@ import {
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
 import api from "../../utils/api"
+import SalesHeader from "../components/SalesHeader";
+import AdminsFooter from "../components/AdminsFooter";
 
 const WholeSaleRecordPage = () => {
+    const myProfile = useAppSelector(selectMyProfile);
+  
+
   const [searchResults, setSearchResults] = useState([])
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
   const [searchingBy, setSearchingBy] = useState("") // "name" or "phone"
@@ -405,9 +412,17 @@ const WholeSaleRecordPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
+     {/*  <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
         Wholesale Records
-      </div>
+      </div> */}
+      
+      <SalesHeader
+              teamName={myProfile?.sales_team?.name}
+              profileImage={myProfile?.profile_image}
+              firstName={myProfile?.first_name}
+              lastName={myProfile?.last_name}
+              description="Record wholesale transactions"
+            />
       <ToastContainer />
 
       <div className="flex justify-center gap-4 mt-4">
@@ -1244,12 +1259,7 @@ const WholeSaleRecordPage = () => {
         )}
       </div>
 
-      <Link
-        to="/sales"
-        className="text-blue-300 bg-gray-800 font-bold text-xl py-4 text-center mt-auto"
-      >
-        Back to Home
-      </Link>
+     <AdminsFooter/>
     </div>
   )
 }

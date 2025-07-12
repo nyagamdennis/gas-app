@@ -27,6 +27,8 @@ import {
   selectAllRequests,
 } from "../features/RequestCylinders/requestedSlice"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
+import SalesHeader from "../components/SalesHeader"
+import AdminsFooter from "../components/AdminsFooter"
 
 const SalesTeamCylinders = () => {
   const dispatch = useAppDispatch()
@@ -124,7 +126,14 @@ console.log('all cylinders ', assigned_cylinders)
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <EmployeeNav salesTeamName={salesTeamName} myProfile={myProfile} />
+      <SalesHeader
+       teamName={myProfile?.sales_team?.name}
+        profileImage={myProfile?.profile_image}
+        firstName={myProfile?.first_name}
+        lastName={myProfile?.last_name}
+        description="Cylinders Request"
+      />
+      {/* <EmployeeNav salesTeamName={salesTeamName} myProfile={myProfile} /> */}
 
       <div className="text-center mt-2">
         <Link to="/request">
@@ -319,7 +328,8 @@ console.log('all cylinders ', assigned_cylinders)
         {/* <Link className="hover:underline" to="/sales">
           Home
         </Link> */}
-        <EmployeeFooter />
+        {/* <EmployeeFooter /> */}
+        <AdminsFooter/>
     </div>
   )
 }
