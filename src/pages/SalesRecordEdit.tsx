@@ -8,6 +8,7 @@ import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfile
 import { fetchSingleSalesTeamData, selectSingleSalesTeamData } from '../features/salesTeam/singleSalesTeamDataSlice';
 import defaultProfile from "../components/media/default.png";
 import { fetchAssignedProducts, selectAllAssignedProducts } from '../features/product/assignedProductsSlice';
+import SalesHeader from '../components/SalesHeader';
 
 const mockProducts = [
   { id: 1, label: "Gas A - 6kg", gas_type: "Gas A", weight: 6 },
@@ -46,7 +47,7 @@ const SalesRecordEdit = () => {
       setIsExchanged(!!sale.exchanged_with_local);
       setTotalAmount(sale.total_amount || 0);
     }
-  }, [dispatch, id, sale]);
+  }, [dispatch, id]);
 
 
   // useEffect(() => {
@@ -83,7 +84,7 @@ const SalesRecordEdit = () => {
   return (
     <div className="min-h-screen bg-neutral-100 flex flex-col">
       {/* Header */}
-      <header className="bg-blue-600 text-white px-6 py-4 shadow-sm flex justify-between items-center">
+ {/*      <header className="bg-blue-600 text-white px-6 py-4 shadow-sm flex justify-between items-center">
         <Link to="/sales">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
@@ -100,7 +101,15 @@ const SalesRecordEdit = () => {
           />
           <span className="text-sm mt-1">{myProfile?.first_name} {myProfile?.last_name}</span>
         </Link>
-      </header>
+      </header> */}
+      
+      <SalesHeader
+        teamName={myProfile?.sales_team?.name}
+        profileImage={myProfile?.profile_image}
+        firstName={myProfile?.first_name}
+        lastName={myProfile?.last_name}
+        description="Edit Records"
+      />
 
       {/* Main Content */}
       <main className="flex-grow px-6 py-8 grid place-items-center">

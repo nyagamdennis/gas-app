@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import defaultProfile from "../components/media/default.png";
 import EmployeeNav from "../components/ui/EmployeeNav";
 import EmployeeFooter from "../components/ui/EmployeeFooter";
+import AdminsFooter from "../components/AdminsFooter";
 
 const OtherProductsSale = () => {
   const dispatch = useAppDispatch();
@@ -133,7 +134,8 @@ const OtherProductsSale = () => {
       </div>
 
       {/* Footer Section */}
-      <EmployeeFooter />
+      {/* <EmployeeFooter /> */}
+      <AdminsFooter/>
     </div>
   );
 };
