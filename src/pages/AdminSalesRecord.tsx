@@ -220,7 +220,7 @@ const AdminSalesRecord = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       
         <AdminNav
-          headerMessage={"Others Sales Dashboard"}
+          headerMessage={"Others Sales Insights"}
           headerText={"Monitor and manage your team's sales"}
         />
 

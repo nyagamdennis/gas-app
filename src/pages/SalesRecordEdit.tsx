@@ -8,6 +8,7 @@ import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfile
 import { fetchSingleSalesTeamData, selectSingleSalesTeamData } from '../features/salesTeam/singleSalesTeamDataSlice';
 import defaultProfile from "../components/media/default.png";
 import { fetchAssignedProducts, selectAllAssignedProducts } from '../features/product/assignedProductsSlice';
+import EmployeeFooter from '../components/ui/EmployeeFooter';
 
 const mockProducts = [
   { id: 1, label: "Gas A - 6kg", gas_type: "Gas A", weight: 6 },
@@ -46,7 +47,7 @@ const SalesRecordEdit = () => {
       setIsExchanged(!!sale.exchanged_with_local);
       setTotalAmount(sale.total_amount || 0);
     }
-  }, [dispatch, id, sale]);
+  }, [dispatch, id]);
 
 
   // useEffect(() => {
@@ -189,7 +190,7 @@ const SalesRecordEdit = () => {
         </div>
       </main>
 
-      <AdminsFooter />
+      <EmployeeFooter />
     </div>
   );
 };
