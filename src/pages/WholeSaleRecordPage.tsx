@@ -17,13 +17,16 @@ import {
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
+import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+
+
 import api from "../../utils/api"
-import SalesHeader from "../components/SalesHeader";
-import AdminsFooter from "../components/AdminsFooter";
+import SalesHeader from "../components/SalesHeader"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
 
 const WholeSaleRecordPage = () => {
-    const myProfile = useAppSelector(selectMyProfile);
-  
+      const myProfile = useAppSelector(selectMyProfile);
+
 
   const [searchResults, setSearchResults] = useState([])
   const [searchPhoneResults, setSearchPhoneResults] = useState([])
@@ -414,16 +417,15 @@ const WholeSaleRecordPage = () => {
       {/* Header */}
      {/*  <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
         Wholesale Records
-      </div> */}
-      
+      </div>
+      <ToastContainer /> */}
       <SalesHeader
-              teamName={myProfile?.sales_team?.name}
-              profileImage={myProfile?.profile_image}
-              firstName={myProfile?.first_name}
-              lastName={myProfile?.last_name}
-              description="Record wholesale transactions"
-            />
-      <ToastContainer />
+       teamName={myProfile?.sales_team?.name}
+        profileImage={myProfile?.profile_image}
+        firstName={myProfile?.first_name}
+        lastName={myProfile?.last_name}
+        description="Wholesales Cylinders Request"
+      />
 
       <div className="flex justify-center gap-4 mt-4">
         <button
@@ -1259,7 +1261,13 @@ const WholeSaleRecordPage = () => {
         )}
       </div>
 
-     <AdminsFooter/>
+     {/*  <Link
+        to="/sales"
+        className="text-blue-300 bg-gray-800 font-bold text-xl py-4 text-center mt-auto"
+      >
+        Back to Home
+      </Link> */}
+      <EmployeeFooter/>
     </div>
   )
 }

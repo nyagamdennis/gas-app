@@ -221,7 +221,7 @@ const AdminOtherProductsSalesRecord = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
       <AdminNav
-         headerMessage={"Other Products Sales Dashboard"}
+         headerMessage={"Other Products Sales Insights"}
          headerText={"Monitor and manage your team's sales effectively"}
       />
 

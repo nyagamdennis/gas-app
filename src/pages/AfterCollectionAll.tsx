@@ -15,6 +15,8 @@ import {
 
 import CircularProgress from "@mui/material/CircularProgress"
 import api from "../../utils/api"
+import AdminNav from "../components/ui/AdminNav"
+import AdminsFooter from "../components/AdminsFooter"
 
 const AfterCollectionAll = () => {
   const [printComplete, setPrintComplete] = useState(false)
@@ -33,12 +35,11 @@ const AfterCollectionAll = () => {
     dispatch(fetchCollectedCylinders(salesTeamId?.id))
   }, [dispatch])
 
-
   const navigate = useNavigate()
 
   const handlePrint = async () => {
     if (!printComplete) {
-      setPrintComplete(true)
+      setIsPrinting(true)
       try {
         // await axios.post(
         //   `${apiUrl}/mark-print-return-complete/`,
@@ -47,12 +48,17 @@ const AfterCollectionAll = () => {
         //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
         //   },
         // )
-        await api.post("/mark-print-return-complete/", {sales_team_is: salesTeamId?.id})
-        setIsPrinting(false)
+        await api.post("/mark-print-return-complete/", {
+          sales_team_id: salesTeamId?.id,
+        })
         setPrintComplete(true)
+              alert("Print successfully")
+
       } catch (error) {
         setPrintComplete(false)
         alert("Error printing, try again.")
+      } finally {
+        setIsPrinting(false)
       }
       // .then(() => setPrintComplete(true))
       //     .catch(err => console.error("Error marking print complete:", err));
@@ -127,12 +133,15 @@ const AfterCollectionAll = () => {
         //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
         //   },
         // )
-        api.post("/mark-print-return-complete/", {sales_team_id: salesTeamId?.id})
-        setIsSaving(false)
+        await api.post("/mark-print-return-complete/", {
+          sales_team_id: salesTeamId?.id,
+        })
         setPrintComplete(true)
+        alert("Saved Successfully")
       } catch (error) {
-        setIsSaving(false)
         alert("error saving try again.")
+      } finally {
+        setIsSaving(false)
       }
     } else {
       alert("Already saved. No need to save again.")
@@ -144,228 +153,258 @@ const AfterCollectionAll = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white p-6">
-      <h2 className="text-center font-bold text-green-950 underline">
-        Empty and Spoiled Cylinders Returns.
-      </h2>
+    <>
+      <AdminNav
+        headerMessage={"Collect Cylinders"}
+        headerText={"Collect cylinders from your retailers or wholesalers"}
+      />
 
-      {/*  */}
-      {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.empties > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Empty Cylinders.</p>
+      <div className="min-h-screen bg-white p-6">
+        <h2 className="text-center font-bold text-green-950 underline">
+          Empty and Spoiled Cylinders Returns.
+        </h2>
+
+        {/*  */}
+        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.empties > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Empty Cylinders.</p>
+              </div>
+
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.empties > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">{cylinder.empties}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.empties > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">{cylinder.empties}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* filled cylinders */}
+        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.filled > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Filled Cylinders.</p>
+              </div>
 
-      {/* filled cylinders */}
-      {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.filled > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Filled Cylinders.</p>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.filled > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">{cylinder.filled}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.filled > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">{cylinder.filled}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* spoiled cylinders */}
+        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.spoiled > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Spoiled Cylinders.</p>
+              </div>
 
-      {/* spoiled cylinders */}
-      {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.spoiled > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Spoiled Cylinders.</p>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.spoiled > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">{cylinder.spoiled}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.spoiled > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">{cylinder.spoiled}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* lost filled cylinders */}
+        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.filled_lost > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Lost Filled Cylinders.</p>
+              </div>
 
-      {/* lost filled cylinders */}
-      {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.filled_lost > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Lost Filled Cylinders.</p>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.filled_lost > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">
+                          {cylinder.filled_lost}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.filled_lost > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">
-                        {cylinder.filled_lost}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* lost empties */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.empties_lost > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
+              </div>
 
-      {/* lost empties */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.empties_lost > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.empties_lost > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">
+                          {cylinder.empties_lost}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.empties_lost > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">
-                        {cylinder.empties_lost}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* less pay */}
+        {cylinders &&
+          cylinders.length > 0 &&
+          cylinders.some((cylinder) => cylinder.less_pay > 0) && (
+            <div>
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">Less Pay Cylinders.</p>
+              </div>
 
-      {/* less pay */}
-      {cylinders &&
-        cylinders.length > 0 &&
-        cylinders.some((cylinder) => cylinder.less_pay > 0) && (
-          <div>
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">Less Pay Cylinders.</p>
+              <table className="w-full border-collapse border border-gray-300 text-sm">
+                <thead className="bg-gray-200">
+                  <tr>
+                    <th className="border px-4 py-2">Cylinder Name</th>
+                    <th className="border px-4 py-2">Weight (kg)</th>
+                    <th className="border px-4 py-2">Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cylinders
+                    .filter((cylinder) => cylinder.less_pay > 0)
+                    .map((cylinder) => (
+                      <tr key={cylinder.id}>
+                        <td className="border px-4 py-2">
+                          {cylinder.gas_type}
+                        </td>
+                        <td className="border px-4 py-2">{cylinder.weight}</td>
+                        <td className="border px-4 py-2">
+                          {cylinder.less_pay}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border px-4 py-2">Cylinder Name</th>
-                  <th className="border px-4 py-2">Weight (kg)</th>
-                  <th className="border px-4 py-2">Quantity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cylinders
-                  .filter((cylinder) => cylinder.less_pay > 0)
-                  .map((cylinder) => (
-                    <tr key={cylinder.id}>
-                      <td className="border px-4 py-2">{cylinder.gas_type}</td>
-                      <td className="border px-4 py-2">{cylinder.weight}</td>
-                      <td className="border px-4 py-2">{cylinder.less_pay}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-      <div className="mt-6 flex justify-center gap-4 ">
-        <button
-          className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600"
-          onClick={handlePrint}
-          disabled={isPrinting}
-        >
-          {isPrinting ? <CircularProgress /> : "print"}
-        </button>
-        <button
-          className="bg-green-500 text-white px-6 py-2 rounded shadow hover:bg-green-600"
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? <CircularProgress /> : "Save"}
-        </button>
+        <div className="mt-6 flex justify-center gap-4 ">
+          <button
+            className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600"
+            onClick={handlePrint}
+            disabled={isPrinting}
+          >
+            {isPrinting ? (
+              <CircularProgress color="white" size={20} thickness={4} />
+            ) : (
+              "print"
+            )}
+          </button>
+          <button
+            className="bg-green-500 text-white px-6 py-2 rounded shadow hover:bg-green-600"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <CircularProgress color="white" size={20} thickness={4} />
+            ) : (
+              "Save"
+            )}
+          </button>
+        </div>
       </div>
-    </div>
+      <AdminsFooter />
+    </>
   )
 }
 

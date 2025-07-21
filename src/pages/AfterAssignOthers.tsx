@@ -13,6 +13,8 @@ import {
   fetchAssignedOthers,
   selectAllAssignsOthers,
 } from "../features/assigns/assignsOthersSlice"
+import AdminNav from "../components/ui/AdminNav"
+import AdminsFooter from "../components/AdminsFooter"
 
 const AfterAssignOthers = () => {
   const salesTeamId = useParams()
@@ -107,7 +109,14 @@ const AfterAssignOthers = () => {
   }
 
   return (
+    <>
+     <AdminNav
+          headerMessage={"Others Sales Insights"}
+          headerText={"Monitor and manage your team's sales"}
+        />
     <div className="min-h-screen bg-white p-6">
+      
+
       <div className="mb-4 text-center">
         {/* <h2 className="text-2xl font-bold">{salesTeamName}</h2> */}
         <p className="text-sm text-gray-600">Assigned Products Report.</p>
@@ -149,6 +158,8 @@ const AfterAssignOthers = () => {
         </button>
       </div>
     </div>
+    <AdminsFooter/>
+    </>
   )
 }
 

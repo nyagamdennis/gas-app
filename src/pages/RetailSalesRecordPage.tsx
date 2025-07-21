@@ -19,12 +19,16 @@ import {
 } from "../features/product/assignedOtherProductsSlice"
 import api from "../../utils/api"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
-import SalesHeader from "../components/SalesHeader";
-import AdminsFooter from "../components/AdminsFooter";
+import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+import SalesHeader from "../components/SalesHeader"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
+
+
 
 
 const RetailSalesRecordPage = () => {
-    const myProfile = useAppSelector(selectMyProfile);
+      const myProfile = useAppSelector(selectMyProfile);
+
 
   const [searchResults, setSearchResults] = useState([])
   console.log('results ', searchResults)
@@ -457,17 +461,17 @@ const RetailSalesRecordPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-     {/*  <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
+    {/*   <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
         Retail Sales Records
-      </div> */}
+      </div>
+      <ToastContainer /> */}
       <SalesHeader
        teamName={myProfile?.sales_team?.name}
         profileImage={myProfile?.profile_image}
         firstName={myProfile?.first_name}
         lastName={myProfile?.last_name}
-        description="Record retail transactions"
+        description="Retail Cylinders Request"
       />
-      <ToastContainer />
 
       <div className="flex justify-center gap-4 mt-4">
         <button
@@ -1268,7 +1272,7 @@ const RetailSalesRecordPage = () => {
       >
         Back to Home
       </Link> */}
-      <AdminsFooter/>
+      <EmployeeFooter/>
     </div>
   )
 }

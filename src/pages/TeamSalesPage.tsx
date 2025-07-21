@@ -19,7 +19,7 @@ import {
   selectAllTeamExpenses,
 } from "../features/expenses/teamExpensesSlice"
 import { CircularProgress } from "@mui/material"
-import SalesHeader from "../components/SalesHeader"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
 
 const TeamSalesPage = () => {
   const dispatch = useAppDispatch()
@@ -431,7 +431,7 @@ const TeamSalesPage = () => {
       </div>
       {/* Footer */}
 
-      <AdminsFooter />
+      <EmployeeFooter/>
     </div>
   )
 }
