@@ -45,19 +45,22 @@ const RightNav = ({ isOpen, onClose }) => {
         aria-modal="true"
       >
         <div className="flex items-center justify-between p-4 border-b">
-          <div>
+          <div className="flex items-center space-x-2">
             <img
               src={businessLogo || "defaultLogo.png"}
               alt="Business Logo"
               className="h-10 w-10 rounded-full"
             />
-            <h2 className="text-lg font-semibold text-gray-800">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">
               {businessName}
             </h2>
             <p className="text-sm text-gray-500">
               {isTrial ? "Trial" : subscriptionPlan} Plan({planName})
             </p>
-            <h2 className="text-lg font-semibold">{businessName}</h2>
+            {/* <h2 className="text-lg font-semibold">{businessName}</h2> */}
+            </div>
+            
           </div>
 
           <button

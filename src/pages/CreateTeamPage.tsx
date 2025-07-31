@@ -23,10 +23,11 @@ import defaultPic from "../images/shop.png"
 import { set } from "cookies"
 import AdminNav from "../components/ui/AdminNav"
 import planStatus from "../features/planStatus/planStatus"
+import { Link, useNavigate } from "react-router-dom"
 
 const CreateTeamPage = () => {
   const dispatch = useAppDispatch()
-
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [teamName, setName] = useState("")
   const [teamType, setTeamType] = useState("")
@@ -268,6 +269,18 @@ const CreateTeamPage = () => {
                   </div>
 
                   <div className="flex gap-2">
+                    {/* <Link to='/teamstock'> */}
+                    <button
+                     onClick={() => {
+                        navigate(`/teamstock/${team.id}/${encodeURIComponent(team.name)}`)
+                      }}
+                      className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                    >
+
+                      stock
+                    </button>
+                    {/* </Link> */}
+                    
                     <button
                       onClick={() => {
                         handleOpenUpdate()
@@ -277,8 +290,10 @@ const CreateTeamPage = () => {
                       }}
                       className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
                     >
-                      Update
+                      update
                     </button>
+                    
+                    
                     <button
                       onClick={() => {
                         handleOpenDelete(team)

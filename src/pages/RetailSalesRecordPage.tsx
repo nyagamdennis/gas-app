@@ -19,7 +19,7 @@ import {
 } from "../features/product/assignedOtherProductsSlice"
 import api from "../../utils/api"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
-import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+// import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 import SalesHeader from "../components/SalesHeader"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
 

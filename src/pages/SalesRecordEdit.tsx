@@ -9,6 +9,7 @@ import { fetchSingleSalesTeamData, selectSingleSalesTeamData } from '../features
 import defaultProfile from "../components/media/default.png";
 import { fetchAssignedProducts, selectAllAssignedProducts } from '../features/product/assignedProductsSlice';
 import EmployeeFooter from '../components/ui/EmployeeFooter';
+import SalesHeader from '../components/SalesHeader';
 
 const mockProducts = [
   { id: 1, label: "Gas A - 6kg", gas_type: "Gas A", weight: 6 },

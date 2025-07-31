@@ -28,6 +28,7 @@ import {
 } from "../features/RequestCylinders/requestedSlice"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
 import SalesHeader from "../components/SalesHeader"
+import AdminsFooter from "../components/AdminsFooter"
 
 const SalesTeamCylinders = () => {
   const dispatch = useAppDispatch()
@@ -327,7 +328,7 @@ console.log('all cylinders ', assigned_cylinders)
           Home
         </Link> */}
         {/* <EmployeeFooter /> */}
-        <AdminsFooter/>
+        <AdminsFooter />
     </div>
   )
 }

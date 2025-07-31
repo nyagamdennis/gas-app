@@ -20,6 +20,7 @@ import {
 } from "../features/expenses/teamExpensesSlice"
 import { CircularProgress } from "@mui/material"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
+import SalesHeader from "../components/SalesHeader"
 
 const TeamSalesPage = () => {
   const dispatch = useAppDispatch()

@@ -61,6 +61,7 @@ import AdminOtherProductsSalesRecord from "./pages/AdminOtherProductsSalesRecord
 import ProsessingPayment from "./pages/ProsessingPayment"
 import CollectOtherProducts from "./pages/CollectOtherProducts"
 import SalesRecordEdit from "./pages/SalesRecordEdit"
+import Stockup from "./pages/Stockup"
 
 
 function App() {
@@ -298,6 +299,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+          // path="/teamstock"
+            // path="/teamstock/:id/:name"
+             path="/teamstock/:teamId/:teamName" 
+
+            element={
+            <ProtectedRoute requiredRole="is_owner">
+              <Stockup />
+            </ProtectedRoute>
+          }  />
           <Route
           path="/admins/store"
           element={

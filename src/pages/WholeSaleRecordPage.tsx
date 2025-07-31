@@ -17,7 +17,7 @@ import {
   selectAllAssignedOtherProducts,
 } from "../features/product/assignedOtherProductsSlice"
 import { recordOthersSales } from "../features/sales/othersSalesSlice"
-import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
+// import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 
 
 import api from "../../utils/api"
