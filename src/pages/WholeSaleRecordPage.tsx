@@ -415,10 +415,10 @@ const WholeSaleRecordPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-     {/*  <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
+      {/* <div className="bg-blue-600 text-white py-4 text-center font-bold text-xl">
         Wholesale Records
-      </div>
-      <ToastContainer /> */}
+      </div> */}
+      <ToastContainer />
       <SalesHeader
        teamName={myProfile?.sales_team?.name}
         profileImage={myProfile?.profile_image}

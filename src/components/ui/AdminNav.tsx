@@ -36,27 +36,25 @@ const AdminNav = ({ headerMessage, headerText }) => {
           <p className="text-sm text-gray-500 mt-1">{headerText}</p>
         </div>
         <div className="flex items-center gap-4">
-          <button
+          {/* <button
             onClick={() => setShowDropdown(!showDropdown)}
             className="relative p-2 text-gray-700 hover:text-black focus:outline-none"
             aria-label="Notifications"
           >
             <NotificationsNoneIcon fontSize="medium" />
 
-            {/* red dot */}
+         
 
             <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             
             
-            {/* notification count */}
             {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] leading-tight font-semibold h-5 w-5 rounded-full flex items-center justify-center">
                 {notifications.length}
               </span>
             )}
-          </button>
+          </button> */}
 
-          {/* Dropdown Menu */}
           {showDropdown && (
             <div className="absolute right-12 top-12 mt-2 w-64 bg-white shadow-lg rounded-lg border border-gray-200 z-50">
               <div className="p-4 border-b font-semibold text-gray-700">
