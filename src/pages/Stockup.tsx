@@ -76,8 +76,8 @@ const Stockup = () => {
         filled: item.filled || 0,
         empties: item.empties || 0,
         spoiled: item.spoiled || 0,
+        assigned_quantity: item.filled
       }))
-      console.log("Payload for assignment:", payload)
   
       dispatch(stockupCylinders(payload))
         // .then(() =>
