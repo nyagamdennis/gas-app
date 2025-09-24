@@ -10,6 +10,9 @@ const api = axios.create({
 let isRefreshing = false
 let refreshPromise: Promise<any> | null = null
 
+// ======================
+// REQUEST INTERCEPTOR
+// ======================
 api.interceptors.request.use(async (config) => {
   const token = store.getState().auth.accessToken
 
@@ -18,8 +21,9 @@ api.interceptors.request.use(async (config) => {
   try {
     const { exp } = jwtDecode<{ exp: number }>(token)
     const now = Date.now() / 1000
-    if (exp - now < 120) {
 
+    if (exp - now < 120) {
+      // Refresh if token will expire in < 2min
       if (!isRefreshing) {
         isRefreshing = true
         refreshPromise = store
@@ -31,20 +35,14 @@ api.interceptors.request.use(async (config) => {
       }
 
       await refreshPromise
-
-      const newToken = store.getState().auth.accessToken
-      if (newToken) {
-        config.headers.Authorization = `Bearer ${newToken}`
-      }
-    } else {
-      config.headers.Authorization = `Bearer ${token}`
     }
 
-    if (
-      config.data &&
-      typeof config.data !== "undefined" &&
-      !(config.data instanceof FormData)
-    ) {
+    const newToken = store.getState().auth.accessToken
+    if (newToken) {
+      config.headers.Authorization = `Bearer ${newToken}`
+    }
+
+    if (config.data && !(config.data instanceof FormData)) {
       config.headers["Content-Type"] = "application/json"
     }
   } catch (e) {
@@ -54,5 +52,46 @@ api.interceptors.request.use(async (config) => {
 
   return config
 })
+
+// ======================
+// RESPONSE INTERCEPTOR
+// ======================
+api.interceptors.response.use(
+  (response) => response, // pass through if OK
+  async (error) => {
+    const originalRequest = error.config
+
+    // Only handle 401 (Unauthorized) once
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true
+
+      try {
+        if (!isRefreshing) {
+          isRefreshing = true
+          refreshPromise = store
+            .dispatch(refreshAccessToken() as any)
+            .unwrap()
+            .finally(() => {
+              isRefreshing = false
+            })
+        }
+
+        await refreshPromise
+
+        const newToken = store.getState().auth.accessToken
+        if (newToken) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`
+          return api(originalRequest) // 🔁 retry the request
+        }
+      } catch (err) {
+        // Refresh failed → logout user
+        store.dispatch(logout())
+        return Promise.reject(err)
+      }
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 export default api

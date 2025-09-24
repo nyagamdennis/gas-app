@@ -43,7 +43,7 @@ const TeamSalesPage = () => {
     return today.toISOString().split("T")[0] // Default to today's date
   })
 
-  console.log("all sales data", allSalesData)
+  // console.log("all sales data", allSalesData)
   const id = myProfile?.id
 
   const salesTeamId = myProfile?.sales_team?.id
@@ -130,24 +130,7 @@ const TeamSalesPage = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-      {/*       <div className="bg-blue-600 text-white py-4 shadow-md flex justify-between items-center px-6">
-        <Link to="/sales">
-          <h1 className="text-3xl font-bold">
-            {myProfile?.sales_team?.name || "Sales Team"}
-          </h1>
-          <p className="mt-1 text-sm">Track your team's sales performance.</p>
-        </Link>
-        <Link to="/myprofile" className="flex items-center space-y-2 flex-col">
-          <img
-            src={myProfile?.profile_image || defaultProfile}
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-          />
-          <span className="text-white text-sm">
-            {myProfile?.first_name} {myProfile?.last_name}
-          </span>
-        </Link>
-      </div> */}
+     
       <SalesHeader
         teamName={myProfile?.sales_team?.name}
         profileImage={myProfile?.profile_image}
@@ -294,7 +277,8 @@ const TeamSalesPage = () => {
               {/* Timestamp */}
               <div className="flex justify-between items-center">
                 <p className="mt-2 text-sm text-gray-500">
-                  Sold on: {new Date(sale.timestamp).toLocaleDateString()}
+                  Sold on: {new Date(sale.timestamp).toLocaleDateString('en-GB')} at{" "}
+                  {new Date(sale.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
                 <div className="flex space-x-2">
                   <button className="bg-red-500 px-2 rounded-md text-white">

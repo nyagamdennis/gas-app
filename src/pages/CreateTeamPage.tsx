@@ -17,7 +17,7 @@ import DialogActions from "@mui/material/DialogActions"
 import DialogContent from "@mui/material/DialogContent"
 import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from "@mui/material/CircularProgress"
 import defaultPic from "../images/shop.png"
 
 import { set } from "cookies"
@@ -27,7 +27,7 @@ import { Link, useNavigate } from "react-router-dom"
 
 const CreateTeamPage = () => {
   const dispatch = useAppDispatch()
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [teamName, setName] = useState("")
   const [teamType, setTeamType] = useState("")
@@ -39,26 +39,24 @@ const CreateTeamPage = () => {
   const [deletingTeam, setDeletingTeam] = useState(false)
 
   const all_salesTeam = useAppSelector(selectAllSalesTeam)
-  
 
   const {
-      isPro,
-      isTrial,
-      isExpired,
-      businessName,
-      businessId,
-      businessLogo,
-      subscriptionPlan,
-      employeeLimit,
-      planName,
-    } = planStatus()
-
+    isPro,
+    isTrial,
+    isExpired,
+    businessName,
+    businessId,
+    businessLogo,
+    subscriptionPlan,
+    employeeLimit,
+    planName,
+  } = planStatus()
 
   useEffect(() => {
-      if (businessId) {
-        dispatch(fetchSalesTeam({ businessId }))
-      }
-    }, [dispatch, businessId])
+    if (businessId) {
+      dispatch(fetchSalesTeam({ businessId }))
+    }
+  }, [dispatch, businessId])
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -143,8 +141,11 @@ const CreateTeamPage = () => {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
       <>
         {/* Header */}
-    
-        <AdminNav headerMessage={'Create New Team'} headerText={'Upload a team profile and assign its type'} />
+
+        <AdminNav
+          headerMessage={"Create New Team"}
+          headerText={"Upload a team profile and assign its type"}
+        />
 
         {/* Main */}
         <main className="flex-grow flex justify-center items-center py-10">
@@ -234,7 +235,6 @@ const CreateTeamPage = () => {
               ) : (
                 "Add Team"
               )}
-             
             </button>
           </form>
         </main>
@@ -252,7 +252,7 @@ const CreateTeamPage = () => {
               {all_salesTeam.map((team) => (
                 <div
                   key={team.id}
-                  className="flex items-center justify-between bg-gray-50 hover:bg-gray-100 p-4 rounded-lg border border-gray-200 transition"
+                  className="flex-col space-y-1 items-center justify-between bg-gray-50 hover:bg-gray-100 p-4 rounded-lg border border-gray-200 transition"
                 >
                   <div className="flex items-center gap-4">
                     <img
@@ -271,16 +271,19 @@ const CreateTeamPage = () => {
                   <div className="flex gap-2">
                     {/* <Link to='/teamstock'> */}
                     <button
-                     onClick={() => {
-                        navigate(`/teamstock/${team.id}/${encodeURIComponent(team.name)}`)
+                      onClick={() => {
+                        navigate(
+                          `/teamstock/${team.id}/${encodeURIComponent(
+                            team.name,
+                          )}`,
+                        )
                       }}
                       className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
                     >
-
                       stock
                     </button>
                     {/* </Link> */}
-                    
+
                     <button
                       onClick={() => {
                         handleOpenUpdate()
@@ -292,8 +295,7 @@ const CreateTeamPage = () => {
                     >
                       update
                     </button>
-                    
-                    
+
                     <button
                       onClick={() => {
                         handleOpenDelete(team)
@@ -332,7 +334,6 @@ const CreateTeamPage = () => {
                 ) : (
                   "Delete"
                 )}
-                
               </Button>
             </DialogActions>
           </Dialog>
@@ -369,7 +370,6 @@ const CreateTeamPage = () => {
                 ) : (
                   "Update"
                 )}
-                
               </Button>
             </DialogActions>
           </Dialog>

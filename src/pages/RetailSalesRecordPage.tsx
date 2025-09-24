@@ -72,18 +72,13 @@ const RetailSalesRecordPage = () => {
   const [paymentMode, setPaymentMode] = useState("cash")
   const [mpesaName, setMpesaName] = useState("")
   const [mpesaPhone, setMpesaPhone] = useState("")
-  // const [mpesaCodes, setMpesaCodes] = useState([""])
   const [cashAmount, setCashAmount] = useState<number>(0)
   const [cashAmountDeposit, setCashAmountDeposit] = useState<number>(0)
   const [numMpesaDeposits, setNumMpesaDeposits] = useState(1)
   const [mpesaPayments, setMpesaPayments] = useState([{ code: "", amount: "" }])
   const [mpesaCodes, setMpesaCodes] = useState([{ code: "", amount: 0 }])
 
-  // const handleNumDepositsChange = (e) => {
-  //   const numDeposits = parseInt(e.target.value, 10)
-  //   setNumMpesaDeposits(numDeposits)
-  //   setMpesaCodes(new Array(numDeposits).fill(""))
-  // }
+ 
   const handleNumDepositsChange = (e) => {
     const count = Math.max(1, parseInt(e.target.value, 10) || 1)
     setNumMpesaDeposits(count)
@@ -188,39 +183,7 @@ const RetailSalesRecordPage = () => {
     }, 0)
   }
 
-  // const calculateTotal = () => {
-  //   return products.reduce((total, product) => {
-  //     const assignedProduct = allAssignedProducts.find(
-  //       (prod) => prod.id === Number(product.productId),
-  //     )
-
-  //     if (assignedProduct) {
-  //       let price
-
-  //       if (paymentAmount === "CUSTOM" && customPrice) {
-  //         price = parseFloat(customPrice) // ✅ Use custom price when selected
-  //       } else {
-  //         price =
-  //           saleType === "COMPLETESALE"
-  //             ? paymentAmount === "MAXIMUM"
-  //               ? assignedProduct.max_retail_selling_price
-  //               : paymentAmount === "MEDIUM"
-  //               ? assignedProduct.mid_retail_selling_price
-  //               : assignedProduct.min_retail_selling_price
-  //             : paymentAmount === "MAXIMUM"
-  //             ? assignedProduct.max_retail_refil_price
-  //             : paymentAmount === "MEDIUM"
-  //             ? assignedProduct.mid_retail_refil_price
-  //             : assignedProduct.min_retail_refil_price
-  //       }
-
-  //       return total + price * product.quantity
-  //     }
-
-  //     return total
-  //   }, 0)
-  // }
-
+ 
   const calculateOtherTotal = () => {
     return otherProducts.reduce((total, product) => {
       const assignedProduct = allOtherProducts.find(
@@ -667,34 +630,7 @@ const RetailSalesRecordPage = () => {
                           </p>
                         </label>
 
-                        {/* <label className="flex items-center gap-2">
-                          <input
-                            type="radio"
-                            name={`paymentAmount-${index}`}
-                            value="MEDIUM"
-                            checked={product.paymentAmount === "MEDIUM"}
-                            onChange={() =>
-                              handleProductChange(
-                                index,
-                                "paymentAmount",
-                                "MEDIUM",
-                              )
-                            }
-                          />
-                          <p>
-                            {saleType === "COMPLETESALE" ? (
-                              <FormattedAmount
-                                amount={
-                                  selectedProduct.mid_retail_selling_price
-                                }
-                              />
-                            ) : (
-                              <FormattedAmount
-                                amount={selectedProduct.mid_retail_refil_price}
-                              />
-                            )}
-                          </p>
-                        </label> */}
+
 
                         <label className="flex items-center gap-2">
                           <input

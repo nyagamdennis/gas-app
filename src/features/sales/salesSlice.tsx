@@ -85,7 +85,20 @@ export const recordSales = createAsyncThunk(
   }
 );
 
-
+export const editSalesRecord = createAsyncThunk(
+  "sales/editSalesRecord",
+  async ({ id, formData }: { id: number; formData: any }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/singlesalesteamdata/${id}/`, formData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      throw error;
+    }
+  }
+);
 
 const salesSlice = createSlice({
   name: "sales",
