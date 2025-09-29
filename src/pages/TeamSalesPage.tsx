@@ -21,6 +21,12 @@ import {
 import { CircularProgress } from "@mui/material"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
 import SalesHeader from "../components/SalesHeader"
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 const TeamSalesPage = () => {
   const dispatch = useAppDispatch()
@@ -34,6 +40,7 @@ const TeamSalesPage = () => {
   const [filteredSales, setFilteredSales] = useState([])
   const [filteredExpenses, setFilteredExpenses] = useState([])
   const [addingExpenses, setAddingExpenses] = useState(false)
+  const [openDelete, setOpenDelete] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
@@ -125,12 +132,19 @@ const TeamSalesPage = () => {
     0,
   )
 
+  const handleOpenDelete = () => {
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+  }
   // console.log("filtered sales data", filteredSales)
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
-     
+
       <SalesHeader
         teamName={myProfile?.sales_team?.name}
         profileImage={myProfile?.profile_image}
@@ -277,11 +291,15 @@ const TeamSalesPage = () => {
               {/* Timestamp */}
               <div className="flex justify-between items-center">
                 <p className="mt-2 text-sm text-gray-500">
-                  Sold on: {new Date(sale.timestamp).toLocaleDateString('en-GB')} at{" "}
-                  {new Date(sale.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  Sold on:{" "}
+                  {new Date(sale.timestamp).toLocaleDateString("en-GB")} at{" "}
+                  {new Date(sale.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
                 <div className="flex space-x-2">
-                  <button className="bg-red-500 px-2 rounded-md text-white">
+                  <button onClick={handleOpenDelete} className="bg-red-500 px-2 rounded-md text-white">
                     Delete
                   </button>
                   <Link to={`/salesrecordedit/${sale.id}`}>
@@ -413,10 +431,33 @@ const TeamSalesPage = () => {
             </form>
           </div>
         </div>
+        <Dialog
+        open={openDelete}
+        onClose={handleCloseDelete}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"are you sure you want to delete?"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Let Google help apps determine location. This means sending anonymous
+            location data to Google, even when no apps are running.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDelete}>Cancel</Button>
+          <Button onClick={handleCloseDelete} autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       </div>
       {/* Footer */}
 
-      <EmployeeFooter/>
+      <EmployeeFooter />
     </div>
   )
 }

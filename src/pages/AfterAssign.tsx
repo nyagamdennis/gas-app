@@ -61,13 +61,7 @@ const AfterAssign = () => {
           .padStart(10)}\n`
       })
 
-      printContent +=
-        "\n\nGoods delivered by: \n_________________________\nSignature: \n_________________________\n\n\n"
-      printContent +=
-        "\n\nGoods received by: \n_________________________\nSignature: \n_________________________\n"
-
-      printContent += "\n\n"
-      printContent += "\n\n"
+      printContent += `Printed At: ${new Date().toLocaleString()}\n`
       // printContent += '\n\n';
 
       window.AndroidBridge.printText(printContent)
