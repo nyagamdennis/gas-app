@@ -39,9 +39,13 @@ import analysisReducer from "../features/analysis/analysisSlice"
 import companyExpensesReducer from "../features/expenses/companyExpensesSlice"
 import aiAnalysisReducer from "../features/ai/aiAnalysisSlice"
 import stockupReducer from "../features/stockup/stockupSlice"
+import cylindersBrandReducer from "../features/cylinders/cylindersBrandSlice";
+import cylindersWeightReducer from "../features/cylinders/cylindersWeightSlice"
 
 export const store = configureStore({
   reducer: {
+    cylindersWeight: cylindersWeightReducer,
+    cylindersBrand:cylindersBrandReducer,
     stockup: stockupReducer,
     analysisAi: aiAnalysisReducer,
     companyExpenses: companyExpensesReducer,

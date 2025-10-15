@@ -64,7 +64,7 @@ import AdminNav from "../components/ui/AdminNav"
 import api from "../../utils/api"
 
 const AdminStore = () => {
-  const [refillingCylinders, setRefillingCylinders] = useState(false);
+  const [refillingCylinders, setRefillingCylinders] = useState(false)
   const [activeTab, setActiveTab] = useState("cylinders")
   const dispatch = useAppDispatch()
   const [openAssign, setOpenAssign] = useState<boolean>(false)
@@ -135,7 +135,7 @@ const AdminStore = () => {
   const [productName, setProductName] = useState<string>("")
   const [productWholeSalePrice, setProductWholeSalePrice] = useState<number>(0)
   const [productRetailPrice, setProductRetailPrice] = useState<number>(0)
-  const [productBuyingPrice,setProductBuyingPrice] = useState<number>(0)
+  const [productBuyingPrice, setProductBuyingPrice] = useState<number>(0)
   const [productQuantity, setProductQuantity] = useState<number>(0)
   const [openUpdateCylinder, setOpenUpdateCylinder] = useState<boolean>(false)
   const [updateCylinderId, setUpdateCylinderID] = useState<string>("")
@@ -171,7 +171,10 @@ const AdminStore = () => {
     anotherCylinderEmptyCylinderPrice,
     setAnotherCylinderEmptyCylinderPrice,
   ] = useState<number>(0)
-  const [anotherCylinderCylinderDepotRefillPrice ,setAnotherCylinderCylinderDepotRefillPrice] = useState<number>()
+  const [
+    anotherCylinderCylinderDepotRefillPrice,
+    setAnotherCylinderCylinderDepotRefillPrice,
+  ] = useState<number>()
   const [anotherCylinderMaxRetailSelling, setAnotherCylinderMaxRetailSelling] =
     useState<number>()
   const [anotherCylinderSpoiled, setAnotherCylinderSpoiled] = useState<number>()
@@ -568,7 +571,7 @@ const AdminStore = () => {
       max_retail_selling_price: anotherCylinderMaxRetailSelling,
       max_retail_refill_price: anotherCylinderMaxRetailRefill,
       empty_cylinder_price: anotherCylinderEmptyCylinderPrice,
-      depot_refill_price: anotherCylinderCylinderDepotRefillPrice
+      depot_refill_price: anotherCylinderCylinderDepotRefillPrice,
     }
     try {
       await dispatch(
@@ -675,7 +678,7 @@ const AdminStore = () => {
       //     "Content-Type": "application/json",
       //   },
       // })
-      const response  = api.post("/recordsales/", formData)
+      const response = api.post("/recordsales/", formData)
       if (response.status === 201) {
         console.log("Form submitted successfully!")
       } else {
@@ -895,11 +898,9 @@ const AdminStore = () => {
     setProductRetailPrice(e.target.value)
   }
 
-
   const handleProductBuyigPriceInputChange = (e: any) => {
     setProductBuyingPrice(e.target.value)
   }
-
 
   const handleProductQuantityInputChange = (e: any) => {
     setProductQuantity(e.target.value)
@@ -1032,7 +1033,7 @@ const AdminStore = () => {
 
   const handleAddRefill = () => {
     // setLoadingAssign(true)
-   setRefillingCylinders(true);
+    setRefillingCylinders(true)
     const payload = storeRefill.map((item) => ({
       // sales_team: selectedTeam?.id,
       id: item.storeId,
@@ -1040,17 +1041,15 @@ const AdminStore = () => {
       refill_quantity: item.refill_quantity,
     }))
     try {
-      dispatch(storeRefillCylinders({ payload}))
-      setRefillingCylinders(false);
+      dispatch(storeRefillCylinders({ payload }))
+      setRefillingCylinders(false)
       toast.success("Refilling cylinders successfully.")
       setOpenRefill(false)
       setStoreRefill([])
     } catch (error) {
-      setRefillingCylinders(false);
+      setRefillingCylinders(false)
       toast.error("an error occured, try again.")
     }
-    
-    
   }
 
   const handleRepairs = () => {
@@ -1186,7 +1185,9 @@ const AdminStore = () => {
                           <FormattedAmount amount={product.whole_sales_price} />{" "}
                         </td>
                         <td className="border px-2 py-1 text-center">
-                          <FormattedAmount amount={product.product_buying_price} />{" "}
+                          <FormattedAmount
+                            amount={product.product_buying_price}
+                          />{" "}
                         </td>
 
                         <td className="border py-1  text-center">
@@ -1580,113 +1581,97 @@ const AdminStore = () => {
                 )}
                 {storeStatus === "succeeded" &&
                   store.length > 0 &&
-                  store.map(
-                    (gas) => (
-                      // console.log("gases", gas),
-                      (
-                        <div
-                          key={gas.id}
-                          className="mb-4 bg-white p-1 rounded-lg shadow-md"
-                        >
-                          <h3 className="text-lg font-semibold text-blue-600">
-                            {gas.name}
-                          </h3>
-                          {gas.cylinders.map((cylinder) => (
-                            <div key={cylinder.id} className="mt-3">
-                              <h4 className="text-base font-semibold">
-                                Cylinder Weight: {cylinder.weight.weight}kg
-                              </h4>
-                              {cylinder.stores.length > 0 ? (
-                                <table className="mt-2 w-full border text-sm">
-                                  <thead>
-                                    <tr className="bg-gray-200 text-left">
-                                      <th className="border px-2 py-1">
-                                        Filled
-                                      </th>
-                                      <th className="border px-2 py-1">
-                                        Empties
-                                      </th>
-                                      <th className="border px-2 py-1">
-                                        Spoiled
-                                      </th>
-                                      <th className="border px-2 py-1">
-                                        Total
-                                      </th>
-                                      <th className="border px-2 py-1">
-                                        Refill
-                                      </th>
-                                      <th className="border px-2 py-1">
-                                        Repair
-                                      </th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {cylinder.stores.map((storeItem) => (
-                                      <tr key={storeItem.id}>
-                                        <td className="border px-2 py-1 text-center">
-                                          {storeItem.filled}
-                                        </td>
-                                        <td className="border px-2 py-1 text-center">
-                                          {storeItem.empties}
-                                        </td>
-                                        <td className="border px-2 py-1 text-center">
-                                          {storeItem.spoiled}
-                                        </td>
-                                        <td className="border px-2 py-1 text-center">
-                                          {storeItem.total_cylinders}
-                                        </td>
-                                        <td className="border px-2 py-1 text-center">
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            max={storeItem.empties}
-                                            className="w-full border px-1 py-1"
-                                            onChange={(e) =>
-                                              handleInputChange(
-                                                storeItem.id,
-                                                storeItem.id,
-                                                cylinder.weight.id,
-                                                cylinder.weight.weight,
-                                                gas.name,
-                                                cylinder.depot_refill_price,
-                                                e.target.value,
-                                              )
-                                            }
-                                          />
-                                        </td>
-                                        <td className="border px-2 py-1 text-center">
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            max={storeItem.spoiled}
-                                            className="w-full border px-1 py-1"
-                                            onChange={(e) =>
-                                              handleInputRepairChange(
-                                                storeItem.id,
-                                                storeItem.id,
-                                                cylinder.weight.id,
-                                                cylinder.weight.weight,
+                  store.map((gas) => (
+                    // console.log("gases", gas),
+                    <div
+                      key={gas.id}
+                      className="mb-4 bg-white p-1 rounded-lg shadow-md"
+                    >
+                      <h3 className="text-lg font-semibold text-blue-600">
+                        {gas.name}
+                      </h3>
+                      {gas.cylinders.map((cylinder) => (
+                        <div key={cylinder.id} className="mt-3">
+                          <h4 className="text-base font-semibold">
+                            Cylinder Weight: {cylinder.weight.weight}kg
+                          </h4>
+                          {cylinder.stores.length > 0 ? (
+                            <table className="mt-2 w-full border text-sm">
+                              <thead>
+                                <tr className="bg-gray-200 text-left">
+                                  <th className="border px-2 py-1">Filled</th>
+                                  <th className="border px-2 py-1">Empties</th>
+                                  <th className="border px-2 py-1">Spoiled</th>
+                                  <th className="border px-2 py-1">Total</th>
+                                  <th className="border px-2 py-1">Refill</th>
+                                  <th className="border px-2 py-1">Repair</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {cylinder.stores.map((storeItem) => (
+                                  <tr key={storeItem.id}>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.filled}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.empties}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.spoiled}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      {storeItem.total_cylinders}
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={storeItem.empties}
+                                        className="w-full border px-1 py-1"
+                                        onChange={(e) =>
+                                          handleInputChange(
+                                            storeItem.id,
+                                            storeItem.id,
+                                            cylinder.weight.id,
+                                            cylinder.weight.weight,
+                                            gas.name,
+                                            cylinder.depot_refill_price,
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className="border px-2 py-1 text-center">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={storeItem.spoiled}
+                                        className="w-full border px-1 py-1"
+                                        onChange={(e) =>
+                                          handleInputRepairChange(
+                                            storeItem.id,
+                                            storeItem.id,
+                                            cylinder.weight.id,
+                                            cylinder.weight.weight,
 
-                                                e.target.value,
-                                              )
-                                            }
-                                          />
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              ) : (
-                                <p className="text-gray-600 mt-2">
-                                  No stores available for this cylinder.
-                                </p>
-                              )}
-                            </div>
-                          ))}
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <p className="text-gray-600 mt-2">
+                              No stores available for this cylinder.
+                            </p>
+                          )}
                         </div>
-                      )
-                    ),
-                  )}
+                      ))}
+                    </div>
+                  ))}
                 <div className=" flex space-x-1 items-center justify-center">
                   <button
                     onClick={handleClickOpenRefills}
@@ -1788,9 +1773,12 @@ const AdminStore = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseRefills}>Cancel</Button>
-          <Button disabled={refillingCylinders} onClick={handleAddRefill} autoFocus>
+          <Button
+            disabled={refillingCylinders}
+            onClick={handleAddRefill}
+            autoFocus
+          >
             {refillingCylinders ? <CircularProgress size={24} /> : "Refill"}
-            
           </Button>
         </DialogActions>
       </Dialog>
@@ -1927,13 +1915,13 @@ const AdminStore = () => {
                   setAnotherCylinderEmptyCylinderPrice(e.target.value)
                 }
               />
-              <Input 
-              label="depot refill price"
-              type="number"
-              value={anotherCylinderCylinderDepotRefillPrice}
-              onChange={(e) => 
-                setAnotherCylinderCylinderDepotRefillPrice(e.target.value)
-              }
+              <Input
+                label="depot refill price"
+                type="number"
+                value={anotherCylinderCylinderDepotRefillPrice}
+                onChange={(e) =>
+                  setAnotherCylinderCylinderDepotRefillPrice(e.target.value)
+                }
               />
             </form>
           )}

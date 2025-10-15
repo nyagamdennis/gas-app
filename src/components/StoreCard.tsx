@@ -22,7 +22,7 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
   return (
     <div
       key={gas.id}
-      className="bg-white rounded-xl shadow-md border border-gray-200 p-5"
+      className="bg-white rounded-xl shadow-md border border-gray-200 p-5 mb-5"
     >
       <div className="flex space-x-5 items-center">
         <h3 className="text-2xl  font-bold text-blue-700 text-nowrap">{gas.name}</h3>

@@ -20,8 +20,9 @@ import planStatus from "../features/planStatus/planStatus"
 import Skeleton from "@mui/material/Skeleton"
 
 const AssigningProducts = () => {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  
   const {
     isPro,
     isTrial,
@@ -32,7 +33,7 @@ const AssigningProducts = () => {
     subscriptionPlan,
     employeeLimit,
     planName,
-  } = planStatus()
+  } = planStatus();
 
   const allSalesTeam = useAppSelector(selectAllSalesTeam)
   const fetchingSalesteamStatus = useAppSelector(getSalesTeamStatus)

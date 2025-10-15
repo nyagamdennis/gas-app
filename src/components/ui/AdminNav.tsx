@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react"
 import RightNav from "../RightNav"
 import MenuIcon from "@mui/icons-material/Menu"
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone"
+import MoreVertIcon from "@mui/icons-material/MoreVert"
 
 const notifications = [
   { id: 1, message: "New order received", time: "2 mins ago" },
@@ -27,36 +28,42 @@ const AdminNav = ({ headerMessage, headerText }) => {
 
   return (
     <div className="relative">
-      {/* Header with toggle button */}
       <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-blue-700  text-3xl font-extrabold tracking-tight">
-            {headerMessage}
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">{headerText}</p>
-        </div>
+        
+        {/* LEFT SIDE: Menu + Header */}
         <div className="flex items-center gap-4">
-          {/* <button
+          <button
+            onClick={() => setNavOpen(true)}
+            className="p-2 text-gray-700 hover:text-black focus:outline-none"
+            aria-label="Open menu"
+          >
+            <MenuIcon />
+          </button>
+          <div>
+            <h1 className="text-blue-700 text-2xl font-extrabold tracking-tight">
+              {headerMessage}
+            </h1>
+            {/* <p className="text-sm text-gray-500">{headerText}</p> */}
+          </div>
+        </div>
+
+        {/* RIGHT SIDE: Notifications + More */}
+        <div className="flex items-center gap-4 relative" ref={dropdownRef}>
+          <button
             onClick={() => setShowDropdown(!showDropdown)}
             className="relative p-2 text-gray-700 hover:text-black focus:outline-none"
             aria-label="Notifications"
           >
             <NotificationsNoneIcon fontSize="medium" />
-
-         
-
-            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-            
-            
             {notifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] leading-tight font-semibold h-5 w-5 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center">
                 {notifications.length}
               </span>
             )}
-          </button> */}
+          </button>
 
           {showDropdown && (
-            <div className="absolute right-12 top-12 mt-2 w-64 bg-white shadow-lg rounded-lg border border-gray-200 z-50">
+            <div className="absolute right-0 top-12 mt-2 w-64 bg-white shadow-lg rounded-lg border border-gray-200 z-50">
               <div className="p-4 border-b font-semibold text-gray-700">
                 Notifications
               </div>
@@ -79,12 +86,12 @@ const AdminNav = ({ headerMessage, headerText }) => {
               </ul>
             </div>
           )}
+
           <button
-            onClick={() => setNavOpen(true)}
             className="p-2 text-gray-700 hover:text-black focus:outline-none"
-            aria-label="Open menu"
+            aria-label="More options"
           >
-            <MenuIcon />
+            <MoreVertIcon />
           </button>
         </div>
       </header>
@@ -95,4 +102,4 @@ const AdminNav = ({ headerMessage, headerText }) => {
   )
 }
 
-export default AdminNav
+export default AdminNav;

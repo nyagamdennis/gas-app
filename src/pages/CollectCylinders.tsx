@@ -19,6 +19,7 @@ import AdminNav from "../components/ui/AdminNav"
 import AdminsFooter from "../components/AdminsFooter"
 import planStatus from "../features/planStatus/planStatus"
 import api from "../../utils/api"
+import Navbar from "../components/ui/mobile/admin/Navbar"
 
 const CollectCylinders = () => {
   const dispatch = useAppDispatch()
@@ -378,9 +379,9 @@ const CollectCylinders = () => {
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col ">
       <main className="flex-grow">
-        <AdminNav
-          headerMessage={"Collect Cylinders"}
-          headerText={"Collect cylinders from your retailers or wholesalers"}
+        <Navbar
+          headerMessage={"EPR"}
+          headerText={""}
         />
         <div className="p-4">
           {!selectedTeam ? (
