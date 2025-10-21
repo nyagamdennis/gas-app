@@ -383,7 +383,7 @@ const CollectCylinders = () => {
           headerMessage={"EPR"}
           headerText={""}
         />
-        <div className="p-4">
+        <div className="p-2">
           {!selectedTeam ? (
             <div>
               <h2 className="text-xl font-bold text-center mb-4">

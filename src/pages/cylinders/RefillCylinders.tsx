@@ -161,7 +161,7 @@ const RefillCylinders = () => {
             headerText={"Manage your operations with style and clarity"}
           />
           <main className="flex-grow m-2 p-1">
-            <div className="min-h-screen bg-gray-100">
+            <div className="">
               <div>
                 {storeStatus === "loading" && (
                   <div className="flex justify-center items-center h-screen">
@@ -273,6 +273,9 @@ const RefillCylinders = () => {
                                    </div> */}
             </div>
           </main>
+          <footer className=" text-white">
+            <AdminsFooter />
+          </footer>
 
           <Dialog
             open={openRefill}
@@ -340,9 +343,7 @@ const RefillCylinders = () => {
               </Button>
             </DialogActions>
           </Dialog>
-          <footer className=" text-white">
-            <AdminsFooter />
-          </footer>
+          
         </div>
       ) : (
         <div className="p-4">

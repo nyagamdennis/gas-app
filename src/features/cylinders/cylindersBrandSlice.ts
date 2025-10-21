@@ -33,14 +33,15 @@ export const fetchCylindersBrand = createAsyncThunk<Debtors[], void>(
   },
 )
 
-export const createBrand = createAsyncThunk<void, number>(
-  "cylindersBrand/createBrand",
-  async (pk) => {
-    // await axios.post(`${apiUrl}/clear_debt/${pk}/`);
-    await api.post(`/clear_debt/${pk}/`)
-    return pk
-  },
-)
+type NewCylindersBrand = { name: string }
+
+export const createCylindersBrand = createAsyncThunk<
+  CylindersBrand,
+  NewCylindersBrand
+>("cylindersBrand/createCylindersBrand", async (brand) => {
+  const response = await api.post("/cylinder-brands/", brand)
+  return response.data as CylindersBrand
+})
 
 const cylindersBrandSlice = createSlice({
   name: "debtors",
@@ -61,29 +62,29 @@ const cylindersBrandSlice = createSlice({
         state.status = "failed"
         state.error = action.error.message || "Failed to fetch debtors."
       })
-
-    // Clear Debtors Cases
-    // .addCase(createBrand.pending, (state) => {
-    //   state.createBrand = "loading";
-    //   state.clearDebtError = null;
-    // })
-    // .addCase(createBrand.fulfilled, (state, action) => {
-    //   state.clearDebtStatus = "succeeded";
-    //   const clearedDebtorId = action.payload;
-    //   state.debtors = state.debtors.filter(
-    //     (debtor) => debtor.id !== clearedDebtorId
-    //   );
-    // })
-    // .addCase(createBrand.rejected, (state, action) => {
-    //   state.clearDebtStatus = "failed";
-    //   state.clearDebtError =
-    //     action.error.message || "Failed to clear the selected debt.";
-    // });
+      .addCase(createCylindersBrand.pending, (state) => {
+        state.status = "loading"
+        state.error = null
+      })
+      .addCase(createCylindersBrand.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.cylindersBrand.push(action.payload)
+      })
+      .addCase(createCylindersBrand.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message || "Failed to create brand."
+      })
   },
 })
 
-export const selectAllCylinderBrands = (state: {cylindersBrand: CylindersBrandState}) => state.cylindersBrand.cylindersBrand
-export const getCylinderBrandsStatus = (state: {cylindersBrand: CylindersBrandState}) => state.cylindersBrand.status
-export const getCylinderBrandsError = (state: {cylindersBrand: CylindersBrandState}) => state.cylindersBrand.error
+export const selectAllCylinderBrands = (state: {
+  cylindersBrand: CylindersBrandState
+}) => state.cylindersBrand.cylindersBrand
+export const getCylinderBrandsStatus = (state: {
+  cylindersBrand: CylindersBrandState
+}) => state.cylindersBrand.status
+export const getCylinderBrandsError = (state: {
+  cylindersBrand: CylindersBrandState
+}) => state.cylindersBrand.error
 
 export default cylindersBrandSlice.reducer

@@ -4,7 +4,7 @@ import { useMediaQuery, useTheme } from "@mui/material"
 import planStatus from "../../features/planStatus/planStatus"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { useNavigate, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import api from "../../../utils/api"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
@@ -509,6 +509,8 @@ const StoreCylinders = () => {
     }
   }
 
+
+  console.log("store data", store)
   return (
     <div>
       <ToastContainer />
@@ -518,8 +520,8 @@ const StoreCylinders = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-          <main className="flex-grow m-2 p-1">
-            <div className="bg-white p-4 rounded-lg shadow-md">
+          <main className="flex-grow  p-1">
+            <div className="bg-white p-2 rounded-lg shadow-md">
               <h2 className="text-2xl font-semibold mb-4">
                 Store Cylinders stock
               </h2>
@@ -599,7 +601,7 @@ const StoreCylinders = () => {
                   <div className="col-span-2 text-center text-gray-500">
                     No stores available for this sales team.
                     <Link
-                      to="/admins/store"
+                      to="/cylinders/add"
                       className="text-blue-600 hover:underline ml-2"
                     >
                       Create a new store
@@ -608,7 +610,7 @@ const StoreCylinders = () => {
                 )}
 
                 {fetchingStoreStatus === "succeeded" && store.length > 0 && (
-                  <div className="">
+                  <div>
                     {store.map((gas) => (
                       <StoreCard
                         gas={gas}

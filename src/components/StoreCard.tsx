@@ -7,7 +7,6 @@ import FormattedAmount from "./FormattedAmount"
 import { Form } from "react-router-dom"
 
 const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
-    // console.log("gas", gas)
   const [expandedRow, setExpandedRow] = useState(null)
   const [expanded, setExpanded] = useState(false)
 
@@ -18,34 +17,34 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
     setExpandedRow(expandedRow === rowId ? null : rowId)
   }
 
-  // console.log("gas", gas)
   return (
     <div
       key={gas.id}
-      className="bg-white rounded-xl shadow-md border border-gray-200 p-5 mb-5"
+      className="bg-white rounded-xl shadow-md border border-gray-200 p-1 mb-2"
     >
-      <div className="flex space-x-5 items-center">
+      <div className="flex space-x-2 items-center">
         <h3 className="text-2xl  font-bold text-blue-700 text-nowrap">{gas.name}</h3>
         <div className="flex ">
-          <div className="flex items-center">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => onDialogOpen("add", gas)}
-              className="bg-blue-600 text-white px-3 py-1 text-nowrap rounded hover:bg-blue-700 transition text-sm"
+              className="bg-blue-600 text-white px-3 py-1 text-nowrap  rounded-lg hover:bg-blue-700 transition text-xs"
             >
               Add Cylinder
             </button>
             <button
-              onClick={() => onDialogOpen("delete", gas)}
-              className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition text-sm ml-2"
-            >
-              Delete
-            </button>
-            <button
               onClick={() => onDialogOpen("update", gas)}
-              className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-sm ml-2"
+              className="bg-green-500 text-white px-3 py-1 r rounded-lg over:bg-green-600 transition text-xs"
             >
               Update
             </button>
+            <button
+              onClick={() => onDialogOpen("delete", gas)}
+              className="bg-red-500 text-white px-3 py-1 rounded-lg  hover:bg-red-600 transition text-xs"
+            >
+              Delete
+            </button>
+            
           </div>
         </div>
       </div>
@@ -102,48 +101,39 @@ const StoreCard = ({ gas, onDialogOpen, onDialogOpenAgain }) => {
                           <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-700">
                             <div>
                               <p>
-                                <strong>Min Retail Price:</strong>{" "}
-                                <FormattedAmount amount={cylinder.min_retail_selling_price} />
+                                <strong>Wholesale Refill Price:</strong>{" "}
+                                <FormattedAmount amount={cylinder.wholesale_refil_price} />
                                 
                               </p>
                               <p>
-                                <strong>Max Retail Price:</strong>{" "}
-                                <FormattedAmount amount={cylinder.max_retail_selling_price} />
+                                <strong>Retail Refill Price:</strong>{" "}
+                                <FormattedAmount amount={cylinder.retail_refil_price} />
                                 
                               </p>
                               <p>
-                                <strong>Min Wholesale:</strong>{" "}
-                                <FormattedAmount amount={cylinder.min_wholesale_selling_price} />
+                                <strong>Outlet Wholesale Price:</strong>{" "}
+                                <FormattedAmount amount={cylinder.outlet_wholesale_price} />
                                 
                               </p>
                               <p>
-                                <strong>Max Wholesale:</strong>{" "}
-                                <FormattedAmount amount={cylinder.max_wholesale_selling_price} />
+                                <strong>Outlet Retail Price:</strong>{" "}
+                                <FormattedAmount amount={cylinder.outlet_retail_price} />
                                 
                               </p>
                             </div>
                             <div>
                               <p>
-                                <strong>Min Refill (Retail):</strong>{" "}
-                                <FormattedAmount amount={cylinder.min_retail_refil_price} />
+                                <strong>Complete Wholesale Price (Gril + Burner):</strong>{" "}
+                                <FormattedAmount amount={cylinder.complete_wholesale_price} />
                                 
                               </p>
                               <p>
-                                <strong>Max Refill (Retail):</strong>{" "}
-                                <FormattedAmount amount={cylinder.max_retail_refil_price} />
+                                <strong>Complete Retail Price (Grill + Burner):</strong>{" "}
+                                <FormattedAmount amount={cylinder.complete_retail_price} />
                                 
                               </p>
-                              <p>
-                                <strong>Min Refill (Wholesale):</strong>{" "}
-                                <FormattedAmount amount={cylinder.min_wholesale_refil_price} />
-                                
-                              </p>
-                              <p>
-                                <strong>Max Refill (Wholesale):</strong>{" "}
-                                <FormattedAmount amount={cylinder.max_wholesale_refil_price} />
-                                
-                              </p>
-
+                              
+                            
 
                               <p>
                                 <strong>Empty Cylinder prince:</strong>{" "}

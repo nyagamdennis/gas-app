@@ -32,14 +32,24 @@ export const fetchCylindersWeight = createAsyncThunk<CylindersWeight[], void>(
   },
 )
 
-export const createCylindersWeight = createAsyncThunk<void, number>(
-  "cylindersWeight/createCylindersWeight",
-  async (pk) => {
-    // await axios.post(`${apiUrl}/clear_debt/${pk}/`);
-    await api.post(`/clear_debt/${pk}/`)
-    return pk
-  },
-)
+// export const createCylindersWeight = createAsyncThunk<void, number>(
+//   "cylindersWeight/createCylindersWeight",
+//   async (pk) => {
+//     // await axios.post(`${apiUrl}/clear_debt/${pk}/`);
+//     await api.post(`/clear_debt/${pk}/`)
+//     return pk
+//   },
+// )
+
+type NewCylindersWeight = { name: string }
+
+export const createCylindersWeight = createAsyncThunk<
+  CylindersWeight,
+  NewCylindersWeight
+>("cylindersWeight/createCylindersWeight", async (weight) => {
+  const response = await api.post("/cylinder-weight/", weight)
+  return response.data as CylindersWeight
+})
 
 const cylindersWeightSlice = createSlice({
   name: "cylindersWeight",
@@ -61,23 +71,18 @@ const cylindersWeightSlice = createSlice({
         state.error = action.error.message || "Failed to fetch cylindersWeight."
       })
 
-    // Clear CylindersWeight Cases
-    // .addCase(createCylindersWeight.pending, (state) => {
-    //   state.createCylindersWeight = "loading";
-    //   state.clearDebtError = null;
-    // })
-    // .addCase(createCylindersWeight.fulfilled, (state, action) => {
-    //   state.clearDebtStatus = "succeeded";
-    //   const clearedDebtorId = action.payload;
-    //   state.cylindersWeight = state.cylindersWeight.filter(
-    //     (debtor) => debtor.id !== clearedDebtorId
-    //   );
-    // })
-    // .addCase(createCylindersWeight.rejected, (state, action) => {
-    //   state.clearDebtStatus = "failed";
-    //   state.clearDebtError =
-    //     action.error.message || "Failed to clear the selected debt.";
-    // });
+      .addCase(createCylindersWeight.pending, (state) => {
+        state.status = "loading"
+        state.error = null
+      })
+      .addCase(createCylindersWeight.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.cylindersWeight.push(action.payload)
+      })
+      .addCase(createCylindersWeight.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message || "Failed to create brand."
+      })
   },
 })
 

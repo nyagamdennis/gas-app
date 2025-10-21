@@ -63,8 +63,8 @@ const teamName = idParams.name ? decodeURIComponent(idParams.name) : ""
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-          <main className="flex-grow m-2 p-1">
-            <div className="bg-white p-4 rounded-lg shadow-md">
+          <main className="flex-grow m-0.5">
+            <div className="bg-white p-1 rounded-lg shadow-md">
               <h2 className="text-2xl font-semibold mb-4">
                 {teamName} Cylinders stock
               </h2>

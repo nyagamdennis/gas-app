@@ -257,9 +257,7 @@ function valueFormatters(value: number | null) {
                       className="text-green-500 text-2xl"
                       fontSize=""
                     />
-                    <h3 className="text-lg font-semibold mt-2">
-                      Total Revenue
-                    </h3>
+                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">Total Revenue</h3>
                   </div>
 
                   <p className="text-gray-600 font-bold ms-2">
@@ -277,7 +275,7 @@ function valueFormatters(value: number | null) {
                 <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <GiProfit className="text-blue-500 text-2xl" />
-                    <h3 className="text-lg font-semibold mt-2">Total Profit</h3>
+                    <h3 className="text-sm  font-semibold mt-2">Total Profit</h3>
                   </div>
 
                   <p className="text-gray-600 font-bold ms-2">
@@ -294,7 +292,7 @@ function valueFormatters(value: number | null) {
                 <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <GiExpense className="text-red-500" fontSize="large" />
-                    <h3 className="text-lg font-semibold mt-2">
+                    <h3 className="text-sm  font-semibold mt-2">
                       Total Expenses
                     </h3>
                   </div>
@@ -313,7 +311,7 @@ function valueFormatters(value: number | null) {
                 <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <FcDebt className="text-yellow-500" fontSize="large" />
-                    <h3 className="text-lg font-semibold mt-2">Total Debt</h3>
+                    <h3 className="text-sm  font-semibold mt-2">Total Debt</h3>
                   </div>
 
                   <p className="text-gray-600 font-bold ms-2">
