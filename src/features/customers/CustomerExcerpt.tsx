@@ -37,7 +37,7 @@ const CustomerExcerpt = ({ customer }) => {
   const toggleSMS = () => setSmsState(!smsState)
   const toggleHistory = () => setShowHistory(!showHistory)
 
-  const formattedDates = customer.customer_debt.map((debt) => {
+  const formattedDates = customer.customer_debt?.map((debt) => {
     const date = new Date(debt.expected_date_to_repay)
     return {
       formatted: date.toLocaleDateString("en-US", {

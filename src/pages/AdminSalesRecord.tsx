@@ -218,13 +218,12 @@ const AdminSalesRecord = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      
-        <AdminNav
-          headerMessage={"Others Sales Insights"}
-          headerText={"Monitor and manage your team's sales"}
-        />
+      <AdminNav
+        headerMessage={"Others Sales Insights"}
+        headerText={"Monitor and manage your team's sales"}
+      />
 
-        {/* Filter Section */}
+      {/* Filter Section */}
       <div className="bg-white shadow-md p-1 flex justify-between items-center mb-2">
         <div className="flex flex-col space-y-2 items-center  md:flex md:justify-between">
           <div className="flex items-center space-x-2">
@@ -339,7 +338,7 @@ const AdminSalesRecord = () => {
                           <FormattedAmount
                             amount={
                               sale.mpesaAmount * sale.quantity -
-                              (sale.debt_info?.debt_amount ||0)
+                              (sale.debt_info?.debt_amount || 0)
                             }
                           />
                         }
@@ -510,7 +509,6 @@ const AdminSalesRecord = () => {
               <p className="font-bold text-red-700 mt-2">
                 Total Expenses: Ksh {totalExpenses.toLocaleString()}
               </p>
-              
             </div>
           )}
         </div>

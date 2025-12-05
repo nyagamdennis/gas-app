@@ -39,12 +39,7 @@ const AdminSms = () => {
         message: messageTextareaRef.current?.value,
       }
 
-      // const response = await axios.post(`${apiUrl}/sendbulksms/`, formData, {
-      //   headers: {
-      //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // })
+     
       const response = await api.post("/sendbulksms/", formData)
 
       if (response.status === 201) {

@@ -7,6 +7,7 @@ import {
 } from "../features/employees/myProfileSlice"
 import { Link } from "react-router-dom"
 import {
+  deleteSalesTeamData,
   fetchSalesTeamData,
   selectAllSalesTeamData,
 } from "../features/salesTeam/salesTeamDataSlice"
@@ -27,8 +28,17 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { useMediaQuery, useTheme } from "@mui/material"
+import { set } from "cookies"
+import { toast, ToastContainer } from "react-toastify"
+import Navbar from "../components/ui/mobile/employees/Navbar"
 
 const TeamSalesPage = () => {
+  const theme = useTheme()
+  const matches = useMediaQuery("(min-width:600px)")
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  
+
   const dispatch = useAppDispatch()
   const myProfile = useAppSelector(selectMyProfile)
   const allSalesData = useAppSelector(selectAllSalesTeamData)
@@ -41,13 +51,20 @@ const TeamSalesPage = () => {
   const [filteredExpenses, setFilteredExpenses] = useState([])
   const [addingExpenses, setAddingExpenses] = useState(false)
   const [openDelete, setOpenDelete] = useState(false);
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [deleteSaleId, setDeleteSaleId] = useState(null);
+  const [deleteProduct, setDeleteProduct] = useState(null);
+  const [deleteSoldTo, setDeleteSoldTo] = useState(null);
+  const [deleteQuantity, setDeleteQuantity] = useState(null);
+  const [deleteAmount, setDeleteAmount] = useState(null);
+  const [deleteSoldToPhone, setDeleteSoldToPhone] = useState(null);
   const [startDate, setStartDate] = useState(() => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
   })
   const [endDate, setEndDate] = useState(() => {
     const today = new Date()
-    return today.toISOString().split("T")[0] // Default to today's date
+    return today.toISOString().split("T")[0] // Default to                                                                                                                                         today's date
   })
 
   // console.log("all sales data", allSalesData)
@@ -55,6 +72,7 @@ const TeamSalesPage = () => {
 
   const salesTeamId = myProfile?.sales_team?.id
   const employeeId = myProfile?.id
+
   const handleAddExpenses = (e) => {
     e.preventDefault()
     setAddingExpenses(true)
@@ -69,12 +87,24 @@ const TeamSalesPage = () => {
       setAddingExpenses(false)
     }
   }
+const salesDate = startDate;
 
   useEffect(() => {
     dispatch(fetchMyProfile())
-    dispatch(fetchSalesTeamData())
+    dispatch(fetchSalesTeamData({ salesDate }))
     dispatch(fetchTeamExpenses({ salesTeamId }))
-  }, [dispatch, salesTeamId])
+  }, [dispatch, salesTeamId, salesDate])
+
+  const handleDelete = async() => {
+    try {
+          await dispatch(deleteSalesTeamData({ deleteSaleId }))
+          toast.success("Sales record deleted successfully")
+          handleCloseDelete()
+    } catch (error) {
+      toast.error("Error deleting sales record")
+    }
+    
+  }
 
   useEffect(() => {
     // Filter sales data by date range
@@ -141,23 +171,24 @@ const TeamSalesPage = () => {
   }
   // console.log("filtered sales data", filteredSales)
 
+
+  
+
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header */}
-
-      <SalesHeader
-        teamName={myProfile?.sales_team?.name}
-        profileImage={myProfile?.profile_image}
-        firstName={myProfile?.first_name}
-        lastName={myProfile?.last_name}
-        description="Track your team's sales performance."
-      />
-
-      {/* Filter Section */}
-      <div className="bg-white shadow-md p-4 flex flex-col space-y-2 items-center  md:flex md:justify-between">
+    <div>
+      {isMobile ? (
+        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+          <Navbar
+            headerMessage={"ERP"}
+            headerText={"Manage your operations with style and clarity"}
+          />
+          <main className="flex-grow m-2 p-1">
+            <ToastContainer />
+            <div className="bg-white shadow-md p-4 flex flex-col space-y-2 items-center  md:flex md:justify-between">
         <div className="flex items-center space-x-2">
           <label htmlFor="start-date" className="text-gray-700 font-medium">
-            Start Date:
+            Sales Date:
           </label>
           <input
             type="date"
@@ -167,18 +198,7 @@ const TeamSalesPage = () => {
             className="border border-gray-300 rounded-md px-3 py-2"
           />
         </div>
-        <div className="flex items-center space-x-2">
-          <label htmlFor="end-date" className="text-gray-700 font-medium">
-            End Date:
-          </label>
-          <input
-            type="date"
-            id="end-date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2"
-          />
-        </div>
+       
       </div>
 
       {/* Sales Data */}
@@ -278,17 +298,7 @@ const TeamSalesPage = () => {
                   </p>
                 ) : null}
               </div>
-              {/* {sale?.admin_payment_verified ? (
-                <div>
-                  <p className=" text-green-900 text-xl">payment verified.</p>
-                </div>
-              ) : (
-                <div>
-                  <p className=" text-red-900 text-xl">payment not verified.</p>
-                </div>
-              )} */}
-
-              {/* Timestamp */}
+             
               <div className="flex justify-between items-center">
                 <p className="mt-2 text-sm text-gray-500">
                   Sold on:{" "}
@@ -299,7 +309,20 @@ const TeamSalesPage = () => {
                   })}
                 </p>
                 <div className="flex space-x-2">
-                  <button onClick={handleOpenDelete} className="bg-red-500 px-2 rounded-md text-white">
+                  <button
+                    onClick={() => {
+                      setDeleteSaleId(sale.id);
+                      setDeleteProduct(sale.product?.cylinder
+                        ? `${sale.product?.gas_type} ${sale.product?.weight}kg - Qty: ${sale.quantity}`
+                        : "N/A");
+                      setDeleteSoldTo(sale.customer?.name);
+                      setDeleteQuantity(sale.quantity);
+                      setDeleteAmount(sale.amount_sold_for);
+                      setDeleteSoldToPhone(sale.customer?.phone);
+                      handleOpenDelete();
+                    }}
+                    className="bg-red-500 px-2 rounded-md text-white"
+                  >
                     Delete
                   </button>
                   <Link to={`/salesrecordedit/${sale.id}`}>
@@ -395,8 +418,18 @@ const TeamSalesPage = () => {
             ) : (
               ""
             )}
+            <div className="flex justify-end">
+              <button
+              onClick={() => setShowExpenseForm(!showExpenseForm)}
+              className="bg-green-900 px-2 py-1 text-white rounded-md cursor-pointer"
+            >
+              {showExpenseForm ? "Cancel" : "Add Expense"}
+            </button>
+            </div>
+            
 
-            <form className=" my-2 p-2">
+{ showExpenseForm && (
+  <form className=" my-2 p-2">
               <div className="flex flex-col space-y-2">
                 <div>
                   <label className=" font-semibold">Expense</label>
@@ -429,6 +462,8 @@ const TeamSalesPage = () => {
                 </button>
               </div>
             </form>
+)}
+            
           </div>
         </div>
         <Dialog
@@ -438,27 +473,38 @@ const TeamSalesPage = () => {
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          {"are you sure you want to delete?"}
+          {`are you sure you want to delete ${deleteProduct}?`}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Let Google help apps determine location. This means sending anonymous
-            location data to Google, even when no apps are running.
+            Delete this sales record permanently sales record of {deleteProduct}.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDelete}>Cancel</Button>
-          <Button onClick={handleCloseDelete} autoFocus>
+          <Button onClick={handleDelete} autoFocus>
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
       </div>
-      {/* Footer */}
-
-      <EmployeeFooter />
+          </main>
+          <footer>
+            <EmployeeFooter />
+          </footer>
+        </div>
+      ) : (
+        <div className="p-4">
+          <p>Desktop view coming soon</p>
+        </div>
+      )}
     </div>
+
+
+
+
+
   )
 }
 

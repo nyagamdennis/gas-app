@@ -32,16 +32,17 @@ const initialState: ExpensesState = {
 export const fetchExpenses = createAsyncThunk<Expenses[]>(
   "expenses/fetchExpenses",
   async (employeeId) => {
-    // const response = await axios.get<Expenses[]>(EXPENSES_URLS);
-    // const response = await axios.get<Expenses[]>(`${apiUrl}/expenses/${employeeId}`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   }
-    // );
-    // console.log('fetch expenses ', response.data)
     const response = await api.get<Expenses[]>(`/expenses/${employeeId}`);
+    return response.data; // Return the fetched expenses data
+  }
+);
+
+
+
+export const fetchAllExpenses = createAsyncThunk<Expenses[]>(
+  "expenses/fetchAllExpenses",
+  async () => {
+    const response = await api.get<Expenses[]>(`/all-expenses/`);
     return response.data; // Return the fetched expenses data
   }
 );
@@ -52,14 +53,6 @@ export const fetchExpenses = createAsyncThunk<Expenses[]>(
 export const updateExpensesStatus = createAsyncThunk(
   "expenses/updateExpensesStatus",
   async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-    // const response = await axios.patch(`${apiUrl}/update-expense/${employeeId}/`, {
-    //   status_field: statusField,
-    // },{
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //   },
-    // });
-    // console.log('STatus functions', response.data)
     const response = await api.patch(`/update-expense/${employeeId}/`, {
       status_field: statusField,
     });
@@ -96,6 +89,18 @@ const expensesSlice = createSlice({
   extraReducers(builder) {
     builder
       // Fetch Expenses
+      .addCase(fetchAllExpenses.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchAllExpenses.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.expenses = action.payload;
+      })
+      .addCase(fetchAllExpenses.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch expenses";
+      })
+
       .addCase(fetchExpenses.pending, (state) => {
         state.status = "loading";
       })

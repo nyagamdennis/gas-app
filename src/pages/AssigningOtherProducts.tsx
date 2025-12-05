@@ -85,6 +85,8 @@ const AssigningOtherProducts = () => {
       .catch((error) => console.error("Error in product assignment:", error))
       .finally(() => setLoadingAssign(false))
   }
+
+  
   return (
     <>
       <AdminNav

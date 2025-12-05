@@ -215,6 +215,7 @@ const singleEmployeeSlice = createSlice({
                 // console.log('log message ', updatedEmployee)
                 if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
                     state.singleEmployee.verified = updatedEmployee.verified; // ✅ Update ONLY the verified field
+                    state.singleEmployee.fired = updatedEmployee.fired;
                 }
 
 

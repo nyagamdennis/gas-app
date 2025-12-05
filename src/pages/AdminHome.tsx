@@ -15,6 +15,7 @@ import useMediaQuery from "@mui/material/useMediaQuery"
 import { useTheme } from "@mui/material"
 import Navbar from "../components/ui/mobile/admin/Navbar"
 import DashboardIcon from "@mui/icons-material/Dashboard"
+import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
 import GasMeterIcon from "@mui/icons-material/GasMeter"
 import MicrowaveIcon from "@mui/icons-material/Microwave"
 import SensorOccupiedIcon from "@mui/icons-material/SensorOccupied"
@@ -63,13 +64,13 @@ const AdminHome = () => {
                 Cylinders
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-yellow-50 to-yellow-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/store/otherproducts"} className="bg-gradient-to-br from-yellow-50 to-yellow-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <MicrowaveIcon className="text-yellow-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-yellow-700 text-center">
                 Other Products
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/hr"} className="bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <SensorOccupiedIcon
                 className="text-purple-600"
                 fontSize="large"
@@ -78,25 +79,25 @@ const AdminHome = () => {
                 HR
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-pink-50 to-pink-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/createteam"} className="bg-gradient-to-br from-pink-50 to-pink-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <PeopleAltIcon className="text-pink-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-pink-700 text-center">
                 Teams
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-red-50 to-red-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/admins/salesdata"} className="bg-gradient-to-br from-red-50 to-red-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <BusinessCenterIcon className="text-red-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-red-700 text-center">
                 Sales
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-teal-50 to-teal-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={'/admins/customers'} className="bg-gradient-to-br from-teal-50 to-teal-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <Diversity1Icon className="text-teal-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-teal-700 text-center">
                 Customers
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-indigo-50 to-indigo-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/admin/expenses"} className="bg-gradient-to-br from-indigo-50 to-indigo-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <CreditScoreIcon className="text-indigo-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-indigo-700 text-center">
                 Expenses
@@ -108,13 +109,22 @@ const AdminHome = () => {
                 AI Tools
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            <Link to={"/admin/reachout"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <ConnectWithoutContactIcon
                 className="text-cyan-600"
                 fontSize="large"
               />
               <p className="mt-2 text-sm font-semibold text-cyan-700 text-center">
                 Reach Out
+              </p>
+            </Link>
+            <Link to={"/admin/deliveries"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+              <TwoWheelerIcon
+                className="text-cyan-600"
+                fontSize="large"
+              />
+              <p className="mt-2 text-sm font-semibold text-cyan-700 text-center">
+                Deliveries
               </p>
             </Link>
             <Link className="bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">

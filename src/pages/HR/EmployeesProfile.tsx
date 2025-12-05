@@ -1,20 +1,22 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react"
-import { useAppDispatch, useAppSelector } from "../app/hooks"
+import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { ClipLoader } from "react-spinners"
 import {
   fetchEmployees,
   selectAllEmployees,
-} from "../features/employees/employeesSlice"
+} from "../../features/employees/employeesSlice"
 import {
   fetchSalesTeam,
   selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
-import defaultProfile from "../components/media/default.png"
-import { useNavigate } from "react-router-dom"
-import AdminsFooter from "../components/AdminsFooter"
-import AdminNav from "../components/ui/AdminNav"
-import planStatus from "../features/planStatus/planStatus"
+} from "../../features/salesTeam/salesTeamSlice"
+import defaultProfile from "../../components/media/default.png"
+import { Link, useNavigate } from "react-router-dom"
+import AdminsFooter from "../../components/AdminsFooter"
+import AdminNav from "../../components/ui/AdminNav"
+import planStatus from "../../features/planStatus/planStatus"
+import Navbar from "../../components/ui/mobile/admin/Navbar"
+import { toast, ToastContainer } from "react-toastify"
 
 const Employee = () => {
   const dispatch = useAppDispatch()
@@ -33,14 +35,14 @@ const Employee = () => {
 
   const allEmployees = useAppSelector(selectAllEmployees)
   const allSalesTeams = useAppSelector(selectAllSalesTeam)
-
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
-    if (businessId){
-    dispatch(fetchEmployees({businessId}))
-    dispatch(fetchSalesTeam({businessId}))}
+    if (businessId) {
+      dispatch(fetchEmployees({ businessId }))
+      dispatch(fetchSalesTeam({ businessId }))
+    }
   }, [dispatch, businessId])
 
   const handleNavigate = (id) => {
@@ -61,14 +63,20 @@ const Employee = () => {
     <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800 font-sans">
       {/* Header */}
       <main className="flex-grow">
-        <AdminNav
+        <Navbar
           headerMessage={"Manage Employees"}
           headerText={"View, edit, and organize your workforce"}
         />
+          <ToastContainer />
+
         <div className=" mt-2">
-          <h2 className="text-lg font-semibold text-gray-800 px-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800 px-6">
             {allEmployees.length} Employees
           </h2>
+            <Link className="me-3 text-blue-600 underline" to={"/admins/ex-employees"}>Ex employees</Link>
+          </div>
+          
           <p className="text-sm text-gray-500 px-6">
             {isTrial
               ? "You are on a trial plan. Upgrade to Pro for more features."
@@ -110,7 +118,8 @@ const Employee = () => {
                           .catch((err) => console.error("Sharing failed", err))
                       } else {
                         navigator.clipboard.writeText(url)
-                        alert("Link copied to clipboard. You can now paste it.")
+                              toast.success("Link copied to clipboard. You can now paste it.")
+                        // alert("Link copied to clipboard. You can now paste it.")
                       }
                     }}
                     className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 text-xs rounded"
@@ -188,7 +197,7 @@ const Employee = () => {
                   <p className="mt-2 text-sm text-gray-500">
                     Phone:{" "}
                     <span className="text-gray-700">
-                      {employee.phone || "No phone"}
+                        {employee.phone || "No phone"}
                     </span>
                   </p>
                   <p className="text-sm text-gray-500">
@@ -211,6 +220,8 @@ const Employee = () => {
                   </button>
                 </div>
               </div>
+              {/* <button>Suspend</button>
+              <button>Fire</button> */}
             </div>
           ))}
 

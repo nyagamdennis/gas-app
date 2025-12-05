@@ -28,7 +28,7 @@ const Settings = () => {
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
 
-  console.log("my_settings", my_settings)
+  // console.log("my_settings", my_settings)
   useEffect(() => {
     dispatch(fetchSettings())
   }, [dispatch])

@@ -28,16 +28,17 @@ const initialState: adminSalesTeamDataState = {
 
 export const fetchAdminSalesTeamData = createAsyncThunk(
   "adminSalesTeamData/fetchAdminSalesTeamData",
-  async () => {
-    // const response = await axios.get(`${apiUrl}/adminsalesteamdata`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   }
-    // );
-    const response = await api.get("/adminsalesteamdata");
-    return response.data; // Corrected the return statement
+  async (
+    { teamId, salesDate }: { teamId?: string; salesDate?: string } = {}
+  ) => {
+    const params: Record<string, string> = {};
+    if (teamId) params.teamId = teamId;
+    if (salesDate) params.salesDate = salesDate;
+    // console.log('sales date ', salesDate)
+    // console.log('team id s ', teamId)
+
+    const response = await api.get("/adminsalesteamdata", { params });
+    return response.data;
   }
 );
 

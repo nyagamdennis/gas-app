@@ -26,9 +26,11 @@ import {
   fetchStore,
   getStoreStatus,
   selectAllStore,
+  storeRefillCylinders,
 } from "../../features/store/storeSlice"
 import CircularProgress from "@mui/material/CircularProgress"
 import planStatus from "../../features/planStatus/planStatus"
+import { toast, ToastContainer } from "react-toastify"
 
 const RefillCylinders = () => {
   const [refillingCylinders, setRefillingCylinders] = useState(false)
@@ -108,7 +110,7 @@ const RefillCylinders = () => {
     }
   }, [businessId, dispatch])
 
-  const handleAddRefill = () => {
+  const handleAddRefill = async () => {
     // setLoadingAssign(true)
     setRefillingCylinders(true)
     const payload = storeRefill.map((item) => ({
@@ -117,22 +119,25 @@ const RefillCylinders = () => {
       cylinder: item.cylinderId,
       refill_quantity: item.refill_quantity,
     }))
+    // console.log("Refill Payload ", payload)
     try {
-      dispatch(storeRefillCylinders({ payload }))
+      // console.log("payload to refill", payload)
+      await dispatch(storeRefillCylinders({ payload })).unwrap()
       setRefillingCylinders(false)
       toast.success("Refilling cylinders successfully.")
       setOpenRefill(false)
       setStoreRefill([])
     } catch (error) {
+      // alert("an error occured, try again.", error)
       setRefillingCylinders(false)
-      toast.error("an error occured, try again.")
+      toast.error(error || error.message || "an error occured, try again.")
     }
   }
 
   const weightSummary = storeRefill.reduce((acc, item) => {
     const { weightId, weightName, refill_price, refill_quantity } = item
-    console.log("weightId, weightName, refill_price, refill_quantity")
-    console.log(weightId, weightName, refill_price, refill_quantity)
+    // console.log("weightId, weightName, refill_price, refill_quantity")
+    // console.log(weightId, weightName, refill_price, refill_quantity)
     if (!acc[weightId]) {
       acc[weightId] = {
         weightName,
@@ -160,6 +165,7 @@ const RefillCylinders = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
+          <ToastContainer />
           <main className="flex-grow m-2 p-1">
             <div className="">
               <div>
@@ -343,7 +349,6 @@ const RefillCylinders = () => {
               </Button>
             </DialogActions>
           </Dialog>
-          
         </div>
       ) : (
         <div className="p-4">

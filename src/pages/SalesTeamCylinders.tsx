@@ -208,25 +208,14 @@ console.log('all cylinders ', assigned_cylinders)
                     Retail Prices
                   </h4>
                   <p>
-                    Min Refill:{" "}
-                    <FormattedAmount amount={cylinder.min_retail_refil_price} />
+                    Refill:{" "}
+                    <FormattedAmount amount={cylinder.retail_refil_price} />
                   </p>
-                  <p>
-                    Max Refill:{" "}
-                    <FormattedAmount amount={cylinder.max_retail_refil_price} />
+                 <p>
+                    Complete:{" "}
+                    <FormattedAmount amount={cylinder.retail_sold} />
                   </p>
-                  <p>
-                    Min Selling:{" "}
-                    <FormattedAmount
-                      amount={cylinder.min_retail_selling_price}
-                    />
-                  </p>
-                  <p>
-                    Max Selling:{" "}
-                    <FormattedAmount
-                      amount={cylinder.max_retail_selling_price}
-                    />
-                  </p>
+                  
                 </div>
               ) : (
                 <div>
@@ -234,27 +223,17 @@ console.log('all cylinders ', assigned_cylinders)
                     Wholesale Prices
                   </h4>
                   <p>
-                    Min Refill:{" "}
+                    Refill:{" "}
                     <FormattedAmount
-                      amount={cylinder.min_wholesale_refil_price}
+                      amount={cylinder.wholesale_refil_price}
                     />
                   </p>
+                 
+                  
                   <p>
-                    Max Refill:{" "}
+                    Complete:{" "}
                     <FormattedAmount
-                      amount={cylinder.max_wholesale_refil_price}
-                    />
-                  </p>
-                  <p>
-                    Min Selling:{" "}
-                    <FormattedAmount
-                      amount={cylinder.min_wholesale_selling_price}
-                    />
-                  </p>
-                  <p>
-                    Max Selling:{" "}
-                    <FormattedAmount
-                      amount={cylinder.max_wholesale_selling_price}
+                      amount={cylinder.wholesale_sold}
                     />
                   </p>
                 </div>

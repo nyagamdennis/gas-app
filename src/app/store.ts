@@ -9,13 +9,14 @@ import authReducer from "../features/auths/authSlice"
 import salesTeamReducer from "../features/salesTeam/salesTeamSlice"
 import salesTeamManagementReducer from "../features/salesTeam/salesTeamManagementSlice"
 import employeesReducer from "../features/employees/employeesSlice"
+import firedEmployeesReducer from "../features/employees/firedEmployeesSlice"
 import businessReducer from "../features/business/businnesSlice"
 import storeReducer from "../features/store/storeSlice"
 import otherProductsReducer from "../features/store/otherProductsSlice"
 import assignsReducer from "../features/assigns/assignsSlice"
 import myProfileReducer from "../features/employees/myProfileSlice"
 import salesTeamDataReducer from "../features/salesTeam/salesTeamDataSlice"
-import singleSalesTeamDataReducer from "../features/salesTeam/singleSalesTeamDataSlice";
+import singleSalesTeamDataReducer from "../features/salesTeam/singleSalesTeamDataSlice"
 import assignedOtherProductsReducer from "../features/product/assignedOtherProductsSlice"
 import adminSalesTeamDataReducer from "../features/salesTeam/adminSalesTeamDataSlice"
 import collectionsReducer from "../features/collections/collectionsSlice"
@@ -39,13 +40,15 @@ import analysisReducer from "../features/analysis/analysisSlice"
 import companyExpensesReducer from "../features/expenses/companyExpensesSlice"
 import aiAnalysisReducer from "../features/ai/aiAnalysisSlice"
 import stockupReducer from "../features/stockup/stockupSlice"
-import cylindersBrandReducer from "../features/cylinders/cylindersBrandSlice";
+import cylindersBrandReducer from "../features/cylinders/cylindersBrandSlice"
 import cylindersWeightReducer from "../features/cylinders/cylindersWeightSlice"
+import vehiclesReducer from "../features/deliveries/vehiclesSlice"
 
 export const store = configureStore({
   reducer: {
+    vehicles: vehiclesReducer,
     cylindersWeight: cylindersWeightReducer,
-    cylindersBrand:cylindersBrandReducer,
+    cylindersBrand: cylindersBrandReducer,
     stockup: stockupReducer,
     analysisAi: aiAnalysisReducer,
     companyExpenses: companyExpensesReducer,
@@ -66,6 +69,7 @@ export const store = configureStore({
     salesTeam: salesTeamReducer,
     salesTeamManagement: salesTeamManagementReducer,
     employees: employeesReducer,
+    firedEmployees: firedEmployeesReducer,
     business: businessReducer,
     store: storeReducer,
     otherProducts: otherProductsReducer,

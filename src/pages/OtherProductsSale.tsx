@@ -68,7 +68,7 @@ const OtherProductsSale = () => {
             className="bg-white border border-gray-300 rounded-lg shadow-lg p-6 hover:shadow-xl transition"
           >
             <div>
-               <h3 className="text-xl font-semibold text-blue-700">{product.product.name}</h3>
+               <h3 className="text-xl font-semibold text-blue-700">{product?.product?.name}</h3>
             <p className="text-gray-600 mt-2">
               <strong>Assigned Quantity:</strong> {product.assigned_quantity}
             </p>
@@ -88,15 +88,14 @@ const OtherProductsSale = () => {
               <strong>Spoiled:</strong> {product.spoiled}
             </p>
             <p className="text-gray-600 mt-1 text-sm">
-              <strong>Wholesale Price:</strong> Ksh {product.product.whole_sales_price}
+              <strong>Wholesale Price:</strong> Ksh {product?.product?.whole_sales_price}
             </p>
             <p className="text-gray-600 mt-1 text-sm">
-              <strong>Retail Price:</strong> Ksh {product.product.retail_sales_price}
+              <strong>Retail Price:</strong> Ksh {product?.product?.retail_sales_price}
             </p>
             <p className="text-gray-600 mt-1 text-sm">
-              <strong>Date Assigned:</strong> {new Date(product.date_assigned).toLocaleDateString()}
+              <strong>Date Assigned:</strong> {new Date(product?.date_assigned).toLocaleDateString()}
             </p>
-
             </div>
            
             <div>

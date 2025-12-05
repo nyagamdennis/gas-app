@@ -9,6 +9,7 @@ import api from "../../../utils/api"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import AddBoxIcon from "@mui/icons-material/AddBox"
+import CircularProgress from "@mui/material/CircularProgress"
 
 import Select from "react-select"
 
@@ -25,6 +26,7 @@ import {
   Typography,
 } from "@mui/material"
 import {
+  addAnotherCylinder,
   addNewCylinders,
   deleteCylinder,
   deleteThisCylinder,
@@ -45,10 +47,13 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import Input from "../../components/Input"
 import { toast, ToastContainer } from "react-toastify"
+
 import {
+  createCylindersWeight,
   fetchCylindersWeight,
   selectAllCylindersWeight,
 } from "../../features/cylinders/cylindersWeightSlice"
+import KenyanCurrencyInput from "../../components/KenyanCurrencyInput"
 
 const StoreCylinders = () => {
   const theme = useTheme()
@@ -83,6 +88,22 @@ const StoreCylinders = () => {
   const [anotherCylinderWeight, setAnotherCylinderWeight] = useState<number>()
   const [anotherCylinderFilled, setAnotherCylinderFilled] = useState<number>()
   const [anotherCylinderEmpties, setAnotherCylinderEmpties] = useState<number>()
+  const [selectedWeight, setSelectedWeight] = useState(null)
+  const [outletWholeSale, setOutletWholeSale] = useState(0)
+  const [outletRetail, setOutletRetail] = useState(0)
+  const [completeWholeSale, setCompleteWholeSale] = useState(0)
+  const [addingNewCylinder, setAddingNewCylinder] = useState(false)
+
+  const [completeRetail, setCompleteRetail] = useState(0)
+  const [emptyCylinderPrice, setEmptyCylinderPrice] = useState(0)
+  const [wholesaleRefillPrice, setWholesaleRefillPrice] = useState(0)
+  const [retailRefillPrice, setRetailRefillPrice] = useState(0)
+  const [depositPrice, setDepositPrice] = useState(0)
+  const [fullCylindersStock, setFullCylindersStock] = useState(0)
+  const [emptyCylindersStock, setEmptyCylindersStock] = useState(0)
+  const [spoiledCylindersStock, setSpoiledCylindersStock] = useState(0)
+  const [gasType, setGasType] = useState<string>("")
+
   const [
     anotherCylinderMinWholeSaleSelling,
     setAnotherCylinderMinWholeSaleSelling,
@@ -157,13 +178,18 @@ const StoreCylinders = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const [addingNewCylinderBrand, setAddingNewCylinderBrand] = useState(false)
+  const [showAddWeigthModal, setShowAddWeightModal] = useState(false)
+  const [newWeight, setNewWeight] = useState("")
+  const [addingNewWeight, setAddingNewWeight] = useState(false)
+  const [openWeight, setOpenWeight] = useState(false)
+  
 
   const allCylinderWeights = useAppSelector(selectAllCylindersWeight)
 
   useEffect(() => {
     if (businessId) {
       dispatch(fetchStore({ businessId }))
-      dispatch(fetchCylindersWeight())
     }
   }, [businessId, dispatch])
 
@@ -185,6 +211,18 @@ const StoreCylinders = () => {
     setSelectedGasData(gas)
     setSelectedGasCylinder(cylinder)
     setDialogOpenAgain(true)
+  }
+
+  const handleOpenDialogueOfWeight = () => {
+    setOpenWeight(true)
+  }
+
+  const handleCloseDialogueOfWeight = () => {
+    setOpenWeight(false)
+  }
+
+  const handleCloseDialogueOfBrand = () => {
+    setShowAddBrandModal(false)
   }
 
   const handleCloseDialogAgain = () => {
@@ -264,6 +302,10 @@ const StoreCylinders = () => {
 
   const handleUpdateCylinderDataRetailSellingInputChange = (e: any) => {
     setUpdateCylinderDataRetailSelling(e.target.value)
+  }
+
+  const handleGasTypeInputChange = (e: any) => {
+    setGasType(e.target.value)
   }
 
   const handleUpdateCylinderDataRetailRefillInputChange = (e: any) => {
@@ -352,8 +394,6 @@ const StoreCylinders = () => {
   const handleDeleteThisCylinder = async () => {
     const id = selectedGasCylinder?.id
     const cylinderWeight = selectedGasCylinder?.weight?.id
-    console.log("id to delete cylinder ", selectedGasCylinder)
-    console.log("cylinder weight ", cylinderWeight)
 
     try {
       await dispatch(deleteThisCylinder({ id, cylinderWeight })).unwrap()
@@ -509,8 +549,72 @@ const StoreCylinders = () => {
     }
   }
 
+  const handleAddNewWeight = async (e: any) => {
+    e.preventDefault()
+    setAddingNewWeight(true)
+    try {
+      const thisWeight = await dispatch(
+        createCylindersWeight({ weight: newWeight }),
+      ).unwrap()
 
-  console.log("store data", store)
+      setSelectedWeight(thisWeight.id)
+      toast.success("Weight added successfully!")
+
+      setOpenWeight(false)
+      setNewWeight("")
+      setAddingNewWeight(false)
+    } catch (error: any) {
+      console.log("Error adding new weight:", error)
+      setAddingNewWeight(false)
+      toast.error(
+        error.message || error.toString() || "Failed to add new brand",
+      )
+    }
+  }
+
+  const handleAddCylinder = async (e: any) => {
+    e.preventDefault()
+    setAddingNewCylinder(true)
+    const formData = {
+      weight: selectedWeight,
+      wholesale_refil_price: wholesaleRefillPrice,
+      retail_refil_price: retailRefillPrice,
+      outlet_wholesale_price: outletWholeSale,
+      outlet_retail_price: outletRetail,
+      complete_wholesale_price: completeWholeSale,
+      complete_retail_price: completeRetail,
+
+      filled: fullCylindersStock,
+      empties: emptyCylindersStock,
+      spoiled: spoiledCylindersStock,
+      empty_cylinder_price: emptyCylinderPrice,
+      depot_refill_price: depositPrice,
+    }
+    try {
+      await dispatch(
+        addAnotherCylinder({ dat: formData, id: selectedGas.id }),
+      ).unwrap()
+      // addAnotherCylinder({ dat: formData, id: selectedGas.id }),
+      setSelectedWeight(null)
+      setOutletWholeSale(0)
+      setOutletRetail(0)
+      setCompleteWholeSale(0)
+      setCompleteRetail(0)
+      setEmptyCylinderPrice(0)
+      setWholesaleRefillPrice(0)
+      setRetailRefillPrice(0)
+      setDepositPrice(0)
+      setFullCylindersStock(0)
+      setEmptyCylindersStock(0)
+      setSpoiledCylindersStock(0)
+      setAddingNewCylinder(false)
+      toast.success("Cylinder recorded successfully!")
+    } catch (error: any) {
+      setAddingNewCylinder(false)
+      toast.error(error.message || error.toString() || "Failed to add cylinder")
+    }
+  }
+
   return (
     <div>
       <ToastContainer />
@@ -616,64 +720,9 @@ const StoreCylinders = () => {
                         gas={gas}
                         onDialogOpen={handleOpenDialog}
                         onDialogOpenAgain={handleOpenDialogAgain}
+                        // onDialogueOfBrand={handleOpenDialogueOfWeight}
                       />
                     ))}
-                    {/* {store.map((gas) => (
-                      <div
-                        key={gas.id}
-                        className="mb-4 bg-white p-3 rounded-lg shadow-xl"
-                      >
-                        <h3 className="text-lg font-semibold text-blue-600">
-                          {gas.name}
-                        </h3>
-                        {gas.cylinders.map((cylinder) => (
-                          <div key={cylinder.id} className="mt-3">
-                            <h4 className="text-base font-semibold">
-                              Cylinder Weight: {cylinder.weight.weight}kg
-                            </h4>
-                            {cylinder.stores.length > 0 ? (
-                              <table className="mt-2 w-full border text-sm">
-                                <thead>
-                                  <tr className="bg-gray-200 text-left">
-                                    <th className="border px-2 py-1">Filled</th>
-                                    <th className="border px-2 py-1">
-                                      Empties
-                                    </th>
-                                    <th className="border px-2 py-1">
-                                      Spoiled
-                                    </th>
-                                    <th className="border px-2 py-1">Total</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {cylinder.stores.map((storeItem) => (
-                                    <tr key={storeItem.id}>
-                                      <td className="border px-2 py-1 text-center">
-                                        {storeItem.filled}
-                                      </td>
-                                      <td className="border px-2 py-1 text-center">
-                                        {storeItem.empties}
-                                      </td>
-                                      <td className="border px-2 py-1 text-center">
-                                        {storeItem.spoiled}
-                                      </td>
-                                      <td className="border px-2 py-1 text-center">
-                                        {storeItem.total_cylinders}
-                                      </td>
-                                   
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            ) : (
-                              <p className="text-gray-600 mt-2">
-                                No stores available for this cylinder.
-                              </p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ))} */}
                   </div>
                 )}
                 {fetchingStoreStatus === "failed" && (
@@ -723,112 +772,6 @@ const StoreCylinders = () => {
               )}
 
               {dialogType === "add" && (
-                // <form>
-                //   <Input
-                //     label="Cylinder Weight"
-                //     type="number"
-                //     value={anotherCylinderWeight}
-                //     onChange={(e) => setAnotherCylinderWeight(e.target.value)}
-                //   />
-                //   <Input
-                //     label="Filled"
-                //     type="number"
-                //     value={anotherCylinderFilled}
-                //     onChange={(e) => setAnotherCylinderFilled(e.target.value)}
-                //   />
-                //   <Input
-                //     label="Empties"
-                //     type="number"
-                //     value={anotherCylinderEmpties}
-                //     onChange={(e) => setAnotherCylinderEmpties(e.target.value)}
-                //   />
-                //   <Input
-                //     label="Spoiled"
-                //     type="number"
-                //     value={anotherCylinderSpoiled}
-                //     onChange={(e) => setAnotherCylinderSpoiled(e.target.value)}
-                //   />
-                //   <Input
-                //     label="Min Retail Selling Price"
-                //     type="number"
-                //     value={anotherCylinderMinRetailSelling}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMinRetailSelling(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Min Wholesale Selling Price"
-                //     type="number"
-                //     value={anotherCylinderMinWholeSaleSelling}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMinWholeSaleSelling(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Min Wholesale Refilling Price"
-                //     type="number"
-                //     value={anotherCylinderMinWholeSaleRefill}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMinWholeSaleRefill(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Min Retail Refilling Price"
-                //     type="number"
-                //     value={anotherCylinderMinRetailRefill}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMinRetailRefill(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Max Retail Selling Price"
-                //     type="number"
-                //     value={anotherCylinderMaxRetailSelling}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMaxRetailSelling(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Max Wholesale Selling Price"
-                //     type="number"
-                //     value={anotherCylinderMaxWholeSaleSelling}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMaxWholeSaleSelling(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Max Wholesale Refilling Price"
-                //     type="number"
-                //     value={anotherCylinderMaxWholeSaleRefill}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMaxWholeSaleRefill(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Max Retail Refilling Price"
-                //     type="number"
-                //     value={anotherCylinderMaxRetailRefill}
-                //     onChange={(e) =>
-                //       setAnotherCylinderMaxRetailRefill(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="Empty Cylinder Price"
-                //     type="number"
-                //     value={anotherCylinderEmptyCylinderPrice}
-                //     onChange={(e) =>
-                //       setAnotherCylinderEmptyCylinderPrice(e.target.value)
-                //     }
-                //   />
-                //   <Input
-                //     label="depot refill price"
-                //     type="number"
-                //     value={anotherCylinderCylinderDepotRefillPrice}
-                //     onChange={(e) =>
-                //       setAnotherCylinderCylinderDepotRefillPrice(e.target.value)
-                //     }
-                //   />
-                // </form>
                 <form className="space-y-6">
                   {/* Cylinder Brand Select */}
 
@@ -845,13 +788,23 @@ const StoreCylinders = () => {
                             label: weight.weight + " kg",
                           })),
                         ]}
+                        value={
+                          selectedWeight
+                            ? {
+                                value: selectedWeight,
+                                label:
+                                  allCylinderWeights.find(
+                                    (weight: any) =>
+                                      weight.id === selectedWeight,
+                                  )?.weight + " kg",
+                              }
+                            : null
+                        }
                         onChange={(selected) => {
-                          if (
-                            selected &&
-                            (selected as any).value === "add_new"
-                          ) {
-                            setShowAddBrandModal(true)
-                          }
+                          const id = (selected as any)?.value ?? null
+                          setSelectedWeight(id)
+                          // console.log("selected brand id:", id) // use this id as needed (set state, send to API, etc.)
+                          if (id === "add_new") setShowAddWeightModal(true)
                         }}
                         placeholder="Select Weight"
                         isClearable
@@ -859,7 +812,7 @@ const StoreCylinders = () => {
                       />
                       <button
                         type="button"
-                        onClick={() => setShowAddBrandModal(true)}
+                        onClick={() => setOpenWeight(true)}
                         className="bg-blue-500 text-white p-2 rounded-md shadow-md hover:bg-blue-600 transition"
                       >
                         <AddBoxIcon sx={{ fontSize: 24 }} />
@@ -878,9 +831,9 @@ const StoreCylinders = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Outlet Wholesale Price (Full Cylinder)
                         </label>
-                        <input
-                          type="number"
-                          placeholder="Enter outlet price"
+                        <KenyanCurrencyInput
+                          value={outletWholeSale}
+                          onChange={(value) => setOutletWholeSale(value)}
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -888,9 +841,41 @@ const StoreCylinders = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Outlet Retail Price (Full Cylinder)
                         </label>
-                        <input
-                          type="number"
-                          placeholder="Enter outlet price"
+                        <KenyanCurrencyInput
+                          value={outletRetail}
+                          onChange={(value) => setOutletRetail(value)}
+                          className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      {/* complete */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Complete Wholesale Price (Grill + Burner)
+                        </label>
+                        <KenyanCurrencyInput
+                          value={completeWholeSale}
+                          onChange={(value) => setCompleteWholeSale(value)}
+                          className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Complete Retail Price (Grill + Burner)
+                        </label>
+                        <KenyanCurrencyInput
+                          value={completeRetail}
+                          onChange={(value) => setCompleteRetail(value)}
+                          className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+                      {/* empty cylinder price */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Empty cylinder Price
+                        </label>
+                        <KenyanCurrencyInput
+                          value={emptyCylinderPrice}
+                          onChange={(value) => setEmptyCylinderPrice(value)}
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -899,9 +884,9 @@ const StoreCylinders = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Wholesale Refill Price
                         </label>
-                        <input
-                          type="number"
-                          placeholder="Enter wholesale refill price"
+                        <KenyanCurrencyInput
+                          value={wholesaleRefillPrice}
+                          onChange={(value) => setWholesaleRefillPrice(value)}
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -910,9 +895,9 @@ const StoreCylinders = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Retail Refill Price
                         </label>
-                        <input
-                          type="number"
-                          placeholder="Enter retail refill price"
+                        <KenyanCurrencyInput
+                          value={retailRefillPrice}
+                          onChange={(value) => setRetailRefillPrice(value)}
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -921,9 +906,9 @@ const StoreCylinders = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Depot Refill Price
                         </label>
-                        <input
-                          type="number"
-                          placeholder="Enter depot refill price"
+                        <KenyanCurrencyInput
+                          value={depositPrice}
+                          onChange={(value) => setDepositPrice(value)}
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -942,8 +927,13 @@ const StoreCylinders = () => {
                           Full Cylinders
                         </label>
                         <input
+                          min={0}
                           type="number"
                           placeholder="Enter quantity"
+                          value={fullCylindersStock}
+                          onChange={(e) =>
+                            setFullCylindersStock(Number(e.target.value))
+                          }
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
@@ -953,6 +943,11 @@ const StoreCylinders = () => {
                           Empty Cylinders
                         </label>
                         <input
+                          min={0}
+                          value={emptyCylindersStock}
+                          onChange={(e) =>
+                            setEmptyCylindersStock(Number(e.target.value))
+                          }
                           type="number"
                           placeholder="Enter quantity"
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
@@ -964,22 +959,17 @@ const StoreCylinders = () => {
                           Spoiled Cylinders
                         </label>
                         <input
+                          min={0}
+                          value={spoiledCylindersStock}
+                          onChange={(e) =>
+                            setSpoiledCylindersStock(Number(e.target.value))
+                          }
                           type="number"
                           placeholder="Enter quantity"
                           className="mt-1 block p-2 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                         />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-500 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-600 transition"
-                    >
-                      Add Cylinders
-                    </button>
                   </div>
                 </form>
               )}
@@ -1006,8 +996,12 @@ const StoreCylinders = () => {
                 </Button>
               )}
               {dialogType === "add" && (
-                <Button variant="contained" onClick={handleAddAnotherCylinder}>
-                  Add
+                <Button
+                  variant="contained"
+                  onClick={handleAddCylinder}
+                  disabled={addingNewCylinder}
+                >
+                  {addingNewCylinder ? <CircularProgress size={24} /> : "Add"}
                 </Button>
               )}
             </DialogActions>
@@ -1101,97 +1095,78 @@ const StoreCylinders = () => {
                     }
                   />
                   <Input
-                    label="Min Retail Selling Price"
+                    label="Retail Refil Price"
                     type="number"
-                    value={selectedGasCylinder?.min_retail_selling_price || ""}
+                    value={selectedGasCylinder?.retail_refil_price || ""}
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        min_retail_selling_price: e.target.value,
+                        retail_refil_price: e.target.value,
                       }))
                     }
                   />
+                  
+                  
                   <Input
-                    label="Min Wholesale Selling Price"
+                    label="Wholesale Refill Price"
                     type="number"
                     value={
-                      selectedGasCylinder?.min_wholesale_selling_price || ""
+                      selectedGasCylinder?.wholesale_refil_price || ""
                     }
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        min_wholesale_selling_price: e.target.value,
+                        wholesale_refil_price: e.target.value,
                       }))
                     }
                   />
                   <Input
-                    label="Min Wholesale Refilling Price"
+                    label="Outlet Retail Price(cylinder)"
                     type="number"
-                    value={selectedGasCylinder?.min_wholesale_refil_price || ""}
+                    value={selectedGasCylinder?.outlet_retail_price || ""}
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        min_wholesale_refil_price: e.target.value,
+                        outlet_retail_price: e.target.value,
                       }))
                     }
                   />
                   <Input
-                    label="Min Retail Refilling Price"
+                    label="Outlet Wholesale Price(cylinder)"
                     type="number"
-                    value={selectedGasCylinder?.min_retail_refil_price || ""}
+                    value={selectedGasCylinder?.outlet_wholesale_price || ""}
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        min_retail_refil_price: e.target.value,
+                        outlet_wholesale_price: e.target.value,
                       }))
                     }
                   />
                   <Input
-                    label="Max Retail Selling Price"
+                    label="Complete Retail Price(Grill + Burner)"
                     type="number"
-                    value={selectedGasCylinder?.max_retail_selling_price || ""}
+                    value={selectedGasCylinder?.complete_retail_price || ""}
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        max_retail_selling_price: e.target.value,
+                        complete_retail_price: e.target.value,
                       }))
                     }
                   />
                   <Input
-                    label="Max Wholesale Selling Price"
+                    label="Complete Wholesale Price(Grill + Burner)"
                     type="number"
                     value={
-                      selectedGasCylinder?.max_wholesale_selling_price || ""
+                      selectedGasCylinder?.complete_wholesale_price || ""
                     }
                     onChange={(e) =>
                       setSelectedGasCylinder((prev) => ({
                         ...prev,
-                        max_wholesale_selling_price: e.target.value,
+                        complete_wholesale_price: e.target.value,
                       }))
                     }
                   />
-                  <Input
-                    label="Max Wholesale Refilling Price"
-                    type="number"
-                    value={selectedGasCylinder?.max_wholesale_refil_price || ""}
-                    onChange={(e) =>
-                      setSelectedGasCylinder((prev) => ({
-                        ...prev,
-                        max_wholesale_refil_price: e.target.value,
-                      }))
-                    }
-                  />
-                  <Input
-                    label="Max Retail Refilling Price"
-                    type="number"
-                    value={selectedGasCylinder?.max_retail_refil_price || ""}
-                    onChange={(e) =>
-                      setSelectedGasCylinder((prev) => ({
-                        ...prev,
-                        max_retail_refil_price: e.target.value,
-                      }))
-                    }
-                  />
+                
                   <Input
                     label="Empty Cylinder Price"
                     type="number"
@@ -1244,6 +1219,46 @@ const StoreCylinders = () => {
               )}
             </DialogActions>
           </Dialog>
+
+          {/* add cylinder Weight dialogue */}
+          <Dialog open={openWeight} onClose={handleCloseDialogueOfWeight}>
+            <DialogTitle>Cylinder Weight</DialogTitle>
+            <DialogContent>
+              <DialogContentText></DialogContentText>
+              <form id="subscription-form">
+                <TextField
+                  value={newWeight}
+                  onChange={(e) => setNewWeight(e.target.value)}
+                  autoFocus
+                  required
+                  margin="dense"
+                  type="text"
+                  id="weight"
+                  name="cylinder_weight"
+                  label="Cylinder Weight in kg"
+                  fullWidth
+                  variant="standard"
+                />
+              </form>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialogueOfWeight}>Cancel</Button>
+              {addingNewWeight ? (
+                <Button disabled>
+                  <CircularProgress
+                    size={20}
+                    thickness={4}
+                    style={{ color: "blue" }}
+                  />
+                </Button>
+              ) : (
+                <Button type="button" onClick={handleAddNewWeight}>
+                  Add
+                </Button>
+              )}
+            </DialogActions>
+          </Dialog>
+
           <footer className=" text-white">
             <AdminsFooter />
           </footer>

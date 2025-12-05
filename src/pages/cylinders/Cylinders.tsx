@@ -9,6 +9,7 @@ import {
   selectAllSalesTeam,
 } from "../../features/salesTeam/salesTeamSlice"
 import AdminsFooter from "../../components/AdminsFooter"
+import { set } from "cookies"
 
 const Cylinders = () => {
   const theme = useTheme()
@@ -32,6 +33,8 @@ const Cylinders = () => {
   const [showModal, setShowModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showTeamModal, setShowTeamModal] = useState(false)
+  const [showRepairTeamModal, setShowRepairTeamModal] = useState(false)
+  const [repairDestination, setRepairDestination] = useState(false)
 
   const allSalesTeam = useAppSelector(selectAllSalesTeam)
   const [selectedTeam, setSelectedTeam] = useState(null)
@@ -46,6 +49,19 @@ const Cylinders = () => {
     setShowAddModal(true)
   }
 
+  const handleShowRepairDestinationModel = () => {
+    setShowRepairTeamModal(false)
+    setRepairDestination(true)
+    setShowModal(false)
+    setShowAddModal(false)
+  }
+  
+
+  const handleCloseRepairDestinationModel = () => {
+    setRepairDestination(false)
+  }
+  
+
   const handleCloseAddModal = () => {
     setShowAddModal(false)
   }
@@ -56,7 +72,14 @@ const Cylinders = () => {
   }
 
   const handleViewTeams = () => {
+    setShowAddModal(false)
     setShowTeamModal(true) // Show the modal
+    // Close the add modal if open
+  }
+
+  const handleVIewRepairTeams = () => {
+    setShowAddModal(false)
+    setShowRepairTeamModal(true)
   }
 
   // Function to handle navigation based on user choice
@@ -153,6 +176,36 @@ const Cylinders = () => {
           )}
 
           {/* ---------------------------- */}
+          {/* Modal for selecting stock view */}
+          {repairDestination && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+                <h2 className="text-lg font-semibold mb-4">
+                  Where do you want to repair cylinders?
+                </h2>
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => handleNavigate("/store/repair")}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                  >
+                    Repair in Store
+                  </button>
+                  <button
+                    onClick={() => handleVIewRepairTeams()}
+                    className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
+                  >
+                    Repair in Sales Team
+                  </button>
+                  <button
+                    onClick={() => setRepairDestination(false)}
+                    className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Modal for selecting stock view */}
           {showTeamModal && (
@@ -190,6 +243,44 @@ const Cylinders = () => {
               </div>
             </div>
           )}
+
+          {/* Modal for selecting stock view */}
+          {showRepairTeamModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+                <h2 className="text-lg font-semibold mb-4">
+                  Select sales Team to repair?
+                </h2>
+                <div className="flex flex-col gap-4">
+                  {allSalesTeam.map((team) => (
+                    <button
+                      key={team.id}
+                      onClick={() =>
+                        handleNavigate(
+                          `/thecylinders/repair/${
+                            team.id
+                          }/${encodeURIComponent(team.name)}`,
+                        )
+                      }
+                      className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition"
+                    >
+                      {team.name}
+                    </button>
+                  ))}
+
+                  {/* Modal for selecting stock view */}
+
+                  <button
+                    onClick={() => setShowRepairTeamModal(false)}
+                    className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showAddModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-lg p-6 w-80">
@@ -202,7 +293,7 @@ const Cylinders = () => {
                     Add new Cylinder
                   </button>
                   <button
-                    onClick={() => handleViewTeams()}
+                    onClick={() => handleShowRepairDestinationModel()}
                     className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition"
                   >
                     Repair cylinders

@@ -7,7 +7,7 @@ import CustomersPage from "./pages/CustomersPage"
 import LoginPage from "./pages/LoginPage"
 import RegisterPage from "./pages/RegisterPage"
 import ProfilePage from "./pages/ProfilePage"
-import SalesRecordPage from "./pages/SalesRecordPage"
+import SalesRecordPage from "./pages/EmployeeHomePage"
 import WholeSaleRecordPage from "./pages/WholeSaleRecordPage"
 import RetailSalesRecordPage from "./pages/RetailSalesRecordPage"
 import TeamSalesPage from "./pages/TeamSalesPage"
@@ -38,10 +38,10 @@ import AfterCollection from "./pages/AfterCollection"
 import AfterCollectionAll from "./pages/AfterCollectionAll"
 import AssigningOtherProducts from "./pages/AssigningOtherProducts"
 import AfterAssignOthers from "./pages/AfterAssignOthers"
-import EmployeesProfile from "./pages/employeesProfile"
+import EmployeesProfile from "./pages/HR/EmployeesProfile"
 import TeamOthersSalesPage from "./pages/TeamOthersSalesPage"
 import Transactions from "./pages/Transactions"
-import EmployeesProfileDetails from "./pages/EmployeesProfileDetails"
+import EmployeesProfileDetails from "./pages/HR/EmployeesProfileDetails"
 import CylinderRequest from "./pages/CylinderRequest"
 import { useTokenAutoRefresher } from "./features/auths/useTokenAutoRefresher "
 import AdminStore from "./pages/AdminStore"
@@ -71,6 +71,26 @@ import StoreCylinders from "./pages/cylinders/StoreCylinders"
 import AssignCylinders from "./pages/cylinders/AssignCylinders"
 import RefillCylinders from "./pages/cylinders/RefillCylinders"
 import AddCylinders from "./pages/cylinders/AddCylinders"
+import RepairCylinders from "./pages/cylinders/RepairTeamCylinders"
+import RepairCylindersStore from "./pages/cylinders/RepairCylindersStore"
+import RepairTeamCylinders from "./pages/cylinders/RepairTeamCylinders"
+import { CiRoute } from "react-icons/ci"
+import Products from "./pages/otherProducts/Products"
+import ProductsActions from "./pages/otherProducts/ProductsActions"
+import AssignOtherProducts from "./pages/otherProducts/AssignOtherProducts"
+import CollectOtheProducts from "./pages/otherProducts/CollectOtheProducts"
+import HrDirection from "./pages/HR/HrDirection"
+import ExEmployees from "./pages/HR/ExEmployees"
+import PayRoll from "./pages/HR/PayRoll"
+import Delivery from "./pages/Deliveries/Delivery"
+import ReachoutGroup from "./pages/Reachout/ReachoutGroup"
+import AllSales from "./pages/SalesRecord/AllSales"
+import TeamsSales from "./pages/SalesRecord/TeamsSales"
+import EmployeeAllSales from "./pages/employeePages/Sales/EmployeeAllSales"
+import CylinderRetail from "./pages/employeePages/Sales/CylinderRetail"
+import CylinderWholesales from "./pages/employeePages/Sales/CylinderWholesales"
+import OtherProductsRetail from "./pages/employeePages/Sales/OtherProductsRetail"
+import OtherProductsWholesale from "./pages/employeePages/Sales/OtherProductsWholesale"
 
 function App() {
   const dispatch = useAppDispatch()
@@ -138,6 +158,14 @@ function App() {
             }
           />
           <Route
+            path="/admins/salesdata"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AllSales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admins/analysis"
             element={
               <ProtectedRoute requiredRole="is_owner">
@@ -179,6 +207,23 @@ function App() {
             }
           />
           <Route
+            path="/admin/deliveries"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <Delivery />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/admin/reachout"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <ReachoutGroup />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/employees"
             element={
               <ProtectedRoute requiredRole="is_owner">
@@ -219,6 +264,23 @@ function App() {
             }
           />
           <Route
+            path="/admins/ex-employees"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <ExEmployees />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admins/payroll"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <PayRoll />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/admins/employees/:id"
             element={
               <ProtectedRoute requiredRole="is_owner">
@@ -227,36 +289,44 @@ function App() {
             }
           />
           <Route
-          path="/cylinders/stock/team/:id/:name"
+            path="/cylinders/stock/team/:id/:name"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <TeamsCylinders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+          path="/admins/salesdata/:id/:name"
           element={
             <ProtectedRoute requiredRole="is_owner">
-              <TeamsCylinders />
+              <TeamsSales />
             </ProtectedRoute>
           }
           />
           <Route
-          path="/cylinders/stock/store"
-          element={
-            <ProtectedRoute requiredRole="is_owner">
-              <StoreCylinders />
-            </ProtectedRoute>
-          }
+            path="/cylinders/stock/store"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <StoreCylinders />
+              </ProtectedRoute>
+            }
           />
           <Route
-          path="/cylinders/assign"
-          element={
-            <ProtectedRoute requiredRole="is_owner">
-              <AssignCylinders />
-            </ProtectedRoute>
-          }
+            path="/cylinders/assign"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AssignCylinders />
+              </ProtectedRoute>
+            }
           />
           <Route
-          path="/cylinders/refill"
-          element={
-            <ProtectedRoute requiredRole="is_owner">
-              <RefillCylinders />
-            </ProtectedRoute>
-          }
+            path="/cylinders/refill"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <RefillCylinders />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/admins/assign"
@@ -356,12 +426,60 @@ function App() {
             }
           />
           <Route
-            // path="/teamstock"
-            // path="/teamstock/:id/:name"
             path="/teamstock/:teamId/:teamName"
             element={
               <ProtectedRoute requiredRole="is_owner">
                 <Stockup />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/thecylinders/repair/:teamId/:teamName"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <RepairTeamCylinders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/store/repair"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <RepairCylindersStore />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/store/otherproducts"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <ProductsActions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/store/othersproductslist"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <Products />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/store/assignothersproducts"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AssignOtherProducts />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/store/collecyotherproducts"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <CollectOtheProducts />
               </ProtectedRoute>
             }
           />
@@ -375,12 +493,12 @@ function App() {
           />
 
           <Route
-          path = "/cylinders/add"
-          element={
-            <ProtectedRoute requiredRole="is_owner">
-              <AddCylinders />
-            </ProtectedRoute> 
-          }
+            path="/cylinders/add"
+            element={
+              <ProtectedRoute requiredRole="is_owner">
+                <AddCylinders />
+              </ProtectedRoute>
+            }
           />
 
           <Route
@@ -411,6 +529,30 @@ function App() {
             }
           />
           <Route
+            path="/sales/whatsells"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <EmployeeAllSales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales/whatsells/retail"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <CylinderRetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sales/whatsells/wholesale"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <CylinderWholesales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/request"
             element={
               <ProtectedRoute requiredRole="is_employee">
@@ -434,6 +576,23 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/*  */}
+           <Route
+            path="/sales/whatsells/retailothers"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <OtherProductsRetail />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/sales/whatsells/wholesaleothers"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <OtherProductsWholesale />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/teamsales"
             element={
@@ -450,14 +609,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* <Route
-            path="/teamotherssales"
+          <Route
+            path="/hr"
             element={
-              <ProtectedRoute requiredRole="is_employee">
-                <TeamOthersSalesPage />
+              <ProtectedRoute requiredRole="is_owner">
+                <HrDirection />
               </ProtectedRoute>
             }
-          /> */}
+          />
           <Route
             path="/otherproducts"
             element={
@@ -466,6 +625,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/salesteamcylinders"
             element={

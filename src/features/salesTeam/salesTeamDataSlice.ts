@@ -28,20 +28,33 @@ const initialState: SalesTeamDataState = {
 
 export const fetchSalesTeamData = createAsyncThunk(
     "salesTeamData/fetchSalesTeamData",
-    async () => {
-      // const response = await axios.get(`${apiUrl}/salesteamdata`,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //     },
-      //   }
-      // );
-      const response = await api.get("/salesteamdata");
+    async (
+      { salesDate }: {  salesDate?: string } = {}
+    ) => {
+      const params: Record<string, string> = {};
+    if (salesDate) params.salesDate = salesDate;
+      const response = await api.get("/salesteamdata", { params });
       return response.data; // Corrected the return statement
     }
   );
   
 
+
+export const deleteSalesTeamData = createAsyncThunk(
+    "salesTeamData/deleteSalesTeamData",
+    async (
+      { deleteSaleId }: {  deleteSaleId?: string } = {}
+    ) => {
+      const params: Record<string, string> = {};
+    if (deleteSaleId) params.deleteSaleId = deleteSaleId;
+      const response = await api.delete("/salesteamdata", { params });
+      // Ensure the thunk returns the id we asked to delete when available,
+      // otherwise fall back to whatever the server returned (id or raw value)
+      const serverId = (response && (response.data?.id ?? response.data)) ?? null;
+      return deleteSaleId ?? serverId;
+    }
+  );
+  
   
  
 
@@ -63,10 +76,30 @@ const salesTeamDataSlice = createSlice({
         state.salesTeamData = action.payload;
        
       })
-      .addCase(fetchSalesTeamData.rejected, (state, action) => {
+      .addCase(fetchSalesTeamData.rejected, (state, action) => {state.status = "failed"
+        state.error = action.error.message
+      })
+      .addCase(deleteSalesTeamData.pending, (state, action) => {
+        state.status = "loading"
+      })
+      .addCase(deleteSalesTeamData.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        // remove deleted record from state: prefer the original arg.deleteSaleId (what we requested),
+        // then consider payload as string or object with id/deletedId
+        const argDeleteId = (action.meta as any)?.arg?.deleteSaleId;
+        const payload = action.payload as any;
+        const deletedId = argDeleteId ?? (typeof payload === "string" ? payload : payload?.id ?? payload?.deletedId ?? null);
+
+        // Only mutate state here; avoid side effects (e.g. alert) inside reducers
+        if (deletedId != null) {
+          state.salesTeamData = state.salesTeamData.filter(item => item.id !== deletedId)
+        }
+      })
+      .addCase(deleteSalesTeamData.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message
       })
+        
   },
 });
 

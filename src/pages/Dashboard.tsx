@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useMediaQuery, useTheme } from "@mui/material"
-import React from "react"
+import React, { useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useNavigate } from "react-router-dom"
 import planStatus from "../features/planStatus/planStatus"
@@ -13,28 +13,46 @@ import { FcDebt } from "react-icons/fc"
 import { FaDollarSign } from "react-icons/fa"
 import Box from "@mui/material/Box"
 import { LineChart } from "@mui/x-charts/LineChart"
-// import { PieChart } from "@mui/x-charts"
 import { PieChart } from "@mui/x-charts/PieChart"
 import { BarChart } from '@mui/x-charts/BarChart';
 import AdminsFooter from "../components/AdminsFooter"
+import computeDayOverDayDebtChange from "../utils/debtUtils"
+import { fetchDebtors, selectAllDebtors } from "../features/debtors/debtorsSlice"
+import { IoTrendingDown } from "react-icons/io5"
+import { fetchAllExpenses, fetchExpenses, selectAllExpenses } from "../features/expenses/expensesSlice"
+import { fetchAnalysis, selectAllAnalysis } from "../features/analysis/analysisSlice"
 
 const Dashboard = () => {
   const theme = useTheme()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  //   const allBusiness = useAppSelector(selectAllBusiness)
   const { isPro, isTrial, isExpired } = planStatus()
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const analysis_data = useAppSelector(selectAllAnalysis);
+  const all_debtors = analysis_data?.debtors || [];
+  const debtors_count = all_debtors.length;
 
-  //   useEffect(() => {
-  //     dispatch(fetchBusiness())
-  //   }, [dispatch])
+  const all_expenses = analysis_data?.expenses || [];
+  // console.log("All Expenses:", all_expenses);
+  
+  
+  // console.log("Analysis Data:", analysis_data?.expenses);
+
+
+    useEffect(() => {
+      // dispatch(fetchDebtors()),
+      // dispatch(fetchAllExpenses()),
+      dispatch(fetchAnalysis())
+    }, [dispatch])
 
   var settings = {
     className: "slider variable-width",
     dots: false,
-    infinite: false,
+    arrows: false,
+    autoplay: true,
+    pauseOnFocus: true,
+    infinite: true,
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 4,
@@ -240,6 +258,14 @@ const Dashboard = () => {
 function valueFormatters(value: number | null) {
   return `${value}mm`;
 }
+const uncleared_debtors = all_debtors.filter(debtor => debtor.cleared === false);
+const total_debt = uncleared_debtors.reduce((total, debtor) => {
+    return total + debtor.amount;
+  }, 0);
+
+// compute change vs previous day (grouped by date_given)
+const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
+
   return (
     <div>
       {isMobile ? (
@@ -249,9 +275,9 @@ function valueFormatters(value: number | null) {
             headerText={"Manage your operations with style and clarity"}
           />
           <main className="m-2 p-1">
-            <div className="slider-container ">
+            <div className="slider-container  ">
               <Slider {...settings}>
-                <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+                <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
                   <div className=" flex items-center justify-center">
                     <FaDollarSign
                       className="text-green-500 text-2xl"
@@ -260,36 +286,37 @@ function valueFormatters(value: number | null) {
                     <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">Total Revenue</h3>
                   </div>
 
-                  <p className="text-gray-600 font-bold ms-2">
+                  <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
                     <CurrencyConvert price={2000} />
                   </p>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center whitespace-nowrap ">
                     <div className="flex items-center mt-2">
                       <TrendingUpIcon className="text-green-500  " />
-                      <p className="text-sm text-green-500 ml-1 ">15.2%</p>
+                      <p className="text-xs text-green-500 ml-1 ">15.2%</p>
                     </div>
-                    <p className="text-xs text-gray-500">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+                <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <GiProfit className="text-blue-500 text-2xl" />
-                    <h3 className="text-sm  font-semibold mt-2">Total Profit</h3>
+                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">Total Profit</h3>
                   </div>
 
-                  <p className="text-gray-600 font-bold ms-2">
+                  <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
                     <CurrencyConvert price={1500} />
                   </p>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center whitespace-nowrap">
                     <div className="flex items-center mt-2">
                       <TrendingUpIcon className="text-blue-500" />
                       <p className="text-sm text-blue-500 ml-1">10.5%</p>
                     </div>
-                    <p className="text-xs text-gray-500">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+
+                <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <GiExpense className="text-red-500" fontSize="large" />
                     <h3 className="text-sm  font-semibold mt-2">
@@ -297,7 +324,7 @@ function valueFormatters(value: number | null) {
                     </h3>
                   </div>
 
-                  <p className="text-gray-600 font-bold ms-2">
+                  <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
                     <CurrencyConvert price={500} />
                   </p>
                   <div className="flex items-center space-x-1">
@@ -305,24 +332,35 @@ function valueFormatters(value: number | null) {
                       <TrendingUpIcon className="text-red-500" />
                       <p className="text-sm text-red-500 ml-1">5.2%</p>
                     </div>
-                    <p className="text-xs text-gray-500">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
                   </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center">
+                <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <FcDebt className="text-yellow-500" fontSize="large" />
                     <h3 className="text-sm  font-semibold mt-2">Total Debt</h3>
                   </div>
 
-                  <p className="text-gray-600 font-bold ms-2">
-                    <CurrencyConvert price={300} />
+                  <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
+                    <CurrencyConvert price={total_debt} />
                   </p>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center ">
                     <div className="flex items-center mt-2">
-                      <TrendingUpIcon className="text-yellow-500" />
-                      <p className="text-sm text-yellow-500 ml-1">2.8%</p>
+                     
+                      {debtChange.changePercent && debtChange.changePercent < 0 ? (
+                        <TrendingDown className="text-yellow-500" />
+                      ) : (
+                        <TrendingUpIcon className="text-red-500" />
+                      )}
+                        <p className={`text-sm ml-1 ${debtChange.changePercent && debtChange.changePercent < 0 ? "text-yellow-500" : "text-red-500"}`}>
+                          {debtChange.changePercent === null
+                            ? debtChange.previousTotal === 0 && debtChange.targetTotal > 0
+                              ? "New"
+                              : "0%"
+                            : `${debtChange.changePercent > 0 ? "" : ""}${debtChange.changePercent.toFixed(1)}%`}
+                        </p>
                     </div>
-                    <p className="text-xs text-gray-500">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
                   </div>
                 </div>
               </Slider>

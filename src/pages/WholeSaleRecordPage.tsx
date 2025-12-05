@@ -155,7 +155,6 @@ const WholeSaleRecordPage = () => {
     }, 0)
   }
 
-  console.log("cylinder exchanged with ", cylinderExchaged)
   const calculateDebt = () => {
     const total = calculateTotal()
     return Math.max(total - deposit, 0)

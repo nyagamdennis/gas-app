@@ -187,11 +187,9 @@ const AddCylinders = () => {
     e.preventDefault()
     setAddingNewBrand(true)
     try {
-      // await dispatch(createCylindersBrand({ name: newBrandName })).unwrap();
       const newBrand = await dispatch(
         createCylindersBrand({ name: newBrandName }),
       ).unwrap()
-      console.log("Newly created brand:", newBrand)
       setSelectedBrand(newBrand.id)
       toast.success("Brand added successfully!")
       setOpen(false)

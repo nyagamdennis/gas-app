@@ -19,13 +19,21 @@ import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
 import CircularProgress from "@mui/material/CircularProgress"
 import defaultPic from "../images/shop.png"
-
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import { set } from "cookies"
 import AdminNav from "../components/ui/AdminNav"
 import planStatus from "../features/planStatus/planStatus"
 import { Link, useNavigate } from "react-router-dom"
+import { useTheme } from "@mui/material"
+import useMediaQuery from "@mui/material/useMediaQuery"
+import Navbar from "../components/ui/mobile/admin/Navbar"
 
 const CreateTeamPage = () => {
+  const theme = useTheme()
+
+  const matches = useMediaQuery("(min-width:600px)")
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -37,6 +45,7 @@ const CreateTeamPage = () => {
   const [addingTeam, setAddingTeam] = useState(false)
   const [updatingTeam, setUpdatingTeam] = useState(false)
   const [deletingTeam, setDeletingTeam] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
 
   const all_salesTeam = useAppSelector(selectAllSalesTeam)
 
@@ -137,248 +146,300 @@ const CreateTeamPage = () => {
     }
   }
 
+  const handleShowAdd = () => {
+    setShowAdd(true)
+  }
+
+  const handleHideShowAdd = () => {
+    setShowAdd(false)
+  }
+  //  className={`px-3 py-1 rounded-md text-white text-sm font-medium transition ${
+  // employee?.verified ? "bg-green-600" : "bg-gray-400"
+  // }`}
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
-      <>
-        {/* Header */}
-
-        <AdminNav
-          headerMessage={"Create New Team"}
-          headerText={"Upload a team profile and assign its type"}
-        />
-
-        {/* Main */}
-        <main className="flex-grow flex justify-center items-center py-10">
-          <form
-            className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl p-8 space-y-6"
-            encType="multipart/form-data"
-            onSubmit={handleSaveClick}
-          >
-            {/* Image Upload */}
-            <div className="flex flex-col items-center">
-              <label htmlFor="profilePicture" className="cursor-pointer">
-                <div className="w-24 h-24 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition">
-                  {selectedImage ? (
-                    <img
-                      src={selectedImage}
-                      alt="Profile"
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-10 h-10 text-gray-400"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 5v14M5 12l2-2 2 2M15 12l2-2 2 2"
-                      />
-                    </svg>
-                  )}
-                </div>
-              </label>
-              <input
-                type="file"
-                id="profilePicture"
-                accept="image/jpeg,image/png,image/gif"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              <span className="text-sm text-gray-500 mt-2">
-                Upload Team Image
-              </span>
+    <div>
+      {isMobile ? (
+        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+          <Navbar
+            headerMessage={"ERP"}
+            headerText={"Manage your operations with style and clarity"}
+          />
+          <main className=" flex-grow m-2 p-1 ">
+            <div className="flex justify-end">
+              {showAdd ? (
+              <button className="bg-slate-500 rounded-md px-1 text-white mb-2" onClick={handleHideShowAdd}>add team <ArrowDropUpIcon /></button>
+            ):(
+              <button className="bg-slate-500 rounded-md px-1 text-white" onClick={handleShowAdd}>add team  <ArrowDropDownIcon /></button>
+            )}
             </div>
-
-            {/* Team Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Team Name
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
-                value={teamName}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Team Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Team Type
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
-                value={teamType}
-                onChange={(e) => setTeamType(e.target.value)}
-                required
+            
+            
+            <div className={`transition-all ${showAdd ? 'show':'hidden'}`}>
+              <form
+                className="w-full max-w-md bg-white border border-gray-200 shadow-lg rounded-2xl p-8 space-y-6"
+                encType="multipart/form-data"
+                onSubmit={handleSaveClick}
               >
-                <option value="">-- Select Team Type --</option>
-                <option value="retail">Retail</option>
-                <option value="wholesale">WholeSale</option>
-              </select>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg shadow hover:bg-blue-700 transition focus:ring-4 focus:ring-blue-300"
-            >
-              {addingTeam ? (
-                <CircularProgress size={24} color="inherit" />
-              ) : (
-                "Add Team"
-              )}
-            </button>
-          </form>
-        </main>
-        {/* Sales Teams List */}
-        <section className="px-6 py-8 bg-white mt-4 rounded-xl shadow-md border border-gray-200 max-w-4xl mx-auto w-full">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
-            Sales Teams
-          </h2>
-          {all_salesTeam.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No teams available. Add a new team to get started.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {all_salesTeam.map((team) => (
-                <div
-                  key={team.id}
-                  className="flex-col space-y-1 items-center justify-between bg-gray-50 hover:bg-gray-100 p-4 rounded-lg border border-gray-200 transition"
-                >
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={team.profile_image || defaultPic}
-                      alt={team.name}
-                      className="w-14 h-14 rounded-full object-cover border border-gray-300"
-                    />
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {team.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{team.type}</p>
+                {/* Image Upload */}
+                <div className="flex flex-col items-center">
+                  <label htmlFor="profilePicture" className="cursor-pointer">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition">
+                      {selectedImage ? (
+                        <img
+                          src={selectedImage}
+                          alt="Profile"
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-10 h-10 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 5v14M5 12l2-2 2 2M15 12l2-2 2 2"
+                          />
+                        </svg>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {/* <Link to='/teamstock'> */}
-                    <button
-                      onClick={() => {
-                        navigate(
-                          `/teamstock/${team.id}/${encodeURIComponent(
-                            team.name,
-                          )}`,
-                        )
-                      }}
-                      className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
-                    >
-                      stock
-                    </button>
-                    {/* </Link> */}
-
-                    <button
-                      onClick={() => {
-                        handleOpenUpdate()
-                        setSalesTeamData(team)
-                        setName(team.name)
-                        setTeamType(team.type)
-                      }}
-                      className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
-                    >
-                      update
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        handleOpenDelete(team)
-                        // TODO: dispatch delete logic here
-                        // alert(`Delete logic for team ID: ${team.id}`)
-                      }}
-                      className="px-3 py-1 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  </label>
+                  <input
+                    type="file"
+                    id="profilePicture"
+                    accept="image/jpeg,image/png,image/gif"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                  <span className="text-sm text-gray-500 mt-2">
+                    Upload Team Image
+                  </span>
                 </div>
-              ))}
+
+                {/* Team Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Team Name
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={teamName}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {/* Team Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Team Type
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={teamType}
+                    onChange={(e) => setTeamType(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Select Team Type --</option>
+                    <option value="retail">Retail</option>
+                    <option value="wholesale">WholeSale</option>
+                  </select>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg shadow hover:bg-blue-700 transition focus:ring-4 focus:ring-blue-300"
+                >
+                  {addingTeam ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Add Team"
+                  )}
+                </button>
+              </form>
             </div>
-          )}
-          <Dialog
-            open={openDelete}
-            onClose={handleCloseDelete}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">
-              {`Are you sure you want to delete ${salesTeamData.name}?`}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                This action cannot be undone. Please confirm if you want to
-                proceed with the deletion.
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDelete}>Disagree</Button>
-              <Button onClick={() => handleDelete(salesTeamData.id)} autoFocus>
-                {deletingTeam ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Delete"
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
 
-          {/* Update Dialogue */}
-          <Dialog
-            open={openUpdate}
-            onClose={handleCloseUpdate}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">
-              {`Update ${salesTeamData.name}`}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
-                  value={teamName}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseUpdate}>Disagree</Button>
-              <Button
-                onClick={() => handleUpdate(salesTeamData.id, teamName)}
-                autoFocus
+            <section className="px-6 py-8 bg-white mt-4 rounded-xl shadow-md border border-gray-200 max-w-4xl mx-auto w-full">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                Sales Teams
+              </h2>
+              {all_salesTeam.length === 0 ? (
+                <p className="text-sm text-gray-500">
+                  No teams available. Add a new team to get started.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {all_salesTeam.map((team) => (
+                    <div
+                      key={team.id}
+                      className="flex-col space-y-1 items-center justify-between bg-gray-50 hover:bg-gray-100 p-4 rounded-lg border border-gray-200 transition"
+                    >
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={team.profile_image || defaultPic}
+                          alt={team.name}
+                          className="w-14 h-14 rounded-full object-cover border border-gray-300"
+                        />
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {team.name}
+                          </h3>
+                          <p className="text-sm text-gray-500">{team.type}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {/* <Link to='/teamstock'> */}
+                        <button
+                          onClick={() => {
+                            navigate(
+                              `/teamstock/${team.id}/${encodeURIComponent(
+                                team.name,
+                              )}`,
+                            )
+                          }}
+                          className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                        >
+                          stock
+                        </button>
+                        {/* </Link> */}
+
+                        <button
+                          onClick={() => {
+                            handleOpenUpdate()
+                            setSalesTeamData(team)
+                            setName(team.name)
+                            setTeamType(team.type)
+                          }}
+                          className="px-3 py-1 text-sm rounded-md bg-green-600 text-white hover:bg-green-700 transition"
+                        >
+                          update
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            handleOpenDelete(team)
+                            // TODO: dispatch delete logic here
+                            // alert(`Delete logic for team ID: ${team.id}`)
+                          }}
+                          className="px-3 py-1 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Dialog
+                open={openDelete}
+                onClose={handleCloseDelete}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
               >
-                {updatingTeam ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Update"
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </section>
+                <DialogTitle id="alert-dialog-title">
+                  {`Are you sure you want to delete ${salesTeamData.name}?`}
+                </DialogTitle>
+                <DialogContent>
+                  <DialogContentText id="alert-dialog-description">
+                    This action cannot be undone. Please confirm if you want to
+                    proceed with the deletion.
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseDelete}>Disagree</Button>
+                  <Button
+                    onClick={() => handleDelete(salesTeamData.id)}
+                    autoFocus
+                  >
+                    {deletingTeam ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Delete"
+                    )}
+                  </Button>
+                </DialogActions>
+              </Dialog>
 
-        {/* Footer */}
-        <AdminsFooter />
-      </>
+              {/* Update Dialogue */}
+              <Dialog
+                open={openUpdate}
+                onClose={handleCloseUpdate}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+              >
+                <DialogTitle id="alert-dialog-title">
+                  {`Update ${salesTeamData.name}`}
+                </DialogTitle>
+                <DialogContent>
+                  <DialogContentText id="alert-dialog-description">
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition"
+                      value={teamName}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseUpdate}>Disagree</Button>
+                  <Button
+                    onClick={() => handleUpdate(salesTeamData.id, teamName)}
+                    autoFocus
+                  >
+                    {updatingTeam ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      "Update"
+                    )}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </section>
+          </main>
+          <footer>
+            <AdminsFooter />
+          </footer>
+        </div>
+      ) : (
+        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+          <AdminNav
+            headerMessage={"Admin Dashboard"}
+            headerText={"Manage your operations with style and clarity"}
+          />
+
+          <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h1>Coming soon...</h1>
+          </main>
+
+          <AdminsFooter />
+        </div>
+      )}
     </div>
+
+    // <div className="min-h-screen bg-gray-50 text-gray-800 font-sans flex flex-col">
+    //   <>
+
+    //     <AdminNav
+    //       headerMessage={"Create New Team"}
+    //       headerText={"Upload a team profile and assign its type"}
+    //     />
+
+    //     <main className="flex-grow flex justify-center items-center py-10">
+
+    //     </main>
+
+    //     <AdminsFooter />
+    //   </>
+    // </div>
   )
 }
 

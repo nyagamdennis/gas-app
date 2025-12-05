@@ -56,12 +56,20 @@ const initialState: assignedOtherProductsState = {
 export const fetchAssignedOtherProducts = createAsyncThunk<assignedOtherProducts[], void, {}>(
   "assignedOtherProducts/fetchAssignedOtherProducts",
   async () => {
-    // const response = await axios.get<assignedOtherProducts[]>(PRODUCT_URLS, {
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //   },
-    // });
     const response = await api.get("/assignedproduct/")
+    return response.data;
+  }
+);
+
+
+
+export const fetchTeamsOtherProducts = createAsyncThunk<assignedOtherProducts[], {teamId: string}, {}>(
+  "assignedOtherProducts/fetchTeamsOtherProducts",
+  async ({teamId}) => {
+        console.log('fetching data ', teamId)
+
+    const response = await api.get(`/teams-otherproducts/${teamId}/`)
+    console.log('fetched data ', response.data)
     return response.data;
   }
 );
@@ -128,6 +136,17 @@ const assignedOtherProductsSlice = createSlice({
         state.assignedOtherProducts = action.payload;
       })
       .addCase(fetchAssignedOtherProducts.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message || "Failed to fetch products";
+      })
+      .addCase(fetchTeamsOtherProducts.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchTeamsOtherProducts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.assignedOtherProducts = action.payload;
+      })
+      .addCase(fetchTeamsOtherProducts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || "Failed to fetch products";
       })

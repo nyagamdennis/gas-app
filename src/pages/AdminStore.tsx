@@ -1582,7 +1582,6 @@ const AdminStore = () => {
                 {storeStatus === "succeeded" &&
                   store.length > 0 &&
                   store.map((gas) => (
-                    // console.log("gases", gas),
                     <div
                       key={gas.id}
                       className="mb-4 bg-white p-1 rounded-lg shadow-md"
