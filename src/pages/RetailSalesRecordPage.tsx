@@ -37,6 +37,7 @@ const RetailSalesRecordPage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const allAssignedProducts = useAppSelector(selectAllAssignedProducts)
+  
   const allOtherProducts = useAppSelector(selectAllAssignedOtherProducts)
   const operationError = useAppSelector(getSalesError)
   const [customPrice, setCustomPrice] = useState("")
@@ -183,7 +184,7 @@ const RetailSalesRecordPage = () => {
     }, 0)
   }
 
- 
+
   const calculateOtherTotal = () => {
     return otherProducts.reduce((total, product) => {
       const assignedProduct = allOtherProducts.find(
@@ -619,12 +620,12 @@ const RetailSalesRecordPage = () => {
                             {saleType === "COMPLETESALE" ? (
                               <FormattedAmount
                                 amount={
-                                  selectedProduct.min_retail_selling_price
+                                  selectedProduct.retail_selling_price
                                 }
                               />
                             ) : (
                               <FormattedAmount
-                                amount={selectedProduct.min_retail_refil_price}
+                                amount={selectedProduct.retail_refil_price}
                               />
                             )}
                           </p>
@@ -652,12 +653,12 @@ const RetailSalesRecordPage = () => {
                             {saleType === "COMPLETESALE" ? (
                               <FormattedAmount
                                 amount={
-                                  selectedProduct.max_retail_selling_price
+                                  selectedProduct.retail_selling_price
                                 }
                               />
                             ) : (
                               <FormattedAmount
-                                amount={selectedProduct.max_retail_refil_price}
+                                amount={selectedProduct.retail_refil_price}
                               />
                             )}
                           </p>
@@ -696,8 +697,7 @@ const RetailSalesRecordPage = () => {
                           e.target.value,
                         )
                       }
-                      // value={customPrice}
-                      // onChange={(e) => setCustomPrice(e.target.value)}
+                     
                       className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                       placeholder="Enter custom amount"
                       min="0"

@@ -14,13 +14,23 @@ import { FaDollarSign } from "react-icons/fa"
 import Box from "@mui/material/Box"
 import { LineChart } from "@mui/x-charts/LineChart"
 import { PieChart } from "@mui/x-charts/PieChart"
-import { BarChart } from '@mui/x-charts/BarChart';
+import { BarChart } from "@mui/x-charts/BarChart"
 import AdminsFooter from "../components/AdminsFooter"
 import computeDayOverDayDebtChange from "../utils/debtUtils"
-import { fetchDebtors, selectAllDebtors } from "../features/debtors/debtorsSlice"
+import {
+  fetchDebtors,
+  selectAllDebtors,
+} from "../features/debtors/debtorsSlice"
 import { IoTrendingDown } from "react-icons/io5"
-import { fetchAllExpenses, fetchExpenses, selectAllExpenses } from "../features/expenses/expensesSlice"
-import { fetchAnalysis, selectAllAnalysis } from "../features/analysis/analysisSlice"
+import {
+  fetchAllExpenses,
+  fetchExpenses,
+  selectAllExpenses,
+} from "../features/expenses/expensesSlice"
+import {
+  fetchAnalysis,
+  selectAllAnalysis,
+} from "../features/analysis/analysisSlice"
 
 const Dashboard = () => {
   const theme = useTheme()
@@ -29,22 +39,20 @@ const Dashboard = () => {
   const { isPro, isTrial, isExpired } = planStatus()
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-  const analysis_data = useAppSelector(selectAllAnalysis);
-  const all_debtors = analysis_data?.debtors || [];
-  const debtors_count = all_debtors.length;
+  const analysis_data = useAppSelector(selectAllAnalysis)
+  const all_debtors = analysis_data?.debtors || []
+  const debtors_count = all_debtors.length
 
-  const all_expenses = analysis_data?.expenses || [];
+  const all_expenses = analysis_data?.expenses || []
   // console.log("All Expenses:", all_expenses);
-  
-  
+
   // console.log("Analysis Data:", analysis_data?.expenses);
 
-
-    useEffect(() => {
-      // dispatch(fetchDebtors()),
-      // dispatch(fetchAllExpenses()),
-      dispatch(fetchAnalysis())
-    }, [dispatch])
+  useEffect(() => {
+    // dispatch(fetchDebtors()),
+    // dispatch(fetchAllExpenses()),
+    dispatch(fetchAnalysis())
+  }, [dispatch])
 
   var settings = {
     className: "slider variable-width",
@@ -167,104 +175,106 @@ const Dashboard = () => {
 
   const valueFormatter = (item: { value: number }) => `${item.value}%`
 
-
   const dataset = [
-  {
-    london: 59,
-    paris: 57,
-    newYork: 86,
-    seoul: 21,
-    month: 'Jan',
-  },
-  {
-    london: 50,
-    paris: 52,
-    newYork: 78,
-    seoul: 28,
-    month: 'Feb',
-  },
-  {
-    london: 47,
-    paris: 53,
-    newYork: 106,
-    seoul: 41,
-    month: 'Mar',
-  },
-  {
-    london: 54,
-    paris: 56,
-    newYork: 92,
-    seoul: 73,
-    month: 'Apr',
-  },
-  {
-    london: 57,
-    paris: 69,
-    newYork: 92,
-    seoul: 99,
-    month: 'May',
-  },
-  {
-    london: 60,
-    paris: 63,
-    newYork: 103,
-    seoul: 144,
-    month: 'June',
-  },
-  {
-    london: 59,
-    paris: 60,
-    newYork: 105,
-    seoul: 319,
-    month: 'July',
-  },
-  {
-    london: 65,
-    paris: 60,
-    newYork: 106,
-    seoul: 249,
-    month: 'Aug',
-  },
-  {
-    london: 51,
-    paris: 51,
-    newYork: 95,
-    seoul: 131,
-    month: 'Sept',
-  },
-  {
-    london: 60,
-    paris: 65,
-    newYork: 97,
-    seoul: 55,
-    month: 'Oct',
-  },
-  {
-    london: 67,
-    paris: 64,
-    newYork: 76,
-    seoul: 48,
-    month: 'Nov',
-  },
-  {
-    london: 61,
-    paris: 70,
-    newYork: 103,
-    seoul: 25,
-    month: 'Dec',
-  },
-];
+    {
+      london: 59,
+      paris: 57,
+      newYork: 86,
+      seoul: 21,
+      month: "Jan",
+    },
+    {
+      london: 50,
+      paris: 52,
+      newYork: 78,
+      seoul: 28,
+      month: "Feb",
+    },
+    {
+      london: 47,
+      paris: 53,
+      newYork: 106,
+      seoul: 41,
+      month: "Mar",
+    },
+    {
+      london: 54,
+      paris: 56,
+      newYork: 92,
+      seoul: 73,
+      month: "Apr",
+    },
+    {
+      london: 57,
+      paris: 69,
+      newYork: 92,
+      seoul: 99,
+      month: "May",
+    },
+    {
+      london: 60,
+      paris: 63,
+      newYork: 103,
+      seoul: 144,
+      month: "June",
+    },
+    {
+      london: 59,
+      paris: 60,
+      newYork: 105,
+      seoul: 319,
+      month: "July",
+    },
+    {
+      london: 65,
+      paris: 60,
+      newYork: 106,
+      seoul: 249,
+      month: "Aug",
+    },
+    {
+      london: 51,
+      paris: 51,
+      newYork: 95,
+      seoul: 131,
+      month: "Sept",
+    },
+    {
+      london: 60,
+      paris: 65,
+      newYork: 97,
+      seoul: 55,
+      month: "Oct",
+    },
+    {
+      london: 67,
+      paris: 64,
+      newYork: 76,
+      seoul: 48,
+      month: "Nov",
+    },
+    {
+      london: 61,
+      paris: 70,
+      newYork: 103,
+      seoul: 25,
+      month: "Dec",
+    },
+  ]
 
-function valueFormatters(value: number | null) {
-  return `${value}mm`;
-}
-const uncleared_debtors = all_debtors.filter(debtor => debtor.cleared === false);
-const total_debt = uncleared_debtors.reduce((total, debtor) => {
-    return total + debtor.amount;
-  }, 0);
+  function valueFormatters(value: number | null) {
+    return `${value}mm`
+  }
+  const uncleared_debtors = all_debtors.filter(
+    (debtor) => debtor.cleared === false,
+  )
+  const total_debt = uncleared_debtors.reduce((total, debtor) => {
+    const amt = Number(debtor.amount) || 0
+    return total + amt
+  }, 0)
 
-// compute change vs previous day (grouped by date_given)
-const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
+  // compute change vs previous day (grouped by date_given)
+  const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
 
   return (
     <div>
@@ -283,7 +293,9 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                       className="text-green-500 text-2xl"
                       fontSize=""
                     />
-                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">Total Revenue</h3>
+                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">
+                      Total Revenue
+                    </h3>
                   </div>
 
                   <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
@@ -294,14 +306,18 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                       <TrendingUpIcon className="text-green-500  " />
                       <p className="text-xs text-green-500 ml-1 ">15.2%</p>
                     </div>
-                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">
+                      from last day
+                    </p>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
                   <div className="flex items-center justify-center">
                     <GiProfit className="text-blue-500 text-2xl" />
-                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">Total Profit</h3>
+                    <h3 className="text-sm font-semibold mt-2 whitespace-nowrap">
+                      Total Profit
+                    </h3>
                   </div>
 
                   <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
@@ -312,7 +328,9 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                       <TrendingUpIcon className="text-blue-500" />
                       <p className="text-sm text-blue-500 ml-1">10.5%</p>
                     </div>
-                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">
+                      from last day
+                    </p>
                   </div>
                 </div>
 
@@ -332,7 +350,9 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                       <TrendingUpIcon className="text-red-500" />
                       <p className="text-sm text-red-500 ml-1">5.2%</p>
                     </div>
-                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">
+                      from last day
+                    </p>
                   </div>
                 </div>
                 <div className="bg-white rounded-lg shadow-md p-1 flex flex-col items-center">
@@ -346,21 +366,33 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                   </p>
                   <div className="flex items-center ">
                     <div className="flex items-center mt-2">
-                     
-                      {debtChange.changePercent && debtChange.changePercent < 0 ? (
+                      {debtChange.changePercent &&
+                      debtChange.changePercent < 0 ? (
                         <TrendingDown className="text-yellow-500" />
                       ) : (
                         <TrendingUpIcon className="text-red-500" />
                       )}
-                        <p className={`text-sm ml-1 ${debtChange.changePercent && debtChange.changePercent < 0 ? "text-yellow-500" : "text-red-500"}`}>
-                          {debtChange.changePercent === null
-                            ? debtChange.previousTotal === 0 && debtChange.targetTotal > 0
-                              ? "New"
-                              : "0%"
-                            : `${debtChange.changePercent > 0 ? "" : ""}${debtChange.changePercent.toFixed(1)}%`}
-                        </p>
+                      <p
+                        className={`text-sm ml-1 ${
+                          debtChange.changePercent &&
+                          debtChange.changePercent < 0
+                            ? "text-yellow-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {debtChange.changePercent === null
+                          ? debtChange.previousTotal === 0 &&
+                            debtChange.targetTotal > 0
+                            ? "New"
+                            : "0%"
+                          : `${
+                              debtChange.changePercent > 0 ? "" : ""
+                            }${debtChange.changePercent.toFixed(1)}%`}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">from last day</p>
+                    <p className="text-xs text-gray-500 whitespace-nowrap pt-2 ps-0.5">
+                      from last day
+                    </p>
                   </div>
                 </div>
               </Slider>
@@ -413,7 +445,11 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
                     series={[
                       { dataKey: "london", label: "London", valueFormatters },
                       { dataKey: "paris", label: "Paris", valueFormatters },
-                      { dataKey: "newYork", label: "New York", valueFormatters },
+                      {
+                        dataKey: "newYork",
+                        label: "New York",
+                        valueFormatters,
+                      },
                       { dataKey: "seoul", label: "Seoul", valueFormatters },
                     ]}
                     {...chartSetting}
@@ -423,8 +459,8 @@ const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
             </div>
           </main>
           <footer>
-        <AdminsFooter />
-      </footer>
+            <AdminsFooter />
+          </footer>
         </div>
       ) : (
         <div className="p-4">

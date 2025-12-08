@@ -31,6 +31,8 @@ import { selectMyProfile } from "../../features/employees/myProfileSlice"
 import { updateExpenseOwner } from "../../features/expenses/expensesSlice"
 import { useParams } from "react-router-dom"
 import FormattedAmount from "../../components/FormattedAmount"
+import { toast, ToastContainer } from "react-toastify"
+import { set } from "cookies"
 
 const TeamsSales = () => {
   const theme = useTheme()
@@ -39,10 +41,9 @@ const TeamsSales = () => {
   const dispatch = useAppDispatch()
   const myProfile = useAppSelector(selectMyProfile)
   const allSalesData = useAppSelector(selectAllAdminSalesTeamData)
-
   const expense = useAppSelector(selectAllTeamExpenses)
   const employees = useAppSelector(selectAllEmployees)
-  const allCash = useAppSelector(selectAllCash)
+  const allCash_sales = useAppSelector(selectAllCash)
   const allSalesTeam = useAppSelector(selectAllSalesTeam)
   const [cashAtHand, setCashAtHand] = useState<number>(0)
   const [filteredSales, setFilteredSales] = useState([])
@@ -50,6 +51,8 @@ const TeamsSales = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("")
   const [filteredExpenses, setFilteredExpenses] = useState([])
   const [addingCash, setAddingCash] = useState(false)
+  const [editSales, setEditSales] = useState(false)
+  const [editSalesBack, setEditSalesBack] = useState(false)
   const [addingAssign, setAddingAssign] = useState(false)
   const [ownerSelections, setOwnerSelections] = useState<
     Record<number, string>
@@ -60,19 +63,19 @@ const TeamsSales = () => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
   })
-  const { id, name } = useParams();
+  const { id, name } = useParams()
 
   const [endDate, setEndDate] = useState(() => {
     const today = new Date()
     return today.toISOString().split("T")[0] // Default to today's date
   })
-  const salesDate = startDate;
-  const decodedTeamName = decodeURIComponent(name);
-  const teamId = id;
-  
+  const salesDate = startDate
+  const decodedTeamName = decodeURIComponent(name)
+  const teamId = id
+
   // const salesTeamId = selectedTeam === "all" ? null : selectedTeam;
-  const salesTeamId =
-    selectedTeam && selectedTeam !== "all" ? selectedTeam : null
+  const salesTeamId = teamId
+
   const {
     isPro,
     isTrial,
@@ -85,38 +88,37 @@ const TeamsSales = () => {
     planName,
   } = planStatus()
 
-  console.log('data is ', allSalesData)
   useEffect(() => {
-    if (businessId ) {
+    if (businessId) {
       dispatch(fetchSalesTeam({ businessId }))
       dispatch(fetchEmployees({ businessId }))
-      dispatch(fetchCash())
+      
     }
   }, [dispatch, businessId])
 
- useEffect(() => {
+  useEffect(() => {
     if (businessId && teamId && salesDate) {
-      dispatch(fetchAdminSalesTeamData({ teamId, salesDate}))
+      dispatch(fetchAdminSalesTeamData({ teamId, salesDate }))
+      dispatch(fetchCash({ businessId, salesDate }))
     }
   }, [dispatch, businessId, teamId, salesDate])
 
   useEffect(() => {
-      const filtered = allSalesData.filter((sale) => {
-        const saleDate = new Date(sale.timestamp).toISOString().split("T")[0]
-        return saleDate >= startDate && saleDate <= endDate
-      })
-      setFilteredSales(filtered)
-    }, [allSalesData, startDate, endDate])
-  
+    const filtered = allSalesData.filter((sale) => {
+      const saleDate = new Date(sale.timestamp).toISOString().split("T")[0]
+      return saleDate >= startDate && saleDate <= endDate
+    })
+    setFilteredSales(filtered)
+  }, [allSalesData, startDate, endDate])
 
-  
+  console.log("cash sales ", allCash_sales)
+
   useEffect(() => {
     if (salesTeamId) {
       dispatch(fetchTeamExpenses({ salesTeamId }))
     }
   }, [dispatch, salesTeamId])
 
- 
   const handleToggleVerification = async (saleId, paymentType) => {
     dispatch(toggleVerification({ saleId, paymentType }))
   }
@@ -187,8 +189,7 @@ const TeamsSales = () => {
     setAddingAssign(true)
     try {
       await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
-    } catch (error) {
-    }
+    } catch (error) {}
     setAddingAssign(false)
   }
 
@@ -199,7 +200,6 @@ const TeamsSales = () => {
     : employees // show all when "all" is selected
 
   const totalDefaultCash = totalAmounts.totalCash - totalExpenses - cashAtHand
-
   const handleLessCash = async (e) => {
     e.preventDefault()
     setAddingCash(true)
@@ -213,11 +213,25 @@ const TeamsSales = () => {
           endDate,
         }),
       )
-      alert("Cash posted successfully.")
+      toast.success("Cash posted successfully.")
     } catch (error) {
-      alert("Failed to post cash.")
+      toast.error("Failed to post cash.")
     }
     setAddingCash(false)
+  }
+
+  const handleEnableSalesEdit = () => {
+    setEditSales(true)
+    setEditSalesBack(true)
+    setCashAtHand(allCash_sales?.cash ?? 0)
+    setSelectedEmployeeId(allCash_sales?.employee?.id?.toString() || "")
+  }
+
+  const handleDesableSalesEdit = () => {
+    setEditSales(false)
+    setEditSalesBack(false)
+    setCashAtHand(0)
+    setSelectedEmployeeId("")
   }
 
   return (
@@ -228,9 +242,12 @@ const TeamsSales = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
+          <ToastContainer />
           <main className="flex-grow m-2 p-1">
             <div>
-                <h2 className="text-2xl font-bold mb-2 text-center text-blue-700 underline">{decodedTeamName} sales</h2>
+              <h2 className="text-2xl font-bold mb-2 text-center text-blue-700 underline">
+                {decodedTeamName} sales
+              </h2>
             </div>
             {/* Filter Section */}
             <div className="bg-white shadow-md p-1 flex justify-between items-center mb-2">
@@ -296,12 +313,12 @@ const TeamsSales = () => {
                     >
                       <div className="flex justify-between items-center">
                         <h3 className="text-xl font-bold text-blue-700 mb-2">
-                        {sale.sales_person?.first_name}{" "}
-                        {sale.sales_person?.last_name}
-                      </h3>
-                      <h5 className="text-red-400">{sale.sales_choice}</h5>
+                          {sale.sales_person?.first_name}{" "}
+                          {sale.sales_person?.last_name}
+                        </h3>
+                        <h5 className="text-red-400">{sale.sales_choice}</h5>
                       </div>
-                      
+
                       <div className="text-gray-600 space-y-1 text-sm">
                         <p>
                           <strong>Customer:</strong> {sale.customer?.name} (
@@ -539,47 +556,104 @@ const TeamsSales = () => {
               </div>
 
               {/* Cash Handling */}
-              <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
-                <h2 className="text-lg font-bold text-purple-700 mb-4">
-                  Cash Management
-                </h2>
-                <form className="flex flex-col gap-4">
-                  <div>
-                    <label className="font-semibold">Cash at Hand</label>
-                    <input
-                      type="number"
-                      className="w-full border border-gray-300 rounded p-2 mt-1"
-                      value={cashAtHand}
-                      onChange={(e) => setCashAtHand(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="font-semibold">Salesperson</label>
-                    <select
-                      className="w-full border border-gray-300 rounded p-2 mt-1"
-                      value={selectedEmployeeId}
-                      onChange={(e) => handleEmployeeChange(e.target.value)}
+              {allCash_sales && !editSales ? (
+                <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                  <h2 className="text-lg font-bold text-purple-700 mb-4">
+                    Sales Submitted
+                  </h2>
+                  <h3>
+                    Cash Submitted:{" "}
+                    <span>
+                      <FormattedAmount amount={allCash_sales?.cash} />
+                    </span>
+                  </h3>
+                  <h3>
+                    Cash Default:{" "}
+                    <span>
+                      <FormattedAmount amount={allCash_sales?.cash_default} />
+                    </span>
+                  </h3>
+                  <h3>
+                    Sales Person:{" "}
+                    <span>
+                      {allCash_sales?.employee?.first_name}{" "}
+                      {allCash_sales?.employee?.last_name}
+                    </span>
+                  </h3>
+
+                  <div className=" flex justify-end">
+                    <button
+                      onClick={handleEnableSalesEdit}
+                      className="bg-blue-500 text-white font-bold rounded-md px-1 "
                     >
-                      <option value="" disabled>
-                        Select Employee
-                      </option>
-                      {filteredEmployees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.first_name} {emp.last_name}
-                        </option>
-                      ))}
-                    </select>
+                      Edit Sales
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleLessCash}
-                    disabled={addingCash}
-                    className="bg-blue-700 text-white rounded p-2 hover:bg-blue-800"
-                  >
-                    {addingCash ? "Submitting..." : "Submit Cash"}
-                  </button>
-                </form>
-              </div>
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                  <h2 className="text-lg font-bold text-purple-700 mb-4 flex justify-between items-center">
+                    Cash Management
+                    {editSalesBack && (
+                      <span
+                        onClick={handleDesableSalesEdit}
+                        className="text-blue-800 underline font-light text-sm"
+                      >
+                        back
+                      </span>
+                    )}
+                  </h2>
+                  <form className="flex flex-col gap-4">
+                    <div>
+                      <label className="font-semibold">Cash at Hand</label>
+                      <input
+                        type="number"
+                        className="w-full border border-gray-300 rounded p-2 mt-1"
+                        value={cashAtHand}
+                        onChange={(e) => setCashAtHand(Number(e.target.value))}
+                      />
+                      <span className="text-sm flex justify-end font-bold ">
+                        {totalDefaultCash > 0 && (
+                          <div className="flex gap-2 items-center text-red-700">
+                            Default{" "}
+                            <FormattedAmount amount={totalDefaultCash} />
+                          </div>
+                        )}
+                        {totalDefaultCash < 0 && (
+                          <div className="flex gap-2 items-center text-green-700">
+                            Excess <FormattedAmount amount={totalDefaultCash} />
+                          </div>
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="font-semibold">Salesperson</label>
+                      <select
+                        className="w-full border border-gray-300 rounded p-2 mt-1"
+                        value={selectedEmployeeId}
+                        onChange={(e) => handleEmployeeChange(e.target.value)}
+                      >
+                        <option value="" disabled>
+                          Select Employee
+                        </option>
+                        {filteredEmployees.map((emp) => (
+                          <option key={emp.id} value={emp.id}>
+                            {emp.first_name} {emp.last_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLessCash}
+                      disabled={addingCash}
+                      className="bg-blue-700 text-white rounded p-2 hover:bg-blue-800"
+                    >
+                      {addingCash ? "Submitting..." : "Submit Cash"}
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           </main>
           <footer>

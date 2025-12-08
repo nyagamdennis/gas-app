@@ -20,18 +20,11 @@ const initialState: CashState = {
   error: null,
 };
 
-export const fetchCash = createAsyncThunk<Cash[]>(
+export const fetchCash = createAsyncThunk(
   "cash/fetchCash",
-  async () => {
-    const response = await api.get("/cash/")
-    // const response = await axios.get<Cash[]>(`${apiUrl}/cash/`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   }
-    // );
-    return response.data; // Return the fetched cash data
+  async ({ businessId, salesDate}:{businessId:string; salesDate:string;}) => {
+    const response = await api.get(`/get-cash/${salesDate}/`)
+    return response.data;
   }
 );
 
@@ -46,13 +39,7 @@ export const postCash = createAsyncThunk(
       sales_team: salesTeamId,
       date: endDate,
     }
-    // const response = await axios.post(`${apiUrl}/cash/${selectedEmployeeId}/`,formData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   }
-    // );
+  
     const response = await api.post(`/cash/${selectedEmployeeId}/`, formData)
     return response.data; // Return the fetched cash data
   }

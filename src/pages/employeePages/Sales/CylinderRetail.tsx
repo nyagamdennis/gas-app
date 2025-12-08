@@ -136,15 +136,15 @@ const CylinderRetail = () => {
           price =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_retail_selling_price
+                ? assignedProduct.retail_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_retail_selling_price
-                : assignedProduct.min_retail_selling_price
+                ? assignedProduct.retail_selling_price
+                : assignedProduct.retail_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_retail_refil_price
+              ? assignedProduct.retail_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_retail_refil_price
-              : assignedProduct.min_retail_refil_price
+              ? assignedProduct.retail_refil_price
+              : assignedProduct.retail_refil_price
         }
 
         return total + price * product.quantity // ✅ Correct multiplication
@@ -184,15 +184,15 @@ const CylinderRetail = () => {
           unitPrice =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_retail_selling_price
+                ? assignedProduct.retail_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_retail_selling_price
-                : assignedProduct.min_retail_selling_price
+                ? assignedProduct.retail_selling_price
+                : assignedProduct.retail_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_retail_refil_price
+              ? assignedProduct.retail_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_retail_refil_price
-              : assignedProduct.min_retail_refil_price
+              ? assignedProduct.retail_refil_price
+              : assignedProduct.retail_refil_price
         }
 
         const productPayload: any = {
@@ -481,7 +481,7 @@ const CylinderRetail = () => {
 
                         {selectedProduct && (
                           <div className="flex items-center  space-x-3 flex-wrap mt-2">
-                            <label className="flex items-center gap-2">
+                            {/* <label className="flex items-center gap-2">
                               <input
                                 type="radio"
                                 name={`paymentAmount-${index}`}
@@ -499,26 +499,26 @@ const CylinderRetail = () => {
                                 {saleType === "COMPLETESALE" ? (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.min_retail_selling_price
+                                      selectedProduct.retail_selling_price
                                     }
                                   />
                                 ) : (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.min_retail_refil_price
+                                      selectedProduct.retail_refil_price
                                     }
                                   />
                                 )}
                               </p>
-                            </label>
+                            </label> */}
 
                             <label className="flex items-center gap-2">
                               <input
+                              
                                 type="radio"
                                 name={`paymentAmount-${index}`}
                                 value="MAXIMUM"
-                                // checked={paymentAmount === "MAXIMUM"}
-                                // onChange={() => setPaymentAmount("MAXIMUM")}
+                                
                                 checked={product.paymentAmount === "MAXIMUM"}
                                 onChange={() =>
                                   handleProductChange(
@@ -532,13 +532,13 @@ const CylinderRetail = () => {
                                 {saleType === "COMPLETESALE" ? (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.max_retail_selling_price
+                                      selectedProduct.retail_selling_price
                                     }
                                   />
                                 ) : (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.max_retail_refil_price
+                                      selectedProduct.retail_refil_price
                                     }
                                   />
                                 )}
@@ -550,8 +550,7 @@ const CylinderRetail = () => {
                                 type="radio"
                                 name={`paymentAmount-${index}`}
                                 value="CUSTOM"
-                                // checked={paymentAmount === "CUSTOM"}
-                                // onChange={() => setPaymentAmount("CUSTOM")}
+                                
                                 checked={product.paymentAmount === "CUSTOM"}
                                 onChange={() =>
                                   handleProductChange(
@@ -578,8 +577,7 @@ const CylinderRetail = () => {
                               e.target.value,
                             )
                           }
-                          // value={customPrice}
-                          // onChange={(e) => setCustomPrice(e.target.value)}
+                         
                           className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
                           placeholder="Enter custom amount"
                           min="0"
