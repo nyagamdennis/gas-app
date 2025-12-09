@@ -119,25 +119,25 @@ const EmployeeHomePage = () => {
                 Sales
               </p>
             </Link>
-            <Link to={'/admins/customers'} className="bg-gradient-to-br from-teal-50 to-teal-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            {/* <Link to={'/admins/customers'} className="bg-gradient-to-br from-teal-50 to-teal-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <Diversity1Icon className="text-teal-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-teal-700 text-center">
                 Customers
               </p>
-            </Link>
+            </Link> */}
             <Link to={"/admin/expenses"} className="bg-gradient-to-br from-indigo-50 to-indigo-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <CreditScoreIcon className="text-indigo-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-indigo-700 text-center">
                 Expenses
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            {/* <Link className="bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <InsightsIcon className="text-gray-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-gray-700 text-center">
                 AI Tools
               </p>
-            </Link>
-            <Link to={"/admin/reachout"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            </Link> */}
+            {/* <Link to={"/admin/reachout"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <ConnectWithoutContactIcon
                 className="text-cyan-600"
                 fontSize="large"
@@ -145,7 +145,7 @@ const EmployeeHomePage = () => {
               <p className="mt-2 text-sm font-semibold text-cyan-700 text-center">
                 Reach Out
               </p>
-            </Link>
+            </Link> */}
             <Link to={"/admin/deliveries"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <TwoWheelerIcon
                 className="text-cyan-600"
@@ -155,12 +155,12 @@ const EmployeeHomePage = () => {
                 Deliveries
               </p>
             </Link>
-            <Link className="bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
+            {/* <Link className="bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
               <SettingsIcon className="text-amber-600" fontSize="large" />
               <p className="mt-2 text-sm font-semibold text-amber-700 text-center">
                 Settings
               </p>
-            </Link>
+            </Link> */}
           </main>
         </div>
       ) : (
