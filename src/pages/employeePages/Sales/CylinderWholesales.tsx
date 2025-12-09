@@ -120,15 +120,15 @@ const CylinderWholesales = () => {
           price =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_wholesale_selling_price
+                ? assignedProduct.wholesale_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_wholesale_selling_price
-                : assignedProduct.min_wholesale_selling_price
+                ? assignedProduct.wholesale_selling_price
+                : assignedProduct.wholesale_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_wholesale_refil_price
+              ? assignedProduct.wholesale_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_wholesale_refil_price
-              : assignedProduct.min_wholesale_refil_price
+              ? assignedProduct.wholesale_refil_price
+              : assignedProduct.wholesale_refil_price
         }
 
         return total + price * product.quantity // ✅ Correct multiplication
@@ -170,15 +170,15 @@ const CylinderWholesales = () => {
           unitPrice =
             saleType === "COMPLETESALE"
               ? product.paymentAmount === "MAXIMUM"
-                ? assignedProduct.max_wholesale_selling_price
+                ? assignedProduct.wholesale_selling_price
                 : product.paymentAmount === "MEDIUM"
-                ? assignedProduct.mid_wholesale_selling_price
-                : assignedProduct.min_wholesale_selling_price
+                ? assignedProduct.wholesale_selling_price
+                : assignedProduct.wholesale_selling_price
               : product.paymentAmount === "MAXIMUM"
-              ? assignedProduct.max_wholesale_refil_price
+              ? assignedProduct.wholesale_refil_price
               : product.paymentAmount === "MEDIUM"
-              ? assignedProduct.mid_wholesale_refil_price
-              : assignedProduct.min_wholesale_refil_price
+              ? assignedProduct.wholesale_refil_price
+              : assignedProduct.wholesale_refil_price
         }
 
         const productPayload: any = {
@@ -475,13 +475,13 @@ const CylinderWholesales = () => {
                                 {saleType === "COMPLETESALE" ? (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.min_wholesale_selling_price
+                                      selectedProduct.wholesale_selling_price
                                     }
                                   />
                                 ) : (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.min_wholesale_refil_price
+                                      selectedProduct.wholesale_refil_price
                                     }
                                   />
                                 )}
@@ -539,13 +539,13 @@ const CylinderWholesales = () => {
                                 {saleType === "COMPLETESALE" ? (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.max_wholesale_selling_price
+                                      selectedProduct.wholesale_selling_price
                                     }
                                   />
                                 ) : (
                                   <FormattedAmount
                                     amount={
-                                      selectedProduct.max_wholesale_refil_price
+                                      selectedProduct.wholesale_refil_price
                                     }
                                   />
                                 )}

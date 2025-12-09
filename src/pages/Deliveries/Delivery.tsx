@@ -14,6 +14,7 @@ import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import {
   addVehicle,
+  deleteVehicle,
   fetchVehicles,
   getAllVehicles,
 } from "../../features/deliveries/vehiclesSlice"
@@ -23,6 +24,23 @@ import {
 } from "../../features/employees/employeesSlice"
 import { toast, ToastContainer } from "react-toastify"
 import CircularProgress from "@mui/material/CircularProgress"
+import Button from "@mui/material/Button"
+import Dialog from "@mui/material/Dialog"
+import DialogActions from "@mui/material/DialogActions"
+import DialogContent from "@mui/material/DialogContent"
+import DialogContentText from "@mui/material/DialogContentText"
+import DialogTitle from "@mui/material/DialogTitle"
+import Slide from "@mui/material/Slide"
+import { TransitionProps } from "@mui/material/transitions"
+
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement<any, any>
+  },
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />
+})
 
 const Delivery = () => {
   const dispatch = useAppDispatch()
@@ -50,6 +68,12 @@ const Delivery = () => {
   const [vehicles, setVehicles] = useState([]) // List of vehicles from the database
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [delting, setDeleting] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
+  const [deleteVehicleNumber, setDeleteVehicleNumber] = useState("")
+  const [deleteVehicleType, setDeleteVehicleType] = useState("")
+
+  const [open, setOpen] = React.useState(false)
 
   const all_vehicles = useAppSelector(getAllVehicles)
   const all_employees = useAppSelector(selectAllEmployees)
@@ -135,12 +159,34 @@ const Delivery = () => {
     console.log("Update vehicle:", vehicle)
   }
 
-  const handleDeleteVehicle = (id) => {
-    // Logic to delete the vehicle
-    // For example, make an API call to delete the vehicle from the database
+  const handleClose = () => {
+    setOpen(false)
+  }
+
+  const handleOpenDeleteVehicle = (id, vehicle_number, type_of_vehicle) => {
+    setDeleteId(id)
+    setDeleteVehicleNumber(vehicle_number)
+    setDeleteVehicleType(type_of_vehicle)
+    setOpen(true)
     setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id))
     console.log("Deleted vehicle with ID:", id)
   }
+
+  const handleDeleteThisVehicle = async () => {
+    setDeleting(true)
+    
+    try {
+      await dispatch(deleteVehicle(deleteId)).unwrap()
+      toast.success("Vehicle deleted successfully!")
+      setOpen(false)
+      setDeleting(false)
+      // setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id))
+    } catch (error) {
+      setDeleting(false)
+      toast.error(error || "Failed to delete vehicle. Please try again.")
+    }
+  }
+
 
   return (
     <div>
@@ -299,7 +345,7 @@ const Delivery = () => {
                       <strong>Type:</strong> {vehicle.type_of_vehicle}
                     </p>
                     <p className="text-sm">
-                      <strong>Number Plate:</strong> {vehicle.number}
+                      <strong>Number Plate:</strong> {vehicle.vehicle_number}
                     </p>
                     <p className="text-sm">
                       <strong>Engine CC:</strong> {vehicle.engine_capacity}
@@ -309,7 +355,8 @@ const Delivery = () => {
                     </p>
                     {vehicle.type_of_vehicle === "VEHICLE" && (
                       <p className="text-sm">
-                        <strong>Conductor:</strong> {vehicle.conductor?.first_name}{" "}
+                        <strong>Conductor:</strong>{" "}
+                        {vehicle.conductor?.first_name}{" "}
                       </p>
                     )}
                   </div>
@@ -323,16 +370,54 @@ const Delivery = () => {
                     </button>
                     {/* Delete Button */}
                     <button
-                      onClick={() => handleDeleteVehicle(vehicle.id)}
+                      onClick={() =>
+                        handleOpenDeleteVehicle(
+                          vehicle.id,
+                          vehicle.vehicle_number,
+                          vehicle.type_of_vehicle,
+                        )
+                      }
                       className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
+                    disabled={delting}
                     >
-                      Delete
+                      {delting ? (
+                        <div className="flex items-center justify-center">
+                          <CircularProgress size={20} className="text-white mr-2" />
+                          Deleting...
+                        </div>
+                      ) : (
+                        "Delete"
+                      )}
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           </main>
+          <Dialog
+            open={open}
+            slots={{
+              transition: Transition,
+            }}
+            keepMounted
+            onClose={handleClose}
+            aria-describedby="alert-dialog-slide-description"
+          >
+            <DialogTitle>{`Delete ${deleteVehicleType} ${deleteVehicleNumber}?`}</DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-slide-description">
+                Are you sure you want to delete this vehicle? This action cannot
+                be undone.
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button onClick={handleDeleteThisVehicle}>Delete</Button>
+            </DialogActions>
+          </Dialog>
+
+
+          
           <footer>
             <AdminsFooter />
           </footer>
