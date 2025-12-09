@@ -16,7 +16,7 @@ import {
   getStoreStatus,
   selectAllStore,
 } from "../../features/store/storeSlice"
-import { assignedCylindersUpdate } from "../../features/assigns/assignsSlice"
+import { assignedCylindersUpdate, assignCylinders } from "../../features/assigns/assignsSlice"
 import Skeleton from "@mui/material/Skeleton"
 import AdminsFooter from "../../components/AdminsFooter"
 
@@ -99,7 +99,8 @@ const AssignCylinders = () => {
       assigned_quantity: item.assigned_quantity,
     }))
 
-    dispatch(assignedCylindersUpdate(payload))
+    // dispatch(assignedCylindersUpdate(payload))
+    dispatch(assignCylinders(payload))
       .then(() =>
         navigate(`/admins/afterassign/${selectedTeam?.id}`, {
           state: { salesTeamName: selectedTeam?.name },

@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
+import { useMediaQuery, useTheme } from "@mui/material"
+
 import {
   fetchAssignedCylinders,
   getAssignsError,
@@ -10,8 +12,14 @@ import {
 } from "../features/assigns/assignsSlice"
 import api from "../../utils/api"
 import CircularProgress from '@mui/material/CircularProgress';
+import Navbar from "../components/ui/mobile/admin/Navbar"
+import AdminsFooter from "../components/AdminsFooter"
 
 const AfterAssign = () => {
+  const theme = useTheme()
+  const matches = useMediaQuery("(min-width:600px)")
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+
   const salesTeamId = useParams()
   const dispatch = useAppDispatch()
   const cylinders = useAppSelector(selectAllAssigns)
@@ -114,8 +122,18 @@ const AfterAssign = () => {
 
 
   return (
-    <div className="min-h-screen bg-white p-4">
-      <div>
+    // <div className="min-h-screen bg-white p-4">
+     
+    // </div>
+    <div>
+      {isMobile ? (
+          <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
+          <Navbar
+            headerMessage={"ERP"}
+            headerText={"Manage your operations with style and clarity"}
+          />
+          <main className="flex-grow m-2 p-1">
+            <div>
         <div className="mb-4 text-center">
           <p className="text-sm text-gray-600">Assigned Cylinders Report</p>
         </div>
@@ -168,7 +186,17 @@ const AfterAssign = () => {
             Edit
           </button>
         </div>
-      </div>
+     </div>
+          </main>
+           <footer className=" text-white">
+            <AdminsFooter />
+          </footer>
+        </div>
+      ) : (
+        <div className="p-4">
+          <p>Desktop view coming soon</p>
+        </div>
+      )}
     </div>
   )
 }
