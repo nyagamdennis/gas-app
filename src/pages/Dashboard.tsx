@@ -8,6 +8,7 @@ import Navbar from "../components/ui/mobile/admin/Navbar"
 import Slider from "react-slick"
 import CurrencyConvert from "../components/CurrencyConvert"
 import TrendingUpIcon from "@mui/icons-material/TrendingUp"
+import TrendingDownIcon from "@mui/icons-material/TrendingDown"
 import { GiExpense, GiProfit } from "react-icons/gi"
 import { FcDebt } from "react-icons/fc"
 import { FaDollarSign } from "react-icons/fa"
@@ -46,7 +47,8 @@ const Dashboard = () => {
   const all_expenses = analysis_data?.expenses || []
   // console.log("All Expenses:", all_expenses);
 
-  // console.log("Analysis Data:", analysis_data?.expenses);
+console.log("revenue:", analysis_data?.sales_summary?.total_revenue);
+  const total_expenses = analysis_data?.sales_summary?.total_expenses || 0;
 
   useEffect(() => {
     // dispatch(fetchDebtors()),
@@ -343,7 +345,7 @@ const Dashboard = () => {
                   </div>
 
                   <p className="text-gray-600 font-bold flex justify-center mt-1 !text-xs ms-2">
-                    <CurrencyConvert price={500} />
+                    <CurrencyConvert price={total_expenses} />
                   </p>
                   <div className="flex items-center space-x-1">
                     <div className="flex items-center mt-2">
@@ -368,7 +370,7 @@ const Dashboard = () => {
                     <div className="flex items-center mt-2">
                       {debtChange.changePercent &&
                       debtChange.changePercent < 0 ? (
-                        <TrendingDown className="text-yellow-500" />
+                        <TrendingDownIcon className="text-yellow-500" />
                       ) : (
                         <TrendingUpIcon className="text-red-500" />
                       )}
