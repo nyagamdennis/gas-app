@@ -103,8 +103,11 @@ const CustomerExcerpt = ({ customer }) => {
             {customer.name}
           </h2>
           <p className="text-sm text-gray-500 flex items-center gap-1">
-          <PhoneInTalkIcon fontSize="small" />
-            <a href={`tel:${phoneStr}`} className="text-blue-600 hover:underline">
+            <PhoneInTalkIcon fontSize="small" />
+            <a
+              href={`tel:${phoneStr}`}
+              className="text-blue-600 hover:underline"
+            >
               {phoneStr}
             </a>
             {/* {phoneStr.slice(0, 3)}****{phoneStr.slice(-3)} */}
@@ -205,15 +208,25 @@ const CustomerExcerpt = ({ customer }) => {
                 <p>
                   💵 Total: <FormattedAmount amount={sale.total_amount} />
                 </p>
+                {sale.exchanged_with_local && (
+                  <p className="text-yellow-600">
+                    ♻️ Exchanged with {sale.cylinder_exchanged_with.gas_type} {sale.cylinder_exchanged_with.weight}kg
+                  </p>
+                )}
                 <hr />
-                <p className="text-xs mt-2">🗓️ Purchased on: {new Date(sale.timestamp).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })} at {new Date(sale.timestamp).toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}</p>
+                <p className="text-xs mt-2">
+                  🗓️ Purchased on:{" "}
+                  {new Date(sale.timestamp).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  at{" "}
+                  {new Date(sale.timestamp).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             ))}
           </div>
