@@ -18,6 +18,7 @@ import Stack from "@mui/material/Stack"
 
 const CustomerExcerpt = ({ customer }) => {
   // const apiUrl = getApiUrl()
+  console.log("Customer data:", customer)
   const [smsState, setSmsState] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [message, setMessage] = useState("")
@@ -191,12 +192,12 @@ const CustomerExcerpt = ({ customer }) => {
             </div>
           )}
 
-          <div>
+          <div className="">
             <h4 className="font-semibold text-green-700">Purchase History</h4>
             {customer.customer_sales.map((sale, i) => (
               <div
                 key={i}
-                className="p-2 rounCustomerExcerptded-md bg-green-50 text-sm border border-green-200 mb-2"
+                className="p-2 rounded-lg bg-green-50 text-sm border border-green-200 mb-2"
               >
                 <p>🧪 Product: {sale.product?.gas_type || "N/A"}</p>
                 <p>⚖️ Weight: {sale.product?.weight || "N/A"}kg</p>
@@ -204,6 +205,15 @@ const CustomerExcerpt = ({ customer }) => {
                 <p>
                   💵 Total: <FormattedAmount amount={sale.total_amount} />
                 </p>
+                <hr />
+                <p className="text-xs mt-2">🗓️ Purchased on: {new Date(sale.timestamp).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })} at {new Date(sale.timestamp).toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}</p>
               </div>
             ))}
           </div>

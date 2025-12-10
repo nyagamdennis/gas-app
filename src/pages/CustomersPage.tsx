@@ -116,7 +116,6 @@ const CustomersPage = () => {
   }
 
   const handleRetailSubmit = async (e: any) => {
-    console.log("Am called to add retail customer!")
     e.preventDefault()
 
     setIsSubmitting(true)
