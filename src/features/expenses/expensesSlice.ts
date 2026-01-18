@@ -38,6 +38,29 @@ export const fetchExpenses = createAsyncThunk<Expenses[]>(
 );
 
 
+export const fetchExpenseCategories = createAsyncThunk<Expenses[]>(
+  "expenses/fetchExpenses",
+  async (employeeId) => {
+    const response = await api.get<Expenses[]>(`/expenses/${employeeId}`)
+    return response.data // Return the fetched expenses data
+  },
+)
+
+export const fetchExpenseSummary = createAsyncThunk<Expenses[]>(
+  "expenses/fetchExpenses",
+  async (employeeId) => {
+    const response = await api.get<Expenses[]>(`/expenses/${employeeId}`)
+    return response.data // Return the fetched expenses data
+  },
+)
+
+export const fetchExpenseSubCategories = createAsyncThunk<Expenses[], {}>(
+  "expenses/fetchExpenses",
+  async (employeeId) => {
+    const response = await api.get<Expenses[]>(`/expenses/${employeeId}`)
+    return response.data // Return the fetched expenses data
+  },
+)
 
 export const fetchAllExpenses = createAsyncThunk<Expenses[]>(
   "expenses/fetchAllExpenses",
@@ -157,5 +180,20 @@ const expensesSlice = createSlice({
 export const selectAllExpenses = (state: { expenses: ExpensesState }) => state.expenses.expenses;
 export const getExpensesStatus = (state: { expenses: ExpensesState }) => state.expenses.status;
 export const getExpensesError = (state: { expenses: ExpensesState }) => state.expenses.error;
+
+
+export const selectAllExpenseCategories = (state: { expenses: ExpensesState }) =>
+  state.expenses.expenses
+
+export const selectAllExpenseSubCategories = (state: { expenses: ExpensesState }) =>
+  state.expenses.expenses
+
+
+
+
+export const selectExpenseSummary = (state: { expenses: ExpensesState }) =>
+  state.expenses.expenses
+
+
 
 export default expensesSlice.reducer;

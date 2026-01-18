@@ -3,7 +3,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import api from "../../../utils/api"
 
-// const CYLINDERSWEIGHT_URL = `${apiUrl}/cylindersWeight/`;
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
@@ -27,19 +26,12 @@ const initialState: CylindersWeightState = {
 export const fetchCylindersWeight = createAsyncThunk<CylindersWeight[], void>(
   "cylindersWeight/fetchCylindersWeight",
   async () => {
-    const response = await api.get("/cylinder-weight/")
+    const response = await api.get("/cylinder/weights/")
     return response.data
   },
 )
 
-// export const createCylindersWeight = createAsyncThunk<void, number>(
-//   "cylindersWeight/createCylindersWeight",
-//   async (pk) => {
-//     // await axios.post(`${apiUrl}/clear_debt/${pk}/`);
-//     await api.post(`/clear_debt/${pk}/`)
-//     return pk
-//   },
-// )
+
 
 type NewCylindersWeight = { name: string }
 
@@ -47,7 +39,7 @@ export const createCylindersWeight = createAsyncThunk<
   CylindersWeight,
   NewCylindersWeight
 >("cylindersWeight/createCylindersWeight", async (weight) => {
-  const response = await api.post("/cylinder-weight/", weight)
+  const response = await api.post("/cylinder/weights/", weight)
   return response.data as CylindersWeight
 })
 
@@ -77,7 +69,7 @@ const cylindersWeightSlice = createSlice({
       })
       .addCase(createCylindersWeight.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.cylindersWeight.push(action.payload)
+        state.cylindersWeight.push(action.payload.weight)
       })
       .addCase(createCylindersWeight.rejected, (state, action) => {
         state.status = "failed"

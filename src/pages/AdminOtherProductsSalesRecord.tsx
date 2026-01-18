@@ -18,10 +18,7 @@ import {
   toggleVerification,
 } from "../features/salesTeam/adminSalesTeamDataSlice"
 import AdminsFooter from "../components/AdminsFooter"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
+
 import {
   fetchTeamExpenses,
   selectAllTeamExpenses,
@@ -41,6 +38,7 @@ import {
 import planStatus from "../features/planStatus/planStatus"
 import AdminNav from "../components/ui/AdminNav"
 import { CircularProgress } from "@mui/material"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../features/salesTeam/salesTeamSlice"
 
 
 const AdminOtherProductsSalesRecord = () => {
@@ -50,7 +48,7 @@ const AdminOtherProductsSalesRecord = () => {
       const expense = useAppSelector(selectAllTeamExpenses)
       const employees = useAppSelector(selectAllEmployees)
       const allCash = useAppSelector(selectAllCash)
-      const allSalesTeam = useAppSelector(selectAllSalesTeam)
+      const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
       const [cashAtHand, setCashAtHand] = useState<number>(0)
       const [filteredSales, setFilteredSales] = useState([])
       const [selectedTeam, setSelectedTeam] = useState("all")
@@ -89,7 +87,7 @@ const AdminOtherProductsSalesRecord = () => {
       useEffect(() => {
         if (businessId) {
           dispatch(fetchAdminSalesTeamData())
-          dispatch(fetchSalesTeam({ businessId }))
+          dispatch(fetchSalesTeamShops())
           dispatch(fetchEmployees({ businessId }))
           dispatch(fetchCash())
         }

@@ -5,33 +5,45 @@ import AdminNav from "../components/ui/AdminNav"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useMediaQuery, useTheme } from "@mui/material"
 
-import {
-  addSettings,
-  fetchSettings,
-  selectAllSettings,
-  updateSettings,
-} from "../features/settings/settingsSlice"
+
 import { Link } from "react-router-dom"
 import Navbar from "../components/ui/mobile/admin/Navbar"
+import { updateSettings } from "../features/settings/settingsSlice"
 
 const Settings = () => {
-    const theme = useTheme()
-  const [businessName, setBusinessName] = useState("")
+  const theme = useTheme()
+  const [isBusinessName, setIsBusinessName] = useState("")
   const [logoFile, setLogoFile] = useState(null)
+
   const [logoPreview, setLogoPreview] = useState(null)
   const currentPlan = "Pro" // Ideally this comes from Redux or API
   const dispatch = useAppDispatch()
   const [addingSettings, setAddingSettings] = useState(false)
-  const my_settings = useAppSelector(selectAllSettings)
   const [editing, setEditing] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
 
-  // console.log("my_settings", my_settings)
-  useEffect(() => {
-    dispatch(fetchSettings())
-  }, [dispatch])
+  const [isBusinessEmail, setIsBusinessEmail] = useState("")
+  const [isBusinessPhone, setIsBusinessPhone] = useState("")
+  const [isBusinessLocation, setIsBusinessLocation] = useState("")
+  const [isBusinessWebsite, setIsBusinessWebsite] = useState("")
+
+const {businessId, businessName, businessLogo, subscriptionPlan, businessEmail, businessPhone, businessWebsite, businessLocation} = useAppSelector(
+    (state) =>
+      state.planStatus || {
+        businessId: null,
+        businessName: null,
+        businessLogo: null,
+        businessEmail: null,
+        businessPhone: null,
+        businessWebsite: null,
+        businessLocation: null,
+        subscriptionPlan: null,
+      },
+  )
+
+ 
 
   const handleLogoChange = (e: any) => {
     const file = e.target.files[0]
@@ -47,7 +59,7 @@ const Settings = () => {
     try {
       setAddingSettings(true)
       const dat = {
-        name: businessName,
+        name: isBusinessName,
         business_logo: logoFile,
       }
       await dispatch(addSettings({ dat }))
@@ -58,30 +70,24 @@ const Settings = () => {
     }
   }
 
-  const handleDeleteSettings = async (id: string) => {
-    try {
-      setAddingSettings(true)
-      await dispatch(deleteSettings(id))
-    } catch (error) {
-      alert(`Failed to delete settings: ${error}`)
-    } finally {
-      setAddingSettings(false)
-    }
-  }
+ 
 
   const handleOpenUpdate = () => {
-    setBusinessName(my_settings.name)
-    setLogoPreview(my_settings.business_logo)
+    setIsBusinessName(businessName)
+    setLogoPreview(businessLogo)
+    setIsBusinessEmail(businessEmail)
+    setIsBusinessPhone(businessPhone)
+    setIsBusinessWebsite(businessWebsite)
+    setIsBusinessLocation(businessLocation)
     setLogoFile(null)
     // Switch to edit mode
     setEditing(true)
   }
 
   const handleCloseUpdate = () => {
-    setBusinessName("")
+    setIsBusinessName("")
     setLogoPreview(null)
     setLogoFile(null)
-    // Switch to view mode
     setEditing(false)
   }
 
@@ -90,10 +96,14 @@ const Settings = () => {
     try {
       setAddingSettings(true)
       const dat = {
-        name: businessName,
+        name: isBusinessName,
         business_logo: logoFile,
+        business_email: isBusinessEmail,
+        business_phone_number: isBusinessPhone,
+        website: isBusinessWebsite,
+        location: isBusinessLocation
       }
-      await dispatch(updateSettings({ dat }))
+      await dispatch(updateSettings({ businessId,dat }))
     } catch (error) {
       alert(`Failed to update settings: ${error}`)
     } finally {
@@ -115,24 +125,21 @@ const Settings = () => {
               Business Settings
             </h2>
 
-            {my_settings && my_settings?.name ? (
+            {businessId ? (
               <div className="bg-white p-6 rounded-2xl shadow-md border">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-2xl font-semibold text-gray-900">
-                      {my_settings?.name}
+                      {businessName}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
-                      Plan:{" "}
-                      <strong>
-                        {my_settings.subscription_plan?.name || "No Plan"}
-                      </strong>
+                      Plan: <strong>{subscriptionPlan || "No Plan"}</strong>
                     </p>
 
-                    {my_settings.subscription_plan ? (
+                    {subscriptionPlan ? (
                       <Link
                         className="mt-2 text-sm text-blue-600 hover:underline"
-                        to={`/subscribe?current_plan=${my_settings.subscription_plan.id}`}
+                        to={`/subscribe?current_plan=${subscriptionPlan.id}`}
                       >
                         Change Plan
                       </Link>
@@ -147,7 +154,7 @@ const Settings = () => {
                   </div>
 
                   <img
-                    src={my_settings.business_logo}
+                    src={businessLogo}
                     alt="Business Logo"
                     className="h-20 w-20 object-contain border rounded-lg"
                   />
@@ -170,12 +177,12 @@ const Settings = () => {
                     </button>
                   )}
 
-                  <button
+                  {/* <button
                     onClick={() => alert("Delete not implemented")}
                     className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
                   >
                     Delete
-                  </button>
+                  </button> */}
                 </div>
 
                 {editing && (
@@ -186,19 +193,6 @@ const Settings = () => {
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">
                       Update Info
                     </h4>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Business Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Logo
@@ -218,6 +212,64 @@ const Settings = () => {
                       )}
                     </div>
 
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Name<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={isBusinessName}
+                        onChange={(e) => setIsBusinessName(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Location<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={isBusinessLocation}
+                        onChange={(e) => setIsBusinessLocation(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Phone<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={isBusinessPhone}
+                        onChange={(e) => setIsBusinessPhone(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Email<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={isBusinessEmail}
+                        onChange={(e) => setIsBusinessEmail(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    {/* <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Email<span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={isBusinessName}
+                        onChange={(e) => setIsBusinessName(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div> */}
                     <div className="flex justify-end">
                       <button
                         type="submit"
@@ -237,19 +289,6 @@ const Settings = () => {
                 <h3 className="text-xl font-semibold text-gray-800">
                   Add Your Business
                 </h3>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Business Name<span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Business Logo
@@ -267,6 +306,66 @@ const Settings = () => {
                       className="mt-3 h-20 object-contain rounded"
                     />
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Name<span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={isBusinessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Email
+                  </label>
+                  <input
+                    type="text"
+                    value={businessEmail}
+                    onChange={(e) => setBusinessEmail(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={businessPhone}
+                    onChange={(e) => setBusinessPhone(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Website
+                  </label>
+                  <input
+                    type="text"
+                    value={businessWebsite}
+                    onChange={(e) => setBusinessWebsite(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Business Location
+                  </label>
+                  <input
+                    type="text"
+                    value={businessLocation}
+                    onChange={(e) => setBusinessLocation(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                  />
                 </div>
 
                 <div className="flex justify-end">
@@ -287,7 +386,7 @@ const Settings = () => {
         </div>
       ) : (
         <div className="flex flex-col min-h-screen bg-gray-50">
-          Deskto coming soon...
+          Desktop coming soon...
         </div>
       )}
     </div>

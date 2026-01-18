@@ -27,8 +27,7 @@ const initialState: CylindersBrandState = {
 export const fetchCylindersBrand = createAsyncThunk<Debtors[], void>(
   "debtors/fetchCylindersBrand",
   async () => {
-    // const response = await axios.get<Debtors[]>(DEBTORS_URL);
-    const response = await api.get("/cylinder-brands/")
+    const response = await api.get("/cylinder/types/")
     return response.data
   },
 )
@@ -39,7 +38,7 @@ export const createCylindersBrand = createAsyncThunk<
   CylindersBrand,
   NewCylindersBrand
 >("cylindersBrand/createCylindersBrand", async (brand) => {
-  const response = await api.post("/cylinder-brands/", brand)
+  const response = await api.post("/cylinder/types/", brand)
   return response.data as CylindersBrand
 })
 
@@ -68,7 +67,7 @@ const cylindersBrandSlice = createSlice({
       })
       .addCase(createCylindersBrand.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.cylindersBrand.push(action.payload)
+        state.cylindersBrand.push(action.payload.type)
       })
       .addCase(createCylindersBrand.rejected, (state, action) => {
         state.status = "failed"

@@ -10,15 +10,12 @@ import {
   updateEmployeeStatus,
 } from "../features/employees/employeesSlice"
 import { ClipLoader } from "react-spinners"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
+import { selectAllSalesTeamShops } from "../features/salesTeam/salesTeamSlice"
 
 const Employee = () => {
   const dispatch = useAppDispatch()
   const allEmployees = useAppSelector(selectAllEmployees)
-  const all_salesTeam = useAppSelector(selectAllSalesTeam)
+  const all_salesTeam = useAppSelector(selectAllSalesTeamShops)
 
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [newSalesTeam, setNewSalesTeam] = useState("")
@@ -28,7 +25,7 @@ const Employee = () => {
 
   useEffect(() => {
     dispatch(fetchEmployees())
-    dispatch(fetchSalesTeam())
+    dispatch(fetchSalesTeamShops())
   }, [dispatch])
 
   const toggleRow = (employeeId) => {

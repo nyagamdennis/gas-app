@@ -63,21 +63,10 @@ export const recordSales = createAsyncThunk(
   "sales/recordSales",
   async (formData, { rejectWithValue }) => {
     try {
-      // const response = await axios.post(
-      //   `${apiUrl}/recordsales/`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //   }
-      // );
-      const response = await api.post("/recordsales/", formData)
+      const response = await api.post("/sales/sales/", formData)
       return response.data;
     } catch (error: any) {
       if (error.response && error.response.data) {
-        // Use rejectWithValue to send backend errors to the `rejected` case
         return rejectWithValue(error.response.data);
       }
       throw error; // For other unexpected errors

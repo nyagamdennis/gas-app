@@ -21,16 +21,10 @@ const initialState: SalesTeamState = {
   error: null,
 }
 
-export const fetchSalesTeam = createAsyncThunk<SalesTeam[], { businessId: string }, {}>(
-  "salesTeam/fetchSalesTeam",
-  async ({ businessId }) => {
-    // console.log("businessId ", businessId)
-    // const response = await axios.get<SalesTeam[]>(`${apiUrl}/getsalesteam/${businessId}/`, {
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //   },
-    // });
-    const response = await api.get(`/getsalesteam/${businessId}/`);
+export const fetchSalesTeamShops = createAsyncThunk<SalesTeam[]>(
+  "salesTeam/fetchSalesTeamShops",
+  async () => {
+    const response = await api.get(`/shop/`)
     return response.data; // Corrected the return statement
   },
 );
@@ -117,14 +111,14 @@ const salesTeamSlice = createSlice({
   reducers: {},
   extraReducers(builder) {
     builder
-      .addCase(fetchSalesTeam.pending, (state) => {
+      .addCase(fetchSalesTeamShops.pending, (state) => {
         state.status = "loading"
       })
-      .addCase(fetchSalesTeam.fulfilled, (state, action) => {
+      .addCase(fetchSalesTeamShops.fulfilled, (state, action) => {
         state.status = "succeeded"
         state.salesTeam = action.payload
       })
-      .addCase(fetchSalesTeam.rejected, (state, action) => {
+      .addCase(fetchSalesTeamShops.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message || "Failed to fetch salesTeam"
       })
@@ -196,7 +190,7 @@ const salesTeamSlice = createSlice({
   },
 })
 
-export const selectAllSalesTeam = (state: { salesTeam: SalesTeamState }) =>
+export const selectAllSalesTeamShops = (state: { salesTeam: SalesTeamState }) =>
   state.salesTeam.salesTeam
 export const getSalesTeamStatus = (state: { salesTeam: SalesTeamState }) =>
   state.salesTeam.status

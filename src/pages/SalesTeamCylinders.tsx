@@ -17,10 +17,10 @@ import defaultProfile from "../components/media/default.png"
 import {
   fetchOtherProducts,
   selectAllOtherProducts,
-} from "../features/store/otherProductsSlice"
+} from "../features/store/productsSlice"
 import EmployeeNav from "../components/ui/EmployeeNav"
 import {
-    approveRequest,
+  approveRequest,
   clearRequested,
   fetchAllRequests,
   fetchRequests,
@@ -41,7 +41,7 @@ const SalesTeamCylinders = () => {
   const [updateSpoiledInput, setUpdateSpoiledInput] = useState({})
 
   const allRequests = useAppSelector(selectAllRequests)
-console.log('all cylinders ', assigned_cylinders)
+  console.log("all cylinders ", assigned_cylinders)
   useEffect(() => {
     dispatch(fetchAssignedProducts())
     dispatch(fetchMyProfile())
@@ -120,14 +120,14 @@ console.log('all cylinders ', assigned_cylinders)
   }
 
   const handleCylinderTransfer = async (cylinderId) => {
-    await dispatch(approveRequest({cylinderId}))
+    await dispatch(approveRequest({ cylinderId }))
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-     <SalesHeader
-       teamName={myProfile?.sales_team?.name}
+      <SalesHeader
+        teamName={myProfile?.sales_team?.name}
         profileImage={myProfile?.profile_image}
         firstName={myProfile?.first_name}
         lastName={myProfile?.last_name}
@@ -169,7 +169,9 @@ console.log('all cylinders ', assigned_cylinders)
             <p className="text-gray-600">Filled: {cylinder.filled}</p>
             <p className="text-gray-600">Empties: {cylinder.empties}</p>
             <p className="text-gray-600">Spoiled: {cylinder.spoiled}</p>
-            <p className="text-gray-600">Transfered: {cylinder.transfered_cylinder}</p>
+            <p className="text-gray-600">
+              Transfered: {cylinder.transfered_cylinder}
+            </p>
             {(() => {
               const requestData = getRequestForCylinder(cylinder.id)
               return requestData ? (
@@ -180,9 +182,10 @@ console.log('all cylinders ', assigned_cylinders)
                       {requestData.quantity}
                     </span>
                   </p>
-                  <button 
-                  onClick={() => handleCylinderTransfer(cylinder.id)}
-                  className="ms-2 bg-green-500 text-white px-1">
+                  <button
+                    onClick={() => handleCylinderTransfer(cylinder.id)}
+                    className="ms-2 bg-green-500 text-white px-1"
+                  >
                     confirm
                   </button>
                   <button
@@ -211,11 +214,9 @@ console.log('all cylinders ', assigned_cylinders)
                     Refill:{" "}
                     <FormattedAmount amount={cylinder.retail_refil_price} />
                   </p>
-                 <p>
-                    Complete:{" "}
-                    <FormattedAmount amount={cylinder.retail_sold} />
+                  <p>
+                    Complete: <FormattedAmount amount={cylinder.retail_sold} />
                   </p>
-                  
                 </div>
               ) : (
                 <div>
@@ -224,17 +225,12 @@ console.log('all cylinders ', assigned_cylinders)
                   </h4>
                   <p>
                     Refill:{" "}
-                    <FormattedAmount
-                      amount={cylinder.wholesale_refil_price}
-                    />
+                    <FormattedAmount amount={cylinder.wholesale_refil_price} />
                   </p>
-                 
-                  
+
                   <p>
                     Complete:{" "}
-                    <FormattedAmount
-                      amount={cylinder.wholesale_sold}
-                    />
+                    <FormattedAmount amount={cylinder.wholesale_sold} />
                   </p>
                 </div>
               )}
@@ -303,11 +299,11 @@ console.log('all cylinders ', assigned_cylinders)
       </div>
 
       {/* Footer */}
-        {/* <Link className="hover:underline" to="/sales">
+      {/* <Link className="hover:underline" to="/sales">
           Home
         </Link> */}
-        {/* <EmployeeFooter /> */}
-        <AdminsFooter />
+      {/* <EmployeeFooter /> */}
+      <AdminsFooter />
     </div>
   )
 }

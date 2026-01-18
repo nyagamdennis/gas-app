@@ -12,8 +12,8 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { fetchDebtors, getDebtorsStatus, selectAllDebtors } from '../features/debtors/debtorsSlice';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { fetchCustomers } from '../features/customers/customerSlice';
 import DebtorsExcerpt from '../features/debtors/DebtorsExcerpt';
+import { fetchCustomers } from '../features/customers/customerSlice';
 
 
 const columns = [

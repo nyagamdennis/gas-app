@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { fetchSalesTeam, selectAllSalesTeam } from '../features/salesTeam/salesTeamSlice'
+import { selectAllSalesTeamShops } from '../features/salesTeam/salesTeamSlice';
 
 const AdminAssignCylinders = () => {
     const dispatch = useAppDispatch();
 
-    const allSalesTeam = useAppSelector(selectAllSalesTeam)
+    const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
 
     // useEffect(() => {
     //     dispatch(fetchSalesTeam())

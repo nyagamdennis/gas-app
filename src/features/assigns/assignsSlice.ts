@@ -27,26 +27,40 @@ const initialState: AssignsState = {
 export const fetchAssignedCylinders = createAsyncThunk(
   "assignedCylinders/fetchAssignedCylinders",
   async (salesTeamId) => {
-    // const response = await axios.get(`${apiUrl}/print-assigned-cylinders/`, {
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //   },
-    //   params: {
-    //     sales_team: salesTeamId,
-    //   },
-    // })
+  
     const response = await api.get("/print-assigned-cylinders/", {params : {sales_team: salesTeamId}})
     return response.data
   },
 )
 
-export const assignCylinders = createAsyncThunk(
-  "assignCylinders/assignCylinders",
+export const assignShopCylinders = createAsyncThunk(
+  "assignShopCylinders/assignShopCylinders",
+  async (payload) => {
+    const response = await api.post("/inventory/transfer/cylinders/", payload)
+    // transfer/cylinders/
+    console.log("Response from assignShopCylinders:", response.data)
+    return response.data
+  },
+)
+
+export const assignShopBulkCylinders = createAsyncThunk(
+  "assignShopBulkCylinders/assignShopBulkCylinders",
+  async (payload) => {
+    const response = await api.post("/inventory/transfer/cylinders/bulk/", payload)
+    // transfer/cylinders/
+    console.log("Response from assignShopBulkCylinders:", response.data)
+    return response.data
+  },
+)
+
+export const assignVehicleCylinders = createAsyncThunk(
+  "assignVehicleCylinders/assignVehicleCylinders",
   async (payload) => {
     const response = await api.post("/assign-cylinders/", payload)
     return response.data
   },
 )
+
 
 export const assignedCylindersUpdate = createAsyncThunk(
   "assignedCylinders/assignedCylindersUpdate",
@@ -64,14 +78,36 @@ const assignsSlice = createSlice({
   extraReducers(builder) {
     builder
 
-      .addCase(assignCylinders.pending, (state, action) => {
+      .addCase(assignShopCylinders.pending, (state, action) => {
         state.status = "loading"
       })
-      .addCase(assignCylinders.fulfilled, (state, action) => {
+      .addCase(assignShopCylinders.fulfilled, (state, action) => {
         state.status = "succeeded"
         // state.assigns.push(action.payload);
       })
-      .addCase(assignCylinders.rejected, (state, action) => {
+      .addCase(assignShopCylinders.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message
+      })
+      .addCase(assignShopBulkCylinders.pending, (state, action) => {
+        state.status = "loading"
+      })
+      .addCase(assignShopBulkCylinders.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        // state.assigns.push(action.payload);
+      })
+      .addCase(assignShopBulkCylinders.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message
+      })
+      .addCase(assignVehicleCylinders.pending, (state, action) => {
+        state.status = "loading"
+      })
+      .addCase(assignVehicleCylinders.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        // state.assigns.push(action.payload);
+      })
+      .addCase(assignVehicleCylinders.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.error.message
       })

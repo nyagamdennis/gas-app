@@ -9,13 +9,13 @@ import AdminNav from "../components/ui/AdminNav"
 import {
   fetchBusiness,
   selectAllBusiness,
-} from "../features/business/businnesSlice"
+} from "../features/company/companySlice"
 import planStatus from "../features/planStatus/planStatus"
 import useMediaQuery from "@mui/material/useMediaQuery"
 import { useTheme } from "@mui/material"
 import Navbar from "../components/ui/mobile/admin/Navbar"
 import DashboardIcon from "@mui/icons-material/Dashboard"
-import TwoWheelerIcon from '@mui/icons-material/TwoWheeler';
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler"
 import GasMeterIcon from "@mui/icons-material/GasMeter"
 import MicrowaveIcon from "@mui/icons-material/Microwave"
 import SensorOccupiedIcon from "@mui/icons-material/SensorOccupied"
@@ -26,19 +26,257 @@ import CreditScoreIcon from "@mui/icons-material/CreditScore"
 import InsightsIcon from "@mui/icons-material/Insights"
 import ConnectWithoutContactIcon from "@mui/icons-material/ConnectWithoutContact"
 import SettingsIcon from "@mui/icons-material/Settings"
+import InventoryIcon from "@mui/icons-material/Inventory"
+import AnalyticsIcon from "@mui/icons-material/Analytics"
+import MessageIcon from "@mui/icons-material/Message"
+import AssignmentIcon from "@mui/icons-material/Assignment"
+import CollectionsIcon from "@mui/icons-material/Collections"
+import StoreIcon from "@mui/icons-material/Store"
+import TrendingUpIcon from "@mui/icons-material/TrendingUp"
+import SmartToyIcon from "@mui/icons-material/SmartToy"
 
 const AdminHome = () => {
   const theme = useTheme()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const allBusiness = useAppSelector(selectAllBusiness)
-  const { isPro, isTrial, isExpired } = planStatus()
+  const { isPro, isTrial, isExpired, businessName } = planStatus()
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
 
   useEffect(() => {
     dispatch(fetchBusiness())
   }, [dispatch])
+
+  const mobileMenuItems = [
+    {
+      to: "/dashboard",
+      icon: DashboardIcon,
+      label: "Dashboard",
+      color: "from-blue-500 to-blue-600",
+      textColor: "text-blue-700",
+      bgColor: "bg-blue-50",
+    },
+    {
+      to: "/thecylinders",
+      icon: GasMeterIcon,
+      label: "Cylinders",
+      color: "from-green-500 to-green-600",
+      textColor: "text-green-700",
+      bgColor: "bg-green-50",
+    },
+    {
+      to: "/store/otherproducts",
+      icon: MicrowaveIcon,
+      label: "Products",
+      color: "from-yellow-500 to-yellow-600",
+      textColor: "text-yellow-700",
+      bgColor: "bg-yellow-50",
+    },
+    {
+      to: "/hr",
+      icon: SensorOccupiedIcon,
+      label: "HR",
+      color: "from-purple-500 to-purple-600",
+      textColor: "text-purple-700",
+      bgColor: "bg-purple-50",
+    },
+    {
+      to: "/createteam",
+      icon: PeopleAltIcon,
+      label: "Teams",
+      color: "from-pink-500 to-pink-600",
+      textColor: "text-pink-700",
+      bgColor: "bg-pink-50",
+    },
+    {
+      to: "/admins/salesdata",
+      icon: BusinessCenterIcon,
+      label: "Sales",
+      color: "from-red-500 to-red-600",
+      textColor: "text-red-700",
+      bgColor: "bg-red-50",
+    },
+    {
+      to: "/admins/customers",
+      icon: Diversity1Icon,
+      label: "Customers",
+      color: "from-teal-500 to-teal-600",
+      textColor: "text-teal-700",
+      bgColor: "bg-teal-50",
+    },
+    {
+      to: "/admin/expenses",
+      icon: CreditScoreIcon,
+      label: "Expenses",
+      color: "from-indigo-500 to-indigo-600",
+      textColor: "text-indigo-700",
+      bgColor: "bg-indigo-50",
+    },
+    {
+      to: "/admins/prediction",
+      icon: SmartToyIcon,
+      label: "AI Tools",
+      color: "from-violet-500 to-violet-600",
+      textColor: "text-violet-700",
+      bgColor: "bg-violet-50",
+    },
+    {
+      to: "/admin/reachout",
+      icon: ConnectWithoutContactIcon,
+      label: "Reach Out",
+      color: "from-cyan-500 to-cyan-600",
+      textColor: "text-cyan-700",
+      bgColor: "bg-cyan-50",
+    },
+    {
+      to: "/admin/deliveries",
+      icon: TwoWheelerIcon,
+      label: "Deliveries",
+      color: "from-emerald-500 to-emerald-600",
+      textColor: "text-emerald-700",
+      bgColor: "bg-emerald-50",
+    },
+    {
+      to: "/admin/settings",
+      icon: SettingsIcon,
+      label: "Settings",
+      color: "from-amber-500 to-amber-600",
+      textColor: "text-amber-700",
+      bgColor: "bg-amber-50",
+    },
+  ]
+
+  const desktopMenuItems = [
+    {
+      to: "/dashboard",
+      icon: DashboardIcon,
+      title: "Dashboard",
+      subtitle: "Overview of your business operations",
+      color: "blue",
+      gradient: "from-blue-500 to-blue-600",
+    },
+    {
+      to: "/thecylinders",
+      icon: GasMeterIcon,
+      title: "Cylinder Management",
+      subtitle: "Manage cylinder inventory and operations",
+      color: "green",
+      gradient: "from-green-500 to-green-600",
+    },
+    {
+      to: "/admins/assign",
+      icon: AssignmentIcon,
+      title: "Assign Cylinders",
+      subtitle: "Efficiently allocate cylinders to sales teams",
+      color: "indigo",
+      gradient: "from-indigo-500 to-indigo-600",
+    },
+    {
+      to: "/admins/collect",
+      icon: CollectionsIcon,
+      title: "Collect Cylinders",
+      subtitle: "Streamline the collection of cylinders",
+      color: "purple",
+      gradient: "from-purple-500 to-purple-600",
+    },
+    {
+      to: "/createteam",
+      icon: PeopleAltIcon,
+      title: "Team Management",
+      subtitle: "Form and manage sales teams",
+      color: "pink",
+      gradient: "from-pink-500 to-pink-600",
+    },
+    {
+      to: "/admins/salesdata",
+      icon: BusinessCenterIcon,
+      title: "Sales Data",
+      subtitle: "Dive into detailed sales analytics",
+      color: "red",
+      gradient: "from-red-500 to-red-600",
+    },
+    {
+      to: "/admins/store",
+      icon: StoreIcon,
+      title: "Store Management",
+      subtitle: "Oversee store inventory and operations",
+      color: "yellow",
+      gradient: "from-yellow-500 to-yellow-600",
+    },
+    {
+      to: "/store/otherproducts",
+      icon: InventoryIcon,
+      title: "Other Products",
+      subtitle: "Manage additional product inventory",
+      color: "orange",
+      gradient: "from-orange-500 to-orange-600",
+    },
+    {
+      to: "/admins/customers",
+      icon: Diversity1Icon,
+      title: "Customer Relations",
+      subtitle: "Handle customer data and interactions",
+      color: "teal",
+      gradient: "from-teal-500 to-teal-600",
+    },
+    {
+      to: "/admin/expenses",
+      icon: CreditScoreIcon,
+      title: "Expense Tracker",
+      subtitle: "Monitor and manage company expenses",
+      color: "cyan",
+      gradient: "from-cyan-500 to-cyan-600",
+    },
+    {
+      to: "/admins/analysis",
+      icon: AnalyticsIcon,
+      title: "Performance Analytics",
+      subtitle: "Evaluate sales and operational performance",
+      color: "emerald",
+      gradient: "from-emerald-500 to-emerald-600",
+    },
+    {
+      to: "/admins/sms",
+      icon: MessageIcon,
+      title: "Messaging Center",
+      subtitle: "Communicate with customers via SMS",
+      color: "violet",
+      gradient: "from-violet-500 to-violet-600",
+    },
+    {
+      to: "/admin/deliveries",
+      icon: TwoWheelerIcon,
+      title: "Delivery Management",
+      subtitle: "Track deliveries and assign delivery personnel",
+      color: "lime",
+      gradient: "from-lime-500 to-lime-600",
+    },
+    {
+      to: "/hr",
+      icon: SensorOccupiedIcon,
+      title: "Human Resources",
+      subtitle: "Organize and manage employee data",
+      color: "fuchsia",
+      gradient: "from-fuchsia-500 to-fuchsia-600",
+    },
+    {
+      to: "/admins/prediction",
+      icon: SmartToyIcon,
+      title: "AI Predictions",
+      subtitle: "Utilize AI for strategic business forecasting",
+      color: "rose",
+      gradient: "from-rose-500 to-rose-600",
+    },
+    {
+      to: "/admin/reachout",
+      icon: ConnectWithoutContactIcon,
+      title: "Customer Outreach",
+      subtitle: "Engage with customers and prospects",
+      color: "sky",
+      gradient: "from-sky-500 to-sky-600",
+    },
+  ]
 
   return (
     <div>
@@ -48,92 +286,58 @@ const AdminHome = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-          <main className="m-2 p-1 grid grid-cols-3 gap-4">
-            <Link
-              to={"/dashboard"}
-              className="bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square"
-            >
-              <DashboardIcon className="text-blue-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-blue-700 text-center">
-                Dashboard
-              </p>
-            </Link>
-            <Link to={"/thecylinders"} className="bg-gradient-to-br from-green-50 to-green-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <GasMeterIcon className="text-green-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-green-700 text-center">
-                Cylinders
-              </p>
-            </Link>
-            <Link to={"/store/otherproducts"} className="bg-gradient-to-br from-yellow-50 to-yellow-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <MicrowaveIcon className="text-yellow-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-yellow-700 text-center">
-                Other Products
-              </p>
-            </Link>
-            <Link to={"/hr"} className="bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <SensorOccupiedIcon
-                className="text-purple-600"
-                fontSize="large"
-              />
-              <p className="mt-2 text-sm font-semibold text-purple-700 text-center">
-                HR
-              </p>
-            </Link>
-            <Link to={"/createteam"} className="bg-gradient-to-br from-pink-50 to-pink-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <PeopleAltIcon className="text-pink-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-pink-700 text-center">
-                Teams
-              </p>
-            </Link>
-            <Link to={"/admins/salesdata"} className="bg-gradient-to-br from-red-50 to-red-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <BusinessCenterIcon className="text-red-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-red-700 text-center">
-                Sales
-              </p>
-            </Link>
-            <Link to={'/admins/customers'} className="bg-gradient-to-br from-teal-50 to-teal-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <Diversity1Icon className="text-teal-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-teal-700 text-center">
-                Customers
-              </p>
-            </Link>
-            <Link to={"/admin/expenses"} className="bg-gradient-to-br from-indigo-50 to-indigo-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <CreditScoreIcon className="text-indigo-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-indigo-700 text-center">
-                Expenses
-              </p>
-            </Link>
-            <Link className="bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <InsightsIcon className="text-gray-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-gray-700 text-center">
-                AI Tools
-              </p>
-            </Link>
-            <Link to={"/admin/reachout"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <ConnectWithoutContactIcon
-                className="text-cyan-600"
-                fontSize="large"
-              />
-              <p className="mt-2 text-sm font-semibold text-cyan-700 text-center">
-                Reach Out
-              </p>
-            </Link>
-            <Link to={"/admin/deliveries"} className="bg-gradient-to-br from-cyan-50 to-cyan-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <TwoWheelerIcon
-                className="text-cyan-600"
-                fontSize="large"
-              />
-              <p className="mt-2 text-sm font-semibold text-cyan-700 text-center">
-                Deliveries
-              </p>
-            </Link>
-            <Link className="bg-gradient-to-br from-amber-50 to-amber-100 flex flex-col items-center justify-center p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow aspect-square">
-              <SettingsIcon className="text-amber-600" fontSize="large" />
-              <p className="mt-2 text-sm font-semibold text-amber-700 text-center">
-                Settings
-              </p>
-            </Link>
+
+          {/* Welcome Section */}
+          <div className="mx-2 mt-2 mb-4 p-4 bg-white rounded-xl shadow-lg">
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">
+              Welcome Back! 👋
+            </h1>
+            <p className="text-sm text-gray-600">
+              {businessName || "Your Business"}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  isPro
+                    ? "bg-green-100 text-green-700"
+                    : isTrial
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {isPro ? "Pro Plan" : isTrial ? "Trial" : "Free Plan"}
+              </span>
+            </div>
+          </div>
+
+          <main className="flex-grow m-2 p-1">
+            <div className="grid grid-cols-3 gap-3">
+              {mobileMenuItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.to}
+                  className={`${item.bgColor} relative overflow-hidden flex flex-col items-center justify-center p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 aspect-square active:scale-95`}
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 hover:opacity-10 transition-opacity duration-200`}
+                  ></div>
+                  <item.icon
+                    className={`${item.textColor} z-10`}
+                    sx={{ fontSize: 36 }}
+                  />
+                  <p
+                    className={`mt-2 text-xs font-semibold ${item.textColor} text-center z-10`}
+                  >
+                    {item.label}
+                  </p>
+                </Link>
+              ))}
+            </div>
           </main>
+
+          <footer className="mt-auto">
+            <AdminsFooter />
+          </footer>
         </div>
       ) : (
         <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
@@ -142,124 +346,75 @@ const AdminHome = () => {
             headerText={"Manage your operations with style and clarity"}
           />
 
-          <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                to: "/admins/assign",
-                title: "Cylinder Assignment",
-                subtitle: "Efficiently allocate cylinders to sales teams.",
-                color: "blue",
-              },
-              {
-                to: "/admins/collect",
-                title: "Cylinder Collection",
-                subtitle: "Streamline the collection of cylinders.",
-                color: "blue",
-              },
-              {
-                to: "/admins/assignothers",
-                title: "Product Allocation",
-                subtitle: "Distribute other products seamlessly.",
-                color: "blue",
-              },
-              {
-                to: "/admin/otherssales",
-                title: "Other Product Sales",
-                subtitle: "Monitor and track sales of additional items.",
-                color: "green",
-              },
-              {
-                to: "/admin/sales",
-                title: "Cylinder Sales Insights",
-                subtitle: "Dive into detailed sales analytics.",
-                color: "green",
-              },
-              {
-                to: "/admins/employees",
-                title: "Employee Management",
-                subtitle: "Organize and manage employee data.",
-                color: "yellow",
-              },
-              {
-                to: "#",
-                title: "Delivery Management",
-                subtitle: "Track deliveries and assign delivery personnel.",
-                color: "yellow", // Blue for logistics/delivery
-              },
-              {
-                to: "#",
-                title: "Order Management",
-                subtitle: "Monitor and manage customer orders efficiently.",
-                color: "yellow", // Yellow is fine for alerts/orders
-              },
-              {
-                to: "/createteam",
-                title: "Team Builder",
-                subtitle: "Form and manage new sales teams.",
-                color: "blue",
-              },
-              {
-                to: "/admins/store",
-                title: "Inventory Hub",
-                subtitle: "Oversee store inventory and operations.",
-                color: "blue",
-              },
-              {
-                to: "/admins/customers",
-                title: "Customer Relations",
-                subtitle: "Handle customer data and interactions.",
-                color: "blue",
-              },
-              {
-                to: "/admins/sms",
-                title: "Messaging Center",
-                subtitle: "Communicate with customers via SMS.",
-                color: "blue",
-              },
-              {
-                to: "/admins/analysis",
-                title: "Performance Analytics",
-                subtitle: "Evaluate sales and operational performance.",
-                color: "blue",
-              },
-              {
-                to: "/admin/expenses",
-                title: "Expense Tracker",
-                subtitle: "Monitor and manage company expenses.",
-                color: "blue",
-              },
-              {
-                to: "/admins/prediction",
-                title: "AI Predictions",
-                subtitle: "Utilize AI for strategic business forecasting.",
-                color: "blue",
-              },
-              {
-                to: "/admins/collectothersproducts",
-                title: "Other Products Collection",
-                subtitle: "Streamline collection of other products.",
-                color: "blue",
-              },
-            ].map(({ to, title, subtitle, color }, index) =>
-              to ? (
-                <Link
-                  to={to}
-                  key={index}
-                  className={`rounded-2xl shadow-xl bg-white hover:bg-${color}-50 border border-${color}-300 text-${color}-600 transition duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center hover:scale-[1.02]`}
+          {/* Welcome Section */}
+          <div className="mx-6 mt-6 mb-4 p-6 bg-white rounded-2xl shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                  Welcome Back! 👋
+                </h1>
+                <p className="text-gray-600">
+                  {businessName || "Your Business"} - Dashboard
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                    isPro
+                      ? "bg-green-100 text-green-700"
+                      : isTrial
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
                 >
-                  <h3 className="text-xl font-semibold">{title}</h3>
-                  <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
-                </Link>
-              ) : (
+                  {isPro
+                    ? "✨ Pro Plan"
+                    : isTrial
+                    ? "🔄 Trial"
+                    : "📦 Free Plan"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <main className="flex-grow p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {desktopMenuItems.map((item, index) => (
+              <Link
+                to={item.to}
+                key={index}
+                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 flex flex-col overflow-hidden hover:scale-105"
+              >
+                {/* Gradient Background */}
                 <div
-                  key={index}
-                  className={`rounded-2xl shadow-xl bg-white hover:bg-${color}-50 border border-${color}-300 text-${color}-600 transition duration-300 ease-in-out p-6 flex flex-col items-center justify-center text-center hover:scale-[1.02]`}
+                  className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                ></div>
+
+                {/* Icon */}
+                <div
+                  className={`relative z-10 w-14 h-14 bg-gradient-to-br ${item.gradient} rounded-xl flex items-center justify-center mb-4 shadow-md`}
                 >
-                  <h3 className="text-xl font-semibold">{title}</h3>
-                  <p className="mt-2 text-sm text-gray-500">{subtitle}</p>
+                  <item.icon className="text-white" sx={{ fontSize: 28 }} />
                 </div>
-              ),
-            )}
+
+                {/* Content */}
+                <div className="relative z-10 flex-grow">
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {item.subtitle}
+                  </p>
+                </div>
+
+                {/* Arrow */}
+                <div className="relative z-10 mt-4 flex items-center text-sm font-semibold text-gray-600 group-hover:text-gray-800 transition-colors">
+                  <span>Learn more</span>
+                  <span className="ml-2 transform group-hover:translate-x-1 transition-transform">
+                    →
+                  </span>
+                </div>
+              </Link>
+            ))}
           </main>
 
           <AdminsFooter />

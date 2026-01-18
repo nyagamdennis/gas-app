@@ -17,6 +17,10 @@ interface CustomersState {
   customers: Customers[]
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
+  nextPage: string | null
+  previousPage: string | null
+  count: number
+  currentPage: number
 }
 
 interface FetchCustomersResponse {
@@ -27,16 +31,27 @@ const initialState: CustomersState = {
   customers: [],
   status: "idle",
   error: null,
+  nextPage: null,
+  previousPage: null,
+  count: 0,
+  currentPage: 1,
 }
 
-export const fetchCustomers = createAsyncThunk<Customers[], void, {}>(
-  "customers/fetchCustomers",
-  async () => {
-    // const response = await axios.get<Customers[]>(CUSTOMERS_URLS);
-    const response = await api.get("/customer/")
-    return response.data // Corrected the return statement
-  },
-)
+
+export const fetchCustomers = createAsyncThunk<
+  any,
+  number | void,
+  { rejectValue: string }
+>("customers/fetchCustomers", async (page = 1, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/customers/?page=${page}`)
+    return response.data
+  } catch (error: any) {
+    return rejectWithValue("Failed to fetch customers.")
+  }
+})
+
+
 
 export const addCustomer = createAsyncThunk<
   any,
@@ -95,25 +110,30 @@ const customersSlice = createSlice({
       .addCase(fetchCustomers.pending, (state) => {
         state.status = "loading"
       })
-      .addCase(fetchCustomers.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.customers = action.payload
-      })
-      .addCase(fetchCustomers.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.error.message || "Failed to fetch customers"
-      })
-      .addCase(addCustomer.pending, (state) => {
-        state.status = "loading"
-      })
-      .addCase(addCustomer.fulfilled, (state, action) => {
-        state.status = "succeeded"
-        state.customers.push(action.payload)
-      })
-      .addCase(addCustomer.rejected, (state, action) => {
-        state.status = "failed"
-        state.error = action.payload as string || "Failed to create customer"
-      })
+     builder
+       .addCase(fetchCustomers.fulfilled, (state, action) => {
+         state.status = "succeeded"
+         state.customers = action.payload.results
+         state.nextPage = action.payload.next
+         state.previousPage = action.payload.previous
+         state.count = action.payload.count
+       })
+
+       .addCase(fetchCustomers.rejected, (state, action) => {
+         state.status = "failed"
+         state.error = action.error.message || "Failed to fetch customers"
+       })
+       .addCase(addCustomer.pending, (state) => {
+         state.status = "loading"
+       })
+       .addCase(addCustomer.fulfilled, (state, action) => {
+         state.status = "succeeded"
+         state.customers.push(action.payload)
+       })
+       .addCase(addCustomer.rejected, (state, action) => {
+         state.status = "failed"
+         state.error = (action.payload as string) || "Failed to create customer"
+       })
   },
 })
 
@@ -123,5 +143,13 @@ export const getCustomersStatus = (state: { customers: CustomersState }) =>
   state.customers.status
 export const getCustomerError = (state: { customers: CustomersState }) =>
   state.customers.error
+
+export const selectPagination = (state: any) => ({
+  next: state.customers.next,
+  previous: state.customers.previous,
+  count: state.customers.count,
+  currentPage: state.customers.currentPage,
+})
+
 
 export default customersSlice.reducer

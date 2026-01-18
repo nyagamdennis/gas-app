@@ -1,12 +1,12 @@
 // @ts-nocheck
 import React, { useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { fetchBusiness, selectAllBusiness } from "../business/businnesSlice"
+import { fetchBusiness, selectAllBusiness } from "../company/companySlice"
 
 const planStatus = () => {
   const biz = useAppSelector(selectAllBusiness)
   const dispatch = useAppDispatch()
-  
+
   const businessName = biz?.name || null
   const businessLogo = biz?.business_logo || null
   const subscription_paid = biz?.subscription_payment || null
@@ -18,12 +18,10 @@ const planStatus = () => {
   const planName = biz?.subscription_plan?.name || null
   const employeeLimit = biz?.subscription_plan?.employee_limit || null
 
+  // useEffect(() => {
+  //   dispatch(fetchBusiness())
+  // }, [dispatch])
 
-  useEffect(() => {
-    dispatch(fetchBusiness())
-  }, [dispatch])
-
-  
   return {
     businessId,
     businessName,

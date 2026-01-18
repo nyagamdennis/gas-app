@@ -37,13 +37,13 @@ const initialState: BusinessState = {
 export const fetchBusiness = createAsyncThunk<Business[], void, {}>(
     "business/fetchBusiness",
     async () => {
-      const response = await api.get('/business/operation/');
+      const response = await api.get('/company/');
       return response.data;
     }
   );
   
 
-const businessSlice = createSlice({
+const companySlice = createSlice({
   name: "business",
   initialState,
   reducers: {},
@@ -70,4 +70,4 @@ export const getBusinessStatus = (state: { business: BusinessState }) =>
 export const getBusinessError = (state: { business: BusinessState }) =>
   state.business.error;
 
-export default businessSlice.reducer;
+export default companySlice.reducer;

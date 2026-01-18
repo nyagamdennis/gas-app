@@ -23,19 +23,19 @@ import DialogTitle from "@mui/material/DialogTitle"
 import useMediaQuery from "@mui/material/useMediaQuery"
 import { useTheme } from "@mui/material/styles"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
-import {
-  addAnotherCylinder,
-  addNewCylinders,
-  deleteCylinder,
-  deleteThisCylinder,
-  fetchStore,
-  getStoreStatus,
-  refillEmpties,
-  selectAllStore,
-  storeRefillCylinders,
-  updateTheCylinder,
-  updateThisCylinder,
-} from "../features/store/storeSlice"
+// import {
+//   addAnotherCylinder,
+//   addNewCylinders,
+//   deleteCylinder,
+//   deleteThisCylinder,
+//   fetchStore,
+//   getStoreStatus,
+//   refillEmpties,
+//   selectAllStore,
+//   storeRefillCylinders,
+//   updateTheCylinder,
+//   updateThisCylinder,
+// } from "../features/store/storeSlice"
 import { TransitionProps } from "@mui/material/transitions"
 import Slide from "@mui/material/Slide"
 import {
@@ -43,10 +43,11 @@ import {
   deleteOtherProduct,
   fetchOtherProducts,
   getOtherProductsError,
-  getOtherProductstatus,
+  getOtherProductsStatus,
+  // getOtherProductstatus,
   selectAllOtherProducts,
   updateOtherProduct,
-} from "../features/store/otherProductsSlice"
+} from "../features/store/productsSlice"
 import FormattedAmount from "../components/FormattedAmount"
 import AddBoxIcon from "@mui/icons-material/AddBox"
 
@@ -71,7 +72,7 @@ const AdminStore = () => {
   const [openSell, setOpenSell] = useState<boolean>(false)
   const [activeForm, setActiveForm] = useState<string>("cylinders")
   const addOtherProductsError = useAppSelector(getOtherProductsError)
-  const otherProductsStatus = useAppSelector(getOtherProductstatus)
+  const otherProductsStatus = useAppSelector(getOtherProductsStatus)
 
   const store = useAppSelector(selectAllStore)
   const otherProducts = useAppSelector(selectAllOtherProducts)

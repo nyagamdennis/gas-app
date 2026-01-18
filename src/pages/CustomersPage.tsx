@@ -1,4 +1,4 @@
-/* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useEffect, useState } from "react"
 import LeftNav from "../components/ui/LeftNav"
 import NavBar from "../components/ui/NavBar"
@@ -11,12 +11,9 @@ import CircularProgress from "@mui/material/CircularProgress"
 import Box from "@mui/material/Box"
 import { Alert } from "@mui/material"
 import {
-  fetchCustomers,
-  getCustomerError,
-  getCustomersStatus,
-  selectAllCustomers,
-} from "../features/customers/customerSlice"
-import { fetchLocations } from "../features/location/locationSlice"
+  fetchLocations,
+  selectAllLocations,
+} from "../features/location/locationSlice"
 import { fetchProducts } from "../features/product/productSlice"
 import { fetchSales } from "../features/sales/salesSlice"
 import CustomerExcerpt from "../features/customers/CustomerExcerpt"
@@ -24,55 +21,81 @@ import ShortCuts from "../components/ShortCuts"
 import AddIcon from "@mui/icons-material/Add"
 import SaveAsIcon from "@mui/icons-material/SaveAs"
 import api from "../../utils/api"
+import {
+  fetchCustomers,
+  getCustomerError,
+  getCustomersStatus,
+  selectAllCustomers,
+  selectPagination,
+} from "../features/customers/customerSlice"
+import {
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  IconButton,
+  Pagination,
+  Chip,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
+  Badge,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Autocomplete,
+} from "@mui/material"
+import {
+  Search,
+  FilterList,
+  PersonAdd,
+  Business,
+  Person,
+  Phone,
+  LocationOn,
+  Refresh,
+  Sort,
+} from "@mui/icons-material"
 
 const CustomersPage = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
-
   const customers = useAppSelector(selectAllCustomers)
   const customerStatus = useAppSelector(getCustomersStatus)
   const customerError = useAppSelector(getCustomerError)
+  const pagination = useAppSelector(selectPagination)
+  const locations = useAppSelector(selectAllLocations)
+
   const [searchInput, setSearchInput] = useState("")
-  const [searchResults, setSearchResults] = useState([])
   const [addRetailCustomer, setAddRetailCustomer] = useState(false)
   const [addWholeSaleCustomer, setAddWholeSaleCustomer] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
   const [showError, setShowError] = useState(false)
-
+  const [activeTab, setActiveTab] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [location, setLocation] = useState("")
-  // const handleSearchInputChange = (event:any) => {
-  //   setSearchInput(event.target.value);
-  // };
+  const [locationId, setLocationId] = useState("")
+  const [filteredType, setFilteredType] = useState("ALL")
+  const [sortBy, setSortBy] = useState("name")
+  const [sortOrder, setSortOrder] = useState("asc")
 
-  const filterCustomers = (searchText: any) => {
-    return customers.filter((customer) => {
-      const nameMatch = customer.name
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-      const phoneMatch = customer?.phone?.toString().includes(searchText)
-      return nameMatch || phoneMatch
-    })
-  }
-
-  const filteredCustomers = filterCustomers(searchInput)
-
-  const handleSHowAddRetailCustomer = () =>
-    setAddRetailCustomer(!addRetailCustomer)
-  const handleSHowAddWholeSaleCustomer = () =>
-    setAddWholeSaleCustomer(!addWholeSaleCustomer)
-
-  const handleSearchInputChange = (event: any) => {
-    const searchText = event.target.value
-    setSearchInput(searchText)
-
-    const filteredCustomers = filterCustomers(searchText)
-    // @ts-ignore
-    setSearchResults(filteredCustomers)
-  }
-
-  // console.log("results ", filteredCustomers)
+  const itemsPerPage = 10
 
   const dispatch = useAppDispatch()
 
@@ -83,41 +106,75 @@ const CustomersPage = () => {
     dispatch(fetchSales())
   }, [dispatch])
 
-  let retail_content
-  let wholesale_content
-  if (customerStatus === "loading") {
-    wholesale_content = <div>loading...</div>
-    retail_content = <div>loading...</div>
-  } else if (customerStatus === "succeeded") {
-    const retail_customers = customers.filter(
-      (retails) => retails.sales === "RETAIL",
-    )
-    const wholesale_customers = customers.filter(
-      (retails) => retails.sales === "WHOLESALE",
-    )
-    // console.log("retails ", retail_customers)
-    // console.log("wholesale ", wholesale_customers)
-    retail_content = retail_customers.map((customer) => (
-      <CustomerExcerpt
-        key={customer.id}
-        customer={customer.id}
-        // @ts-ignore
-        // customer={customer}
-      />
-    ))
-    wholesale_content = wholesale_customers.map((customer) => (
-      <CustomerExcerpt
-        key={customer.id}
-        customer={customer.id}
-        // @ts-ignore
-        // customer={customer}
-      />
-    ))
+  // Filter and sort customers
+  const filterAndSortCustomers = () => {
+    let filtered = customers
+
+    // Filter by search
+    if (searchInput) {
+      filtered = filtered.filter((customer) => {
+        const searchLower = searchInput.toLowerCase()
+        return (
+          customer.name.toLowerCase().includes(searchLower) ||
+          customer.phone?.toString().includes(searchInput) ||
+          customer.sales?.toLowerCase().includes(searchLower)
+        )
+      })
+    }
+
+    // Filter by type
+    if (filteredType !== "ALL") {
+      filtered = filtered.filter((customer) => customer.sales === filteredType)
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue, bValue
+
+      switch (sortBy) {
+        case "name":
+          aValue = a.name.toLowerCase()
+          bValue = b.name.toLowerCase()
+          break
+        case "date":
+          aValue = new Date(a.date_aded)
+          bValue = new Date(b.date_aded)
+          break
+        case "location":
+          aValue = a.location
+          bValue = b.location
+          break
+        default:
+          aValue = a.name.toLowerCase()
+          bValue = b.name.toLowerCase()
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+
+    return filtered
   }
 
-  const handleRetailSubmit = async (e: any) => {
-    e.preventDefault()
+  const filteredCustomers = filterAndSortCustomers()
 
+  // Paginate customers
+  const paginatedCustomers = filteredCustomers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  )
+
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage)
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value)
+  }
+
+  const handleRetailSubmit = async (e) => {
+    e.preventDefault()
     setIsSubmitting(true)
 
     try {
@@ -125,320 +182,417 @@ const CustomersPage = () => {
         sales: "RETAIL",
         name: name,
         phone: phone,
-        location: { name: location },
+        location: locationId,
       }
-      console.log("Save this data ", formData)
-      // const response = await axios.post(
-      //   `${apiUrl}/addcustomer/`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //   },
-      // )
+
       const response = await api.post("/addcustomer/", formData)
 
-      console.log("Made a request already!")
       if (response.status === 201) {
         dispatch(fetchCustomers())
         setShowAlert(true)
+        setName("")
+        setPhone("")
+        setLocationId("")
         setTimeout(() => {
           setShowAlert(false)
-        }, 5000)
-      } else {
-        console.log("Error here!")
-        if (response.status === 400) {
-          console.error("Bad Request: The submitted data is invalid")
-        } else if (response.status === 401) {
-          console.error("Unauthorized: User is not authenticated")
-        } else {
-          console.error("Form submission failed with status:", response.status)
-        }
+          setAddRetailCustomer(false)
+        }, 3000)
       }
-    } catch (error: any) {
-      if (error.response.status === 401) {
-        console.error("Error occurred while submitting the form:", error)
-        setShowError(true)
-        setTimeout(() => {
-          setShowError(false)
-        }, 5000)
-      } else {
-        console.error("Error occurred while submitting the form:", error)
-      }
+    } catch (error) {
+      console.error("Error adding customer:", error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 5000)
     } finally {
-      setName("")
-      setPhone("")
-      setLocation("")
       setIsSubmitting(false)
-      setTimeout(() => {
-        setAddRetailCustomer(false)
-      }, 6000)
     }
   }
-  const handleWholeSaleSubmit = async (e: any) => {
-    e.preventDefault()
 
+  const handleWholeSaleSubmit = async (e) => {
+    e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      // Create an object with the form data
       const formData = {
         sales: "WHOLESALE",
         name: name,
         phone: phone,
-        location: { name: location },
+        location: locationId,
       }
-      // const response = await axios.post(
-      //   `${apiUrl}/addcustomer/`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //   },
-      // )
-      const response = await api.post("addcustomer/", formData)
+
+      const response = await api.post("/addcustomer/", formData)
 
       if (response.status === 201) {
         dispatch(fetchCustomers())
         setShowAlert(true)
-        setTimeout(() => {
-          setShowAlert(false)
-        }, 5000)
         setName("")
         setPhone("")
-        setLocation("")
-      } else {
-        // Handle specific error status codes
-        if (response.status === 400) {
-          console.error("Bad Request: The submitted data is invalid")
-        } else if (response.status === 401) {
-          console.error("Unauthorized: User is not authenticated")
-        } else {
-          console.error("Form submission failed with status:", response.status)
-        }
-      }
-    } catch (error: any) {
-      if (error.response === 401) {
-        console.error("Error occurred while submitting the form:", error)
-        setShowError(true)
+        setLocationId("")
         setTimeout(() => {
-          setShowError(false)
-        }, 5000)
-      } else {
-        console.error("Error occurred while submitting the form:", error)
+          setShowAlert(false)
+          setAddWholeSaleCustomer(false)
+        }, 3000)
       }
+    } catch (error) {
+      console.error("Error adding customer:", error)
+      setShowError(true)
+      setTimeout(() => setShowError(false), 5000)
     } finally {
       setIsSubmitting(false)
-      setTimeout(() => {
-        setAddWholeSaleCustomer(false)
-      }, 6000)
     }
   }
 
+  const getCustomerCountByType = (type) => {
+    return customers.filter((customer) => customer.sales === type).length
+  }
+
+  if (!isAuthenticated) {
+    return <Login />
+  }
+
   return (
-    <div>
-      {isAuthenticated ? (
-        <div className="flex gap-1 bg-slate-900 text-white">
-          <div className=" w-1/6">
-            <LeftNav />
-          </div>
-          <div className=" w-full">
-            <NavBar />
-            <div>
-              <ShortCuts />
-              <div className="mt-5 mx-3 flex flex-col space-y-3">
-                <h1 className=" font-extrabold text-2xl">Customers</h1>
-                <div className=" grid grid-cols-2 gap-4 h-96">
-                  <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-                    <h4 className=" text-xl font-bold underline mb-3">
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "grey.50" }}>
+      <LeftNav />
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <NavBar />
+        <ShortCuts />
+        <Container maxWidth="xl" sx={{ py: 3, flex: 1 }}>
+          {/* Header */}
+          <Box sx={{ mb: 4 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={6}>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  Customers Management
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Manage your retail and wholesale customers
+                </Typography>
+              </Grid>
+              <Grid item xs={12} md={6} sx={{ textAlign: { md: "right" } }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    justifyContent: { xs: "flex-start", md: "flex-end" },
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    startIcon={<PersonAdd />}
+                    onClick={() => setAddRetailCustomer(true)}
+                  >
+                    Add Retail
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Business />}
+                    onClick={() => setAddWholeSaleCustomer(true)}
+                  >
+                    Add Wholesale
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+
+            {/* Stats Cards */}
+            <Grid container spacing={2} sx={{ mt: 3 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h4" color="primary">
+                      {customers.length}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Customers
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h4" color="secondary">
+                      {getCustomerCountByType("RETAIL")}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
                       Retail Customers
-                    </h4>
-                    <div className=" flex justify-between">
-                      <form onSubmit={handleSearchInputChange}>
-                        <div className=" flex">
-                          <input
-                            type="text"
-                            placeholder="search customer.."
-                            className="ms-1 mb-2 outline-none text-black px-1"
-                            required
-                          />
-                          <button className=" bg-slate-400 px-2 h-6 ">
-                            search
-                          </button>
-                        </div>
-                      </form>
-                      <div
-                        className="flex items-center cursor-pointer"
-                        onClick={handleSHowAddRetailCustomer}
-                      >
-                        <p>Add Retail Customer</p>
-                        <AddIcon className=" " />
-                      </div>
-                    </div>
-                    {addRetailCustomer && (
-                      <div>
-                        <form
-                          className=" flex gap-2 px-1 mb-2 flex-wrap"
-                          onSubmit={handleRetailSubmit}
-                        >
-                          <input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Customer Name"
-                            type="text"
-                            className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
-                            required
-                          />
-                          <input
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="Phone Number"
-                            type="number"
-                            className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
-                            required
-                          />
-                          <input
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Location"
-                            type="text"
-                            className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
-                            required
-                          />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h4" color="success">
+                      {getCustomerCountByType("WHOLESALE")}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Wholesale Customers
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h4" color="warning">
+                      {pagination?.total_pages || 1}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Pages
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </Box>
 
-                          <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
-                            {isSubmitting ? (
-                              <Box sx={{ display: "flex" }}>
-                                <CircularProgress className=" !text-white" />
-                              </Box>
-                            ) : (
-                              <>
-                                Add <SaveAsIcon />
-                              </>
-                            )}
-                          </button>
-                        </form>
-                        {showAlert && (
-                          <Alert severity="success" className=" mb-2">
-                            Successfully Added the Customer!
-                          </Alert>
-                        )}
-                        {showError && (
-                          <Alert severity="error" className=" mb-2">
-                            There was an error, try again!
-                          </Alert>
-                        )}
-                      </div>
-                    )}
+          {/* Search and Filter Bar */}
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  placeholder="Search customers by name, phone, or type..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Filter by Type</InputLabel>
+                  <Select
+                    value={filteredType}
+                    label="Filter by Type"
+                    onChange={(e) => setFilteredType(e.target.value)}
+                  >
+                    <MenuItem value="ALL">All Types</MenuItem>
+                    <MenuItem value="RETAIL">Retail</MenuItem>
+                    <MenuItem value="WHOLESALE">Wholesale</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Sort By</InputLabel>
+                  <Select
+                    value={sortBy}
+                    label="Sort By"
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <MenuItem value="name">Name</MenuItem>
+                    <MenuItem value="date">Date Added</MenuItem>
+                    <MenuItem value="location">Location</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </Paper>
 
-                    {retail_content}
-                  </div>
-                  <div className=" bg-gray-500 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-200">
-                    <h4 className=" text-xl font-bold underline mb-3">
-                      WholeSale Customers
-                    </h4>
+          {/* Customers List */}
+          <Paper sx={{ mb: 3 }}>
+            <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+              <Typography variant="h6">
+                Customers ({filteredCustomers.length})
+              </Typography>
+            </Box>
 
-                    {/* <div className=" flex">
-              <input
-                type="text"
-                placeholder="search customer.."
-                className="ms-1 mb-2 outline-none text-black px-1"
+            {customerStatus === "loading" ? (
+              <Box sx={{ p: 4, textAlign: "center" }}>
+                <CircularProgress />
+              </Box>
+            ) : customerStatus === "failed" ? (
+              <Box sx={{ p: 4, textAlign: "center" }}>
+                <Alert severity="error">
+                  Error loading customers: {customerError}
+                </Alert>
+              </Box>
+            ) : (
+              <>
+                <List sx={{ p: 0 }}>
+                  {paginatedCustomers.length > 0 ? (
+                    paginatedCustomers.map((customer) => (
+                      <React.Fragment key={customer.id}>
+                        <CustomerExcerpt customer={customer} />
+                        <Divider />
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <Box sx={{ p: 4, textAlign: "center" }}>
+                      <Typography color="text.secondary">
+                        No customers found. Try adjusting your search or add a
+                        new customer.
+                      </Typography>
+                    </Box>
+                  )}
+                </List>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <Box sx={{ p: 2, display: "flex", justifyContent: "center" }}>
+                    <Pagination
+                      count={totalPages}
+                      page={currentPage}
+                      onChange={handlePageChange}
+                      color="primary"
+                      showFirstButton
+                      showLastButton
+                    />
+                  </Box>
+                )}
+              </>
+            )}
+          </Paper>
+        </Container>
+      </Box>
+
+      {/* Add Retail Customer Dialog */}
+      <Dialog
+        open={addRetailCustomer}
+        onClose={() => setAddRetailCustomer(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Retail Customer</DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleRetailSubmit}>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Customer Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                margin="normal"
+                required
               />
-              <button className=" bg-slate-400 px-2 h-6 ">search</button>
-            </div> */}
-                    <div className=" flex justify-between">
-                      <form onSubmit={handleSearchInputChange}>
-                        <div className=" flex">
-                          <input
-                            type="text"
-                            placeholder="search customer.."
-                            className="ms-1 mb-2 outline-none text-black px-1"
-                            required
-                          />
-                          <button className=" bg-slate-400 px-2 h-6 ">
-                            search
-                          </button>
-                        </div>
-                      </form>
-                      <div
-                        className="flex items-center cursor-pointer"
-                        onClick={handleSHowAddWholeSaleCustomer}
-                      >
-                        <p>Add a Wholesale Customer</p>
-                        <AddIcon className=" " />
-                      </div>
-                    </div>
-                    {addWholeSaleCustomer && (
-                      <div>
-                        <form
-                          className=" flex gap-2 px-1 mb-2 flex-wrap"
-                          onSubmit={handleWholeSaleSubmit}
-                        >
-                          <input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Customer Name"
-                            type="text"
-                            className=" outline-none px-2 text-gray-600 rounded-sm py-0.5"
-                            required
-                          />
-                          <input
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="Phone Number"
-                            type="number"
-                            className=" outline-none px-2 rounded-sm text-gray-600 py-0.5"
-                            required
-                          />
-                          <input
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="Location"
-                            type="text"
-                            className=" outline-none rounded-sm px-2 text-gray-600 py-0.5"
-                            required
-                          />
-                          <button className=" bg-blue-500 py-1 px-2 flex items-center rounded-md">
-                            {isSubmitting ? (
-                              <Box sx={{ display: "flex" }}>
-                                <CircularProgress className=" !text-white" />
-                              </Box>
-                            ) : (
-                              <>
-                                Add <SaveAsIcon />
-                              </>
-                            )}
-                          </button>
-                        </form>
-                        {showAlert && (
-                          <Alert severity="success" className=" mb-2">
-                            Successfully Added the Customer!
-                          </Alert>
-                        )}
-                        {showError && (
-                          <Alert severity="error" className=" mb-2">
-                            There was an error, try again!
-                          </Alert>
-                        )}
-                      </div>
-                    )}
-                    {wholesale_content}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <Login />
-        </div>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                margin="normal"
+                required
+                type="tel"
+              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Location</InputLabel>
+                <Select
+                  value={locationId}
+                  label="Location"
+                  onChange={(e) => setLocationId(e.target.value)}
+                  required
+                >
+                  {locations.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddRetailCustomer(false)}>Cancel</Button>
+          <Button
+            onClick={handleRetailSubmit}
+            variant="contained"
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? <CircularProgress size={20} /> : <SaveAsIcon />
+            }
+          >
+            {isSubmitting ? "Adding..." : "Add Customer"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Add Wholesale Customer Dialog */}
+      <Dialog
+        open={addWholeSaleCustomer}
+        onClose={() => setAddWholeSaleCustomer(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Wholesale Customer</DialogTitle>
+        <DialogContent>
+          <form onSubmit={handleWholeSaleSubmit}>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Company/Organization Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                margin="normal"
+                required
+              />
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                margin="normal"
+                required
+                type="tel"
+              />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Location</InputLabel>
+                <Select
+                  value={locationId}
+                  label="Location"
+                  onChange={(e) => setLocationId(e.target.value)}
+                  required
+                >
+                  {locations.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddWholeSaleCustomer(false)}>Cancel</Button>
+          <Button
+            onClick={handleWholeSaleSubmit}
+            variant="contained"
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? <CircularProgress size={20} /> : <SaveAsIcon />
+            }
+          >
+            {isSubmitting ? "Adding..." : "Add Customer"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Alerts */}
+      {showAlert && (
+        <Alert
+          severity="success"
+          sx={{ position: "fixed", bottom: 20, right: 20, zIndex: 1000 }}
+        >
+          Customer added successfully!
+        </Alert>
       )}
-    </div>
+      {showError && (
+        <Alert
+          severity="error"
+          sx={{ position: "fixed", bottom: 20, right: 20, zIndex: 1000 }}
+        >
+          There was an error adding the customer. Please try again.
+        </Alert>
+      )}
+    </Box>
   )
 }
 

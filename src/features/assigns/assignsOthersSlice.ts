@@ -42,7 +42,8 @@ export const assignOthers = createAsyncThunk(
     'assignOthers/assignOthers',
     async (payload) => {
       
-      const response = await api.post("assign-others/", payload)
+      const response = await api.post("inventory/transfer/products/", payload)
+      console.log("respinse is ", response.data)
       return response.data;
     }
   );

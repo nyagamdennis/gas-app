@@ -13,15 +13,19 @@ import planStatus from "../features/planStatus/planStatus"
 
 const RightNav = ({ isOpen, onClose }) => {
   const dispatch = useAppDispatch()
-  const {
-    isExpired,
-    businessName,
-    businessLogo,
-    subscriptionPlan,
-    isTrial,
+  
+  
+  const {  isExpired, businessId, businessName,businessLogo, subscriptionPlan } = useAppSelector(
+    (state) =>
+      state.planStatus || {
+        isExpired: false,
+        businessName: null,
+        businessId: null,
+        businessLogo: null,
+        subscriptionPlan: null,
+      },
+  )
 
-    planName
-  } = planStatus()
 
   const handleLogOut = () => {
     dispatch(logout())
@@ -56,9 +60,9 @@ const RightNav = ({ isOpen, onClose }) => {
               <h2 className="text-lg font-semibold text-gray-800">
               {businessName}
             </h2>
-            <p className="text-sm text-gray-500">
-              {isTrial ? "Trial" : subscriptionPlan} Plan({planName})
-            </p>
+            {/* <p className="text-sm text-gray-500">
+              {isTrial ? "Trial" : subscriptionPlan}
+            </p> */}
             {/* <h2 className="text-lg font-semibold">{businessName}</h2> */}
             </div>
             

@@ -5,7 +5,7 @@ import { ToastContainer } from "react-toastify"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 
-const OtherSales = () => {
+const ProductSales = () => {
   const theme = useTheme()
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
@@ -33,4 +33,4 @@ const OtherSales = () => {
   )
 }
 
-export default OtherSales
+export default ProductSales

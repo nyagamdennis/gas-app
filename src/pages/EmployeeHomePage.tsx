@@ -29,15 +29,15 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 const EmployeeHomePage = () => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const myProfile = useAppSelector(selectMyProfile)
+  // const myProfile = useAppSelector(selectMyProfile)
 
   const theme = useTheme()
     const matches = useMediaQuery("(min-width:600px)")
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
 
-  useEffect(() => {
-    dispatch(fetchMyProfile())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(fetchMyProfile())
+  // }, [dispatch])
 
   const handleLogOut = () => {
     dispatch(logout())

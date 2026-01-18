@@ -2,22 +2,20 @@
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useNavigate, useParams } from "react-router-dom"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
+
 import { fetchStore, selectAllStore } from "../features/store/storeSlice"
 import {
   assignedCylindersUpdate,
   fetchAssignedCylinders,
   selectAllAssigns,
 } from "../features/assigns/assignsSlice"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../features/salesTeam/salesTeamSlice"
 
 const EditAssignedCylinders = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const salesTeamId = useParams()
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
+  const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const store = useAppSelector(selectAllStore)
   const cylinders = useAppSelector(selectAllAssigns)
   console.log('assigned ', cylinders)
@@ -33,7 +31,7 @@ console.log('assigned data ', assignments)
   //  console.log('team id ', salesTeam)
   const [salesTeamName, setSalesTeamName] = useState(salesTeam?.name)
   useEffect(() => {
-    dispatch(fetchSalesTeam())
+    dispatch(fetchSalesTeamShops())
     dispatch(fetchStore())
     dispatch(fetchAssignedCylinders(salesTeamId?.id))
   }, [dispatch])

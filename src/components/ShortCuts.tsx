@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
 import HailIcon from "@mui/icons-material/Hail"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
-import { fetchCustomers, selectAllCustomers } from "../features/customers/customerSlice"
 import { fetchDebtors, selectAllDebtors } from "../features/debtors/debtorsSlice"
 import { useEffect } from "react"
 import { Link } from "react-router-dom"
+import { fetchCustomers, selectAllCustomers } from "../features/customers/customerSlice"
 
 const ShortCuts = () => {
   const customers = useAppSelector(selectAllCustomers)

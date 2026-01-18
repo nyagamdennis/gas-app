@@ -10,10 +10,10 @@ import Person2Icon from '@mui/icons-material/Person2';
 const UnverifiedPage = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const myProfile = useAppSelector(selectMyProfile);
+    // const myProfile = useAppSelector(selectMyProfile);
     const [errMsg, setErrMsg] = useState("");
 
-    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    // const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
    
     return (

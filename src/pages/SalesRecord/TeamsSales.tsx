@@ -8,10 +8,7 @@ import {
   selectAllAdminSalesTeamData,
   toggleVerification,
 } from "../../features/salesTeam/adminSalesTeamDataSlice"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../../features/salesTeam/salesTeamSlice"
+
 import {
   fetchEmployees,
   selectAllEmployees,
@@ -33,6 +30,7 @@ import { useParams } from "react-router-dom"
 import FormattedAmount from "../../components/FormattedAmount"
 import { toast, ToastContainer } from "react-toastify"
 import { set } from "cookies"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../../features/salesTeam/salesTeamSlice"
 
 const TeamsSales = () => {
   const theme = useTheme()
@@ -44,7 +42,7 @@ const TeamsSales = () => {
   const expense = useAppSelector(selectAllTeamExpenses)
   const employees = useAppSelector(selectAllEmployees)
   const allCash_sales = useAppSelector(selectAllCash)
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
+  const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const [cashAtHand, setCashAtHand] = useState<number>(0)
   const [filteredSales, setFilteredSales] = useState([])
   const [selectedTeam, setSelectedTeam] = useState("all")
@@ -90,7 +88,7 @@ const TeamsSales = () => {
 
   useEffect(() => {
     if (businessId) {
-      dispatch(fetchSalesTeam({ businessId }))
+      dispatch(fetchSalesTeamShops())
       dispatch(fetchEmployees({ businessId }))
       
     }

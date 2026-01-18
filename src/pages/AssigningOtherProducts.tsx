@@ -2,10 +2,7 @@
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useNavigate } from "react-router-dom"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../features/salesTeam/salesTeamSlice"
 import { fetchStore, selectAllStore } from "../features/store/storeSlice"
 import { assignCylinders } from "../features/assigns/assignsSlice"
 import {
@@ -15,7 +12,7 @@ import {
 import {
   fetchOtherProducts,
   selectAllOtherProducts,
-} from "../features/store/otherProductsSlice"
+} from "../features/store/productsSlice"
 import { assignOthers } from "../features/assigns/assignsOthersSlice"
 import FormattedAmount from "../components/FormattedAmount"
 import planStatus from "../features/planStatus/planStatus"
@@ -37,7 +34,7 @@ const AssigningOtherProducts = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
+  const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const products = useAppSelector(selectAllOtherProducts)
 
   const [selectedTeam, setSelectedTeam] = useState(null)
@@ -45,7 +42,7 @@ const AssigningOtherProducts = () => {
   const [loadingAssign, setLoadingAssign] = useState(false)
 
   useEffect(() => {
-    dispatch(fetchSalesTeam({ businessId }))
+    dispatch(fetchSalesTeamShops())
     dispatch(fetchOtherProducts({ businessId }))
   }, [dispatch])
 
@@ -86,7 +83,6 @@ const AssigningOtherProducts = () => {
       .finally(() => setLoadingAssign(false))
   }
 
-  
   return (
     <>
       <AdminNav

@@ -24,6 +24,9 @@ interface AuthState {
   isLoading: boolean
   error: string | null
   isAuthenticated: boolean
+  // 🔥 NEW: Add status tracking
+  loginStatus: "idle" | "loading" | "success" | "failure"
+  loginError: string | null
 }
 
 interface LoginPayload {
@@ -57,11 +60,13 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   isAuthenticated: !!accessToken,
+  // 🔥 NEW: Initialize status
+  loginStatus: "idle",
+  loginError: null,
 }
 
-
 import { createSelector } from "@reduxjs/toolkit"
-import { RootState } from "../../app/store" // adjust path as needed
+import { RootState } from "../../app/store"
 import {
   fetchEmployeeVerificationStatus,
   selectEmployeeVerified,
@@ -79,10 +84,8 @@ export const refreshAccessTokenIfExpired =
       const decoded: any = jwt_decode(accessToken)
       const now = Date.now() / 1000
 
-      // If token is about to expire in next 2 minutes
       if (decoded.exp - now < 120) {
         await dispatch(refreshAccessToken())
-      } else {
       }
     } catch (err) {
       dispatch(logout())
@@ -96,6 +99,9 @@ export const authSlice = createSlice({
     loginStart: (state) => {
       state.isLoading = true
       state.error = null
+      // 🔥 NEW: Set status to loading
+      state.loginStatus = "loading"
+      state.loginError = null
     },
     loginSuccess: (state, action: PayloadAction<LoginPayload>) => {
       const timers = 60 * 86400
@@ -106,19 +112,35 @@ export const authSlice = createSlice({
       state.isLoading = false
       state.error = null
       state.isAuthenticated = true
+      // 🔥 NEW: Set status to success
+      state.loginStatus = "success"
+      state.loginError = null
+
       cookies.set("refreshToken", refreshToken, { expires: timers })
       cookies.set("user", JSON.stringify(user), { expires: timers })
       cookies.set("accessToken", accessToken, { expires: timers })
     },
-    loginFailure: (state, action) => {
+    loginFailure: (state, action: PayloadAction<string>) => {
       state.isLoading = false
       state.error = action.payload
+      // 🔥 NEW: Set status to failure
+      state.loginStatus = "failure"
+      state.loginError = action.payload
       console.log("Login failure ", action.payload)
+    },
+    // 🔥 NEW: Reset login status (useful after showing error)
+    resetLoginStatus: (state) => {
+      state.loginStatus = "idle"
+      state.loginError = null
     },
     logoutSuccess: (state) => {
       state.user = null
       state.accessToken = null
       state.isAuthenticated = false
+      // 🔥 NEW: Reset status on logout
+      state.loginStatus = "idle"
+      state.loginError = null
+
       cookies.expire("user")
       cookies.expire("accessToken")
       cookies.expire("refreshToken")
@@ -126,49 +148,56 @@ export const authSlice = createSlice({
   },
 })
 
-export const { loginStart, loginFailure, loginSuccess, logoutSuccess } =
-  authSlice.actions
+export const {
+  loginStart,
+  loginFailure,
+  loginSuccess,
+  logoutSuccess,
+  resetLoginStatus, // 🔥 NEW: Export reset action
+} = authSlice.actions
 
 export const login = (credentials: any) => async (dispatch: any) => {
   try {
     dispatch(loginStart())
-    // const response = await axios.post(`${apiUrl}/users/token/`, credentials)
-    const response = await api.post("users/token/", credentials)
+    const response = await api.post("auth/login/", credentials)
     const accessToken = response.data.access
     const refreshToken = response.data.refresh
     const decodedToken: any = jwt_decode(accessToken)
-    // const user = decodedToken;
 
     const user: User = {
       email: decodedToken.email,
       first_name: decodedToken.first_name,
       last_name: decodedToken.last_name,
       phone_number: decodedToken.phone_number,
-      role: decodedToken.role, // Extract role
+      role: decodedToken.role,
       is_owner: decodedToken.is_owner,
       is_employee: decodedToken.is_employee,
       business: decodedToken.business,
       employee_id: decodedToken.employee_id,
     }
 
-    
-
     dispatch(loginSuccess({ user, accessToken, refreshToken }))
-
-    
-   
 
     const timer = 240
     const intervalId = setInterval(() => {
       dispatch(refreshAccessToken())
     }, timer * 1000)
     dispatch({ type: "SET_INTERVAL_ID", payload: intervalId })
-    // new change=> return the response data here // return a promise so as it can be waited in the component
-    return response.data
+
+    // 🔥 NEW: Return both data and user info for redirect
+    return {
+      success: true,
+      data: response.data,
+      user,
+    }
   } catch (error: any) {
     const message = error.response?.data?.detail || "An unknown error occurred."
     dispatch(loginFailure(message))
-    throw error // re-throw the error
+    // 🔥 NEW: Return error info
+    return {
+      success: false,
+      error: message,
+    }
   }
 }
 
@@ -181,10 +210,9 @@ export const refreshAccessToken =
     try {
       const newrefreshToken = cookies.get("refreshToken")
 
-      // const response = await axios.post(`${apiUrl}/users/token/refresh/`, {
-      //   refresh: newrefreshToken,
-      // })
-      const response = await api.post("users/token/refresh/", {refresh: newrefreshToken})
+      const response = await api.post("/auth/token/refresh/", {
+        refresh: newrefreshToken,
+      })
       const accessToken = response.data.access
       const refreshToken = response.data.refresh
       const decodedToken = jwt_decode(accessToken)
@@ -192,23 +220,11 @@ export const refreshAccessToken =
 
       dispatch(loginSuccess({ user, accessToken, refreshToken }))
     } catch (error) {
-      
       dispatch(logout())
     }
   }
 
-// export const selectDecodedUserFromToken = (state: { auth: AuthState }) => {
-//   const token = state.auth.accessToken
-//   if (!token) return null
-
-//   try {
-//     return jwt_decode(token) as User
-//   } catch (error) {
-//     return null
-//   }
-// }
 const selectAccessToken = (state: { auth: AuthState }) => state.auth.accessToken
-
 
 export const selectDecodedUserFromToken = createSelector(
   [selectAccessToken],
@@ -220,10 +236,9 @@ export const selectDecodedUserFromToken = createSelector(
     } catch {
       return null
     }
-  }
+  },
 )
 
-// Memoized selector for user data
 export const selectUserData = createSelector(
   (state: RootState) => state.auth.user,
   (user) => (user ? { ...user, employee_id: user.employee_id } : null),
@@ -234,11 +249,13 @@ export const selectUserRole = (state: { auth: AuthState }) =>
 
 export const userOwner = (state: { auth: AuthState }) =>
   state.auth.user?.is_owner
+
+export const userDataType = (state: { auth: AuthState }) => state.auth.user
+
 export const userEmployee = (state: { auth: AuthState }) =>
   state.auth.user?.is_employee
 
-export const exportedUserData = (state: { auth: AuthState }) =>
-  state.auth.user;
+export const exportedUserData = (state: { auth: AuthState }) => state.auth.user
 
 export const selectUserStatus = createSelector(
   (state: RootState) => state.auth.user,
@@ -264,7 +281,21 @@ export const selectAuthLoading = (state: { auth: AuthState }) =>
   state.auth.isLoading
 
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error
-// Export the user data for external use
 
+// 🔥 NEW: Selectors for login status
+export const selectLoginStatus = (state: { auth: AuthState }) =>
+  state.auth.loginStatus
+
+export const selectLoginError = (state: { auth: AuthState }) =>
+  state.auth.loginError
+
+export const selectIsLoginLoading = (state: { auth: AuthState }) =>
+  state.auth.loginStatus === "loading"
+
+export const selectIsLoginSuccess = (state: { auth: AuthState }) =>
+  state.auth.loginStatus === "success"
+
+export const selectIsLoginFailure = (state: { auth: AuthState }) =>
+  state.auth.loginStatus === "failure"
 
 export default authSlice.reducer

@@ -18,10 +18,7 @@ import {
   toggleVerification,
 } from "../features/salesTeam/adminSalesTeamDataSlice"
 import AdminsFooter from "../components/AdminsFooter"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../features/salesTeam/salesTeamSlice"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../features/salesTeam/salesTeamSlice"
 import {
   fetchTeamExpenses,
   selectAllTeamExpenses,
@@ -49,7 +46,7 @@ const AdminSalesRecord = () => {
   const expense = useAppSelector(selectAllTeamExpenses)
   const employees = useAppSelector(selectAllEmployees)
   const allCash = useAppSelector(selectAllCash)
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
+  const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const [cashAtHand, setCashAtHand] = useState<number>(0)
   const [filteredSales, setFilteredSales] = useState([])
   const [selectedTeam, setSelectedTeam] = useState("all")
@@ -88,7 +85,7 @@ const AdminSalesRecord = () => {
   useEffect(() => {
     if (businessId) {
       dispatch(fetchAdminSalesTeamData())
-      dispatch(fetchSalesTeam({ businessId }))
+      dispatch(fetchSalesTeamShops())
       dispatch(fetchEmployees({ businessId }))
       dispatch(fetchCash())
     }

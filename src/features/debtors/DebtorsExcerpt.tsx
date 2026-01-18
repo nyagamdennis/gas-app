@@ -4,8 +4,8 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import CurrencyConvert from '../../components/CurrencyConvert';
 import { useAppSelector } from '../../app/hooks';
-import { selectAllCustomers } from '../customers/customerSlice';
 import { selectAllEmployees } from '../employees/employeesSlice';
+import { selectAllCustomers } from '../customers/customerSlice';
 
 // @ts-ignore
 const DebtorsExcerpt = ({ debtor, onClearClick, onCloseClick }) => {

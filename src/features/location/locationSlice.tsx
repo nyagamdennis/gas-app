@@ -29,7 +29,7 @@ export const fetchLocations = createAsyncThunk<Locations[], void, {}>(
     "customers/fetchLocations",
     async () => {
      
-      const response = await api.get("/locations/")
+      const response = await api.get("/location/locations/")
       return response.data; // Corrected the return statement
     }
   );

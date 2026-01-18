@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { useNavigate } from 'react-router-dom';
-import { fetchSalesTeam, selectAllSalesTeam } from '../features/salesTeam/salesTeamSlice';
 import { fetchStore, selectAllStore } from '../features/store/storeSlice';
 
 import { addRequest, approveRequest, clearRequested, fetchRequests, selectAllRequests } from '../features/RequestCylinders/requestedSlice';
@@ -12,12 +11,13 @@ import jwt_decode from "jwt-decode"
 import { fetchMyProfile, selectMyProfile } from '../features/employees/myProfileSlice';
 import EmployeeNav from '../components/ui/EmployeeNav';
 import api from "../../utils/api"
+import { fetchSalesTeamShops, selectAllSalesTeamShops } from '../features/salesTeam/salesTeamSlice';
 
 const CylinderRequest = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    const allSalesTeam = useAppSelector(selectAllSalesTeam);
+    const allSalesTeam = useAppSelector(selectAllSalesTeamShops);
     const allRequests = useAppSelector(selectAllRequests);
     const myProfile = useAppSelector(selectMyProfile)
     const store = useAppSelector(selectAllStore);
@@ -31,7 +31,7 @@ const CylinderRequest = () => {
     const businessId = myProfile.business
     
     useEffect((salesTeamId) => {
-        dispatch(fetchSalesTeam({businessId}));
+        dispatch(fetchSalesTeamShops());
         dispatch(fetchStore({businessId}));
         dispatch(fetchMyProfile())
 

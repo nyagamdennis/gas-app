@@ -4,6 +4,18 @@ import { useMediaQuery, useTheme } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import planStatus from "../../features/planStatus/planStatus"
 import BadgeIcon from "@mui/icons-material/Badge"
+import LocalShippingIcon from "@mui/icons-material/LocalShipping"
+import TwoWheelerIcon from "@mui/icons-material/TwoWheeler"
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar"
+import PersonIcon from "@mui/icons-material/Person"
+import EngineeringIcon from "@mui/icons-material/Engineering"
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber"
+import SpeedIcon from "@mui/icons-material/Speed"
+import EditIcon from "@mui/icons-material/Edit"
+import DeleteIcon from "@mui/icons-material/Delete"
+import AddIcon from "@mui/icons-material/Add"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import ExpandLessIcon from "@mui/icons-material/ExpandLess"
 
 import { set } from "cookies"
 import PaymentIcon from "@mui/icons-material/Payment"
@@ -77,14 +89,11 @@ const Delivery = () => {
 
   const all_vehicles = useAppSelector(getAllVehicles)
   const all_employees = useAppSelector(selectAllEmployees)
-  console.log("All employees from Redux:", all_employees)
-  console.log("All vehicles from Redux:", all_vehicles)
 
   const handleShowForm = () => {
     setShowForm((prev) => {
-      const newShowForm = !prev // Toggle the form visibility
+      const newShowForm = !prev
       if (newShowForm) {
-        // Fetch employees when the form is shown
         dispatch(fetchEmployees({ businessId }))
       }
       return newShowForm
@@ -94,18 +103,14 @@ const Delivery = () => {
   useEffect(() => {
     if (!businessId) return
 
-    // Always fetch vehicles
     dispatch(fetchVehicles({ businessId }))
 
-    // Only fetch employees when the add form is visible
     if (showForm) {
-      // alert("Fetching employees...")
       dispatch(fetchEmployees({ businessId }))
     }
   }, [dispatch, businessId])
 
   useEffect(() => {
-    // Replace this with an API call to fetch vehicles
     setVehicles([
       {
         id: 1,
@@ -127,35 +132,33 @@ const Delivery = () => {
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true) // Set submitting to true
+    setSubmitting(true)
     const formData = {
       business: businessId,
       type_of_vehicle: vehicleType,
       vehicle_number: numberPlate,
       engine_capacity: engineCC,
       driver: driver,
-      conductor: vehicleType === "VEHICLE" ? conductor : undefined, // Only include conductor for normal vehicles
+      conductor: vehicleType === "VEHICLE" ? conductor : undefined,
     }
     console.log("Form Data to be sent:", formData)
     try {
       await dispatch(addVehicle(formData)).unwrap()
       toast.success("Vehicle added successfully!")
-      // Clear the form fields
       setVehicleType("MOTORBIKE")
       setNumberPlate("")
       setEngineCC("")
       setDriver("")
       setConductor("")
+      setShowForm(false)
     } catch (error: any) {
       toast.error(error || "Failed to add vehicle. Please try again.")
     } finally {
-      setSubmitting(false) // Reset submitting to false
+      setSubmitting(false)
     }
   }
 
   const handleUpdateVehicle = (vehicle) => {
-    // Logic to update the vehicle
-    // For example, open a modal with the vehicle's details pre-filled
     console.log("Update vehicle:", vehicle)
   }
 
@@ -168,257 +171,495 @@ const Delivery = () => {
     setDeleteVehicleNumber(vehicle_number)
     setDeleteVehicleType(type_of_vehicle)
     setOpen(true)
-    setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id))
-    console.log("Deleted vehicle with ID:", id)
   }
 
   const handleDeleteThisVehicle = async () => {
     setDeleting(true)
-    
+
     try {
       await dispatch(deleteVehicle(deleteId)).unwrap()
       toast.success("Vehicle deleted successfully!")
       setOpen(false)
       setDeleting(false)
-      // setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id))
     } catch (error) {
       setDeleting(false)
       toast.error(error || "Failed to delete vehicle. Please try again.")
     }
   }
 
+  const getVehicleIcon = (type) => {
+    return type === "MOTORBIKE" ? <TwoWheelerIcon /> : <DirectionsCarIcon />
+  }
+
+  const getVehicleColor = (type) => {
+    return type === "MOTORBIKE" ? "bg-blue-500" : "bg-purple-500"
+  }
+
+  const getVehicleBgColor = (type) => {
+    return type === "MOTORBIKE" ? "bg-blue-50" : "bg-purple-50"
+  }
 
   return (
     <div>
       {isMobile ? (
-        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 flex flex-col font-sans">
           <Navbar
-            headerMessage={"ERP"}
-            headerText={"Manage your operations with style and clarity"}
+            headerMessage={"Delivery Fleet"}
+            headerText={"Manage your delivery vehicles and drivers"}
           />
-          <ToastContainer />
-          <main className="flex-grow m-2 p-1">
-            <div>
-              <h2 className="text-xl font-bold mb-4">
-                Manage Delivery Vehicles
-              </h2>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
 
-              <div className="flex justify-end mb-2">
-                {(showForm && (
+          <main className="flex-grow p-4 pb-20">
+            {/* Header with Stats */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <LocalShippingIcon className="text-blue-600 text-2xl" />
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Vehicle Fleet
+                </h1>
+              </div>
+              <p className="text-gray-600">
+                Manage all your delivery vehicles and assign drivers
+              </p>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Total Vehicles</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {all_vehicles.length}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <LocalShippingIcon className="text-blue-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-500">Active Drivers</p>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {all_vehicles.filter((v) => v.driver).length}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <PersonIcon className="text-green-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Add Vehicle Button */}
+            <div className="mb-6">
+              <button
+                onClick={handleShowForm}
+                className="w-full py-4 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <AddIcon />
+                {showForm ? "Close Form" : "Add New Vehicle"}
+              </button>
+            </div>
+
+            {/* Add Vehicle Form */}
+            <div
+              className={`transition-all duration-300 transform ${
+                showForm ? "block" : "hidden"
+              }`}
+            >
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <AddIcon className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Add New Vehicle
+                    </h2>
+                    <p className="text-gray-600 text-sm">
+                      Enter vehicle details below
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAddVehicle} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <DirectionsCarIcon
+                          className="text-gray-500"
+                          size={18}
+                        />
+                        Vehicle Type
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setVehicleType("MOTORBIKE")}
+                          className={`flex-1 py-3 px-4 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${
+                            vehicleType === "MOTORBIKE"
+                              ? "border-blue-500 bg-blue-50 text-blue-700"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-blue-300"
+                          }`}
+                        >
+                          <TwoWheelerIcon />
+                          Motorbike
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVehicleType("VEHICLE")}
+                          className={`flex-1 py-3 px-4 rounded-lg border-2 flex items-center justify-center gap-2 transition-all ${
+                            vehicleType === "VEHICLE"
+                              ? "border-purple-500 bg-purple-50 text-purple-700"
+                              : "border-gray-200 bg-white text-gray-700 hover:border-purple-300"
+                          }`}
+                        >
+                          <DirectionsCarIcon />
+                          Vehicle
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <ConfirmationNumberIcon
+                          className="text-gray-500"
+                          size={18}
+                        />
+                        Number Plate
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={numberPlate}
+                        onChange={(e) => setNumberPlate(e.target.value)}
+                        placeholder="e.g., KAA 123A"
+                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-colors"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <SpeedIcon className="text-gray-500" size={18} />
+                        Engine Capacity
+                      </label>
+                      <input
+                        type="number"
+                        value={engineCC}
+                        onChange={(e) => setEngineCC(e.target.value)}
+                        placeholder="e.g., 150"
+                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-colors"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <PersonIcon className="text-gray-500" size={18} />
+                        Driver
+                      </label>
+                      <select
+                        value={driver}
+                        onChange={(e) => setDriver(e.target.value)}
+                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-colors bg-white"
+                        required
+                      >
+                        <option value="">Select Driver</option>
+                        {all_employees.map((employee) => (
+                          <option key={employee.id} value={employee.id}>
+                            {employee.first_name} {employee.last_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {vehicleType === "VEHICLE" && (
+                    <div>
+                      <label className=" text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <EngineeringIcon className="text-gray-500" size={18} />
+                        Conductor
+                      </label>
+                      <select
+                        value={conductor}
+                        onChange={(e) => setConductor(e.target.value)}
+                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-colors bg-white"
+                        required
+                      >
+                        <option value="">Select Conductor</option>
+                        {all_employees.map((employee) => (
+                          <option key={employee.id} value={employee.id}>
+                            {employee.first_name} {employee.last_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <button
-                    onClick={handleShowForm}
-                    className="bg-blue-500 text-white rounded-md px-2 "
+                    type="submit"
+                    disabled={submitting}
+                    className={`w-full py-4 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                      submitting
+                        ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                        : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl"
+                    }`}
                   >
-                    Add <ArrowDropUpIcon />
+                    {submitting ? (
+                      <>
+                        <CircularProgress size={20} className="text-white" />
+                        Adding Vehicle...
+                      </>
+                    ) : (
+                      <>
+                        <LocalShippingIcon />
+                        Add Vehicle to Fleet
+                      </>
+                    )}
                   </button>
-                )) || (
-                  <button
-                    onClick={handleShowForm}
-                    className="bg-blue-500 text-white rounded-md px-2 "
-                  >
-                    Add <ArrowDropDownIcon />
-                  </button>
-                )}
+                </form>
+              </div>
+            </div>
+
+            {/* Vehicles List */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Your Vehicles
+                  </h2>
+                  <p className="text-gray-600 text-sm">
+                    All registered delivery vehicles
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                  {all_vehicles.length} vehicles
+                </span>
               </div>
 
-              {/* Form for adding vehicles */}
-              <form
-                onSubmit={handleAddVehicle}
-                className={`space-y-4 bg-white p-4 rounded-lg transition-all shadow-md ${
-                  showForm ? "block" : "hidden"
-                }`}
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Vehicle Type<span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={vehicleType}
-                    onChange={(e) => setVehicleType(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              {all_vehicles.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+                  <LocalShippingIcon className="text-gray-300 text-6xl mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    No Vehicles Yet
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Add your first delivery vehicle to get started
+                  </p>
+                  <button
+                    onClick={handleShowForm}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all"
                   >
-                    <option value="MOTORBIKE">Motorbike</option>
-                    <option value="VEHICLE">Normal Vehicle</option>
-                  </select>
+                    Add First Vehicle
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Number Plate<span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={numberPlate}
-                    onChange={(e) => setNumberPlate(e.target.value)}
-                    placeholder="Enter number plate"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Engine CC
-                  </label>
-                  <input
-                    type="number"
-                    value={engineCC}
-                    onChange={(e) => setEngineCC(e.target.value)}
-                    placeholder="Enter engine CC"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Driver
-                  </label>
-                  <select
-                    value={driver}
-                    onChange={(e) => setDriver(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="">Select Driver</option>
-                    {all_employees.map((employee) => (
-                      <option key={employee.id} value={employee.id}>
-                        {employee.first_name} {employee.last_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {vehicleType === "VEHICLE" && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Conductor
-                    </label>
-                    <select
-                      value={conductor}
-                      onChange={(e) => setConductor(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
+              ) : (
+                <div className="space-y-4">
+                  {all_vehicles.map((vehicle) => (
+                    <div
+                      key={vehicle.id}
+                      className={`p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md ${
+                        vehicle.type_of_vehicle === "MOTORBIKE"
+                          ? "bg-gradient-to-r from-blue-50 to-white"
+                          : "bg-gradient-to-r from-purple-50 to-white"
+                      }`}
                     >
-                      <option value="">Select Conductor</option>
-                      {all_employees.map((employee) => (
-                        <option key={employee.id} value={employee.id}>
-                          {employee.first_name} {employee.last_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div
+                            className={`p-3 rounded-xl ${getVehicleColor(
+                              vehicle.type_of_vehicle,
+                            )} text-white`}
+                          >
+                            {getVehicleIcon(vehicle.type_of_vehicle)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-gray-900">
+                                {vehicle.vehicle_number}
+                              </h3>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                  vehicle.type_of_vehicle === "MOTORBIKE"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-purple-100 text-purple-700"
+                                }`}
+                              >
+                                {vehicle.type_of_vehicle === "MOTORBIKE"
+                                  ? "Motorbike"
+                                  : "Vehicle"}
+                              </span>
+                            </div>
 
-                <button
-                  type="submit"
-                  disabled={submitting} // Disable the button while submitting
-                  className={`w-full py-2 px-4 rounded-md transition ${
-                    submitting
-                      ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
-                >
-                  {submitting ? (
-                    <div className="flex items-center justify-center">
-                      <CircularProgress size={20} className="text-white mr-2" />
-                      Adding...
-                    </div>
-                  ) : (
-                    "Add Vehicle"
-                  )}
-                </button>
-              </form>
-            </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-3">
+                              <div className="flex items-center gap-2">
+                                <SpeedIcon className="text-gray-400 text-sm" />
+                                <span className="text-sm text-gray-600">
+                                  Engine:
+                                </span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {vehicle.engine_capacity} CC
+                                </span>
+                              </div>
 
-            {/* List of available vehicles */}
-            {/* List of available vehicles */}
-            <h3 className="text-lg font-bold mt-6 mb-4">Available Vehicles</h3>
-            <div className="space-y-4">
-              {all_vehicles.map((vehicle) => (
-                <div
-                  key={vehicle.id}
-                  className="p-4 bg-white rounded-lg shadow-md flex-col space-y-2 justify-between items-center"
-                >
-                  <div>
-                    <p className="text-sm">
-                      <strong>Type:</strong> {vehicle.type_of_vehicle}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Number Plate:</strong> {vehicle.vehicle_number}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Engine CC:</strong> {vehicle.engine_capacity}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Driver:</strong> {vehicle.driver?.first_name}{" "}
-                    </p>
-                    {vehicle.type_of_vehicle === "VEHICLE" && (
-                      <p className="text-sm">
-                        <strong>Conductor:</strong>{" "}
-                        {vehicle.conductor?.first_name}{" "}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {/* Update Button */}
-                    <button
-                      onClick={() => handleUpdateVehicle(vehicle)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition"
-                    >
-                      Update
-                    </button>
-                    {/* Delete Button */}
-                    <button
-                      onClick={() =>
-                        handleOpenDeleteVehicle(
-                          vehicle.id,
-                          vehicle.vehicle_number,
-                          vehicle.type_of_vehicle,
-                        )
-                      }
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition"
-                    disabled={delting}
-                    >
-                      {delting ? (
-                        <div className="flex items-center justify-center">
-                          <CircularProgress size={20} className="text-white mr-2" />
-                          Deleting...
+                              <div className="flex items-center gap-2">
+                                <PersonIcon className="text-gray-400 text-sm" />
+                                <span className="text-sm text-gray-600">
+                                  Driver:
+                                </span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {vehicle.driver?.first_name}{" "}
+                                  {vehicle.driver?.last_name}
+                                </span>
+                              </div>
+
+                              {vehicle.type_of_vehicle === "VEHICLE" &&
+                                vehicle.conductor && (
+                                  <div className="flex items-center gap-2 col-span-2">
+                                    <EngineeringIcon className="text-gray-400 text-sm" />
+                                    <span className="text-sm text-gray-600">
+                                      Conductor:
+                                    </span>
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {vehicle.conductor?.first_name}{" "}
+                                      {vehicle.conductor?.last_name}
+                                    </span>
+                                  </div>
+                                )}
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        "Delete"
-                      )}
-                    </button>
-                  </div>
+
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => handleUpdateVehicle(vehicle)}
+                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                            title="Edit vehicle"
+                          >
+                            <EditIcon />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleOpenDeleteVehicle(
+                                vehicle.id,
+                                vehicle.vehicle_number,
+                                vehicle.type_of_vehicle,
+                              )
+                            }
+                            className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                            title="Delete vehicle"
+                            disabled={delting}
+                          >
+                            <DeleteIcon />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </main>
+
+          {/* Delete Confirmation Dialog */}
           <Dialog
             open={open}
-            slots={{
-              transition: Transition,
-            }}
+            TransitionComponent={Transition}
             keepMounted
             onClose={handleClose}
-            aria-describedby="alert-dialog-slide-description"
+            PaperProps={{
+              style: {
+                borderRadius: "16px",
+                padding: "8px",
+              },
+            }}
           >
-            <DialogTitle>{`Delete ${deleteVehicleType} ${deleteVehicleNumber}?`}</DialogTitle>
+            <DialogTitle className="flex items-center gap-3">
+              <div
+                className={`p-2 rounded-lg ${getVehicleColor(
+                  deleteVehicleType,
+                )} text-white`}
+              >
+                {deleteVehicleType === "MOTORBIKE" ? (
+                  <TwoWheelerIcon />
+                ) : (
+                  <DirectionsCarIcon />
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Delete Vehicle
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Are you sure you want to delete this vehicle?
+                </p>
+              </div>
+            </DialogTitle>
             <DialogContent>
-              <DialogContentText id="alert-dialog-slide-description">
-                Are you sure you want to delete this vehicle? This action cannot
-                be undone.
-              </DialogContentText>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 my-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <DeleteIcon className="text-red-600" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-red-800">
+                      Warning: This action cannot be undone
+                    </p>
+                    <p className="text-red-600 text-sm mt-1">
+                      Vehicle{" "}
+                      <span className="font-bold">{deleteVehicleNumber}</span>{" "}
+                      will be permanently removed from your fleet.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
-              <Button onClick={handleDeleteThisVehicle}>Delete</Button>
+            <DialogActions className="px-6 pb-6">
+              <Button
+                onClick={handleClose}
+                className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteThisVehicle}
+                disabled={delting}
+                className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all flex items-center gap-2"
+              >
+                {delting ? (
+                  <>
+                    <CircularProgress size={20} className="text-white" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <DeleteIcon />
+                    Delete Vehicle
+                  </>
+                )}
+              </Button>
             </DialogActions>
           </Dialog>
 
-
-          
-          <footer>
+          <footer className="mt-auto">
             <AdminsFooter />
           </footer>
         </div>

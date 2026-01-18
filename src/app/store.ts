@@ -2,7 +2,6 @@ import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit"
 import customerReducer from "../features/customers/customerSlice"
 import debtorsReducer from "../features/debtors/debtorsSlice"
 import locationsReducer from "../features/location/locationSlice"
-import productsReducer from "../features/product/productSlice"
 import assignedProductsReducer from "../features/product/assignedProductsSlice"
 import salesReducer from "../features/sales/salesSlice"
 import authReducer from "../features/auths/authSlice"
@@ -10,9 +9,9 @@ import salesTeamReducer from "../features/salesTeam/salesTeamSlice"
 import salesTeamManagementReducer from "../features/salesTeam/salesTeamManagementSlice"
 import employeesReducer from "../features/employees/employeesSlice"
 import firedEmployeesReducer from "../features/employees/firedEmployeesSlice"
-import businessReducer from "../features/business/businnesSlice"
+import businessReducer from "../features/company/companySlice"
 import storeReducer from "../features/store/storeSlice"
-import otherProductsReducer from "../features/store/otherProductsSlice"
+import otherProductsReducer from "../features/store/productsSlice"
 import assignsReducer from "../features/assigns/assignsSlice"
 import myProfileReducer from "../features/employees/myProfileSlice"
 import salesTeamDataReducer from "../features/salesTeam/salesTeamDataSlice"
@@ -43,9 +42,16 @@ import stockupReducer from "../features/stockup/stockupSlice"
 import cylindersBrandReducer from "../features/cylinders/cylindersBrandSlice"
 import cylindersWeightReducer from "../features/cylinders/cylindersWeightSlice"
 import vehiclesReducer from "../features/deliveries/vehiclesSlice"
+import planStatusReducer from "../features/plans/planStatusSlice"
+import storeCylinderReducer from "../features/store/storeCylindersSlice"
+import salesTeamVehicleReducer from "../features/salesTeam/salesTeamVehicleSlice"
+import customerHistoryReducer from "../features/customers/customerHistorySlice"
 
 export const store = configureStore({
   reducer: {
+    salesTeamVehicle: salesTeamVehicleReducer,
+    customersHistory: customerHistoryReducer,
+    storeCylinders: storeCylinderReducer,
     vehicles: vehiclesReducer,
     cylindersWeight: cylindersWeightReducer,
     cylindersBrand: cylindersBrandReducer,
@@ -62,7 +68,7 @@ export const store = configureStore({
     customers: customerReducer,
     debtors: debtorsReducer,
     locations: locationsReducer,
-    products: productsReducer,
+    products: otherProductsReducer,
     assignedProducts: assignedProductsReducer,
     sales: salesReducer,
     auth: authReducer,
@@ -72,7 +78,6 @@ export const store = configureStore({
     firedEmployees: firedEmployeesReducer,
     business: businessReducer,
     store: storeReducer,
-    otherProducts: otherProductsReducer,
     assigns: assignsReducer,
     myProfile: myProfileReducer,
     salesTeamData: salesTeamDataReducer,
@@ -90,6 +95,7 @@ export const store = configureStore({
     advances: advancesReducer,
     cash: cashReducer,
     teamExpenses: teamExpensesReducer,
+    planStatus: planStatusReducer,
   },
 })
 

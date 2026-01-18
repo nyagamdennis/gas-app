@@ -7,7 +7,6 @@ import LeftNav from '../components/ui/LeftNav'
 import NavBar from '../components/ui/NavBar'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { clearDebtors, fetchDebtors, getClearDebtError, getClearDebtStatus, getDebtorsStatus, selectAllDebtors } from '../features/debtors/debtorsSlice';
-import { fetchCustomers } from '../features/customers/customerSlice';
 import DebtorsExcerpt from '../features/debtors/DebtorsExcerpt';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -25,6 +24,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormattedAmount from '../components/FormattedAmount';
 import { CircularProgress } from '@mui/material';
+import { fetchCustomers } from '../features/customers/customerSlice';
 
 
 const columns = [

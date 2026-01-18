@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
-  fetchSalesTeam,
+  fetchSalesTeamShops,
   getSalesTeamStatus,
-  selectAllSalesTeam,
+  selectAllSalesTeamShops,
 } from "../features/salesTeam/salesTeamSlice"
 import {
   fetchStore,
@@ -13,11 +13,11 @@ import {
   selectAllStore,
 } from "../features/store/storeSlice"
 import { Link, useNavigate } from "react-router-dom"
-import { assignCylinders } from "../features/assigns/assignsSlice"
 import AdminNav from "../components/ui/AdminNav"
 import AdminsFooter from "../components/AdminsFooter"
 import planStatus from "../features/planStatus/planStatus"
 import Skeleton from "@mui/material/Skeleton"
+import { assignShopCylinders } from "../features/assigns/assignsSlice"
 
 const AssigningProducts = () => {
   const dispatch = useAppDispatch();
@@ -35,7 +35,7 @@ const AssigningProducts = () => {
     planName,
   } = planStatus();
 
-  const allSalesTeam = useAppSelector(selectAllSalesTeam)
+  const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const fetchingSalesteamStatus = useAppSelector(getSalesTeamStatus)
   const store = useAppSelector(selectAllStore)
   const fetchingStoreStatus = useAppSelector(getStoreStatus)
@@ -47,7 +47,7 @@ const AssigningProducts = () => {
 
   useEffect(() => {
     if (businessId) {
-      dispatch(fetchSalesTeam({ businessId }))
+      dispatch(fetchSalesTeamShops())
     }
   }, [dispatch, businessId])
 
@@ -94,7 +94,7 @@ const AssigningProducts = () => {
       assigned_quantity: item.assigned_quantity,
     }))
 
-    dispatch(assignCylinders(payload))
+    dispatch(assignShopCylinders(payload))
       .then(() =>
         navigate(`/admins/afterassign/${selectedTeam?.id}`, {
           state: { salesTeamName: selectedTeam?.name },

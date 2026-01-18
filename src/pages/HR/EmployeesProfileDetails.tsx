@@ -8,10 +8,7 @@ import {
   transferEmployee,
   updateSimgleEmployeeStatus,
 } from "../../features/employees/singleEmployeeSlice"
-import {
-  fetchSalesTeam,
-  selectAllSalesTeam,
-} from "../../features/salesTeam/salesTeamSlice"
+import { selectAllSalesTeamShops } from "../../features/salesTeam/salesTeamSlice"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { useNavigate, useParams } from "react-router-dom"
 import {
@@ -66,8 +63,7 @@ const EmployeesProfileDetails = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const employee = useAppSelector(selectSingleEmployees)
-  console.log("fetched employee ", employee)
-  const allSalesTeams = useAppSelector(selectAllSalesTeam)
+  const allSalesTeams = useAppSelector(selectAllSalesTeamShops)
   const employeeDefaults = useAppSelector(selectAllDefaults)
   const employeeLessPays = useAppSelector(selectAllLessPay)
   const expense = useAppSelector(selectAllExpenses)
