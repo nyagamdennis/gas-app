@@ -1,236 +1,350 @@
 /* eslint-disable prettier/prettier */
-// @ts-nocheck
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import api from "../../../utils/api"
 
+interface Assignment {
+  type: "SHOP" | "VEHICLE" | "STORE" | null
+  name: string | null
+  id?: number
+  assigned_date?: string
+  assigned_by?: string | null
+}
 
+interface AssignmentHistory {
+  type: "SHOP" | "VEHICLE" | "STORE"
+  id: number
+  name: string
+  assigned_date: string
+  assigned_by: string | null
+  is_active: boolean
+  status: string
+}
 
+interface TransferHistory {
+  id: number
+  from_type: string
+  from_id: number | null
+  to_type: string
+  to_id: number
+  transferred_by: string | null
+  transfer_date: string
+  reason: string
+}
+
+interface AttendanceSummary {
+  last_30_days: {
+    present: number
+    absent: number
+    on_leave: number
+    total_days: number
+  }
+  recent_attendance: Array<{
+    date: string
+    status: string
+    marked_by: string | null
+    remarks: string | null
+  }>
+}
+
+interface LeaveRequest {
+  id: number
+  start_date: string
+  end_date: string
+  reason: string
+  status: "PENDING" | "APPROVED" | "REJECTED"
+  applied_on: string
+  reviewed_by: string | null
+  reviewed_on: string | null
+  is_active_leave: boolean
+}
+
+interface Review {
+  id: number
+  rating: number
+  comments: string | null
+  review_date: string
+  reviewer: string | null
+}
+
+interface EmploymentHistory {
+  id: number
+  start_date: string
+  end_date: string | null
+  status: "ACTIVE" | "ENDED"
+  position: string | null
+  department: string | null
+  salary: string | null
+  reason_for_change: string | null
+}
 
 interface SingleEmployee {
-    id: string;
-    first_name: string;
-    last_name: string;
-    phone: string;
-    alternative_phone: string;
-    sales_team?: { id: number; name: string };
-    verified: boolean;
-    suspended: boolean;
-    fired: boolean;
-    defaulted: boolean;
+  id: number
+  first_name: string
+  last_name: string
+  full_name: string
+  gender: "MALE" | "FEMALE"
+  id_number: string
+  email: string
+  phone_number: string
+  email_verified: boolean
+  phone_verified: boolean
+  is_active: boolean
+  employment_status: "ACTIVE" | "TERMINATED" | "RESIGNED" | "TRANSFERRED"
+  can_perform_sales: boolean
+  can_manage_inventory: boolean
+  can_manage_delivery: boolean
+  can_view_reports: boolean
+  date_joined?: string
+  created_at?: string
+  updated_at?: string
+  user_role: string
+  assigned_to: Assignment | null
+  assignment_history: AssignmentHistory[]
+  transfer_history: TransferHistory[]
+  attendance_summary: AttendanceSummary
+  leave_history: LeaveRequest[]
+  reviews: Review[]
+  employment_history: EmploymentHistory[]
 }
 
 interface SingleEmployeeState {
-    singleEmployee: SingleEmployee[];
-    status: "idle" | "loading" | "succeeded" | "failed";
-    error: string | null;
+  singleEmployee: SingleEmployee | null
+  status: "idle" | "loading" | "succeeded" | "failed"
+  error: string | null
+
+  // Additional states for related actions
+  terminationStatus: "idle" | "loading" | "succeeded" | "failed"
+  terminationError: string | null
+
+  attendanceStatus: "idle" | "loading" | "succeeded" | "failed"
+  attendanceData: any | null
+  attendanceError: string | null
+
+  leaveStatus: "idle" | "loading" | "succeeded" | "failed"
+  leaveData: any | null
+  leaveError: string | null
+
+  reactivationStatus: "idle" | "loading" | "succeeded" | "failed"
+  reactivationError: string | null
 }
 
 const initialState: SingleEmployeeState = {
-    singleEmployee: [],
-    status: "idle",
-    error: null,
-};
+  singleEmployee: null,
+  status: "idle",
+  error: null,
 
+  terminationStatus: "idle",
+  terminationError: null,
 
-export const fetchSingleEmployee = createAsyncThunk<Employees[]>(
-    "singleEmployee/fetchSingleEmployee",
-    async ({ id }: { id: string }) => {
-        // const response = await axios.get<Employees[]>(`${apiUrl}/employees/${employeeId}/`);
-        const response = await api.get(`/employees/${id}/`)
-        // alert('fetched ', response.data)
-        // console.log('results of employees ', response.data)
-        return response.data; // Return the fetched employees data
-    }
-);
+  attendanceStatus: "idle",
+  attendanceData: null,
+  attendanceError: null,
 
+  leaveStatus: "idle",
+  leaveData: null,
+  leaveError: null,
 
-export const transferEmployee = createAsyncThunk(
-    "singleEmployee/transferEmployee",
-    async ({ employeeId, salesTeamId }: { employeeId: number; salesTeamId: number }) => {
-        const formData = { sales_team_id: salesTeamId };
-        // const response = await axios.patch(`${apiUrl}/transfer/${employeeId}/`, formData,
-        //     {
-        //         headers: {
-        //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        //         },
-        //     }
-        // );
-        const response = await api.patch(`/transfer/${employeeId}/`, formData);
-        return response.data; // Return the updated employee data
-    }
-);
+  reactivationStatus: "idle",
+  reactivationError: null,
+}
 
+export const fetchSingleEmployee = createAsyncThunk(
+  "singleEmployee/fetchSingleEmployee",
+  async (id: string) => {
+    const response = await api.get(`/employees/employees/${id}/`)
+    return response.data
+  },
+)
 
-export const addEmployeeSalary = createAsyncThunk(
-    "singleEmployee/addEmployeeSalary",
-    async ({ employeeId, salaryAmount }: { employeeId: number; salaryAmount: number }) => {
-        const formData = { contract_salary: salaryAmount };
-        // const response = await axios.patch(`${apiUrl}/salary/${employeeId}/`, formData,
-        //     {
-        //         headers: {
-        //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        //         },
-        //     }
-        // );
-        // console.log('response ', response.data)
-        const response = await api.patch(`/salary/${employeeId}/`, formData);
-        return response.data;
-    }
-);
+export const terminateEmployee = createAsyncThunk(
+  "singleEmployee/terminateEmployee",
+  async ({ employeeId, data }: { employeeId: string; data: any }) => {
+    const response = await api.post(
+      `/employees/employees/${employeeId}/terminate/`,
+      data,
+    )
+    return response.data
+  },
+)
 
+export const employeeAttendance = createAsyncThunk(
+  "singleEmployee/employeeAttendance",
+  async ({ employeeId, params = {} }: { employeeId: string; params?: any }) => {
+    const response = await api.get(
+      `/employees/employees/${employeeId}/attendance/`,
+      { params },
+    )
+    return response.data
+  },
+)
 
+export const employeeLeave = createAsyncThunk(
+  "singleEmployee/employeeLeave",
+  async ({ employeeId, params = {} }: { employeeId: string; params?: any }) => {
+    const response = await api.get(
+      `/employees/employees/${employeeId}/leaves/`,
+      { params },
+    )
+    return response.data
+  },
+)
 
-export const addEmployeeSalaryDate = createAsyncThunk(
-    "singleEmployee/addEmployeeSalaryDate",
-    async ({ employeeId, salaryDate }: { employeeId: number; salaryDate: number }) => {
-        const currentDate = new Date();
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth(); // Note: getMonth() returns 0-based month
-        const date = new Date(year, month, salaryDate+1); // Create a proper date object with corrected month
-        const formData = { date_joined: date.toISOString().split("T")[0] }; // Format as YYYY-MM-DD
-        // console.log('dates ', formData)
-        // const response = await axios.patch(`${apiUrl}/salary/${employeeId}/`, formData,
-        //     {
-        //         headers: {
-        //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        //         },
-        //     }
-        // );
-        const response = await api.patch(`/salary/${employeeId}/`, formData);
-        return response.data;
-    }
-);
-
-
-
-
-export const updateSimgleEmployeeStatus = createAsyncThunk(
-    "employees/updateSimgleEmployeeStatus",
-    async ({ employeeId, statusField }: { employeeId: number; statusField: string }) => {
-        // const response = await axios.patch(`${apiUrl}/update-status/${employeeId}/`, {
-        //     status_field: statusField,
-        // }, {
-        //     headers: {
-        //         Authorization: `Bearer ${Cookies.get("accessToken")}`,
-        //     },
-        // });
-        // console.log('STatus functions', response.data)
-        const response = await api.patch(`/update-status/${employeeId}/`, {
-            status_field: statusField,
-        });
-        return response.data; // Return the updated employee data
-        // return { employeeId, statusField, updatedEmployee: response.data }; // Return the updated employee data
-    }
-);
+export const employeeReactivate = createAsyncThunk(
+  "singleEmployee/employeeReactivate",
+  async ({ employeeId, data }: { employeeId: string; data?: any }) => {
+    const response = await api.post(
+      `/employees/employees/${employeeId}/reactivate/`,
+      data || {},
+    )
+    return response.data
+  },
+)
 
 const singleEmployeeSlice = createSlice({
-    name: "singleEmployee",
-    initialState,
-    reducers: {},
-    extraReducers(builder) {
-        builder
-            // Fetch Employees
-            .addCase(fetchSingleEmployee.pending, (state) => {
-                state.status = "loading";
-            })
-            .addCase(fetchSingleEmployee.fulfilled, (state, action) => {
-                state.status = "succeeded";
-                state.singleEmployee = action.payload;
-            })
-            .addCase(fetchSingleEmployee.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.error.message || "Failed to fetch employees";
-            })
-            // Transfer Employee
-            .addCase(transferEmployee.pending, (state) => {
-                state.status = "loading";
-            })
-
-            .addCase(transferEmployee.fulfilled, (state, action) => {
-                state.status = "succeeded";
-
-                // Extract updated employee from the payload
-                const updatedEmployee = action.payload.employee;
-
-                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
-                    state.singleEmployee.sales_team = updatedEmployee.sales_team; // ✅ Update ONLY the verified field
-                }
-            })
-
-            .addCase(transferEmployee.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.error.message || "Failed to transfer employee";
-            })
-            .addCase(addEmployeeSalary.pending, (state) => {
-                state.status = "loading";
-            })
-
-            .addCase(addEmployeeSalary.fulfilled, (state, action) => {
-                state.status = "succeeded";
-
-                // Extract updated employee from the payload
-                const updatedEmployee = action.payload;
-
-                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
-                    state.singleEmployee.contract_salary = updatedEmployee.contract_salary; // ✅ Update ONLY the verified field
-                }
-            })
-
-            .addCase(addEmployeeSalary.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.error.message || "Failed to add salary.";
-            })
-
-            .addCase(addEmployeeSalaryDate.pending, (state) => {
-                state.status = "loading";
-            })
-
-            .addCase(addEmployeeSalaryDate.fulfilled, (state, action) => {
-                state.status = "succeeded";
-
-                // Extract updated employee from the payload
-                const updatedEmployee = action.payload;
-
-                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
-                    state.singleEmployee.date_joined = updatedEmployee.date_joined; // ✅ Update ONLY the verified field
-                }
-            })
-
-            .addCase(addEmployeeSalaryDate.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.error.message || "Failed to add salary.";
-            })
-
-            
-            // Update Employee Status
-            .addCase(updateSimgleEmployeeStatus.pending, (state) => {
-                state.status = "loading";
-            })
-
-            .addCase(updateSimgleEmployeeStatus.fulfilled, (state, action) => {
-                state.status = "succeeded";
-
-                // Extract updated employee from the payload
-                const updatedEmployee = action.payload.employee;
-                // console.log('log message ', updatedEmployee)
-                if (state.singleEmployee && state.singleEmployee.id === updatedEmployee.id) {
-                    state.singleEmployee.verified = updatedEmployee.verified; // ✅ Update ONLY the verified field
-                    state.singleEmployee.fired = updatedEmployee.fired;
-                }
-
-
-            })
-
-
-            .addCase(updateSimgleEmployeeStatus.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.error.message || "Failed to update employee status";
-            });
+  name: "singleEmployee",
+  initialState,
+  reducers: {
+    clearTerminationStatus: (state) => {
+      state.terminationStatus = "idle"
+      state.terminationError = null
     },
-});
+    clearAttendanceStatus: (state) => {
+      state.attendanceStatus = "idle"
+      state.attendanceData = null
+      state.attendanceError = null
+    },
+    clearLeaveStatus: (state) => {
+      state.leaveStatus = "idle"
+      state.leaveData = null
+      state.leaveError = null
+    },
+    clearReactivationStatus: (state) => {
+      state.reactivationStatus = "idle"
+      state.reactivationError = null
+    },
+    clearSingleEmployee: (state) => {
+      state.singleEmployee = null
+      state.status = "idle"
+      state.error = null
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Single Employee
+      .addCase(fetchSingleEmployee.pending, (state) => {
+        state.status = "loading"
+        state.error = null
+      })
+      .addCase(fetchSingleEmployee.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.singleEmployee = action.payload
+      })
+      .addCase(fetchSingleEmployee.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message || "Failed to fetch employee details"
+      })
 
-export const selectSingleEmployees = (state: { singleEmployee: SingleEmployeeState }) => state.singleEmployee.singleEmployee;
-export const getSingleEmployeesStatus = (state: { singleEmployee: SingleEmployeeState }) => state.singleEmployee.status;
-export const getSingleEmployeeError = (state: { singleEmployee: SingleEmployeeState }) => state.singleEmployee.error;
+      // Terminate Employee
+      .addCase(terminateEmployee.pending, (state) => {
+        state.terminationStatus = "loading"
+        state.terminationError = null
+      })
+      .addCase(terminateEmployee.fulfilled, (state, action) => {
+        state.terminationStatus = "succeeded"
+        if (state.singleEmployee) {
+          state.singleEmployee.employment_status = "TERMINATED"
+          state.singleEmployee.is_active = false
+        }
+       
+      })
+      .addCase(terminateEmployee.rejected, (state, action) => {
+        state.terminationStatus = "failed"
+        state.terminationError =
+          action.error.message || "Failed to terminate employee"
+      })
 
-export default singleEmployeeSlice.reducer;
+      // Employee Attendance
+      .addCase(employeeAttendance.pending, (state) => {
+        state.attendanceStatus = "loading"
+        state.attendanceError = null
+      })
+      .addCase(employeeAttendance.fulfilled, (state, action) => {
+        state.attendanceStatus = "succeeded"
+        state.attendanceData = action.payload
+      })
+      .addCase(employeeAttendance.rejected, (state, action) => {
+        state.attendanceStatus = "failed"
+        state.attendanceError =
+          action.error.message || "Failed to fetch attendance data"
+      })
+
+      // Employee Leave
+      .addCase(employeeLeave.pending, (state) => {
+        state.leaveStatus = "loading"
+        state.leaveError = null
+      })
+      .addCase(employeeLeave.fulfilled, (state, action) => {
+        state.leaveStatus = "succeeded"
+        state.leaveData = action.payload
+      })
+      .addCase(employeeLeave.rejected, (state, action) => {
+        state.leaveStatus = "failed"
+        state.leaveError = action.error.message || "Failed to fetch leave data"
+      })
+
+      // Reactivate Employee
+      .addCase(employeeReactivate.pending, (state) => {
+        state.reactivationStatus = "loading"
+        state.reactivationError = null
+      })
+      .addCase(employeeReactivate.fulfilled, (state, action) => {
+        state.reactivationStatus = "succeeded"
+        if (state.singleEmployee) {
+          state.singleEmployee.employment_status = "ACTIVE"
+          state.singleEmployee.is_active = true
+        }
+        
+      })
+      .addCase(employeeReactivate.rejected, (state, action) => {
+        state.reactivationStatus = "failed"
+        state.reactivationError =
+          action.error.message || "Failed to reactivate employee"
+      })
+  },
+})
+
+export const {
+  clearTerminationStatus,
+  clearAttendanceStatus,
+  clearLeaveStatus,
+  clearReactivationStatus,
+  clearSingleEmployee,
+} = singleEmployeeSlice.actions
+
+// Selectors
+export const selectSingleEmployee = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.singleEmployee
+export const selectSingleEmployeeStatus = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.status
+export const selectSingleEmployeeError = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.error
+export const selectTerminationStatus = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.terminationStatus
+export const selectAttendanceData = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.attendanceData
+export const selectAttendanceStatus = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.attendanceStatus
+export const selectLeaveData = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.leaveData
+export const selectLeaveStatus = (state: {
+  singleEmployee: SingleEmployeeState
+}) => state.singleEmployee.leaveStatus
+
+export default singleEmployeeSlice.reducer

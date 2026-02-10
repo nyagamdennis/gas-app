@@ -75,8 +75,7 @@ const CollectOtherProducts = () => {
   }, [selectedTeam, businessId, dispatch])
 
   const hasProducts = assignedProducts.length > 0
-  // inventory/vehicles/2/products/
-  // inventory/shop/3/products/
+
 
   useEffect(() => {
     if (selectedTeam) {
@@ -99,7 +98,7 @@ const CollectOtherProducts = () => {
   const getTeamDisplayName = (team, type) => {
     return type === "vehicle" ? team.number_plate : team.name
   }
-
+console.log('assigned product ', assignedProducts)
   const handleSelectTeam = (team, type) => {
     setSelectedTeam(team)
     setSelectedTeamType(type)
@@ -590,7 +589,7 @@ const CollectOtherProducts = () => {
                               {product?.product?.name || "N/A"}
                             </td>
                             <td className="border border-gray-300 px-3 py-2 text-center font-medium">
-                              {product?.assigned_quantity || 0}
+                              {product?.quantity || 0}
                             </td>
                             <td className="border border-gray-300 px-3 py-2 text-center font-bold text-green-600">
                               {product.retail_sold || 0}
@@ -607,7 +606,7 @@ const CollectOtherProducts = () => {
                               )}
                             </td>
                             <td className="border border-gray-300 px-3 py-2 text-center text-red-600">
-                              {product.spoiled || 0}
+                              {product.spoiled_product_quantity || 0}
                             </td>
                           </tr>
                         ))}

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { useMediaQuery, useTheme } from "@mui/material"
 import { toast, ToastContainer } from "react-toastify"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -50,6 +50,9 @@ const CylinderSales = () => {
   // Get query parameters
   const queryParams = new URLSearchParams(location.search)
   const saleType = queryParams.get("type") || "retail" // 'retail' or 'wholesale'
+  // Add this with your other state declarations
+  const [saleResponse, setSaleResponse] = useState(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   // Get team ID if present in URL
   const pathParts = location.pathname.split("/")
@@ -82,6 +85,15 @@ const CylinderSales = () => {
   const [productFetchError, setProductFetchError] = useState("")
   const [isLoadingProducts, setIsLoadingProducts] = useState(false)
   const [salesNote, setSalesNote] = useState("")
+
+  // Add these state variables near your other state declarations
+  const [mpesaVerificationStatus, setMpesaVerificationStatus] = useState({})
+  const [isCheckingMpesa, setIsCheckingMpesa] = useState(false)
+  const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("")
+  const [isPromptOpen, setIsPromptOpen] = useState(false)
+  const [remainingAmount, setRemainingAmount] = useState(0)
+  const [useSamePhone, setUseSamePhone] = useState(true)
+  const [secondMpesaCode, setSecondMpesaCode] = useState("")
 
   // NEW: Sales type state (refill, complete, outlet)
   const [salesType, setSalesType] = useState("refill") // Default to refill
@@ -151,7 +163,6 @@ const CylinderSales = () => {
       if (teamType === "shop" && teamId) {
         // Fetch from shop
         response = await api.get(`/inventory/shops/${teamId}/cylinders/`)
-        console.log("shop cylinders ", response.data)
       } else if (teamType === "vehicle" && teamId) {
         // Fetch from vehicle
         response = await api.get(`/inventory/vehicles/${teamId}/cylinders/`)
@@ -164,6 +175,7 @@ const CylinderSales = () => {
         // Transform the data to match your existing structure
         const transformedCylinders = response.data.map((cylinder) => ({
           id: cylinder.id || cylinder.product_id,
+          cylinder_type_id: cylinder?.cylinder?.id,
           gas_type: cylinder?.cylinder?.cylinder_type?.name || 0,
           weight: cylinder?.cylinder?.weight?.weight || 0,
           filled: cylinder.full_cylinder_quantity || cylinder.stock || 0,
@@ -188,7 +200,6 @@ const CylinderSales = () => {
         toast.error("Failed to load cylinder data")
       }
     } catch (error) {
-      console.error("Error fetching cylinders:", error)
       setCylinderFetchError(error.message || "Failed to fetch cylinders")
       toast.error("Failed to load available cylinders")
 
@@ -213,7 +224,6 @@ const CylinderSales = () => {
       if (teamType === "shop" && teamId) {
         // Fetch from shop
         response = await api.get(`/inventory/shops/${teamId}/products/`)
-        console.log("shop products ", response.data)
       } else if (teamType === "vehicle" && teamId) {
         // Fetch from vehicle
         response = await api.get(`/inventory/vehicles/${teamId}/products/`)
@@ -226,9 +236,10 @@ const CylinderSales = () => {
         // Transform the data to match your existing structure
         const transformedProducts = response.data.map((product) => ({
           id: product.id || 0,
+          product_type_id: product?.product?.id,
           product: product?.product?.name || 0,
-          retail_price: product?.product?.retail_sales_price || 0,
-          whole_sales_price: product?.product?.whole_sales_price || 0,
+          retail_price: product?.product?.prices?.retail_sales_price || 0,
+          whole_sales_price: product?.product?.prices?.whole_sales_price || 0,
           // Add any other necessary fields
         }))
 
@@ -239,7 +250,6 @@ const CylinderSales = () => {
         toast.error("Failed to load product data")
       }
     } catch (error) {
-      console.error("Error fetching products:", error)
       setProductFetchError(error.message || "Failed to fetch products")
       // toast.error("Failed to load available products")
     } finally {
@@ -321,9 +331,7 @@ const CylinderSales = () => {
             .success
             // "Device location captured! Enter customer location separately.",
             ()
-        } catch (error) {
-          console.log("Reverse geocoding failed, coordinates only")
-        }
+        } catch (error) {}
 
         setLastLocationUpdate(new Date().toLocaleTimeString())
       },
@@ -416,7 +424,6 @@ const CylinderSales = () => {
         // toast.success("Approximate device location captured via IP")
       }
     } catch (ipError) {
-      console.error("IP location error:", ipError)
       toast.error("Could not determine device location")
     }
   }
@@ -458,7 +465,6 @@ const CylinderSales = () => {
 
       return null
     } catch (error) {
-      console.error("Reverse geocoding error:", error)
       return null
     }
   }
@@ -553,7 +559,7 @@ const CylinderSales = () => {
   }
 
   // Calculate total including cylinders and additional products (for complete sales)
-  const calculateTotal = () => {
+  const calculateTotal = useCallback(() => {
     let cylinderTotal = cylinderProducts.reduce((total, product) => {
       const selectedProduct = availableCylinders.find(
         (prod) => prod.id === Number(product.productId),
@@ -599,7 +605,14 @@ const CylinderSales = () => {
     }
 
     return cylinderTotal + additionalProductsTotal
-  }
+  }, [
+    cylinderProducts,
+    additionalProducts,
+    availableCylinders,
+    availableProducts,
+    salesType,
+    saleType,
+  ])
 
   const calculateDebt = () => {
     const total = calculateTotal()
@@ -680,16 +693,11 @@ const CylinderSales = () => {
 
   // M-Pesa handling
   const handleNumDepositsChange = (e) => {
-    const count = Math.max(1, parseInt(e.target.value, 10) || 1)
+    const count = Math.max(1, Math.min(2, parseInt(e.target.value, 10) || 1)) // Limit to max 2
     setNumMpesaDeposits(count)
 
-    setMpesaCodes((prevCodes) => {
-      const newCodes = [...prevCodes]
-      while (newCodes.length < count) {
-        newCodes.push({ code: "", amount: 0 })
-      }
-      return newCodes.slice(0, count)
-    })
+    // Distribute amounts when changing number of deposits
+    distributeMpesaAmounts(count)
   }
 
   const handleMpesaCodeChange = (index, field, value) => {
@@ -712,9 +720,7 @@ const CylinderSales = () => {
           .then((response) => {
             setSearchResults(response.data)
           })
-          .catch((error) => {
-            console.error("Search error:", error)
-          })
+          .catch((error) => {})
       } else {
         setSearchResults([])
       }
@@ -734,14 +740,13 @@ const CylinderSales = () => {
           .then((response) => {
             setSearchPhoneResults(response.data)
           })
-          .catch((error) => {
-            console.error("Search error:", error)
-          })
+          .catch((error) => {})
       }
     }, 300)
     return () => clearTimeout(delayDebounceFn)
   }, [customerPhone, searchingBy])
 
+  // Form submission - include BOTH location name and coordinates
   // Form submission - include BOTH location name and coordinates
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -749,7 +754,6 @@ const CylinderSales = () => {
     // Show summary before submission if not already shown
     if (!showSummary) {
       setShowSummary(true)
-      // toast.info("Please review the order summary before submitting")
       return
     }
 
@@ -759,12 +763,21 @@ const CylinderSales = () => {
     const totalAmount = calculateTotal()
     const team_type = teamType?.toLocaleUpperCase()
 
+    // Filter out empty M-Pesa codes
+    const validMpesaCodes = mpesaCodes.filter(
+      (code) => code.code && code.code.trim() !== "",
+    )
+    const totalMpesaAmount = validMpesaCodes.reduce(
+      (sum, code) => sum + (parseFloat(code.amount) || 0),
+      0,
+    )
+
     const formData: any = {
       company_id: businessId,
       customer_details: {
         name: customerName,
         location: {
-          name: customerLocationName, // User-entered location name
+          name: customerLocationName,
           // Include coordinates separately if available
           ...(hasLocation && {
             coordinates: {
@@ -777,7 +790,6 @@ const CylinderSales = () => {
           }),
         },
         phone: parseInt(customerPhone) || 0,
-        // customer_type: customerType,
         sales: saleType.toUpperCase(),
       },
 
@@ -799,19 +811,16 @@ const CylinderSales = () => {
           }
 
           return {
-            cylinder_id: product.productId,
-            sale_type: salesType.toUpperCase(), // Use selected sales type (refill, complete, outlet)
+            cylinder_id: selectedProduct?.cylinder_type_id || product.productId,
+            sale_type: salesType.toUpperCase(),
             quantity: product.quantity,
             unit_price: unitPrice * product.quantity,
-            // unit_price: unitPrice,
+            is_custom_price: product.paymentAmount === "CUSTOM",
             empties_returned: product.quantity,
-            // source_type: teamType || "store", // Add source type
-            // source_id: teamId || null, // Add source ID if available
           }
         }),
-        // Additional products (only for complete sales)
       ],
-      product_items: [
+      items: [
         ...(salesType === "complete"
           ? additionalProducts.map((product) => {
               const selectedProduct = availableProducts.find(
@@ -827,20 +836,16 @@ const CylinderSales = () => {
               }
 
               return {
-                product_id: product.productId,
+                product_id: selectedProduct.product_type_id,
                 quantity: product.quantity,
                 unit_price: unitPrice * product.quantity,
-                // unit_price: unitPrice,
-                // source_type: teamType || "store",
-                // source_id: teamId || null,
+                is_custom_price: product.paymentAmount === "CUSTOM",
               }
             })
           : []),
       ],
       payment_info: {
         amount: totalAmount,
-        mpesa_receipt_number: "ABC123",
-        mpesa_phone_number: "254712345678",
       },
       total_amount: totalAmount,
       partial_payment_amount: isFullyPaid ? totalAmount : deposit,
@@ -851,7 +856,6 @@ const CylinderSales = () => {
       cylinder_exchanged_with: cylinderExchanged || null,
       location_id: teamId || null,
       location_type: team_type || null,
-      // Also include location data separately in case backend needs it
       location_data: hasLocation
         ? {
             latitude: locationCoordinates.latitude,
@@ -863,37 +867,92 @@ const CylinderSales = () => {
         : null,
     }
 
+    // Handle payment methods
     if (paymentMode === "cash") {
+      formData.payment_method = "CASH"
       formData.cashAmount = totalAmount
       formData.payment_info.payment_method = "CASH"
     } else if (paymentMode === "mpesa") {
+      formData.payment_method = "MPESA"
       formData.payment_info.payment_method = "MPESA"
-      formData.payment_info = customerPhone
-      formData.payment_info.mpesa_receipt_number = mpesaCodes
+
+      // Check if we have valid M-Pesa codes
+      if (validMpesaCodes.length === 0) {
+        toast.error("Please enter at least one M-Pesa code")
+        setIsSubmitting(false)
+        return
+      }
+
+      // For single M-Pesa payment
+      if (validMpesaCodes.length === 1) {
+        formData.payment_info.mpesa_receipt_number = validMpesaCodes[0].code
+        if (customerPhone) {
+          formData.payment_info.mpesa_phone_number = customerPhone
+        }
+      } else {
+        // For multiple M-Pesa payments - use mpesa_payments array
+        formData.mpesa_payments = validMpesaCodes.map((code) => ({
+          code: code.code,
+          amount:
+            parseFloat(code.amount) || totalAmount / validMpesaCodes.length,
+        }))
+
+        // Also include phone for reference
+        if (customerPhone) {
+          formData.payment_info.mpesa_phone_number = customerPhone
+        }
+      }
     } else if (paymentMode === "mpesa_cash") {
+      formData.payment_method = "CASH+MPESA"
       formData.payment_info.payment_method = "CASH+MPESA"
       formData.cashAmount = cashAmount
       formData.mpesaAmount = totalAmount - cashAmount
-      formData.mpesa_codes = mpesaCodes
+
+      // Handle M-Pesa portion
+      if (validMpesaCodes.length === 0) {
+        toast.error("Please enter at least one M-Pesa code")
+        setIsSubmitting(false)
+        return
+      }
+
+      if (validMpesaCodes.length === 1) {
+        formData.payment_info.mpesa_receipt_number = validMpesaCodes[0].code
+        if (customerPhone) {
+          formData.payment_info.mpesa_phone_number = customerPhone
+        }
+      } else {
+        // For multiple M-Pesa payments
+        formData.mpesa_payments = validMpesaCodes.map((code) => ({
+          code: code.code,
+          amount:
+            parseFloat(code.amount) ||
+            (totalAmount - cashAmount) / validMpesaCodes.length,
+        }))
+
+        if (customerPhone) {
+          formData.payment_info.mpesa_phone_number = customerPhone
+        }
+      }
     }
-    // {teamType === "shop" ? "Shop Team" : "Vehicle Team"}
+
+    // Set location based on team type
     if (teamType === "shop") {
       formData.shop = teamId
-    } else if (teamType === "Vehicle Team") {
+    } else if (teamType === "vehicle") {
       formData.vehicle = teamId
     } else {
       formData.store = teamId
     }
-    console.log("Submitting form data:", formData)
+
+    console.log("Form data to submit:", formData)
 
     try {
-      await dispatch(recordSales(formData)).unwrap()
+      const result = await dispatch(recordSales(formData)).unwrap()
       toast.success(`🎉 ${salesType} sale recorded successfully!`)
-
-      setTimeout(() => {
-        navigate(teamId ? `/sales/teams/${teamId}` : "/sales")
-      }, 2000)
+      setSaleResponse(result)
+      setShowSuccessModal(true)
     } catch (error: any) {
+      console.error("Error submitting sale:", error)
       toast.error(error.error || "Failed to record sale. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -901,6 +960,366 @@ const CylinderSales = () => {
     }
   }
 
+  // // Update your M-Pesa validation in the form to show warnings
+  // useEffect(() => {
+  //   if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
+  //     const validCodes = mpesaCodes.filter(
+  //       (code) => code.code && code.code.trim() !== "",
+  //     )
+  //     if (validCodes.length > 0) {
+  //       const totalEntered = validCodes.reduce((sum, code) => {
+  //         return sum + (parseFloat(code.amount) || 0)
+  //       }, 0)
+
+  //       let expectedTotal = calculateTotal()
+  //       if (paymentMode === "mpesa_cash") {
+  //         expectedTotal = calculateTotal() - cashAmount
+  //       }
+  //       console.log('expected total is ', expectedTotal)
+  //       console.log("total entere is ", totalEntered)
+
+  //       if (totalEntered !== expectedTotal) {
+  //         // Show a warning but don't prevent submission
+  //         console.warn(
+  //           `M-Pesa total (${totalEntered}) doesn't match expected (${expectedTotal})`,
+  //         )
+  //       }
+  //     }
+  //   }
+  // }, [mpesaCodes, paymentMode, calculateTotal, cashAmount])
+
+  // Update the distributeMpesaAmounts function to be called explicitly when needed
+  const distributeMpesaAmounts = (depositCount) => {
+    const totalAmount = calculateTotal()
+    let mpesaAmount = totalAmount
+
+    if (paymentMode === "mpesa_cash") {
+      mpesaAmount = totalAmount - cashAmount
+    }
+
+    if (depositCount > 1) {
+      const averageAmount = mpesaAmount / depositCount
+      setMpesaCodes((prevCodes) => {
+        const newCodes = [...prevCodes]
+        while (newCodes.length < depositCount) {
+          newCodes.push({ code: "", amount: averageAmount })
+        }
+        // Only update amounts for existing codes
+        return newCodes.slice(0, depositCount).map((code, index) => ({
+          ...code,
+          amount: code.amount || averageAmount,
+        }))
+      })
+    } else {
+      // For single deposit, set the full amount
+      setMpesaCodes([{ code: "", amount: mpesaAmount }])
+    }
+  }
+
+  // Add this function after your other render functions
+  const renderSuccessModal = () => {
+    if (!saleResponse) return null
+
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleString()
+    }
+
+    const formatCurrency = (amount) => {
+      return `Ksh ${parseFloat(amount).toLocaleString()}`
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="sticky top-0 bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-t-2xl">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center">
+                  <CheckCircle className="mr-3 h-8 w-8" />
+                  Sale Completed Successfully!
+                </h2>
+                <p className="text-green-100 mt-1">
+                  Invoice: {saleResponse.invoice_number}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false)
+                }}
+                className="text-white hover:text-green-100 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {/* Invoice Summary */}
+            <div className="mb-8">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600">Invoice Number</p>
+                  <p className="text-lg font-bold text-blue-700">
+                    {saleResponse.invoice_number}
+                  </p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <p className="text-sm text-gray-600">Date & Time</p>
+                  <p className="font-medium">
+                    {formatDate(saleResponse.created_at)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="bg-blue-50 p-4 rounded-xl mb-6">
+                <h3 className="font-semibold text-blue-800 mb-3">
+                  Customer Details
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-blue-700">Name</p>
+                    <p className="font-medium">
+                      {saleResponse.customer_info.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-700">Phone</p>
+                    <p className="font-medium">
+                      {saleResponse.customer_info.phone}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-700">Sale Type</p>
+                    <p className="font-medium">{saleResponse.sale_type}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-700">Location</p>
+                    <p className="font-medium">
+                      {saleResponse.location_name || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cylinder Items */}
+              {saleResponse.cylinder_items &&
+                saleResponse.cylinder_items.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-gray-800 mb-3">
+                      Cylinder Items
+                    </h3>
+                    <div className="space-y-3">
+                      {saleResponse.cylinder_items.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className="bg-green-50 p-4 rounded-xl border border-green-200"
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-bold text-green-800">
+                                {item.cylinder_name}
+                              </h4>
+                              <p className="text-sm text-green-700">
+                                {item.sale_type} • {item.quantity} unit
+                                {item.quantity > 1 ? "s" : ""}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-green-800">
+                                {formatCurrency(item.total_price)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Unit: {formatCurrency(item.unit_price)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm mt-3">
+                            <div>
+                              <p className="text-gray-600">Empties Returned</p>
+                              <p className="font-medium">
+                                {item.empties_returned}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600">Cylinder Cost</p>
+                              <p className="font-medium">
+                                {formatCurrency(item.cylinder_cost)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Payments */}
+              {saleResponse.payments && saleResponse.payments.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-800 mb-3">
+                    Payment Details
+                  </h3>
+                  <div className="space-y-3">
+                    {saleResponse.payments.map((payment, index) => (
+                      <div
+                        key={payment.id}
+                        className="bg-yellow-50 p-4 rounded-xl border border-yellow-200"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-bold text-yellow-800">
+                              {payment.payment_method} Payment
+                            </h4>
+                            <p className="text-sm text-yellow-700">
+                              {formatDate(payment.transaction_date)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-yellow-800">
+                              {formatCurrency(payment.amount)}
+                            </p>
+                            <p
+                              className={`text-sm ${
+                                payment.is_verified
+                                  ? "text-green-600"
+                                  : "text-yellow-600"
+                              }`}
+                            >
+                              {payment.is_verified
+                                ? "✓ Verified"
+                                : "Pending Verification"}
+                            </p>
+                          </div>
+                        </div>
+                        {payment.mpesa_receipt_number && (
+                          <div className="mt-2 text-sm">
+                            <p className="text-gray-600">
+                              M-Pesa Receipt: {payment.mpesa_receipt_number}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Amount Summary */}
+              <div className="bg-gray-50 p-5 rounded-xl mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">
+                  Amount Summary
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium">
+                      {formatCurrency(saleResponse.subtotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tax:</span>
+                    <span className="font-medium">
+                      {formatCurrency(saleResponse.tax_amount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Discount:</span>
+                    <span className="font-medium text-red-600">
+                      -{formatCurrency(saleResponse.discount_amount)}
+                    </span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-xl font-bold">
+                      <span>Total Amount:</span>
+                      <span className="text-blue-700">
+                        {formatCurrency(saleResponse.total_amount)}
+                      </span>
+                    </div>
+                  </div>
+                  {/* <div className="flex justify-between">
+                    <span className="text-gray-600">Total Cost:</span>
+                    <span className="font-medium text-gray-700">
+                      {formatCurrency(saleResponse.total_cost)}
+                    </span>
+                  </div> */}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Amount Paid:</span>
+                    <span className="font-medium text-green-700">
+                      {formatCurrency(saleResponse.amount_paid)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="text-gray-600">Balance Due:</span>
+                    <span
+                      className={`font-bold ${
+                        saleResponse.balance_due === "0.00"
+                          ? "text-green-700"
+                          : "text-red-700"
+                      }`}
+                    >
+                      {formatCurrency(saleResponse.balance_due)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-gray-600">Payment Status:</span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        saleResponse.payment_status === "PAID"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {saleResponse.payment_status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false)
+                  // Optionally reset form and close modal
+                  resetForm()
+                }}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  // Function to print or save as PDF
+                  handlePrintReceipt()
+                }}
+                className="flex-1 py-3 bg-blue-100 text-blue-600 rounded-xl font-medium hover:bg-blue-200 transition-colors flex items-center justify-center"
+              >
+                <Receipt className="mr-2" />
+                Print Receipt
+              </button>
+              <button
+                onClick={() => {
+                  // Navigate to sales list or dashboard
+                  // navigate(teamId ? `/sales/teams/${teamId}` : "/sales")
+                  navigate(
+                    teamId
+                      ? `/admins/salesdata/${teamId}/${teamName}/${teamType}`
+                      : "/sales",
+                  )
+                }}
+                className="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
+              >
+                View All Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
   // Render cylinder product row
   const renderCylinderProductRow = (product, index) => {
     const selectedProduct = availableCylinders.find(
@@ -1722,10 +2141,560 @@ const CylinderSales = () => {
     )
   }
 
+  const resetForm = () => {
+    setCustomerName("")
+    setCustomerPhone("")
+    setCustomerLocationName("")
+    setCylinderProducts([
+      { productId: "", quantity: 1, paymentAmount: "MAXIMUM", customPrice: "" },
+    ])
+    setAdditionalProducts([
+      { productId: "", quantity: 1, paymentAmount: "MAXIMUM", customPrice: "" },
+    ])
+    setPaymentType("FULLY_PAID")
+    setPaymentMode("cash")
+    setCashAmount(0)
+    setDeposit(0)
+    setMpesaCodes([{ code: "", amount: 0 }])
+    setSalesNote("")
+    setExchangedWithLocal(false)
+    setCylinderExchanged("")
+    setSalesType("refill")
+    setShowSummary(false)
+  }
+
+  const handlePrintReceipt = () => {
+    if (!saleResponse) return
+
+    // Create a print-friendly version
+    const printContent = `
+    <html>
+      <head>
+        <title>Receipt - ${saleResponse.invoice_number}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          .header { text-align: center; margin-bottom: 20px; }
+          .invoice-number { font-size: 18px; font-weight: bold; }
+          .section { margin-bottom: 15px; }
+          .total { font-size: 18px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
+          .thank-you { text-align: center; margin-top: 30px; font-style: italic; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>Sales Receipt</h2>
+          <div class="invoice-number">${saleResponse.invoice_number}</div>
+          <div>Date: ${new Date(saleResponse.created_at).toLocaleString()}</div>
+        </div>
+        
+        <div class="section">
+          <h3>Customer: ${saleResponse.customer_info.name}</h3>
+          <p>Phone: ${saleResponse.customer_info.phone}</p>
+        </div>
+        
+        <div class="section">
+          <h3>Items:</h3>
+          ${saleResponse.cylinder_items
+            .map(
+              (item) => `
+            <p>${item.cylinder_name} - ${item.quantity} x Ksh ${item.unit_price} = Ksh ${item.total_price}</p>
+          `,
+            )
+            .join("")}
+        </div>
+        
+        <div class="section">
+          <h3>Payment:</h3>
+          <p>Method: ${saleResponse.payment_method}</p>
+          <p>Amount: Ksh ${saleResponse.total_amount}</p>
+          <p>Status: ${saleResponse.payment_status}</p>
+        </div>
+        
+        <div class="total">
+          Total: Ksh ${saleResponse.total_amount}
+        </div>
+        
+        <div class="thank-you">
+          <p>Thank you for your business!</p>
+        </div>
+      </body>
+    </html>
+  `
+
+    const printWindow = window.open("", "_blank")
+    printWindow.document.write(printContent)
+    printWindow.document.close()
+    printWindow.print()
+  }
+
+  // Function to check M-Pesa payment on backend
+  const checkMpesaPayment = async (index) => {
+    setIsCheckingMpesa(true)
+
+    // Determine which phone to use
+    let phoneToUse = customerPhone
+    if (index === 1 && !useSamePhone && mpesaPhoneNumber) {
+      phoneToUse = mpesaPhoneNumber
+    }
+
+    if (!phoneToUse) {
+      toast.error("Please enter a phone number to check payment")
+      setIsCheckingMpesa(false)
+      return false
+    }
+
+    try {
+      const response = await api.post("/online-payment/verify-payment/", {
+        phone_number: phoneToUse,
+        is_second_payment: index === 1,
+      })
+
+      const result = response.data
+
+      if (result.status === "success" && result.data) {
+        const paymentData = result.data
+
+        // Update verification status
+        setMpesaVerificationStatus((prev) => ({
+          ...prev,
+          [index === 1 ? "second" : "first"]: {
+            customer_name: paymentData.customer_name,
+            mpesa_code: paymentData.mpesa_code,
+            amount: parseFloat(paymentData.amount),
+            phone_number: paymentData.phone_number,
+            verified: true,
+            timestamp: paymentData.timestamp || new Date().toLocaleTimeString(),
+          },
+        }))
+
+        // Update the M-Pesa code field
+        if (paymentData.mpesa_code) {
+          handleMpesaCodeChange(index, "code", paymentData.mpesa_code)
+        }
+
+        // Check if amount matches expected
+        const expectedAmount = getExpectedAmountForPayment(index)
+        const actualAmount = parseFloat(paymentData.amount)
+
+        if (actualAmount === expectedAmount) {
+          toast.success(
+            `✅ Payment ${
+              index + 1
+            } verified! Amount: Ksh ${actualAmount.toLocaleString()}`,
+          )
+
+          // Update customer name if available and this is the first payment
+          if (paymentData.customer_name && index === 0 && !customerName) {
+            setCustomerName(paymentData.customer_name)
+          }
+
+          // Check if we need to handle partial payment
+          if (index === 0 && actualAmount < expectedAmount) {
+            const remaining = expectedAmount - actualAmount
+            setRemainingAmount(remaining)
+            toast.warning(
+              `⚠️ Partial payment. Remaining: Ksh ${remaining.toLocaleString()}`,
+            )
+
+            // Automatically set number of deposits to 2
+            if (numMpesaDeposits === 1) {
+              setNumMpesaDeposits(2)
+              handleNumDepositsChange({ target: { value: 2 } })
+            }
+          }
+
+          return true
+        } else if (actualAmount < expectedAmount && index === 0) {
+          // Handle partial payment
+          const remaining = expectedAmount - actualAmount
+          setRemainingAmount(remaining)
+          toast.warning(
+            `⚠️ Partial payment received: Ksh ${actualAmount.toLocaleString()}. Remaining: Ksh ${remaining.toLocaleString()}`,
+          )
+
+          // Automatically set number of deposits to 2
+          if (numMpesaDeposits === 1) {
+            setNumMpesaDeposits(2)
+            handleNumDepositsChange({ target: { value: 2 } })
+          }
+
+          return false
+        } else {
+          toast.info(
+            `Payment found but amount doesn't match. Received: Ksh ${actualAmount.toLocaleString()}, Expected: Ksh ${expectedAmount.toLocaleString()}`,
+          )
+          return false
+        }
+      } else if (result.status === "partial") {
+        // Handle partial payment status from backend
+        toast.info(result.message)
+        if (result.data) {
+          const paymentData = result.data
+          setMpesaVerificationStatus((prev) => ({
+            ...prev,
+            [index === 1 ? "second" : "first"]: {
+              customer_name: paymentData.customer_name,
+              mpesa_code: paymentData.mpesa_code,
+              amount: parseFloat(paymentData.amount),
+              phone_number: paymentData.phone_number,
+              verified: false,
+              timestamp:
+                paymentData.timestamp || new Date().toLocaleTimeString(),
+              is_partial: true,
+            },
+          }))
+        }
+        return false
+      } else {
+        toast.info(result.message || "No payment found for this number yet.")
+        return false
+      }
+    } catch (error) {
+      console.error("M-Pesa verification error:", error)
+
+      // Check if it's a network error or server error
+      if (error.response) {
+        if (error.response.status === 404) {
+          toast.info("No payment found for this number yet.")
+        } else {
+          toast.error(
+            `Error: ${
+              error.response.data?.message || "Failed to check payment"
+            }`,
+          )
+        }
+      } else if (error.request) {
+        toast.error("Network error. Please check your connection.")
+      } else {
+        toast.error("Error checking payment. Please try again.")
+      }
+
+      return false
+    } finally {
+      setIsCheckingMpesa(false)
+    }
+  }
+
+  // Function to get expected amount for a specific payment
+  const getExpectedAmountForPayment = (index) => {
+    const total =
+      paymentMode === "mpesa_cash"
+        ? calculateTotal() - cashAmount
+        : calculateTotal()
+
+    if (index === 0) {
+      return remainingAmount > 0 ? total - remainingAmount : total
+    } else if (index === 1) {
+      return remainingAmount
+    }
+
+    return total
+  }
+
+  // Update the handleMpesaPrompt function to handle the new response format
+  const handleMpesaPrompt = async (index) => {
+    let phoneToUse = customerPhone
+    let amount = getExpectedAmountForPayment(index)
+
+    if (index === 1 && !useSamePhone && mpesaPhoneNumber) {
+      phoneToUse = mpesaPhoneNumber
+    }
+
+    if (!phoneToUse) {
+      toast.error("Please enter a phone number")
+      return
+    }
+
+    if (!amount || amount <= 0) {
+      toast.error("Invalid amount specified")
+      return
+    }
+
+    setIsCheckingMpesa(true)
+    try {
+      const response = await api.post("/online-payment/request-payment/", {
+        phone_number: phoneToUse,
+        amount: amount,
+      })
+
+      if (response.data.success) {
+        toast.success(
+          response.data.message ||
+            `Payment request sent to ${phoneToUse}. Amount: Ksh ${amount.toLocaleString()}`,
+        )
+
+        // Store the checkout request ID for tracking if needed
+        const checkoutRequestId = response.data.checkout_request_id
+        console.log("Checkout Request ID:", checkoutRequestId)
+
+        // Store the phone number used for the payment
+        if (index === 1 && !useSamePhone) {
+          setMpesaPhoneNumber(phoneToUse)
+        }
+
+        // Auto-check after 15 seconds (give user time to complete payment)
+        toast.info("Checking for payment in 15 seconds...")
+        setTimeout(() => {
+          checkMpesaPayment(index)
+        }, 15000)
+      } else {
+        toast.error(response.data.message || "Failed to send payment request")
+        if (response.data.mpesa_response?.ResponseDescription) {
+          console.error(
+            "M-Pesa Error:",
+            response.data.mpesa_response.ResponseDescription,
+          )
+        }
+      }
+    } catch (error) {
+      console.error("Payment request error:", error)
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          toast.error(
+            error.response.data?.message ||
+              "Invalid request. Please check phone number and amount.",
+          )
+        } else {
+          toast.error(
+            error.response.data?.message || "Failed to send payment request",
+          )
+        }
+      } else if (error.request) {
+        toast.error("Network error. Please check your connection.")
+      } else {
+        toast.error("Failed to send payment request")
+      }
+    } finally {
+      setIsCheckingMpesa(false)
+    }
+  }
+
+  // Function to handle radio button change for same/different phone
+  const handlePhoneOptionChange = (value) => {
+    setUseSamePhone(value === "same")
+
+    // If switching to different phone, clear the second M-Pesa code
+    if (value === "different" && mpesaCodes.length > 1) {
+      handleMpesaCodeChange(1, "code", "")
+      setMpesaVerificationStatus((prev) => ({
+        ...prev,
+        second: null,
+      }))
+    }
+  }
+
+  // Function to handle M-Pesa refresh button click
+  const handleMpesaRefresh = async (index) => {
+    const phoneToUse = mpesaPhoneNumber || customerPhone
+
+    if (!phoneToUse) {
+      toast.error("Please enter a phone number to check payment")
+      return
+    }
+
+    const expectedAmount =
+      paymentMode === "mpesa_cash"
+        ? calculateTotal() - cashAmount
+        : calculateTotal()
+
+    const isSecondPayment = index === 1
+    const amountForThisPayment = isSecondPayment
+      ? remainingAmount
+      : expectedAmount
+
+    await checkMpesaPayment(phoneToUse, amountForThisPayment, isSecondPayment)
+  }
+
+  // Function to prompt for second payment
+  const handleSecondPaymentPrompt = () => {
+    if (remainingAmount > 0) {
+      setIsPromptOpen(true)
+    } else {
+      toast.info("No remaining amount to pay.")
+    }
+  }
+
+  // Function to submit second payment
+  const handleSubmitSecondPayment = async () => {
+    if (!mpesaPhoneNumber && !customerPhone) {
+      toast.error("Please enter a phone number")
+      return
+    }
+
+    const phoneToUse = useSamePhone ? customerPhone : mpesaPhoneNumber
+
+    if (!phoneToUse) {
+      toast.error("Please enter a valid phone number")
+      return
+    }
+
+    setIsPromptOpen(false)
+    setIsCheckingMpesa(true)
+
+    try {
+      const response = await api.post("/online-payment/request-payment/", {
+        phone_number: phoneToUse,
+        amount: remainingAmount,
+        is_second_payment: true,
+      })
+
+      toast.success(
+        `Payment request sent to ${phoneToUse}. Amount: Ksh ${remainingAmount}`,
+      )
+      setMpesaPhoneNumber(phoneToUse)
+
+      // Start checking for the payment after 10 seconds
+      setTimeout(() => {
+        handleMpesaRefresh(1)
+      }, 10000)
+    } catch (error) {
+      toast.error("Failed to send payment request")
+      console.error("Payment request error:", error)
+    } finally {
+      setIsCheckingMpesa(false)
+    }
+  }
+
+  // Function to render M-Pesa verification status
+  const renderMpesaVerificationStatus = (index) => {
+    const status = mpesaVerificationStatus[index === 1 ? "second" : "first"]
+
+    if (!status) return null
+
+    const expectedAmount = getExpectedAmountForPayment(index)
+    const actualAmount = status.amount
+    const isCorrectAmount = actualAmount === expectedAmount
+    const isDuplicateCode =
+      index === 1 &&
+      mpesaCodes[0]?.code &&
+      mpesaCodes[1]?.code &&
+      mpesaCodes[0].code === mpesaCodes[1].code
+
+    return (
+      <div
+        className={`mt-2 p-3 rounded-lg border ${
+          status.verified && isCorrectAmount && !isDuplicateCode
+            ? "bg-green-50 border-green-200"
+            : status.is_partial
+            ? "bg-yellow-50 border-yellow-200"
+            : "bg-blue-50 border-blue-200"
+        }`}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center mb-1">
+              <p
+                className={`text-sm font-medium ${
+                  status.verified && isCorrectAmount && !isDuplicateCode
+                    ? "text-green-700"
+                    : status.is_partial
+                    ? "text-yellow-700"
+                    : "text-blue-700"
+                }`}
+              >
+                {status.verified && isCorrectAmount && !isDuplicateCode
+                  ? "✅ Payment Verified"
+                  : status.is_partial
+                  ? "⏳ Partial Payment"
+                  : isDuplicateCode
+                  ? "⚠️ Duplicate Code"
+                  : "⏳ Payment Found"}
+              </p>
+              {status.timestamp && (
+                <span className="text-xs text-gray-500 ml-2">
+                  {new Date(status.timestamp).toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+
+            {status.customer_name && (
+              <p className="text-xs text-gray-600 mb-1">
+                <span className="font-semibold">Customer:</span>{" "}
+                {status.customer_name}
+              </p>
+            )}
+
+            <p className="text-xs text-gray-600 mb-1">
+              <span className="font-semibold">Phone:</span>{" "}
+              {status.phone_number || customerPhone}
+            </p>
+
+            {status.amount && (
+              <div className="text-xs mb-1">
+                <span className="font-semibold text-gray-600">
+                  Amount Paid:
+                </span>{" "}
+                <span
+                  className={`font-medium ${
+                    isCorrectAmount ? "text-green-600" : "text-yellow-600"
+                  }`}
+                >
+                  Ksh {status.amount.toLocaleString()}
+                </span>
+                {!isCorrectAmount && expectedAmount > 0 && (
+                  <span className="ml-2 text-gray-500">
+                    (Expected: Ksh {expectedAmount.toLocaleString()})
+                  </span>
+                )}
+              </div>
+            )}
+
+            {status.mpesa_code && (
+              <p className="text-xs text-gray-600">
+                <span className="font-semibold">M-Pesa Code:</span>{" "}
+                <span className="font-mono font-medium bg-gray-100 px-1 py-0.5 rounded">
+                  {status.mpesa_code}
+                </span>
+              </p>
+            )}
+
+            {isDuplicateCode && index === 1 && (
+              <p className="text-xs text-red-600 mt-2 font-medium">
+                ⚠️ This code is the same as the first payment. Please wait for
+                the second payment to complete.
+              </p>
+            )}
+
+            {status.is_partial && (
+              <p className="text-xs text-yellow-700 mt-2 font-medium">
+                ⚠️ This appears to be a partial payment. Please complete the
+                second payment.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+  // Effect to handle automatic second payment setup
+  useEffect(() => {
+    if (remainingAmount > 0 && numMpesaDeposits === 1) {
+      // Automatically add second payment field
+      setNumMpesaDeposits(2)
+      handleNumDepositsChange({ target: { value: 2 } })
+      toast.info("Second payment field added for remaining amount")
+    }
+  }, [remainingAmount])
+
+  // Effect to distribute amounts when deposits change
+  useEffect(() => {
+    if (mpesaCodes.length === 2 && remainingAmount > 0) {
+      const firstPaymentAmount = calculateTotal() - remainingAmount
+      const secondPaymentAmount = remainingAmount
+
+      setMpesaCodes((prev) => [
+        { ...prev[0], amount: firstPaymentAmount },
+        { ...prev[1], amount: secondPaymentAmount },
+      ])
+    }
+  }, [numMpesaDeposits, remainingAmount, calculateTotal()])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <ToastContainer />
       {showSummary && renderOrderSummary()}
+      {showSuccessModal && renderSuccessModal()}
 
       {isMobile ? (
         <div className="flex flex-col min-h-screen">
@@ -2555,10 +3524,63 @@ const CylinderSales = () => {
                   {(paymentMode === "mpesa" ||
                     paymentMode === "mpesa_cash") && (
                     <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                      <h3 className="font-semibold text-green-800 mb-3">
-                        M-Pesa Details
-                      </h3>
-                      <div className="space-y-3">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold text-green-800 flex items-center">
+                          <img
+                            src={mpesalogo}
+                            alt="M-Pesa"
+                            className="h-6 w-20 mr-2"
+                          />
+                          M-Pesa Details
+                        </h3>
+                        <div className="flex space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleMpesaPrompt(0)}
+                            disabled={isCheckingMpesa}
+                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium flex items-center disabled:opacity-50"
+                          >
+                            <span>Prompt</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => checkMpesaPayment(0)}
+                            disabled={isCheckingMpesa}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center disabled:opacity-50"
+                          >
+                            <Refresh
+                              className={`h-4 w-4 mr-1 ${
+                                isCheckingMpesa ? "animate-spin" : ""
+                              }`}
+                            />
+                            Refresh
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        {/* Phone Number Input */}
+                        <div>
+                          <label className="block text-sm font-medium text-green-700 mb-1">
+                            Phone Number for M-Pesa
+                          </label>
+                          <input
+                            type="tel"
+                            value={customerPhone}
+                            onChange={(e) => {
+                              setSearchingBy("phone")
+                              setCustomerPhone(e.target.value)
+                            }}
+                            className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            placeholder="07XX XXX XXX"
+                            required
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Enter the phone number used for M-Pesa payment
+                          </p>
+                        </div>
+
+                        {/* Number of Deposits */}
                         <div>
                           <label className="block text-sm font-medium text-green-700 mb-1">
                             Number of M-Pesa Deposits
@@ -2569,48 +3591,252 @@ const CylinderSales = () => {
                             onChange={handleNumDepositsChange}
                             className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                             min="1"
+                            max="2"
                             required
                           />
                         </div>
 
-                        {mpesaCodes.map((code, index) => (
-                          <div key={index} className="space-y-2">
+                        {/* First M-Pesa Payment */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
                             <label className="block text-sm font-medium text-green-700">
-                              M-Pesa Code {index + 1}
+                              First M-Pesa Code
                             </label>
-                            <input
-                              type="text"
-                              value={code.code}
-                              onChange={(e) =>
-                                handleMpesaCodeChange(
-                                  index,
-                                  "code",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                              placeholder="e.g., RF48HGT678"
-                              required
-                            />
-                            {numMpesaDeposits > 1 && (
+                            <div className="text-xs text-gray-500">
+                              Expected: Ksh{" "}
+                              {getExpectedAmountForPayment(0).toLocaleString()}
+                            </div>
+                          </div>
+
+                          <input
+                            type="text"
+                            value={mpesaCodes[0]?.code || ""}
+                            onChange={(e) =>
+                              handleMpesaCodeChange(0, "code", e.target.value)
+                            }
+                            className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                            placeholder="e.g., RF48HGT678"
+                            required
+                          />
+
+                          {/* Verification Status for First Payment */}
+                          {renderMpesaVerificationStatus(0)}
+                        </div>
+
+                        {/* Second M-Pesa Payment (if needed) */}
+                        {numMpesaDeposits > 1 && (
+                          <div className="space-y-4 pt-4 border-t border-green-200">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <label className="block text-sm font-medium text-green-700">
+                                  Second M-Pesa Code
+                                </label>
+                                <div className="text-xs text-gray-500">
+                                  Remaining: Ksh{" "}
+                                  {remainingAmount.toLocaleString()}
+                                </div>
+                              </div>
+
                               <input
-                                type="number"
-                                value={code.amount}
+                                type="text"
+                                value={mpesaCodes[1]?.code || ""}
                                 onChange={(e) =>
                                   handleMpesaCodeChange(
-                                    index,
-                                    "amount",
+                                    1,
+                                    "code",
                                     e.target.value,
                                   )
                                 }
-                                className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 mt-2"
-                                placeholder="Amount for this code"
-                                min="0"
-                                required
+                                className="w-full px-4 py-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                placeholder="e.g., RF48HGT679"
+                                required={numMpesaDeposits > 1}
                               />
+
+                              {/* Phone Option for Second Payment */}
+                              <div className="mt-3">
+                                <label className="block text-sm font-medium text-gray-600 mb-2">
+                                  Pay with same phone number?
+                                </label>
+                                <div className="flex space-x-4">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handlePhoneOptionChange("same")
+                                    }
+                                    className={`flex-1 py-2 px-4 rounded-lg border transition-all ${
+                                      useSamePhone
+                                        ? "bg-blue-100 border-blue-500 text-blue-600"
+                                        : "bg-gray-100 border-gray-300 hover:border-gray-400"
+                                    }`}
+                                  >
+                                    Same Phone
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handlePhoneOptionChange("different")
+                                    }
+                                    className={`flex-1 py-2 px-4 rounded-lg border transition-all ${
+                                      !useSamePhone
+                                        ? "bg-green-100 border-green-500 text-green-600"
+                                        : "bg-gray-100 border-gray-300 hover:border-gray-400"
+                                    }`}
+                                  >
+                                    Different Phone
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Different Phone Input */}
+                              {!useSamePhone && (
+                                <div className="mt-3">
+                                  <label className="block text-sm font-medium text-gray-600 mb-1">
+                                    Phone Number for Second Payment
+                                  </label>
+                                  <input
+                                    type="tel"
+                                    value={mpesaPhoneNumber}
+                                    onChange={(e) =>
+                                      setMpesaPhoneNumber(e.target.value)
+                                    }
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    placeholder="07XX XXX XXX"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Second Payment Buttons */}
+                              <div className="flex space-x-2 mt-3">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMpesaPrompt(1)}
+                                  disabled={isCheckingMpesa}
+                                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium flex items-center justify-center disabled:opacity-50"
+                                >
+                                  <span>Prompt for 2nd Payment</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => checkMpesaPayment(1)}
+                                  disabled={isCheckingMpesa}
+                                  className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center justify-center disabled:opacity-50"
+                                >
+                                  <Refresh
+                                    className={`h-4 w-4 mr-1 ${
+                                      isCheckingMpesa ? "animate-spin" : ""
+                                    }`}
+                                  />
+                                  Refresh
+                                </button>
+                              </div>
+
+                              {/* Verification Status for Second Payment */}
+                              {renderMpesaVerificationStatus(1)}
+
+                              {/* Duplicate Code Warning */}
+                              {mpesaCodes[0]?.code &&
+                                mpesaCodes[1]?.code &&
+                                mpesaCodes[0].code === mpesaCodes[1].code && (
+                                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-xs text-red-700">
+                                      ⚠️ The second M-Pesa code is the same as
+                                      the first. Please wait for the second
+                                      payment to be processed.
+                                    </p>
+                                  </div>
+                                )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Second Payment Prompt Modal */}
+                  {isPromptOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                      <div className="bg-white rounded-2xl w-full max-w-md">
+                        <div className="p-6">
+                          <h3 className="text-lg font-semibold text-yellow-700 mb-4">
+                            Second Payment Required
+                          </h3>
+
+                          <div className="mb-6">
+                            <p className="text-gray-600 mb-4">
+                              Remaining amount to pay:{" "}
+                              <span className="font-bold text-yellow-700">
+                                Ksh {remainingAmount}
+                              </span>
+                            </p>
+
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-600 mb-3">
+                                Use same phone number for payment?
+                              </label>
+                              <div className="flex space-x-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setUseSamePhone(true)}
+                                  className={`flex-1 py-2 px-4 rounded-lg border ${
+                                    useSamePhone
+                                      ? "bg-blue-100 border-blue-500 text-blue-600"
+                                      : "bg-gray-100 border-gray-300"
+                                  }`}
+                                >
+                                  Same Phone ({customerPhone || "Not set"})
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setUseSamePhone(false)}
+                                  className={`flex-1 py-2 px-4 rounded-lg border ${
+                                    !useSamePhone
+                                      ? "bg-green-100 border-green-500 text-green-600"
+                                      : "bg-gray-100 border-gray-300"
+                                  }`}
+                                >
+                                  Different Phone
+                                </button>
+                              </div>
+                            </div>
+
+                            {!useSamePhone && (
+                              <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-600 mb-1">
+                                  Phone Number for Payment
+                                </label>
+                                <input
+                                  type="tel"
+                                  value={mpesaPhoneNumber}
+                                  onChange={(e) =>
+                                    setMpesaPhoneNumber(e.target.value)
+                                  }
+                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                  placeholder="07XX XXX XXX"
+                                />
+                              </div>
                             )}
                           </div>
-                        ))}
+
+                          <div className="flex space-x-3">
+                            <button
+                              type="button"
+                              onClick={() => setIsPromptOpen(false)}
+                              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSubmitSecondPayment}
+                              disabled={isCheckingMpesa}
+                              className="flex-1 py-3 bg-yellow-500 text-white rounded-xl hover:bg-yellow-600 disabled:opacity-50"
+                            >
+                              {isCheckingMpesa
+                                ? "Sending..."
+                                : "Send Payment Request"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

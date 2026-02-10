@@ -25,16 +25,6 @@ const initialState: CompanyExpensesState = {
 export const fetchCompanyExpenses = createAsyncThunk<CompanyExpenses[]>(
   "companyExpenses/fetchCompanyExpenses",
   async () => {
-    // const response = await axios.get<Expenses[]>(EXPENSES_URLS);
-    // const response = await axios.get<CompanyExpenses[]>(
-    //   `${apiUrl}/sales_ai/company-expenses/`,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   },
-    // )
-    // console.log('fetch expenses ', response.data)
     const response = await api.get<CompanyExpenses[]>(
       "/sales_ai/company-expenses/")
     return response.data // Return the fetched expenses data
@@ -44,15 +34,6 @@ export const fetchCompanyExpenses = createAsyncThunk<CompanyExpenses[]>(
 export const addNewExpense = createAsyncThunk(
   "companyExpense/addNewExpense",
   async ({ formData }: { formData: any }) => {
-    // const response = await axios.post<CompanyExpenses>(
-    //   `${apiUrl}/sales_ai/company-expenses/`,
-    //   formData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     },
-    //   },
-    // )
     const response = await api.post("/sales_ai/company-expenses/", formData)
     return response.data // Return the created expense data
   },

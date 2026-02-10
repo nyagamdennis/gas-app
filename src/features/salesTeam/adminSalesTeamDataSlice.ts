@@ -29,15 +29,10 @@ const initialState: adminSalesTeamDataState = {
 export const fetchAdminSalesTeamData = createAsyncThunk(
   "adminSalesTeamData/fetchAdminSalesTeamData",
   async (
-    { teamId, salesDate }: { teamId?: string; salesDate?: string } = {}
   ) => {
-    const params: Record<string, string> = {};
-    if (teamId) params.teamId = teamId;
-    if (salesDate) params.salesDate = salesDate;
-    // console.log('sales date ', salesDate)
-    // console.log('team id s ', teamId)
+ 
 
-    const response = await api.get("/adminsalesteamdata", { params });
+    const response = await api.get("/sales/sales/today");
     return response.data;
   }
 );
@@ -47,16 +42,7 @@ export const fetchAdminSalesTeamData = createAsyncThunk(
 export const toggleVerification = createAsyncThunk(
   "adminSalesTeamData/toggleVerification",
   async ({saleId, paymentType}:{saleId: string; paymentType:string}) => {
-  
-      // const response = await axios.patch(
-      //     `${apiUrl}/adminsverifyalesteamdata/${saleId}/`,
-      //     {paymentType:paymentType},
-      //     {
-      //         headers: {
-      //             Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //         },
-      //     }
-      // );
+
       const response = await api.patch(`/adminsverifyalesteamdata/${saleId}/`, {
         paymentType: paymentType,
       });

@@ -7,7 +7,15 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import defaultProfile from "../../components/media/default.png"
 import { useNavigate } from "react-router-dom"
 import planStatus from "../../features/planStatus/planStatus"
-import { fetchFiredEmployees, selectAllFiredEmployees } from "../../features/employees/firedEmployeesSlice"
+import {
+  fetchFiredEmployees,
+  selectAllFiredEmployees,
+} from "../../features/employees/firedEmployeesSlice"
+import {
+  fetchTerminatedEmployees,
+  selectAllEmployees,
+} from "../../features/employees/employeesSlice"
+import { employeeReactivate, fetchSingleEmployee } from "../../features/employees/singleEmployeeSlice"
 
 // Role options with icons
 const ROLE_OPTIONS = [
@@ -25,16 +33,22 @@ const ExEmployees = () => {
   const navigate = useNavigate()
   const { businessName, businessId } = planStatus()
 
-  const allEmployees = useAppSelector(selectAllFiredEmployees)
+  const allEmployees = useAppSelector(selectAllEmployees)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterRole, setFilterRole] = useState("")
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
   const [showRehireModal, setShowRehireModal] = useState(false)
 
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false)
+
+  const [reactivationData, setReactivationData] = useState({
+    reactivation_reason: "",
+  })
+
   useEffect(() => {
     if (businessId) {
-      dispatch(fetchFiredEmployees({ businessId }))
+      dispatch(fetchTerminatedEmployees({ businessId }))
     }
   }, [dispatch, businessId])
 
@@ -62,27 +76,43 @@ const ExEmployees = () => {
     setShowEmployeeModal(true)
   }
 
-  const handleRehire = async () => {
-    if (selectedEmployee && businessId) {
-      try {
-        // await dispatch(
-        //   rehireEmployee({
-        //     businessId,
-        //     employeeId: selectedEmployee.id,
-        //   }),
-        // ).unwrap()
+  const handleRehire = () => {
+    if (!selectedEmployee) return
 
-        toast.success(
-          `${selectedEmployee.first_name} has been rehired successfully!`,
-        )
-        setShowRehireModal(false)
-        setShowEmployeeModal(false)
-        dispatch(fetchFiredEmployees({ businessId }))
-      } catch (error) {
-        toast.error("Failed to rehire employee")
-      }
-    }
+    dispatch(
+      employeeReactivate({
+        employeeId: selectedEmployee?.id,
+        data: reactivationData,
+      }),
+    )
+      .unwrap()
+      .then(() => {
+        toast.success("Employee reactivated successfully")
+        setReactivateDialogOpen(false)
+        setReactivationData({ reactivation_reason: "" })
+        dispatch(fetchSingleEmployee(id))
+      })
+      .catch((error) => {
+        console.error("Failed to reactivate employee:", error)
+        toast.error("Failed to reactivate employee")
+      })
   }
+
+  // const handleRehire = async () => {
+  //   if (selectedEmployee && businessId) {
+  //     try {
+
+  //       toast.success(
+  //         `${selectedEmployee.first_name} has been rehired successfully!`,
+  //       )
+  //       setShowRehireModal(false)
+  //       setShowEmployeeModal(false)
+  //       dispatch(fetchFiredEmployees({ businessId }))
+  //     } catch (error) {
+  //       toast.error("Failed to rehire employee")
+  //     }
+  //   }
+  // }
 
   const terminationReasons = [
     { value: "RESIGNATION", label: "Resignation", icon: "✍️" },

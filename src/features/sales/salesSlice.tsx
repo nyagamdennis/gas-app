@@ -27,37 +27,49 @@ const initialState: SalesState = {
     error: null,
 };
 
-export const fetchSales = createAsyncThunk<Sales[], void, {}>(
-    "sales/fetchSales",
-    async () => {
-      // const response = await axios.get<Sales[]>(SALES_URLS);
-      const response = await api.get("/sales/")
-      return response.data; // Corrected the return statement
-    }
-  );
+type FetchSalesParams = {
+  date?: string // YYYY-MM-DD
+  startDate?: string // YYYY-MM-DD
+  endDate?: string // YYYY-MM-DD
+  shopId?: number
+  storeId?: number
+  vehicleId?: number
+}
+
+
+export const fetchSales = createAsyncThunk<
+  Sales[],
+  FetchSalesParams | undefined
+>("sales/fetchSales", async (params, { rejectWithValue }) => {
+
+  try {
+    const response = await api.get("/sales/sales/", {
+      params: {
+        ...(params?.date && { created_at__date: params.date }),
+        ...(params?.startDate && { created_at__date__gte: params.startDate }),
+        ...(params?.endDate && { created_at__date__lte: params.endDate }),
+        ...(params?.shopId && { shop: params.shopId }),
+        ...(params?.storeId && { store: params.storeId }),
+        ...(params?.vehicleId && { vehicle: params.vehicleId }),
+      },
+    })
+    return response.data
+  } catch (error: any) {
+    return rejectWithValue(error.response?.data)
+  }
+})
+
+
+export const retriveSales = createAsyncThunk<Sales[], void, {}>(
+  "sales/fetchSales",
+  async () => {
+    // const response = await axios.get<Sales[]>(SALES_URLS);
+    const response = await api.get("/sales/retrieve")
+    return response.data // Corrected the return statement
+  },
+)
   
 
-// export const recordSales = createAsyncThunk<Sales[], void, {}>(
-//     "sales/recordSales",
-//     async (formData) => {
-//       // const response = await axios.post(`${apiUrl}/recordsales/`, formData,{
-//       //   headers: {
-//       //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-//       //     "Content-Type": "application/json",
-//       //   });
-//       const response = await axios.post(
-//         `${apiUrl}/recordsales/`,
-//         formData,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${Cookies.get("accessToken")}`,
-//             "Content-Type": "application/json",
-//           },
-//         },
-//       )
-//       return response.data; // Corrected the return statement
-//     }
-//   );
   
 export const recordSales = createAsyncThunk(
   "sales/recordSales",

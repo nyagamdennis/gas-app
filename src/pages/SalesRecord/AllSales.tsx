@@ -55,6 +55,7 @@ import {
   selectAllSalesTeamVehicle,
 } from "../../features/salesTeam/salesTeamVehicleSlice"
 import planStatus from "../../features/planStatus/planStatus"
+import { fetchSales, retriveSales } from "../../features/sales/salesSlice"
 
 const AllSales = () => {
   const dispatch = useAppDispatch()
@@ -103,34 +104,34 @@ const AllSales = () => {
   const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
   const [loading, setLoading] = useState(false)
 
+  const [hasFetched, setHasFetched] = useState(false)
 
 
-const [hasFetched, setHasFetched] = useState(false)
+  
 
-useEffect(() => {
-  // Only fetch if we have businessId, haven't fetched yet, and arrays are empty
-  if (
-    businessId &&
-    !hasFetched &&
-    allSalesTeam.length === 0 &&
-    allSalesVehicles.length === 0
-  ) {
-    setLoading(true)
-    Promise.all([
-      dispatch(fetchSalesTeamShops()),
-      dispatch(fetchSalesTeamVehicle()),
-    ])
-      .finally(() => setLoading(false))
-      .then(() => setHasFetched(true))
-  }
-}, [
-  dispatch,
-  businessId,
-  hasFetched,
-  allSalesTeam.length,
-  allSalesVehicles.length,
-])
-
+  useEffect(() => {
+    // Only fetch if we have businessId, haven't fetched yet, and arrays are empty
+    if (
+      businessId &&
+      !hasFetched &&
+      allSalesTeam.length === 0 &&
+      allSalesVehicles.length === 0
+    ) {
+      setLoading(true)
+      Promise.all([
+        dispatch(fetchSalesTeamShops()),
+        dispatch(fetchSalesTeamVehicle()),
+      ])
+        .finally(() => setLoading(false))
+        .then(() => setHasFetched(true))
+    }
+  }, [
+    dispatch,
+    businessId,
+    hasFetched,
+    allSalesTeam.length,
+    allSalesVehicles.length,
+  ])
 
   const handleViewCylinderSales = () => {
     setActiveModalType("cylinders")
@@ -257,7 +258,7 @@ useEffect(() => {
     if (selectedTeamType === "shop" && selectedTeam) {
       route = `/cylinders/sales/new/shop/${selectedTeam.name}/${selectedTeam.id}`
     } else if (selectedTeamType === "vehicle" && selectedTeam) {
-      route = `/cylinders/sales/new/vehicle/${selectedTeam.name}/${selectedTeam.id}`
+      route = `/cylinders/sales/new/vehicle/${selectedTeam.number_plate}/${selectedTeam.id}`
     }
 
     // Add sale type as query param
@@ -434,6 +435,10 @@ useEffect(() => {
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => handleNavigate("/cylinders/stock/store")}
+                      // navigate(teamId ? `/admins/salesdata/${teamId}/${teamName}/${teamType}` : "/sales")
+
+                      // /admins/salesdata/${teamId}/${teamName}
+                      // /admins/salesdata/2/Downtown%20Branch%20upda/shop
                       className="py-2 px-3 border border-blue-300 text-blue-600 rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
                     >
                       <Store className="text-sm" />
@@ -449,7 +454,7 @@ useEffect(() => {
                       }`}
                     >
                       <Groups className="text-sm" />
-                      Teams
+                      Shops
                     </button>
                     <button
                       onClick={() => handleViewVehicles("cylinders")}
@@ -502,7 +507,7 @@ useEffect(() => {
                       }`}
                     >
                       <Groups className="text-sm" />
-                      Teams
+                      Shops
                     </button>
                     <button
                       onClick={() => handleViewVehicles("products")}
@@ -555,7 +560,9 @@ useEffect(() => {
                           <h3 className="font-medium text-gray-900">
                             {team.name}
                           </h3>
-                          <p className="text-sm text-gray-600">ID: {team.id}</p>
+                          <p className="text-sm text-gray-600">
+                            Location: {team?.location?.name}
+                          </p>
                         </div>
                         <ChevronRight className="text-gray-400" />
                       </button>
@@ -1274,11 +1281,13 @@ useEffect(() => {
                         key={team.id}
                         onClick={() =>
                           handleNavigate(
-                            `/admins/cylinders/team-sales/${
+                            `/admins/salesdata/${
                               team.id
-                            }/${encodeURIComponent(team.name)}`,
+                            }/${team.name}/shop`,
                           )
                         }
+                        // navigate(teamId ? `/admins/salesdata/${teamId}/${teamName}/${teamType}` : "/sales")
+
                         className="rounded-xl border border-gray-200 mb-3 hover:border-blue-500 hover:bg-blue-50 transition-all"
                       >
                         <ListItemIcon>
@@ -1290,7 +1299,7 @@ useEffect(() => {
                         </ListItemIcon>
                         <ListItemText
                           primary={team.name}
-                          secondary={`ID: ${team.id}`}
+                          secondary={`Location: ${team?.location?.name}`}
                           primaryTypographyProps={{
                             className: "font-semibold",
                           }}
@@ -1452,14 +1461,17 @@ useEffect(() => {
                         key={vehicle.id}
                         onClick={() =>
                           handleNavigate(
-                            `/admins/cylinders/vehicle-sales/${
+                            `/admins/salesdata/${
                               vehicle.id
-                            }/${encodeURIComponent(
-                              vehicle.name ||
-                                vehicle.vehicleNumber ||
-                                "Vehicle",
-                            )}`,
+                            }/${vehicle.number_plate}/vehicle`,
                           )
+                        //   onClick={() =>
+                        //   handleNavigate(
+                        //     `/admins/salesdata/${
+                        //       team.id
+                        //     }/${team.name}/shop`,
+                        //   )
+                        // }
                         }
                         className="rounded-xl border border-gray-200 mb-3 hover:border-cyan-500 hover:bg-cyan-50 transition-all"
                       >
@@ -1474,17 +1486,17 @@ useEffect(() => {
                         </ListItemIcon>
                         <ListItemText
                           primary={
-                            vehicle.name ||
-                            vehicle.vehicleNumber ||
-                            `Vehicle ${vehicle.id}`
+                            vehicle.number_plate ||
+                            vehicle.vehicleNumber || 'dd'
+                            // `Vehicle ${vehicle.id}`
                           }
                           secondary={
                             <>
                               <span className="font-medium text-gray-900">
                                 {vehicle.vehicleType || "Vehicle"}
                               </span>
-                              {vehicle.vehicleNumber &&
-                                ` • ${vehicle.vehicleNumber}`}
+                              {vehicle.number_plate &&
+                                ` • ${vehicle.engine_size} cc`}
                             </>
                           }
                           primaryTypographyProps={{

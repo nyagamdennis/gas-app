@@ -1,1275 +1,1376 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react"
-import {
-  addEmployeeSalary,
-  addEmployeeSalaryDate,
-  fetchSingleEmployee,
-  selectSingleEmployees,
-  transferEmployee,
-  updateSimgleEmployeeStatus,
-} from "../../features/employees/singleEmployeeSlice"
-import { selectAllSalesTeamShops } from "../../features/salesTeam/salesTeamSlice"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { useNavigate, useParams } from "react-router-dom"
-import {
-  clearDefault,
-  fetchDefaults,
-  ReturnDefault,
-  selectAllDefaults,
-} from "../../features/defaults/defaultsSlice"
-import {
-  clearLessPay,
-  fetchLessPay,
-  selectAllLessPay,
-} from "../../features/defaults/lessPaySlice"
-import DateDisplay from "../../components/DateDisplay"
-import {
-  fetchExpenses,
-  selectAllExpenses,
-} from "../../features/expenses/expensesSlice"
-import FormattedAmount from "../../components/FormattedAmount"
-import Button from "@mui/material/Button"
-import TextField from "@mui/material/TextField"
-import Dialog from "@mui/material/Dialog"
-import DialogActions from "@mui/material/DialogActions"
-import DialogContent from "@mui/material/DialogContent"
-import DialogContentText from "@mui/material/DialogContentText"
-import DialogTitle from "@mui/material/DialogTitle"
-import CircularProgress from "@mui/material/CircularProgress"
-import {
-  addEmployeeAdvance,
-  clearAdvances,
-  fetchAdvances,
-  selectAllAdvance,
-} from "../../features/defaults/advancesSlice"
-import { fetchCash, selectAllCash } from "../../features/cashAtHand/cashSlice"
-import defaultPic from "../../components/media/default.png"
-import AdminsFooter from "../../components/AdminsFooter"
-import {
-  fetchSalary,
-  selectAllSalary,
-} from "../../features/monthlySalary/salarySlice"
-import Navbar from "../../components/ui/mobile/admin/Navbar"
+import { useNavigate, useParams, Link } from "react-router-dom"
 import { toast, ToastContainer } from "react-toastify"
+import CircularProgress from "@mui/material/CircularProgress"
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Grid,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  Button,
+} from "@mui/material"
+import {
+  CheckCircle,
+  Cancel,
+  Warning,
+  TransferWithinAStation,
+  Phone,
+  Email,
+  Badge,
+  Work,
+  LocationOn,
+  CalendarToday,
+  AccountCircle,
+  AttachMoney,
+  History,
+  AccessTime,
+  EventNote,
+  Star,
+  Assignment,
+  TrendingUp,
+  EventAvailable,
+  Edit,
+  Refresh,
+} from "@mui/icons-material"
+
+import Navbar from "../../components/ui/mobile/admin/Navbar"
+import AdminsFooter from "../../components/AdminsFooter"
+import defaultProfile from "../../components/media/default.png"
+import {
+  fetchSingleEmployee,
+  terminateEmployee,
+  employeeAttendance,
+  employeeLeave,
+  employeeReactivate,
+  selectSingleEmployee,
+  selectSingleEmployeeStatus,
+  selectTerminationStatus,
+  selectAttendanceData,
+  selectAttendanceStatus,
+  selectLeaveData,
+  selectLeaveStatus,
+  clearTerminationStatus,
+  clearAttendanceStatus,
+  clearLeaveStatus,
+  clearReactivationStatus,
+} from "../../features/employees/singleEmployeeSlice"
+
+// Helper function to get team type display
+const getTeamTypeDisplay = (type) => {
+  switch (type) {
+    case "VEHICLE":
+      return { icon: "🚚", label: "Vehicle Team" }
+    case "SHOP":
+      return { icon: "🏪", label: "Shop Team" }
+    case "STORE":
+      return { icon: "🏬", label: "Store Team" }
+    case "DELIVERY":
+      return { icon: "🏍️", label: "Delivery Team" }
+    default:
+      return { icon: "👥", label: "Team" }
+  }
+}
+
+// Helper function to get role icon
+const getRoleIcon = (role) => {
+  switch (role) {
+    case "SHOP_ATTENDANT":
+      return "🏪"
+    case "DELIVERY_GUY":
+      return "🏍️"
+    case "STORE_MAN":
+      return "📦"
+    case "SECURITY":
+      return "🛡️"
+    case "TRUCK_DRIVER":
+      return "🚛"
+    case "CONDUCTOR":
+      return "🎫"
+    case "SALES_PERSON":
+      return "💼"
+    default:
+      return "👤"
+  }
+}
 
 const EmployeesProfileDetails = () => {
-  const [showIds, setShowIds] = useState<boolean>(false)
-  const [addingSalary, setAddingSalary] = useState<Boolean>(false)
-  const [addingSalaryDate, setAddingSalaryDate] = useState<Boolean>(false)
-  const [salaryAmount, setSalaryAmount] = useState<number>(0)
-  const [addingAdvance, setAddingAdvance] = useState<Boolean>(false)
-  const [advanceAmount, setAdvanceAmount] = useState<number>(0)
-  const { id } = useParams()
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const employee = useAppSelector(selectSingleEmployees)
-  const allSalesTeams = useAppSelector(selectAllSalesTeamShops)
-  const employeeDefaults = useAppSelector(selectAllDefaults)
-  const employeeLessPays = useAppSelector(selectAllLessPay)
-  const expense = useAppSelector(selectAllExpenses)
-  const advances = useAppSelector(selectAllAdvance)
-  const allCash = useAppSelector(selectAllCash)
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date()
-    return `${now.toLocaleString("default", {
-      month: "long",
-    })} ${now.getFullYear()}`
+  const { id } = useParams<{ id: string }>()
+
+  // Redux selectors
+  const employee = useAppSelector(selectSingleEmployee)
+  const status = useAppSelector(selectSingleEmployeeStatus)
+  const terminationStatus = useAppSelector(selectTerminationStatus)
+  const attendanceData = useAppSelector(selectAttendanceData)
+  const attendanceStatus = useAppSelector(selectAttendanceStatus)
+  const leaveData = useAppSelector(selectLeaveData)
+  const leaveStatus = useAppSelector(selectLeaveStatus)
+
+  // Local state
+  const [activeTab, setActiveTab] = useState(0)
+  const [terminateDialogOpen, setTerminateDialogOpen] = useState(false)
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false)
+  const [terminationData, setTerminationData] = useState({
+    termination_reason: "",
+    termination_date: new Date().toISOString().split("T")[0],
+    notice_period_days: 30,
+    final_settlement_amount: "",
+    remarks: "",
   })
-
-
-  // const employeeSalary = useAppSelector(selectAllSalary)
-  const employeeSalary = useAppSelector(selectAllSalary)
-  // console.log('employee sala ', employeeSalary)
-
-  const [selectedEmployee, setSelectedEmployee] = useState(null)
-  const [newSalesTeam, setNewSalesTeam] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [advanceDate, setAdvanceDate] = useState("")
-  const [openAddDate, setOpenAddDate] = useState(false)
-
-  // const [employeeLessPays, setEmployeeLessPays] = useState({});
-
-  const [modalEmployee, setModalEmployee] = useState(null)
-
-  const [open, setOpen] = React.useState(false)
-  const [openAdvance, setOpenAdvance] = React.useState(false)
-  const [salaryDate, setSalaryDate] = useState("")
-
-  const handleAddSalaryData = async () => {
-    setAddingSalary(true)
-    try {
-      const updatedEmployeeSalary = await dispatch({ salaryDate })
-      alert("Salary date added successfully!")
-      handleClickCloseAddSalaryDate()
-    } catch (error) {
-      console.log("error ", error)
-      alert("Failed to add salary date.", error.message)
-    }
-    setAddingSalary(false)
-  }
-
-  const handleOpenIds = () => {
-    setShowIds(!showIds)
-  }
-
-  const handleClickOpen = () => {
-    setOpen(true)
-  }
-
-  const handleClose = () => {
-    setOpen(false)
-  }
-
-  const handleClickOpenAdvance = () => {
-    setOpenAdvance(true)
-  }
-
-  const handleCloseAdvance = () => {
-    setOpenAdvance(false)
-  }
-
-  const handleClickOpenAddSalaryDate = () => {
-    setOpenAddDate(true)
-  }
-
-  const handleClickCloseAddSalaryDate = () => {
-    setOpenAddDate(false)
-  }
+  const [reactivationData, setReactivationData] = useState({
+    reactivation_reason: "",
+  })
 
   useEffect(() => {
     if (id) {
-      dispatch(fetchSingleEmployee({ id }))
-      dispatch(fetchSalesTeam())
-      dispatch(fetchDefaults(id))
-      dispatch(fetchLessPay(id))
-      dispatch(fetchExpenses(id))
-      dispatch(fetchAdvances(id))
-      dispatch(fetchSalary({ employeeId: Number(id) }))
-      dispatch(fetchCash())
+      dispatch(fetchSingleEmployee(id))
+    }
+
+    return () => {
+      dispatch(clearTerminationStatus())
+      dispatch(clearAttendanceStatus())
+      dispatch(clearLeaveStatus())
+      dispatch(clearReactivationStatus())
     }
   }, [dispatch, id])
 
-  const handleStatusChange = async (employeeId, statusField) => {
-    setLoading(true)
-    try {
-      await dispatch(
-        updateSimgleEmployeeStatus({ employeeId, statusField }),
-      ).unwrap()
-      toast.success(`employee status updated: ${statusField}`)
-      setSelectedEmployee(null)
-    } catch (error) {
-      toast.error(`Failed to update status: ${error}`)
+  useEffect(() => {
+    if (id && activeTab === 1) {
+      dispatch(employeeAttendance({ employeeId: id }))
     }
-    setLoading(false)
+  }, [dispatch, id, activeTab])
+
+  useEffect(() => {
+    if (id && activeTab === 2) {
+      dispatch(employeeLeave({ employeeId: id }))
+    }
+  }, [dispatch, id, activeTab])
+
+  const handleTerminateEmployee = () => {
+    if (!id) return
+
+    dispatch(terminateEmployee({ employeeId: id, data: terminationData }))
+      .unwrap()
+      .then(() => {
+        toast.success("Employee terminated successfully")
+        setTerminateDialogOpen(false)
+        setTerminationData({
+          termination_reason: "",
+          termination_date: new Date().toISOString().split("T")[0],
+          notice_period_days: 30,
+          final_settlement_amount: "",
+          remarks: "",
+        })
+        dispatch(fetchSingleEmployee(id))
+      })
+      .catch((error) => {
+        console.error("Failed to terminate employee:", error)
+        toast.error("Failed to terminate employee")
+      })
   }
 
+  const handleReactivateEmployee = () => {
+    if (!id) return
 
-  const handleTermination = async (employeeId, statusField) => {
-    setLoading(true)
-    try {
-      await dispatch(
-        updateSimgleEmployeeStatus({ employeeId, statusField }),
-      ).unwrap()
-      alert(`Employee status updated: ${statusField}`)
-      setSelectedEmployee(null)
-    } catch (error) {
-      alert("Failed to update employee status ", error)
-    }
-    setLoading(false)
-  }
-  const employeeId = Number(id)
-
-  const handleTransferEmployee = async () => {
-    if (!newSalesTeam) {
-      toast.error("Please select a sales team.")
-      return
-    }
-    setLoading(true)
-    try {
-      await dispatch(
-        transferEmployee({
-          employeeId: selectedEmployee?.id,
-          salesTeamId: newSalesTeam,
-        }),
-      ).unwrap()
-      toast.success("Employee transferred successfully.")
-      setSelectedEmployee(null)
-    } catch (error) {
-      toast.error("Failed to transfer employee, try again.")
-    }
-    setLoading(false)
+    dispatch(employeeReactivate({ employeeId: id, data: reactivationData }))
+      .unwrap()
+      .then(() => {
+        toast.success("Employee reactivated successfully")
+        setReactivateDialogOpen(false)
+        setReactivationData({ reactivation_reason: "" })
+        dispatch(fetchSingleEmployee(id))
+      })
+      .catch((error) => {
+        console.error("Failed to reactivate employee:", error)
+        toast.error("Failed to reactivate employee")
+      })
   }
 
-  const handleClearDefaults = async (defaultId) => {
-    setLoading(true)
-    try {
-      await dispatch(clearDefault(defaultId)).unwrap()
-      // alert("Defaults cleared successfully.")
-      toast.success("Defaults cleared successfully.")
-    } catch (error) {
-      // alert("Failed to clear defaults.")
-      toast.error("Failed to clear default, try again.")
-    }
-    setLoading(false)
-  }
-
-  const handleReturnDefaults = async (defaultId) => {
-    setLoading(true)
-    try {
-      await dispatch(ReturnDefault(defaultId)).unwrap()
-      // alert("Defaults cleared successfully.")
-      toast.success("Defaults cleared successfully.")
-    } catch (error) {
-      // alert("Failed to clear defaults.")
-      toast.error("Failed to cleared defaults.")
-    }
-    setLoading(false)
-  }
-
-  const handleReturnDefault = async () => {}
-
-  const handleClearLessPay = async (lessPayId) => {
-    setLoading(true)
-    try {
-      await dispatch(clearLessPay(lessPayId)).unwrap()
-      // alert("less payments cleared successfully.")
-      toast.success("Less payments cleared successfully.")
-    } catch (error) {
-      // alert("Failed to clear less pay.")
-      toast.error("Failed to clear less pay.")
-    }
-    setLoading(false)
-  }
-
-  const handleRemoveAdvance = async (advanceId) => {
-    // setLoading(true);
-    try {
-      await dispatch(clearAdvances(advanceId)).unwrap()
-      // alert("advance cleared successfully.")
-      toast.success("advance cleared successfully.")
-    } catch (error) {
-      // alert("Failed to clear advance.")
-      toast.error("Failed to clear advance.")
-    }
-    // setLoading(false);
-  }
-
-  const handleSalesTeamChange = async (event) => {
-    const newSalesTeamId = event.target.value
-    if (!newSalesTeamId) return
-
-    setLoading(true)
-    try {
-      const updatedEmployee = await dispatch(
-        transferEmployee({
-          employeeId: employee.id,
-          salesTeamId: Number(newSalesTeamId),
-        }),
-      ).unwrap()
-
-      // alert("Sales Team updated successfully!")
-      toast.success("Sales Team updated successfully!")
-    } catch (error) {
-      // alert("Failed to update Sales Team.")
-      toast.error("Failed to update Sales Team.")
-    }
-    setLoading(false)
-  }
-
-  // ------------------------------------------------------------------
-  const getDateRangeForSelectedMonth = (
-    selectedMonth: string,
-    salaries: Salary[],
-  ): { startDate: Date; endDate: Date } => {
-    const [monthStr, yearStr] = selectedMonth.split(" ")
-    const selectedDate = new Date(`${monthStr} 1, ${yearStr}`)
-
-    const sortedSalaries = salaries
-      .filter((s) => !!s.payment_date)
-      .map((s) => new Date(s.payment_date))
-      .sort((a, b) => a.getTime() - b.getTime())
-
-    let startDate: Date
-    let endDate: Date = new Date() // fallback to today
-
-    // Check if payment exists for selected month
-    const currentSalaryDate = sortedSalaries.find((date) => {
-      return (
-        date.getMonth() === selectedDate.getMonth() &&
-        date.getFullYear() === selectedDate.getFullYear()
-      )
-    })
-
-    if (currentSalaryDate) {
-      startDate = currentSalaryDate
-
-      const nextSalaryDate = sortedSalaries.find((d) => d > currentSalaryDate)
-      if (nextSalaryDate) endDate = nextSalaryDate
-    } else {
-      // No salary for this month, default range
-      startDate = selectedDate
-
-      const nextSalaryDate = sortedSalaries.find((d) => d > startDate)
-      if (nextSalaryDate) endDate = nextSalaryDate
-    }
-
-    return { startDate, endDate }
-  }
-
-  // -------------------------------------------------------------------
-  const { startDate, endDate } = getDateRangeForSelectedMonth(
-    selectedMonth,
-    employeeSalary,
-  )
-
-  const filteredExpenses = expense?.filter((cash) => {
-    const cashDate = new Date(cash.date)
-    if (isNaN(cashDate)) return false
-
-    return (
-      cash.employee?.id === employeeId &&
-      cashDate >= startDate &&
-      cashDate < endDate
-    )
-  })
-
-  const filteredtotalMaxWholesaleDefaultPrice = employeeDefaults?.filter(
-    (cash) => {
-      const cashDate = new Date(cash.date_lost)
-      if (isNaN(cashDate)) return false
-
-      return (
-        cash.employee === employeeId &&
-        cashDate >= startDate &&
-        cashDate < endDate
-      )
-    },
-  )
-
-  // Calculate total max wholesale price for defaults
-  const totalMaxWholesaleDefaultPrice =
-    filteredtotalMaxWholesaleDefaultPrice.reduce((total, item) => {
-      const emptyPrice =
-        (item.number_of_empty_cylinder || 0) *
-        (item.cylinder?.max_wholesale_refil_price || 0)
-      const filledPrice =
-        (item.number_of_filled_cylinder || 0) *
-        (item.cylinder?.max_wholesale_selling_price || 0)
-      return total + emptyPrice + filledPrice
-    }, 0)
-
-  const filteredEmployeeLessPay = employeeLessPays?.filter((cash) => {
-    const cashDate = new Date(cash.date_lost)
-    if (isNaN(cashDate)) return false
-
-    return (
-      cash.employee === employeeId &&
-      cashDate >= startDate &&
-      cashDate < endDate
-    )
-  })
-
-  const totalMaxWholesaleRefillLessPayPrice = filteredEmployeeLessPay.reduce(
-    (total, item) => {
-      return (
-        total +
-        (item.cylinder?.max_retail_refil_price || 0) * item.cylinders_less_pay
-      )
-    },
-    0,
-  )
-
-  const filteredAdvances = advances?.filter((cash) => {
-    const cashDate = new Date(cash.date_added)
-    if (isNaN(cashDate)) return false
-
-    return (
-      cash.employee === employeeId &&
-      cashDate >= startDate &&
-      cashDate < endDate
-    )
-  })
-
-  // ------------------------------
-  const totalExpenses = filteredExpenses?.reduce(
-    (total, item) => total + (item.amount || 0),
-    0,
-  )
-
-  const totalAdvances = filteredAdvances.reduce(
-    (total, item) => total + (item.amount || 0),
-    0,
-  )
-
-  const handleAddNewSalary = async () => {
-    setAddingSalary(true)
-    try {
-      const updatedEmployeeSalary = await dispatch(
-        addEmployeeSalary({
-          employeeId: employeeId,
-          salaryAmount: Number(salaryAmount),
-        }),
-      ).unwrap()
-      // alert("Salary added successfully!")
-      toast.success("Salary added successfully!")
-      handleClose()
-    } catch (error) {
-      // console.log("error ", error)
-      toast.error("Failed to add salary.", error.message)
-    }
-    setAddingSalary(false)
-  }
-  const handleAddSalaryDate = async () => {
-    setAddingSalaryDate(true)
-    try {
-      const updatedEmployeeSalary = await dispatch(
-        addEmployeeSalaryDate({
-          employeeId: employeeId,
-          salaryDate: salaryDate,
-        }),
-      )
-      toast.success("Salary date added successfully!")
-      handleClickCloseAddSalaryDate()
-    } catch (error) {
-      console.log("error ", error)
-      toast.error("Failed to add salary date.", error.message)
-    }
-    setAddingSalaryDate(false)
-  }
-
-  const handleAddNewAdvance = async () => {
-    setAddingSalary(true)
-    try {
-      const employeeAdvance = await dispatch(
-        addEmployeeAdvance({
-          employeeId: employeeId,
-          amount: Number(advanceAmount),
-          date_issued: advanceDate,
-        }),
-      ).unwrap()
-      toast.success("advance added successfully!")
-      handleCloseAdvance()
-    } catch (error) {
-      console.log("error ", error)
-      toast.error("Failed to advance.", error.message)
-    }
-    setAddingAdvance(false)
-  }
-
-  const totalCost = filteredtotalMaxWholesaleDefaultPrice.reduce(
-    (sum, cylinder) => {
-      const isFilled = !!cylinder.number_of_filled_cylinder
-      const isEmpty = !!cylinder.number_of_empty_cylinder
-
-      const price = isFilled
-        ? cylinder.cylinder?.max_retail_selling_price
-        : isEmpty
-        ? cylinder.cylinder?.empty_cylinder_price
-        : 0
-
-      return sum + (price || 0) // fallback in case price is undefined
-    },
-    0,
-  )
-
-  const filteredCash = allCash?.filter((cash) => {
-    const cashDate = new Date(cash.deficit_date)
-    return (
-      cash.employee === employeeId &&
-      cashDate >= startDate &&
-      cashDate < endDate
-    )
-  })
-
-  const totalCashDefault = filteredCash?.reduce((acc, cash) => {
-    return acc + cash.cash_default
-  }, 0)
-  console.log("Total cash default ", filteredCash)
-
-  const formated_payment_date = () => {
-    const today = new Date() // current date
-    const joined = new Date(employee?.date_joined) // original date
-    // Construct new date with current year & month, but day from `date_joined`
-    const adjusted = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      joined.getDate(),
-    )
-    return adjusted
-  }
-
-  const generateMonthOptions = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ]
-
-    const joinedDate = new Date(employee?.date_joined)
-    const currentDate = new Date()
-    const options = []
-
-    for (
-      let date = new Date(joinedDate);
-      date <= currentDate;
-      date.setMonth(date.getMonth() + 1)
-    ) {
-      const label = `${months[date.getMonth()]} ${date.getFullYear()}`
-      if (label !== selectedMonth) {
-        options.push(
-          <option key={label} value={label}>
-            {label}
-          </option>,
+  const getStatusChip = (status: string) => {
+    switch (status) {
+      case "ACTIVE":
+        return (
+          <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+            <CheckCircle className="mr-1" fontSize="small" /> Active
+          </span>
         )
-      }
+      case "TERMINATED":
+        return (
+          <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+            <Cancel className="mr-1" fontSize="small" /> Terminated
+          </span>
+        )
+      case "RESIGNED":
+        return (
+          <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">
+            <Warning className="mr-1" fontSize="small" /> Resigned
+          </span>
+        )
+      case "TRANSFERRED":
+        return (
+          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+            <TransferWithinAStation className="mr-1" fontSize="small" />{" "}
+            Transferred
+          </span>
+        )
+      default:
+        return (
+          <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+            {status}
+          </span>
+        )
     }
-
-    return options
   }
 
-  const hasSalaryForSelectedMonth = () => {
-    const [monthStr, yearStr] = selectedMonth.split(" ")
-    const targetMonth = new Date(`${monthStr} 1, ${yearStr}`).getMonth()
-    const targetYear = parseInt(yearStr, 10)
-
-    const salaryList = Array.isArray(employeeSalary) ? employeeSalary : []
-    
-
-    const match = employeeSalary.find((salary) => {
-      const date = new Date(salary.payment_date)
-      const amount = salary.amount
-      return (
-        date.getMonth() === targetMonth &&
-        date.getFullYear() === targetYear &&
-        amount
-      )
-    })
-
-    return match
-      ? { paid: true, paymentDate: match.payment_date, amount: match.amount }
-      : { paid: false, paymentDate: null, amount: null }
+  const getAttendanceStatusChip = (status: string) => {
+    switch (status) {
+      case "PRESENT":
+        return (
+          <Chip
+            label="Present"
+            color="success"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      case "ABSENT":
+        return (
+          <Chip
+            label="Absent"
+            color="error"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      case "ON_LEAVE":
+        return (
+          <Chip
+            label="On Leave"
+            color="warning"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      default:
+        return <Chip label={status} size="small" className="!text-xs" />
+    }
   }
 
-  const { paid, paymentDate, amount } = hasSalaryForSelectedMonth()
-  const handlePayment = () => {}
-  return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800 font-sans">
-      {/* Header */}
-      <main className="flex-grow">
+  const getLeaveStatusChip = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return (
+          <Chip
+            label="Approved"
+            color="success"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      case "PENDING":
+        return (
+          <Chip
+            label="Pending"
+            color="warning"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      case "REJECTED":
+        return (
+          <Chip
+            label="Rejected"
+            color="error"
+            size="small"
+            className="!text-xs"
+          />
+        )
+      default:
+        return <Chip label={status} size="small" className="!text-xs" />
+    }
+  }
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
         <Navbar
-          headerMessage={"Manage Employees"}
-          headerText={"View, edit, and organize your workforce"}
+          headerMessage="Employee Details"
+          headerText="Loading employee information..."
         />
-        <ToastContainer />
-        <div className="max-w-4xl mx-auto p-3">
-          {/* Back Button */}
-          <button
-            className="mb-6 px-5 py-2.5 bg-gray-700 text-white rounded-md hover:bg-gray-900 transition"
-            onClick={() => navigate("/admins/employees")}
-          >
-            ← Back to Employees
-          </button>
+        <div className="flex-grow flex items-center justify-center">
+          <CircularProgress />
+        </div>
+        <footer className="fixed bottom-0 left-0 right-0">
+          <AdminsFooter />
+        </footer>
+      </div>
+    )
+  }
 
-          {/* Employee Card */}
-          <div className="bg-white p-6 shadow-md rounded-xl flex flex-col md:flex-row gap-6">
-            {/* Profile Image */}
-            <div className="flex flex-col items-center w-full md:w-1/3">
-              <img
-                src={employee?.profile_image || defaultPic}
-                alt={`${employee?.first_name} ${employee?.last_name}`}
-                className="w-32 h-32 rounded-full border border-gray-300 object-cover"
-              />
-              <h2 className="text-xl font-semibold mt-3">
-                {employee?.first_name} {employee?.last_name}
-              </h2>
-              <p className="text-gray-500 text-sm">{employee?.user?.email}</p>
-            </div>
-
-            {/* Details Section */}
-            <div className="flex-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* Personal Info */}
-                <section>
-                  <h3 className="text-base font-bold text-gray-700 mb-2">
-                    Personal Details
-                  </h3>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>
-                      <strong>ID Number:</strong> {employee?.id_number}
-                    </li>
-                    <li>
-                      <strong>Gender:</strong> {employee?.gender}
-                    </li>
-                    <li>
-                      <strong>Phone:</strong> {employee?.phone}
-                    </li>
-                    <li>
-                      <strong>Alt. Phone:</strong> {employee?.alternative_phone}
-                    </li>
-                  </ul>
-                </section>
-
-                {/* Sales Team */}
-                <section>
-                  <h3 className="text-base font-bold text-gray-700 mb-2">
-                    Sales Team
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={employee?.sales_team?.profile_image || defaultPic}
-                      alt={employee?.sales_team?.name}
-                      className="w-12 h-12 rounded-full border border-gray-300"
-                    />
-                    <p className="text-sm">
-                      {employee?.sales_team?.name || "Not Assigned"}
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">
-                      Change Team
-                    </label>
-                    <select
-                      onChange={handleSalesTeamChange}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white text-sm"
-                    >
-                      <option value="">Select a new Sales Team</option>
-                      {allSalesTeams.map((team) => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </section>
-              </div>
-
-              {/* Status & Actions */}
-              <div >
-                {/* <button
-              onClick={() => handleStatusChange(employee?.id, "verified")}
-              className={`px-3 py-1 rounded-md text-white text-sm font-medium transition ${
-                employee?.verified ? "bg-green-600" : "bg-gray-400"
-              }`}
-            >
-              {employee?.verified ? "Verified ✅" : "Not Verified ❌"}
-            </button> */}
-                {/* Verification Status */}
-                <div className="mt-6">
-                  <h3 className="text-base whitespace-nowrap font-bold text-gray-700 mb-2">
-                    Verification Status
-                  </h3>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="verificationStatus"
-                        value="verified"
-                        checked={employee?.verified}
-                        onChange={() =>
-                          handleStatusChange(employee?.id, "verified")
-                        }
-                        className="form-radio h-4 w-4 text-green-600"
-                      />
-                      <span className="text-sm text-gray-700">Verified</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="verificationStatus"
-                        value="not_verified"
-                        checked={!employee?.verified}
-                        onChange={() =>
-                          handleStatusChange(employee?.id, "verified")
-                        }
-                        className="form-radio h-4 w-4 text-gray-600"
-                      />
-                      <span className="text-sm text-gray-700 whitespace-nowrap">
-                        Not Verified
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                
-              </div>
-              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                
-
-                <button
-                  onClick={handleClickOpenAddSalaryDate}
-                  className="px-3 py-1 rounded-md bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium"
-                >
-                  Payment Date
-                </button>
-
-                <div
-                  className={`px-3 py-1 rounded-md text-white text-sm font-medium text-center ${
-                    employee?.fired ? "bg-black" : "bg-gray-400"
-                  }`}
-                  onClick={() => handleStatusChange(employee?.id, "fire")}
-                >
-                  {employee?.fired ? "Terminated 🔥" : "Terminate"}
-                </div>
-
-                <button
-                  onClick={handleClickOpen}
-                  className="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
-                >
-                  Enter Salary
-                </button>
-
-                <button
-                  onClick={handleClickOpenAdvance}
-                  className="px-3 py-1 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
-                >
-                  Add Advance
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* ID Card Toggle */}
-          <div className="mt-6 text-center">
+  if (status === "failed" || !employee) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
+        <Navbar
+          headerMessage="Employee Details"
+          headerText="Employee not found"
+        />
+        <main className="flex-grow flex flex-col items-center justify-center p-4">
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4 opacity-30">😞</div>
+            <p className="text-gray-600 text-lg mb-2">
+              Failed to load employee details
+            </p>
             <button
-              onClick={handleOpenIds}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition"
+              onClick={() => navigate("/admins/employees")}
+              className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition"
             >
-              {showIds ? "Hide ID Cards" : "Show ID Cards"}
+              ← Back to Employees
             </button>
           </div>
+        </main>
+        <footer className="fixed bottom-0 left-0 right-0">
+          <AdminsFooter />
+        </footer>
+      </div>
+    )
+  }
 
-          {/* ID Card Display */}
-          {showIds && (
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-md font-semibold text-gray-700 mb-1">
-                  Front ID
-                </h3>
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
+      {/* Header */}
+      <Navbar
+        headerMessage="Employee Details"
+        headerText="View and manage employee information"
+      />
+      <ToastContainer />
+
+      <main className="flex-grow m-2 p-1 mb-20">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/admins/employees")}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow transition"
+        >
+          <ArrowBackIcon fontSize="small" />
+          Back to Employees
+        </button>
+
+        {/* Employee Header Card */}
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg mb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4 mb-4 md:mb-0">
+              <div className="relative">
                 <img
-                  src={employee?.front_id || defaultPic}
-                  alt="Front ID"
-                  className="w-full h-48 object-cover border border-gray-300 rounded-lg"
+                  src={employee.profile_image || defaultProfile}
+                  alt={employee.full_name}
+                  className="w-20 h-20 object-cover rounded-full border-4 border-white shadow-lg"
                 />
-              </div>
-              <div>
-                <h3 className="text-md font-semibold text-gray-700 mb-1">
-                  Back ID
-                </h3>
-                <img
-                  src={employee?.back_id || defaultPic}
-                  alt="Back ID"
-                  className="w-full h-48 object-cover border border-gray-300 rounded-lg"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="my-6 p-6 rounded-2xl shadow-sm border border-gray-200 bg-white space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-gray-700">
-                    Payment Date:
-                  </span>{" "}
-                  <DateDisplay date={formated_payment_date()} />
-                </p>
-                <select
-                  className="border outline-none border-gray-300 rounded-md px-3 py-2 bg-white text-sm"
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(e.target.value)}
-                >
-                  <option value={selectedMonth} disabled hidden>
-                    {selectedMonth}
-                  </option>
-                  {generateMonthOptions()}
-                </select>
-              </div>
-
-              <h4 className="text-base font-semibold text-blue-700">
-                Salary:{" "}
-                <span className="font-normal text-gray-800">
-                  <FormattedAmount amount={employee?.contract_salary} />
-                </span>
-              </h4>
-
-              <h4 className="text-base font-semibold text-yellow-700">
-                Total Advances:{" "}
-                <span className="font-normal text-gray-800">
-                  <FormattedAmount amount={totalAdvances} />
-                </span>
-              </h4>
-
-              <h4 className="text-base font-semibold text-orange-600">
-                Total Expenses:{" "}
-                <span className="font-normal text-gray-800">
-                  Ksh {totalExpenses.toLocaleString()}
-                </span>
-              </h4>
-
-              <h4 className="text-base font-semibold text-rose-600">
-                Total Less Pay:{" "}
-                <span className="font-normal text-gray-800">
-                  Ksh {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
-                </span>
-              </h4>
-
-              <h4 className="text-base font-semibold text-red-600">
-                Total Defaults:{" "}
-                <span className="font-normal text-gray-800">
-                  Ksh {totalCost.toLocaleString()}
-                </span>
-              </h4>
-
-              <div className="text-base font-semibold text-purple-700">
-                Total Cash Default:{" "}
-                <span className="text-gray-800">
-                  {totalCashDefault.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "KSH",
-                  })}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <h4 className="text-lg font-bold text-green-800 flex items-center justify-between">
-                <span>Total Net Salary:</span>
-                {paid ? (
-                  <span>
-                    <FormattedAmount amount={amount} />
-                  </span>
-                ) : (
-                  <span>
-                    <FormattedAmount
-                      amount={
-                        employee?.contract_salary -
-                        totalExpenses -
-                        totalCost -
-                        totalMaxWholesaleRefillLessPayPrice -
-                        totalAdvances -
-                        totalCashDefault
-                      }
-                    />
-                  </span>
+                {employee.employment_status === "ACTIVE" && (
+                  <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
                 )}
-              </h4>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white mb-1">
+                  {employee.full_name}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-blue-100 bg-blue-700 bg-opacity-30 px-3 py-1 rounded-full text-sm">
+                    {getRoleIcon(employee.user_role)} {employee.user_role}
+                  </span>
+                  {getStatusChip(employee.employment_status)}
+                  {employee.assigned_to?.name && (
+                    <span className="text-blue-100 bg-blue-700 bg-opacity-30 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                      <LocationOn fontSize="small" />
+                      Assigned to: {employee.assigned_to.name}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-
-            <div className="flex justify-end">
-              {paid ? (
-                <button className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all">
-                  paid
+            <div className="flex gap-2">
+              {employee.employment_status === "ACTIVE" ? (
+                <button
+                  onClick={() => setTerminateDialogOpen(true)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition shadow-md"
+                  disabled={terminationStatus === "loading"}
+                >
+                  {terminationStatus === "loading" ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    "Terminate"
+                  )}
                 </button>
               ) : (
                 <button
-                  onClick={handlePayment}
-                  className="bg-green-700 hover:bg-green-800 text-white font-medium px-4 py-2 rounded-md transition-all"
+                  onClick={() => setReactivateDialogOpen(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition shadow-md"
                 >
-                  Pay
+                  Reactivate
                 </button>
               )}
+              <Link
+                to={`/admins/employees/${id}/edit`}
+                className="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition shadow-md flex items-center gap-2"
+              >
+                <Edit fontSize="small" />
+                Edit
+              </Link>
             </div>
           </div>
 
-          {/* Advances */}
-          {filteredAdvances.length > 0 && (
-            <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Advance Payments
-              </h3>
-              <div className="overflow-auto rounded-md border border-gray-100">
-                <table className="min-w-full text-sm text-left text-gray-700">
-                  <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
-                    <tr>
-                      <th className="px-4 py-3">Amount</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAdvances.map((advance) => (
-                      <tr key={advance.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">{advance.amount ?? "N/A"}</td>
-                        <td className="px-4 py-2">
-                          <DateDisplay date={advance.date_issued} />
-                        </td>
-                        <td className="px-4 py-2">
-                          <button
-                            onClick={() => handleRemoveAdvance(advance.id)}
-                            className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-sm text-blue-100 mb-1">
+                Days Present (30d)
               </div>
-              <div className="text-right text-base font-semibold text-red-700">
-                Total Advances: <FormattedAmount amount={totalAdvances} />
+              <div className="text-2xl font-bold text-white">
+                {employee.attendance_summary?.last_30_days?.present || 0}
               </div>
-            </section>
-          )}
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-sm text-blue-100 mb-1">Leave Requests</div>
+              <div className="text-2xl font-bold text-white">
+                {employee.leave_history?.length || 0}
+              </div>
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-sm text-blue-100 mb-1">
+                Performance Reviews
+              </div>
+              <div className="text-2xl font-bold text-white">
+                {employee.reviews?.length || 0}
+              </div>
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg p-4">
+              <div className="text-sm text-blue-100 mb-1">Assignments</div>
+              <div className="text-2xl font-bold text-white">
+                {employee.assignment_history?.length || 0}
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* Cash at Hand Defaults */}
-          {filteredCash.length > 0 && (
-            <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">
-                Cash at Hand Defaults
-              </h3>
-              <div className="overflow-auto rounded-md border border-gray-100">
-                <table className="min-w-full text-sm text-left text-gray-700">
-                  <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
-                    <tr>
-                      <th className="px-4 py-3">Amount</th>
-                      <th className="px-4 py-3">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCash.map((cash) => (
-                      <tr key={cash.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">
-                          {cash.cash_default ?? "N/A"}
-                        </td>
-                        <td className="px-4 py-2">
-                          <DateDisplay date={cash.date} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="text-right text-base font-semibold text-red-700">
-                Total Cash Default: Ksh {totalCashDefault.toLocaleString()}
-              </div>
-            </section>
-          )}
+        {/* Tabs Navigation */}
+        <div className="bg-white rounded-lg shadow-md mb-4">
+          <div className="border-b">
+            <div className="flex overflow-x-auto">
+              <button
+                onClick={() => setActiveTab(0)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 0
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <AccountCircle fontSize="small" />
+                  Overview
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab(1)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 1
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <EventAvailable fontSize="small" />
+                  Attendance
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab(2)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 2
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <EventNote fontSize="small" />
+                  Leave History
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab(3)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 3
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Assignment fontSize="small" />
+                  Assignments
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab(4)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 4
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Star fontSize="small" />
+                  Reviews
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab(5)}
+                className={`flex-1 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition ${
+                  activeTab === 5
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <History fontSize="small" />
+                  History
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
 
-          {/* Expenses */}
-          {filteredExpenses.length > 0 && (
-            <section className="bg-white shadow-md border border-gray-200 rounded-2xl p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">Expenses</h3>
-              <div className="overflow-auto rounded-md border border-gray-100">
-                <table className="min-w-full text-sm text-left text-gray-700">
-                  <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
-                    <tr>
-                      <th className="px-4 py-3">Name</th>
-                      <th className="px-4 py-3">Amount</th>
-                      <th className="px-4 py-3">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredExpenses.map((expense) => (
-                      <tr key={expense.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2">{expense.name ?? "N/A"}</td>
-                        <td className="px-4 py-2">{expense.amount ?? "N/A"}</td>
-                        <td className="px-4 py-2">
-                          <DateDisplay date={expense.date} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="text-right text-base font-semibold text-red-700">
-                Total Expenses: Ksh {totalExpenses.toLocaleString()}
-              </div>
-            </section>
-          )}
-
-          {/* --------------------------------------- */}
-          <div className="space-y-6">
-            {/* Lost Cylinders Section */}
-            {filteredtotalMaxWholesaleDefaultPrice.length > 0 && (
-              <section className="bg-white border border-gray-200 shadow-md rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  Lost Cylinders
+        {/* Tab Content */}
+        <div className="space-y-4">
+          {activeTab === 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Personal Information */}
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Badge /> Personal Information
                 </h3>
-                <div className="overflow-auto rounded-md border border-gray-100">
-                  <table className="min-w-full text-sm text-left text-gray-700">
-                    <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
-                      <tr>
-                        <th className="px-4 py-3">Gas Type</th>
-                        <th className="px-4 py-3">Weight (kg)</th>
-                        <th className="px-4 py-3">Filled</th>
-                        <th className="px-4 py-3">Empty</th>
-                        <th className="px-4 py-3">Cost</th>
-                        <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {employeeDefaults.map((cylinder) => {
-                        const isFilled = !!cylinder.number_of_filled_cylinder
-                        const isEmpty = !!cylinder.number_of_empty_cylinder
-                        const cost = isFilled
-                          ? cylinder.cylinder?.max_retail_selling_price
-                          : isEmpty
-                          ? cylinder.cylinder?.empty_cylinder_price
-                          : "N/A"
-
-                        return (
-                          <tr
-                            key={cylinder.id}
-                            className="hover:bg-gray-50 transition"
-                          >
-                            <td className="px-4 py-2">
-                              {cylinder.cylinder?.gas_type ?? "N/A"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {cylinder.cylinder?.weight ?? "N/A"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {cylinder.number_of_filled_cylinder ?? "N/A"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {cylinder.number_of_empty_cylinder ?? "N/A"}
-                            </td>
-                            <td className="px-4 py-2">{cost}</td>
-                            <td className="px-4 py-2">
-                              <DateDisplay date={cylinder.date_lost} />
-                            </td>
-                            <td className="px-4 py-2">
-                              <div className="flex gap-2">
-                                {!cylinder.cleared && (
-                                  <>
-                                    <button
-                                      onClick={() =>
-                                        handleClearDefaults(cylinder.id)
-                                      }
-                                      disabled={loading}
-                                      className="bg-green-600 text-white text-xs px-3 py-1 rounded hover:bg-green-700 disabled:opacity-50"
-                                    >
-                                      Clear
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleReturnDefaults(cylinder.id)
-                                      }
-                                      disabled={loading}
-                                      className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
-                                    >
-                                      Return
-                                    </button>
-                                  </>
-                                )}
-                                {cylinder.cleared && (
-                                  <span className="text-green-700 font-medium">
-                                    Yes
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                <div className="space-y-3">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">ID Number</p>
+                    <p className="font-semibold text-gray-800">
+                      {employee.id_number || "Not provided"}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Gender</p>
+                    <p className="font-semibold text-gray-800">
+                      {employee.gender || "Not specified"}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Email</p>
+                    <div className="flex items-center gap-2">
+                      <Email fontSize="small" className="text-gray-500" />
+                      <span className="font-semibold text-gray-800">
+                        {employee.email}
+                      </span>
+                      {employee.email_verified && (
+                        <CheckCircle
+                          fontSize="small"
+                          className="text-green-500"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Phone</p>
+                    <div className="flex items-center gap-2">
+                      <Phone fontSize="small" className="text-gray-500" />
+                      <span className="font-semibold text-gray-800">
+                        {employee.phone_number || "Not provided"}
+                      </span>
+                      {employee.phone_verified && (
+                        <CheckCircle
+                          fontSize="small"
+                          className="text-green-500"
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Date Joined</p>
+                    <p className="font-semibold text-gray-800">
+                      {new Date(
+                        employee.date_joined || employee.created_at || "",
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right text-base font-medium mt-4 text-red-600">
-                  Total Lost Cylinder Cost: Ksh {totalCost.toLocaleString()}
-                </div>
-              </section>
-            )}
+              </div>
 
-            {/* Less Pays Section */}
-            <section className="bg-white border border-gray-200 shadow-md rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Less Pay Records
-              </h3>
-              {filteredEmployeeLessPay?.length > 0 ? (
+              {/* Permissions & Status */}
+              <div className="bg-white rounded-lg shadow-md p-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Work /> Permissions & Status
+                </h3>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  {employee.can_perform_sales && (
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      Can Perform Sales
+                    </span>
+                  )}
+                  {employee.can_manage_inventory && (
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      Can Manage Inventory
+                    </span>
+                  )}
+                  {employee.can_manage_delivery && (
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      Can Manage Delivery
+                    </span>
+                  )}
+                  {employee.can_view_reports && (
+                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      Can View Reports
+                    </span>
+                  )}
+                </div>
+
+                {/* Current Assignment */}
+                {employee.assigned_to && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600 mb-2">
+                      Current Assignment
+                    </p>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">
+                          {getTeamTypeDisplay(employee.assigned_to.type).icon}
+                        </span>
+                        <div>
+                          <p className="font-bold text-gray-800">
+                            {employee.assigned_to.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Type: {employee.assigned_to.type}
+                          </p>
+                        </div>
+                      </div>
+                      {employee.assigned_to.assigned_date && (
+                        <p className="text-xs text-gray-500">
+                          Assigned on:{" "}
+                          {new Date(
+                            employee.assigned_to.assigned_date,
+                          ).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Attendance Summary */}
+              <div className="md:col-span-2 bg-white rounded-lg shadow-md p-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <TrendingUp /> Recent Attendance (Last 30 Days)
+                </h3>
+                {employee.attendance_summary && (
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <div className="text-3xl font-bold text-green-600">
+                        {employee.attendance_summary.last_30_days.present}
+                      </div>
+                      <div className="text-sm text-green-700">Present Days</div>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg text-center">
+                      <div className="text-3xl font-bold text-red-600">
+                        {employee.attendance_summary.last_30_days.absent}
+                      </div>
+                      <div className="text-sm text-red-700">Absent Days</div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                      <div className="text-3xl font-bold text-yellow-600">
+                        {employee.attendance_summary.last_30_days.on_leave}
+                      </div>
+                      <div className="text-sm text-yellow-700">Leave Days</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 1 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Attendance Records
+                </h3>
+                <button
+                  onClick={() =>
+                    dispatch(employeeAttendance({ employeeId: id }))
+                  }
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                >
+                  <Refresh fontSize="small" />
+                  Refresh
+                </button>
+              </div>
+
+              {attendanceStatus === "loading" ? (
+                <div className="flex justify-center p-8">
+                  <CircularProgress />
+                </div>
+              ) : attendanceData ? (
                 <>
-                  <div className="overflow-auto rounded-md border border-gray-100">
-                    <table className="min-w-full text-sm text-left text-gray-700">
-                      <thead className="bg-gray-50 font-semibold text-gray-600 uppercase tracking-wide">
-                        <tr>
-                          <th className="px-4 py-3">Cylinder</th>
-                          <th className="px-4 py-3">Weight</th>
-                          <th className="px-4 py-3">Quantity</th>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Resolved</th>
+                  {/* Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {attendanceData.statistics?.attendance_rate || 0}%
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Attendance Rate
+                      </div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {attendanceData.statistics?.present_days || 0}
+                      </div>
+                      <div className="text-sm text-green-600">Present</div>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {attendanceData.statistics?.absent_days || 0}
+                      </div>
+                      <div className="text-sm text-red-600">Absent</div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {attendanceData.statistics?.leave_days || 0}
+                      </div>
+                      <div className="text-sm text-yellow-600">On Leave</div>
+                    </div>
+                  </div>
+
+                  {/* Attendance Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Date
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Status
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Marked By
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Remarks
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {employeeLessPays.map((item) => (
-                          <tr
-                            key={item.id}
-                            className="hover:bg-gray-50 transition"
-                          >
-                            <td className="px-4 py-2">
-                              {item.cylinder?.gas_type || "N/A"}
-                            </td>
-                            <td className="px-4 py-2">
-                              {item.cylinder?.weight}
-                            </td>
-                            <td className="px-4 py-2">
-                              {item.cylinders_less_pay}
-                            </td>
-                            <td className="px-4 py-2">
-                              <DateDisplay date={item.date_lost} />
-                            </td>
-                            <td className="px-4 py-2">
-                              {item.resolved ? (
-                                <span className="text-green-700 font-medium">
-                                  Yes
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={() => handleClearLessPay(item.id)}
-                                  disabled={loading}
-                                  className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 disabled:opacity-50"
-                                >
-                                  Clear
-                                </button>
-                              )}
+                        {attendanceData.attendance_records?.map(
+                          (record, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="p-3 text-sm border-b">
+                                {new Date(record.date).toLocaleDateString()}
+                              </td>
+                              <td className="p-3 text-sm border-b">
+                                {getAttendanceStatusChip(record.status)}
+                              </td>
+                              <td className="p-3 text-sm border-b">
+                                {record.marked_by || "System"}
+                              </td>
+                              <td className="p-3 text-sm border-b text-gray-600">
+                                {record.remarks || "-"}
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                        {(!attendanceData.attendance_records ||
+                          attendanceData.attendance_records.length === 0) && (
+                          <tr>
+                            <td
+                              colSpan={4}
+                              className="p-8 text-center text-gray-500"
+                            >
+                              No attendance records found
                             </td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
-                  <div className="mt-4 text-right font-semibold text-base text-blue-600">
-                    Total Less Pay: Ksh{" "}
-                    {totalMaxWholesaleRefillLessPayPrice.toLocaleString()}
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No attendance data available
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 2 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-800">
+                  Leave Requests
+                </h3>
+                <button
+                  onClick={() => dispatch(employeeLeave({ employeeId: id }))}
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+                >
+                  <Refresh fontSize="small" />
+                  Refresh
+                </button>
+              </div>
+
+              {leaveStatus === "loading" ? (
+                <div className="flex justify-center p-8">
+                  <CircularProgress />
+                </div>
+              ) : leaveData ? (
+                <>
+                  {/* Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div className="bg-gray-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {leaveData.statistics?.total_requests || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Total Requests
+                      </div>
+                    </div>
+                    <div className="bg-green-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {leaveData.statistics?.approved || 0}
+                      </div>
+                      <div className="text-sm text-green-600">Approved</div>
+                    </div>
+                    <div className="bg-yellow-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {leaveData.statistics?.pending || 0}
+                      </div>
+                      <div className="text-sm text-yellow-600">Pending</div>
+                    </div>
+                    <div className="bg-red-50 p-4 rounded-lg text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {leaveData.statistics?.rejected || 0}
+                      </div>
+                      <div className="text-sm text-red-600">Rejected</div>
+                    </div>
+                  </div>
+
+                  {/* Leave Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Period
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Reason
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Status
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Applied On
+                          </th>
+                          <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                            Reviewed By
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {leaveData.leave_requests?.map((leave, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="p-3 text-sm border-b">
+                              {new Date(leave.start_date).toLocaleDateString()}{" "}
+                              - {new Date(leave.end_date).toLocaleDateString()}
+                            </td>
+                            <td className="p-3 text-sm border-b">
+                              {leave.reason}
+                            </td>
+                            <td className="p-3 text-sm border-b">
+                              {getLeaveStatusChip(leave.status)}
+                            </td>
+                            <td className="p-3 text-sm border-b">
+                              {new Date(leave.applied_on).toLocaleDateString()}
+                            </td>
+                            <td className="p-3 text-sm border-b">
+                              {leave.reviewed_by || "Not reviewed"}
+                            </td>
+                          </tr>
+                        ))}
+                        {(!leaveData.leave_requests ||
+                          leaveData.leave_requests.length === 0) && (
+                          <tr>
+                            <td
+                              colSpan={5}
+                              className="p-8 text-center text-gray-500"
+                            >
+                              No leave requests found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </>
               ) : (
-                <p className="text-gray-500">No less pay records found.</p>
+                <div className="text-center py-8 text-gray-500">
+                  No leave data available
+                </div>
               )}
-            </section>
-          </div>
+            </div>
+          )}
 
-          <Dialog open={open} onClose={handleClose}>
-            <DialogTitle>Enter Salary</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Enter new employees salary.</DialogContentText>
-              <TextField
-                autoFocus
-                required
-                margin="dense"
-                name="new-salary"
-                label="New Salary"
-                type="number"
-                fullWidth
-                variant="standard"
-                value={salaryAmount}
-                onChange={(e) => setSalaryAmount(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
-              {/* <CircularProgress />
-          <Button onClick={handleAddNewSalary}>Add</Button> */}
-              {addingSalary ? (
-                <CircularProgress size={24} />
-              ) : (
-                <Button onClick={handleAddNewSalary} disabled={addingSalary}>
-                  Add
-                </Button>
-              )}
-            </DialogActions>
-          </Dialog>
+          {activeTab === 3 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Assignment History
+              </h3>
 
-          <Dialog open={openAdvance} onClose={handleCloseAdvance}>
-            <DialogTitle>Enter Advance</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Enter new Advance.</DialogContentText>
-              <TextField
-                autoFocus
-                required
-                margin="dense"
-                name="new-advance"
-                label="New Salary"
-                type="number"
-                fullWidth
-                variant="standard"
-                value={advanceAmount}
-                onChange={(e) => setAdvanceAmount(e.target.value)}
-              />
-              <TextField
-                required
-                margin="dense"
-                name="advance-date"
-                label="Advance Date"
-                type="date"
-                fullWidth
-                variant="standard"
-                InputLabelProps={{ shrink: true }}
-                value={advanceDate}
-                onChange={(e) => setAdvanceDate(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseAdvance}>Cancel</Button>
-              {/* <CircularProgress />
-          <Button onClick={handleAddNewSalary}>Add</Button> */}
-              {addingAdvance ? (
-                <CircularProgress size={24} />
-              ) : (
-                <Button onClick={handleAddNewAdvance} disabled={addingAdvance}>
-                  Add
-                </Button>
-              )}
-            </DialogActions>
-          </Dialog>
+              {/* Assignment Table */}
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Type
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Name
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Assigned Date
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Assigned By
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employee.assignment_history?.map((assignment, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="p-3 text-sm border-b">
+                          <span
+                            className={`inline-block px-2 py-1 rounded-full text-xs ${
+                              assignment.type === "SHOP"
+                                ? "bg-blue-100 text-blue-800"
+                                : assignment.type === "VEHICLE"
+                                ? "bg-purple-100 text-purple-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {assignment.type}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {assignment.name}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {new Date(
+                            assignment.assigned_date,
+                          ).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {assignment.assigned_by || "System"}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {assignment.is_active ? (
+                            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!employee.assignment_history ||
+                      employee.assignment_history.length === 0) && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="p-8 text-center text-gray-500"
+                        >
+                          No assignment history found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-          <Dialog open={openAddDate} onClose={handleClickCloseAddSalaryDate}>
-            <DialogTitle>Enter Payment date.</DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Enter payment dates from date 1-28.
-              </DialogContentText>
-              <TextField
-                required
-                margin="dense"
-                name="payment-date"
-                label="Payment Date"
-                type="number"
-                min={1}
-                max={28}
-                fullWidth
-                variant="standard"
-                InputLabelProps={{ shrink: true }}
-                value={salaryDate}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value, 10)
-                  if (val >= 1 && val <= 28) {
-                    setSalaryDate(val)
-                  }
-                }}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClickCloseAddSalaryDate}>Cancel</Button>
-              {/* <CircularProgress />
-          <Button onClick={handleAddNewSalary}>Add</Button> */}
-              {addingAdvance ? (
-                <CircularProgress size={24} />
+              {/* Transfer History */}
+              {employee.transfer_history &&
+                employee.transfer_history.length > 0 && (
+                  <div>
+                    <h4 className="text-md font-bold text-gray-800 mb-3">
+                      Transfer History
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                              Transfer Date
+                            </th>
+                            <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                              From
+                            </th>
+                            <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                              To
+                            </th>
+                            <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                              Transferred By
+                            </th>
+                            <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                              Reason
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {employee.transfer_history.map((transfer, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="p-3 text-sm border-b">
+                                {new Date(
+                                  transfer.transfer_date,
+                                ).toLocaleDateString()}
+                              </td>
+                              <td className="p-3 text-sm border-b">
+                                {transfer.from_type !== "NONE"
+                                  ? `${transfer.from_type} (ID: ${transfer.from_id})`
+                                  : "None"}
+                              </td>
+                              <td className="p-3 text-sm border-b">
+                                {transfer.to_type} (ID: {transfer.to_id})
+                              </td>
+                              <td className="p-3 text-sm border-b">
+                                {transfer.transferred_by || "System"}
+                              </td>
+                              <td className="p-3 text-sm border-b text-gray-600">
+                                {transfer.reason || "-"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+            </div>
+          )}
+
+          {activeTab === 4 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Performance Reviews
+              </h3>
+              {employee.reviews && employee.reviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {employee.reviews.map((review, index) => (
+                    <div
+                      key={index}
+                      className="bg-gray-50 p-4 rounded-lg hover:shadow-md transition"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span key={i} className="text-xl">
+                              {i < review.rating ? "⭐" : "☆"}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(review.review_date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {review.comments && (
+                        <p className="text-gray-700 mb-3">{review.comments}</p>
+                      )}
+                      {review.reviewer && (
+                        <p className="text-sm text-gray-500">
+                          Reviewed by: {review.reviewer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <Button
-                  onClick={handleAddSalaryDate}
-                  disabled={addingSalaryDate}
-                >
-                  Add
-                </Button>
+                <div className="text-center py-8 text-gray-500">
+                  No performance reviews found
+                </div>
               )}
-            </DialogActions>
-          </Dialog>
+            </div>
+          )}
+
+          {activeTab === 5 && (
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Employment History
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Period
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Position
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Department
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Salary
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Status
+                      </th>
+                      <th className="text-left p-3 text-sm font-semibold text-gray-700 border-b">
+                        Reason for Change
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employee.employment_history?.map((history, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="p-3 text-sm border-b">
+                          {new Date(history.start_date).toLocaleDateString()}
+                          {history.end_date &&
+                            ` - ${new Date(
+                              history.end_date,
+                            ).toLocaleDateString()}`}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {history.position || "-"}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {history.department || "-"}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {history.salary || "-"}
+                        </td>
+                        <td className="p-3 text-sm border-b">
+                          {history.status === "ACTIVE" ? (
+                            <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                              {history.status}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 text-sm border-b text-gray-600">
+                          {history.reason_for_change || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!employee.employment_history ||
+                      employee.employment_history.length === 0) && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="p-8 text-center text-gray-500"
+                        >
+                          No employment history found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
-      {/* Footer */}
-      <AdminsFooter />
+      {/* Termination Dialog */}
+      <Dialog
+        open={terminateDialogOpen}
+        onClose={() => setTerminateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle className="!bg-gradient-to-r !from-red-500 !to-red-600 !text-white">
+          Terminate Employee
+        </DialogTitle>
+        <DialogContent className="!pt-6">
+          <DialogContentText className="!mb-4">
+            You are about to terminate <strong>{employee.full_name}</strong>.
+            This action cannot be undone.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Termination Reason"
+            type="text"
+            fullWidth
+            required
+            value={terminationData.termination_reason}
+            onChange={(e) =>
+              setTerminationData({
+                ...terminationData,
+                termination_reason: e.target.value,
+              })
+            }
+          />
+          <TextField
+            margin="dense"
+            label="Termination Date"
+            type="date"
+            fullWidth
+            InputLabelProps={{ shrink: true }}
+            value={terminationData.termination_date}
+            onChange={(e) =>
+              setTerminationData({
+                ...terminationData,
+                termination_date: e.target.value,
+              })
+            }
+          />
+          <TextField
+            margin="dense"
+            label="Notice Period (Days)"
+            type="number"
+            fullWidth
+            value={terminationData.notice_period_days}
+            onChange={(e) =>
+              setTerminationData({
+                ...terminationData,
+                notice_period_days: parseInt(e.target.value) || 0,
+              })
+            }
+          />
+          <TextField
+            margin="dense"
+            label="Final Settlement Amount"
+            type="number"
+            fullWidth
+            value={terminationData.final_settlement_amount}
+            onChange={(e) =>
+              setTerminationData({
+                ...terminationData,
+                final_settlement_amount: e.target.value,
+              })
+            }
+          />
+          <TextField
+            margin="dense"
+            label="Remarks"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            value={terminationData.remarks}
+            onChange={(e) =>
+              setTerminationData({
+                ...terminationData,
+                remarks: e.target.value,
+              })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <button
+            onClick={() => setTerminateDialogOpen(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleTerminateEmployee}
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={
+              !terminationData.termination_reason ||
+              terminationStatus === "loading"
+            }
+          >
+            {terminationStatus === "loading" ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Confirm Termination"
+            )}
+          </button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Reactivation Dialog */}
+      <Dialog
+        open={reactivateDialogOpen}
+        onClose={() => setReactivateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle className="!bg-gradient-to-r !from-green-500 !to-green-600 !text-white">
+          Reactivate Employee
+        </DialogTitle>
+        <DialogContent className="!pt-6">
+          <DialogContentText className="!mb-4">
+            You are about to reactivate <strong>{employee.full_name}</strong>.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Reactivation Reason"
+            type="text"
+            fullWidth
+            required
+            value={reactivationData.reactivation_reason}
+            onChange={(e) =>
+              setReactivationData({
+                reactivation_reason: e.target.value,
+              })
+            }
+          />
+        </DialogContent>
+        <DialogActions>
+          <button
+            onClick={() => setReactivateDialogOpen(false)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleReactivateEmployee}
+            className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition disabled:opacity-50"
+            disabled={!reactivationData.reactivation_reason}
+          >
+            Confirm Reactivation
+          </button>
+        </DialogActions>
+      </Dialog>
+
+      <footer className="fixed bottom-0 left-0 right-0">
+        <AdminsFooter />
+      </footer>
     </div>
   )
 }

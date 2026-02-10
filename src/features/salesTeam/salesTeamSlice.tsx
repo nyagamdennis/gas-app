@@ -62,32 +62,14 @@ export const updateSalesTeam = createAsyncThunk(
 )
 
 interface AddSalesTeamParams {
-  profile_image: File
   name: string
   teamType: string
 }
 
 export const addSalesTeam = createAsyncThunk(
   "addSalesTeam/addSalesTeam",
-  async (params: AddSalesTeamParams) => {
-    const { profile_image, name, teamType } = params
-
-    const formData = new FormData()
-    formData.append("profile_image", profile_image)
-    formData.append("name", name)
-    formData.append('type', teamType)
-
-    // const response = await axios.post(`${apiUrl}/createteam/`, formData, {
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //     "Content-Type": "multipart/form-data",
-    //   },
-    // })
-    const response = await api.post("/createteam/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  async (Data) => {
+    const response = await api.post("/shop/", Data);
     return response.data
   },
 )
@@ -139,14 +121,8 @@ const salesTeamSlice = createSlice({
       .addCase(addSalesTeam.fulfilled, (state, action) => {
         state.status = "succeeded"
         // state.salesTeam.push(action.payload)
-        state.salesTeam = [ action.payload, ...state.salesTeam]
-        // state.stockProps = state.stockProps.map((stock) => {
-        //   if (stock.id === action.payload.id) {
-        //     return action.payload
-        //   } else {
-        //     return stock
-        //   }
-        // })
+        state.salesTeam.unshift(action.payload.shop)
+       
       })
       .addCase(addSalesTeam.rejected, (state, action) => {
         state.status = "failed"

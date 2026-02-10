@@ -49,7 +49,7 @@ const Navbar = ({ headerMessage, headerText }) => {
     
             {/* RIGHT SIDE: Notifications + More */}
             <div className="flex items-center  relative" ref={dropdownRef}>
-              <button
+              {/* <button
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="relative p-2 text-gray-700 hover:text-black focus:outline-none"
                 aria-label="Notifications"
@@ -60,7 +60,7 @@ const Navbar = ({ headerMessage, headerText }) => {
                     {notifications.length}
                   </span>
                 )}
-              </button>
+              </button> */}
     
               {showDropdown && (
                 <div className="absolute right-0 top-12 mt-2 w-64 bg-white shadow-lg rounded-lg border border-gray-200 z-50">
@@ -86,13 +86,13 @@ const Navbar = ({ headerMessage, headerText }) => {
                   </ul>
                 </div>
               )}
-    
+{/*     
               <button
                 className="p-1 text-gray-700 hover:text-black focus:outline-none"
                 aria-label="More options"
               >
                 <MoreVertIcon className='text-white' />
-              </button>
+              </button> */}
             </div>
           </header>
     

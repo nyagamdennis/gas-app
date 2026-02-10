@@ -66,6 +66,7 @@ const StoreCylinders = () => {
   const navigate = useNavigate()
   const { businessId } = useAppSelector((state) => state.planStatus)
 
+  const { urlStoreId } = useParams()
   const storeCylinder = useAppSelector(selectAllStoreCylinders)
   const storeCylinderWeight = useAppSelector(selectAllCylindersWeight)
 
@@ -194,11 +195,21 @@ const StoreCylinders = () => {
     }
   }, [businessId, dispatch])
 
-  useEffect(() => {
-    if (fetchingStoreStatus === "succeeded" && store.length === 1 && !storeId) {
-      setStoreId(store[0].id.toString())
-    }
-  }, [fetchingStoreStatus, store, storeId])
+   useEffect(() => {
+     if (urlStoreId) {
+       // If ID is in URL, use it immediately
+       setStoreId(urlStoreId)
+     } else if (fetchingStoreStatus === "succeeded" && store.length === 1 && !storeId) {
+       // If NO ID in URL, but stores are loaded, pick the first one as default
+       setStoreId(store[0].id.toString())
+     }
+   }, [urlStoreId, fetchingStoreStatus, store])
+
+  // useEffect(() => {
+  //   if (fetchingStoreStatus === "succeeded" && store.length === 1 && !storeId) {
+  //     setStoreId(store[0].id.toString())
+  //   }
+  // }, [fetchingStoreStatus, store, storeId])
 
   useEffect(() => {
     if (storeId) {

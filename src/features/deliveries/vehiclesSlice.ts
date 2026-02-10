@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+// @ts-nocheck
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
 import api from "../../../utils/api"
 
 interface Vehicles {
@@ -16,12 +17,14 @@ interface VehiclesState {
   vehicles: Vehicles[]
   status: "idle" | "loading" | "succeeded" | "failed"
   error: string | null
+  currentVehicle: Vehicles | null
 }
 
 const initialState: VehiclesState = {
   vehicles: [],
   status: "idle",
   error: null,
+  currentVehicle: null,
 }
 
 export const fetchVehicles = createAsyncThunk<
@@ -29,9 +32,12 @@ export const fetchVehicles = createAsyncThunk<
   { businessId: string },
   {}
 >("vehicles/fetchVehicles", async ({ businessId }) => {
-  const response = await api.get(`/vehicles/`)
-  return response.data // Return the fetched vehicles data
+  const response = await api.get(`/vehicle/`)
+  console.log("all vehocle ", response.data)
+  return response.data
 })
+
+
 
 export const addVehicle = createAsyncThunk<
   Vehicles, // The type of the returned data
@@ -46,7 +52,7 @@ export const addVehicle = createAsyncThunk<
   { rejectValue: string } // Type for rejected value
 >("vehicles/addVehicle", async (formData, { rejectWithValue }) => {
   try {
-    const response = await api.post(`/vehicles/`, formData) // API call to add a new vehicle
+    const response = await api.post(`/vehicle/`, formData) // API call to add a new vehicle
     return response.data // Return the newly added vehicle
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -72,10 +78,34 @@ export const deleteVehicle = createAsyncThunk<
   }
 })
 
+
+export const updateVehicle = createAsyncThunk(
+  "vehicle/updateVehicle",
+  async (
+    { id, data }: { id: number; data: Partial<Vehicles> },
+    { rejectWithValue },
+  ) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await api.patch(`/vehicles/${id}/`, data)
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Failed to update vehicle")
+    }
+  },
+)
+
 const vehiclesSlice = createSlice({
   name: "vehicles",
   initialState,
-  reducers: {},
+  reducers: {
+    setCurrentVehicle: (state, action: PayloadAction<Vehicles | null>) => {
+      state.currentVehicle = action.payload
+    },
+    clearError: (state) => {
+      state.error = null
+    },
+  },
   extraReducers(builder) {
     builder
       // Fetch Vehicles
@@ -95,7 +125,7 @@ const vehiclesSlice = createSlice({
       })
       .addCase(addVehicle.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.vehicles.push(action.payload) // Add the new vehicle to the state
+        state.vehicles.unshift(action.payload.vehicle) // Add the new vehicle to the state
       })
       .addCase(addVehicle.rejected, (state, action) => {
         state.status = "failed"
@@ -114,8 +144,32 @@ const vehiclesSlice = createSlice({
         state.status = "failed"
         state.error = action.payload as string // Set the error message
       })
+      .addCase(updateVehicle.pending, (state) => {
+        state.status = "loading"
+        state.error = null
+      })
+      .addCase(updateVehicle.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        const index = state.vehicles.findIndex(
+          (v) => v.id === action.payload.vehicle.id,
+        )
+        if (index !== -1) {
+          state.vehicles[index] = action.payload.vehicle
+        }
+        if (state.currentVehicle?.id === action.payload.vehicle.id) {
+          state.currentVehicle = action.payload.vehicle
+        }
+      })
+      .addCase(updateVehicle.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.payload as string
+      })
   },
 })
+
+
+export const { setCurrentVehicle, clearError } = vehiclesSlice.actions
+
 
 export const getAllVehicles = (state: { vehicles: VehiclesState }) =>
   state.vehicles.vehicles
@@ -123,5 +177,8 @@ export const getVehiclesStatus = (state: { vehicles: VehiclesState }) =>
   state.vehicles.status
 export const getVehiclesError = (state: { vehicles: VehiclesState }) =>
   state.vehicles.error
+export const selectCurrentVehicle = (state: { vehicles: VehiclesState }) =>
+  state.vehicles.currentVehicle
+
 
 export default vehiclesSlice.reducer

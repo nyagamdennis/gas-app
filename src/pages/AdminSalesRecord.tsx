@@ -28,7 +28,7 @@ import {
   fetchEmployees,
   selectAllEmployees,
 } from "../features/employees/employeesSlice"
-import { updateExpenseOwner } from "../features/expenses/expensesSlice"
+// import { updateExpenseOwner } from "../features/expenses/expensesSlice"
 import CurrencyConvert from "../components/CurrencyConvert"
 import {
   fetchCash,
@@ -178,7 +178,7 @@ const AdminSalesRecord = () => {
 
     setAddingAssign(true)
     try {
-      await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
+      // await dispatch(updateExpenseOwner({ expenseId, selectedOwner }))
     } catch (error) {
       console.error("Error assigning owner:", error)
     }

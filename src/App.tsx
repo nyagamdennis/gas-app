@@ -332,7 +332,7 @@ function App() {
           />
 
           <Route
-            path="/admins/salesdata/:id/:name"
+            path="/admins/salesdata/:id/:name/:teamtype"
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <TeamsSales />
@@ -341,6 +341,14 @@ function App() {
           />
           <Route
             path="/cylinders/stock/store"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <StoreCylinders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cylinders/stock/store/:urlStoreId?"
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <StoreCylinders />

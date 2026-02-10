@@ -78,537 +78,368 @@ import {
   ArrowUpward,
   ArrowDownward,
   CloudUpload,
-  PersonAdd,
 } from "@mui/icons-material"
-import {
-  approveExpense,
-  attachExpenseToEmployee,
-  createExpense,
-  deleteExpense,
-  fetchExpenseCategories,
-  fetchExpenses,
-  fetchExpenseSubCategories,
-  fetchExpenseSummary,
-  markExpenseAsPaid,
-  rejectExpense,
-  selectAllExpenses,
-  selectExpenseCategories,
-  selectExpenseSubCategories,
-  selectExpenseSummary,
-  updateExpense,
-} from "../features/expenses/expensesSlice"
-import Badge from "@mui/material/Badge"
-import { fetchEmployees, selectAllEmployees } from "../features/employees/employeesSlice"
-import planStatus from "../features/planStatus/planStatus"
+import { createExpense, deleteExpense, fetchExpenseCategories, fetchExpenses, fetchExpenseSubCategories, fetchExpenseSummary, selectAllExpenses, selectExpenseCategories, selectExpenseSubCategories, selectExpenseSummary, updateExpense } from "../features/expenses/expensesSlice"
 
-const Expenses = () => {
-  const {
-      isPro,
-      isTrial,
-      isExpired,
-      businessName,
-      businessId,
-      businessLogo,
-      subscriptionPlan,
-      employeeLimit,
-      planName,
-    } = planStatus()
-  const theme = useTheme()
-  const navigate = useNavigate()
 
-  const matches = useMediaQuery("(min-width:600px)")
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-  const [open, setOpen] = useState(false)
-  const [openDelete, setOpenDelete] = useState(false)
-  const [openUpdate, setOpenUpdate] = useState(false)
-  const [openApprove, setOpenApprove] = useState(false)
-  const [openReject, setOpenReject] = useState(false)
-  const [openAttachToEmployee, setOpenAttachToEmployee] = useState(false)
-  const [openMarkPaid, setOpenMarkPaid] = useState(false)
-  const [selectedExpense, setSelectedExpense] = useState<any>(null)
-  const [rejectionReason, setRejectionReason] = useState("")
+const EmployeeExpense = () => {
 
-  const dispatch = useAppDispatch()
 
-  const [activeTab, setActiveTab] = useState(0)
-  const [search, setSearch] = useState("")
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-
-  // Form states
-  const [expenseData, setExpenseData] = useState({
-    title: "",
-    expense_type: "SHOP",
-    category: "",
-    subcategory: "",
-    description: "",
-    amount: "",
-    tax_amount: "0",
-    payment_method: "CASH",
-    payment_reference: "",
-    location: "",
-    vehicle: "",
-    motorbike: "",
-    expense_date: new Date().toISOString().split("T")[0],
-    receipt_number: "",
-    notes: "",
-  })
-
-  // Employee attachment state
-  const [attachEmployeeData, setAttachEmployeeData] = useState({
-    expenseId: "",
-    employeeId: "",
-    deductionAmount: "",
-    description: "",
-  })
-
-  const [updateExpenseData, setUpdateExpenseData] = useState({
-    id: "",
-    title: "",
-    category: "",
-    subcategory: "",
-    description: "",
-    amount: "",
-    tax_amount: "0",
-    payment_method: "CASH",
-    payment_reference: "",
-  })
-
-  const [deleteData, setDeleteData] = useState({
-    id: "",
-    title: "",
-  })
-
-  const [loading, setLoading] = useState({
-    add: false,
-    update: false,
-    delete: false,
-    categories: false,
-    summary: false,
-  })
-
-  const [filter, setFilter] = useState({
-    expense_type: "ALL",
-    category: "",
-    status: "ALL",
-    start_date: "",
-    end_date: "",
-  })
-
-  // updated code start
-
-  const expenses = useAppSelector(selectAllExpenses)
-  const categories = useAppSelector(selectExpenseCategories)
-  const subcategories = useAppSelector(selectExpenseSubCategories)
-  const summary = useAppSelector(selectExpenseSummary)
-  const employees = useAppSelector(selectAllEmployees)
-    // const all_employees = useAppSelector(selectAllEmployees)
-  
-
-  // const fuelCategory = categories.find((c) => c.code === "FUEL")
-
-  // console.log("category sub expenses are ", categories)
-
-  useEffect(() => {
-    dispatch(fetchExpenses())
-    dispatch(fetchEmployees({ businessId }))
-    dispatch(fetchExpenseCategories())
-    dispatch(fetchExpenseSummary())
-  }, [dispatch])
-
-  useEffect(() => {
-    if (expenseData.category) {
-      dispatch(fetchExpenseSubCategories(parseInt(expenseData.category)))
-    }
-  }, [expenseData.category, dispatch])
-
-  const handleAddExpense = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading({ ...loading, add: true })
-
-    try {
-      const formData = new FormData()
-
-      // Add all form data
-      Object.entries(expenseData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-          formData.append(key, value.toString())
-        }
-      })
-
-      // Add company ID (you might need to get this from user context)
-      formData.append("company", "1") // Replace with actual company ID
-
-      await dispatch(createExpense(formData))
-      setLoading({ ...loading, add: false })
-      handleClose()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
-    } catch (error: any) {
-      alert(error.message || "Failed to create expense")
-      setLoading({ ...loading, add: false })
-    }
-  }
-
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading({ ...loading, update: true })
-
-    try {
-      const expenseId = parseInt(updateExpenseData.id)
-      await dispatch(
-        updateExpense({
-          id: expenseId,
-          expenseData: updateExpenseData,
-        }),
-      )
-      setLoading({ ...loading, update: false })
-      handleCloseUpdate()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
-    } catch (error: any) {
-      alert(error.message || "Failed to update expense")
-      setLoading({ ...loading, update: false })
-    }
-  }
-
-  const handleDelete = async () => {
-    setLoading({ ...loading, delete: true })
-
-    try {
-      const expenseId = parseInt(deleteData.id)
-      await dispatch(deleteExpense(expenseId))
-      setLoading({ ...loading, delete: false })
-      handleDeleteClose()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
-    } catch (error: any) {
-      setLoading({ ...loading, delete: false })
-      alert(error.message || "Failed to delete expense")
-    }
-  }
-
-  // New functions for admin actions
-  const handleApproveExpense = async (expenseId: number) => {
-    setLoading({ ...loading, approve: true })
-    try {
-      await dispatch(approveExpense(expenseId))
-      setLoading({ ...loading, approve: false })
-      setOpenApprove(false)
-      dispatch(fetchExpenses())
-    } catch (error: any) {
-      alert(error.message || "Failed to approve expense")
-      setLoading({ ...loading, approve: false })
-    }
-  }
-
-  const handleRejectExpense = async () => {
-    if (!rejectionReason.trim()) {
-      alert("Please provide a rejection reason")
-      return
-    }
-
-    setLoading({ ...loading, reject: true })
-    try {
-      await dispatch(
-        rejectExpense({
-          id: selectedExpense.id,
-          rejection_reason: rejectionReason,
-        }),
-      )
-      setLoading({ ...loading, reject: false })
-      setOpenReject(false)
-      setRejectionReason("")
-      dispatch(fetchExpenses())
-    } catch (error: any) {
-      alert(error.message || "Failed to reject expense")
-      setLoading({ ...loading, reject: false })
-    }
-  }
-
-  const handleMarkAsPaid = async (expenseId: number) => {
-    setLoading({ ...loading, markPaid: true })
-    try {
-      await dispatch(markExpenseAsPaid(expenseId))
-      setLoading({ ...loading, markPaid: false })
-      setOpenMarkPaid(false)
-      dispatch(fetchExpenses())
-    } catch (error: any) {
-      alert(error.message || "Failed to mark expense as paid")
-      setLoading({ ...loading, markPaid: false })
-    }
-  }
-
-  const handleAttachToEmployee = async () => {
-    if (!attachEmployeeData.employeeId || !attachEmployeeData.deductionAmount) {
-      alert("Please select an employee and enter deduction amount")
-      return
-    }
-
-    setLoading({ ...loading, attachEmployee: true })
-    try {
-      await dispatch(
-        attachExpenseToEmployee({
-          expenseId: parseInt(attachEmployeeData.expenseId),
-          employeeId: parseInt(attachEmployeeData.employeeId),
-          deductionAmount: parseFloat(attachEmployeeData.deductionAmount),
-        }),
-      )
-      setLoading({ ...loading, attachEmployee: false })
-      setOpenAttachToEmployee(false)
-      setAttachEmployeeData({
-        expenseId: "",
-        employeeId: "",
-        deductionAmount: "",
+    const theme = useTheme()
+      const navigate = useNavigate()
+    
+      const matches = useMediaQuery("(min-width:600px)")
+      const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+      const [open, setOpen] = useState(false)
+      const [openDelete, setOpenDelete] = useState(false)
+      const [openUpdate, setOpenUpdate] = useState(false)
+      const dispatch = useAppDispatch()
+    
+      const [activeTab, setActiveTab] = useState(0)
+      const [search, setSearch] = useState("")
+      const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+    
+      // Form states
+      const [expenseData, setExpenseData] = useState({
+        title: "",
+        expense_type: "SHOP",
+        category: "",
+        subcategory: "",
         description: "",
+        amount: "",
+        tax_amount: "0",
+        payment_method: "CASH",
+        payment_reference: "",
+        location: "",
+        vehicle: "",
+        motorbike: "",
+        expense_date: new Date().toISOString().split("T")[0],
+        receipt_number: "",
+        notes: "",
       })
-      dispatch(fetchExpenses())
-    } catch (error: any) {
-      alert(error.message || "Failed to attach expense to employee")
-      setLoading({ ...loading, attachEmployee: false })
-    }
-  }
-
-  const handleClickApproveOpen = (expense: any) => {
-    setSelectedExpense(expense)
-    setOpenApprove(true)
-  }
-
-  const handleClickRejectOpen = (expense: any) => {
-    setSelectedExpense(expense)
-    setOpenReject(true)
-  }
-
-  const handleClickMarkPaidOpen = (expense: any) => {
-    setSelectedExpense(expense)
-    setOpenMarkPaid(true)
-  }
-
-  const handleClickAttachToEmployeeOpen = (expense: any) => {
-    setAttachEmployeeData({
-      ...attachEmployeeData,
-      expenseId: expense.id.toString(),
-    })
-    setOpenAttachToEmployee(true)
-  }
-
-  const filteredExpenses = expenses.filter((expense) => {
-    const matchesSearch =
-      search === "" ||
-      expense.title.toLowerCase().includes(search.toLowerCase()) ||
-      expense.description?.toLowerCase().includes(search.toLowerCase()) ||
-      expense.receipt_number?.toLowerCase().includes(search.toLowerCase())
-
-    const matchesType =
-      filter.expense_type === "ALL" ||
-      expense.expense_type === filter.expense_type
-    const matchesCategory =
-      filter.category === "" ||
-      expense.category.id.toString() === filter.category
-    const matchesStatus =
-      filter.status === "ALL" || expense.status === filter.status
-
-    return matchesSearch && matchesType && matchesCategory && matchesStatus
-  })
-
-  const totalExpenses = filteredExpenses.reduce(
-    (sum, expense) => sum + parseFloat(expense.total_amount),
-    0,
-  )
-
-  const handleQuickFuel = () => {
-    const fuelCategory = categories.find((c) => c.code === "FUEL")
-    if (fuelCategory) {
-      setExpenseData({
-        ...expenseData,
-        expense_type: "VEHICLE",
-        title: "Fuel Expense",
-        category: fuelCategory.id.toString(),
+    
+      const [updateExpenseData, setUpdateExpenseData] = useState({
+        id: "",
+        title: "",
+        category: "",
+        subcategory: "",
+        description: "",
+        amount: "",
+        tax_amount: "0",
+        payment_method: "CASH",
+        payment_reference: "",
       })
-      handleClickOpen()
-    } else {
-      alert("Fuel category not found. Please ensure categories are loaded.")
-    }
-  }
-  // updated code end
-
-  const handleClickOpen = () => {
-    setOpen(true)
-  }
-
-  const handleClose = () => {
-    setOpen(false)
-    setExpenseData({
-      title: "",
-      expense_type: "SHOP",
-      category: "",
-      subcategory: "",
-      description: "",
-      amount: "",
-      tax_amount: "0",
-      payment_method: "CASH",
-      payment_reference: "",
-      location: "",
-      vehicle: "",
-      motorbike: "",
-      expense_date: new Date().toISOString().split("T")[0],
-      receipt_number: "",
-      notes: "",
-    })
-  }
-
-  const handleCloseUpdate = () => {
-    setOpenUpdate(false)
-  }
-
-  const handleClickDeleteOpen = (expenseId: string, expenseTitle: string) => {
-    setDeleteData({
-      id: expenseId,
-      title: expenseTitle,
-    })
-    setOpenDelete(true)
-  }
-
-  const handleDeleteClose = () => {
-    setOpenDelete(false)
-  }
-
-  const handleClickUpdateOpen = (expense: any) => {
-    setUpdateExpenseData({
-      id: expense.id,
-      title: expense.title,
-      category: expense.category?.id || "",
-      subcategory: expense.subcategory?.id || "",
-      description: expense.description || "",
-      amount: expense.amount,
-      tax_amount: expense.tax_amount || "0",
-      payment_method: expense.payment_method || "CASH",
-      payment_reference: expense.payment_reference || "",
-    })
-    setOpenUpdate(true)
-  }
-
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target
-    setExpenseData({
-      ...expenseData,
-      [name]: value,
-    })
-  }
-
-  const handleUpdateInputChange = (e: any) => {
-    const { name, value } = e.target
-    setUpdateExpenseData({
-      ...updateExpenseData,
-      [name]: value,
-    })
-  }
-
-  const getExpenseTypeIcon = (type: string) => {
-    switch (type) {
-      case "VEHICLE":
-        return <DirectionsCar sx={{ fontSize: 16 }} />
-      case "MOTORBIKE":
-        return <TwoWheeler sx={{ fontSize: 16 }} />
-      case "SHOP":
-        return <Storefront sx={{ fontSize: 16 }} />
-      case "OFFICE":
-        return <Business sx={{ fontSize: 16 }} />
-      case "STAFF":
-        return <Person sx={{ fontSize: 16 }} />
-      default:
-        return <Receipt sx={{ fontSize: 16 }} />
-    }
-  }
-
-  const getExpenseTypeColor = (type: string) => {
-    switch (type) {
-      case "VEHICLE":
-        return "primary"
-      case "MOTORBIKE":
-        return "secondary"
-      case "SHOP":
-        return "success"
-      case "OFFICE":
-        return "warning"
-      case "STAFF":
-        return "info"
-      default:
-        return "default"
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return <CheckCircle sx={{ fontSize: 16, color: "success.main" }} />
-      case "PENDING":
-        return <Pending sx={{ fontSize: 16, color: "warning.main" }} />
-      case "REJECTED":
-        return <Warning sx={{ fontSize: 16, color: "error.main" }} />
-      case "PAID":
-        return <Payment sx={{ fontSize: 16, color: "info.main" }} />
-      default:
-        return <AccessTime sx={{ fontSize: 16 }} />
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "APPROVED":
-        return "success"
-      case "PENDING":
-        return "warning"
-      case "REJECTED":
-        return "error"
-      case "PAID":
-        return "info"
-      default:
-        return "default"
-    }
-  }
-
-  const getPaymentMethodIcon = (method: string) => {
-    switch (method) {
-      case "MPESA":
-        return <AttachMoney sx={{ fontSize: 16 }} />
-      case "BANK_TRANSFER":
-        return <Payment sx={{ fontSize: 16 }} />
-      default:
-        return <Receipt sx={{ fontSize: 16 }} />
-    }
-  }
-
-  const handleAttachEmployeeInputChange = (e: any) => {
-    const { name, value } = e.target
-    setAttachEmployeeData({
-      ...attachEmployeeData,
-      [name]: value,
-    })
-  }
-
-  // Check if expense has employee attachments
-  const hasEmployeeAttachment = (expense: any) => {
-    return (
-      expense.employee_attachments && expense.employee_attachments.length > 0
-    )
-  }
-
-  // Render employee attachments badge
-  const renderEmployeeAttachmentBadge = (expense: any) => {
-    if (hasEmployeeAttachment(expense)) {
-      const count = expense.employee_attachments.length
-      return (
-        <Tooltip
-          title={`Attached to ${count} employee(s) for salary deduction`}
-        >
-          <Badge badgeContent={count} color="secondary" sx={{ ml: 1 }}>
-            <PersonAdd fontSize="small" />
-          </Badge>
-        </Tooltip>
+    
+      const [deleteData, setDeleteData] = useState({
+        id: "",
+        title: "",
+      })
+    
+      const [loading, setLoading] = useState({
+        add: false,
+        update: false,
+        delete: false,
+        categories: false,
+        summary: false,
+      })
+    
+      const [filter, setFilter] = useState({
+        expense_type: "ALL",
+        category: "",
+        status: "ALL",
+        start_date: "",
+        end_date: "",
+      })
+    
+      // updated code start
+    
+    
+    const expenses = useAppSelector(selectAllExpenses);
+      const categories = useAppSelector(selectExpenseCategories);
+      const subcategories = useAppSelector(selectExpenseSubCategories);
+      const summary = useAppSelector(selectExpenseSummary);
+      
+      const fuelCategory = categories.find((c) => c.code === "FUEL")
+    
+      console.log("category sub expenses are ", categories)
+    
+      useEffect(() => {
+        dispatch(fetchExpenses());
+        dispatch(fetchExpenseCategories());
+        dispatch(fetchExpenseSummary());
+      }, [dispatch]);
+    
+      useEffect(() => {
+        if (expenseData.category) {
+          dispatch(fetchExpenseSubCategories(parseInt(expenseData.category)))
+        }
+      }, [expenseData.category, dispatch])
+    
+    
+    
+      const handleAddExpense = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading({ ...loading, add: true })
+    
+        try {
+          const formData = new FormData()
+    
+          // Add all form data
+          Object.entries(expenseData).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+              formData.append(key, value.toString())
+            }
+          })
+    
+          // Add company ID (you might need to get this from user context)
+          formData.append("company", "1") // Replace with actual company ID
+    
+          await dispatch(createExpense(formData))
+          setLoading({ ...loading, add: false })
+          handleClose()
+          dispatch(fetchExpenseSummary()) // Refresh summary
+          dispatch(fetchExpenses()) // Refresh expenses list
+        } catch (error: any) {
+          alert(error.message || "Failed to create expense")
+          setLoading({ ...loading, add: false })
+        }
+      }
+    
+    
+      const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading({ ...loading, update: true })
+    
+        try {
+          const expenseId = parseInt(updateExpenseData.id)
+          await dispatch(
+            updateExpense({
+              id: expenseId,
+              expenseData: updateExpenseData,
+            }),
+          )
+          setLoading({ ...loading, update: false })
+          handleCloseUpdate()
+          dispatch(fetchExpenseSummary()) // Refresh summary
+          dispatch(fetchExpenses()) // Refresh expenses list
+        } catch (error: any) {
+          alert(error.message || "Failed to update expense")
+          setLoading({ ...loading, update: false })
+        }
+      }
+    
+      const handleDelete = async () => {
+        setLoading({ ...loading, delete: true })
+    
+        try {
+          const expenseId = parseInt(deleteData.id)
+          await dispatch(deleteExpense(expenseId))
+          setLoading({ ...loading, delete: false })
+          handleDeleteClose()
+          dispatch(fetchExpenseSummary()) // Refresh summary
+          dispatch(fetchExpenses()) // Refresh expenses list
+        } catch (error: any) {
+          setLoading({ ...loading, delete: false })
+          alert(error.message || "Failed to delete expense")
+        }
+      }
+    
+      
+      const filteredExpenses = expenses.filter((expense) => {
+        const matchesSearch =
+          search === "" ||
+          expense.title.toLowerCase().includes(search.toLowerCase()) ||
+          expense.description?.toLowerCase().includes(search.toLowerCase()) ||
+          expense.receipt_number?.toLowerCase().includes(search.toLowerCase())
+    
+        const matchesType =
+          filter.expense_type === "ALL" ||
+          expense.expense_type === filter.expense_type
+        const matchesCategory =
+          filter.category === "" ||
+          expense.category.id.toString() === filter.category
+        const matchesStatus =
+          filter.status === "ALL" || expense.status === filter.status
+    
+        return matchesSearch && matchesType && matchesCategory && matchesStatus
+      })
+    
+      const totalExpenses = filteredExpenses.reduce(
+        (sum, expense) => sum + parseFloat(expense.total_amount),
+        0,
       )
-    }
-    return null
-  }
+    
+      const handleQuickFuel = () => {
+        const fuelCategory = categories.find((c) => c.code === "FUEL")
+        if (fuelCategory) {
+          setExpenseData({
+            ...expenseData,
+            expense_type: "VEHICLE",
+            title: "Fuel Expense",
+            category: fuelCategory.id.toString(),
+          })
+          handleClickOpen()
+        } else {
+          alert("Fuel category not found. Please ensure categories are loaded.")
+        }
+      }
+      // updated code end
+    
+      const handleClickOpen = () => {
+        setOpen(true)
+      }
+    
+      const handleClose = () => {
+        setOpen(false)
+        setExpenseData({
+          title: "",
+          expense_type: "SHOP",
+          category: "",
+          subcategory: "",
+          description: "",
+          amount: "",
+          tax_amount: "0",
+          payment_method: "CASH",
+          payment_reference: "",
+          location: "",
+          vehicle: "",
+          motorbike: "",
+          expense_date: new Date().toISOString().split("T")[0],
+          receipt_number: "",
+          notes: "",
+        })
+      }
+    
+      const handleCloseUpdate = () => {
+        setOpenUpdate(false)
+      }
+    
+      const handleClickDeleteOpen = (expenseId: string, expenseTitle: string) => {
+        setDeleteData({
+          id: expenseId,
+          title: expenseTitle,
+        })
+        setOpenDelete(true)
+      }
+    
+      const handleDeleteClose = () => {
+        setOpenDelete(false)
+      }
+    
+      const handleClickUpdateOpen = (expense: any) => {
+        setUpdateExpenseData({
+          id: expense.id,
+          title: expense.title,
+          category: expense.category?.id || "",
+          subcategory: expense.subcategory?.id || "",
+          description: expense.description || "",
+          amount: expense.amount,
+          tax_amount: expense.tax_amount || "0",
+          payment_method: expense.payment_method || "CASH",
+          payment_reference: expense.payment_reference || "",
+        })
+        setOpenUpdate(true)
+      }
+    
+    
+    
+    
+     
+    
+      const handleInputChange = (e: any) => {
+        const { name, value } = e.target
+        setExpenseData({
+          ...expenseData,
+          [name]: value,
+        })
+      }
+    
+      const handleUpdateInputChange = (e: any) => {
+        const { name, value } = e.target
+        setUpdateExpenseData({
+          ...updateExpenseData,
+          [name]: value,
+        })
+      }
+    
+      const getExpenseTypeIcon = (type: string) => {
+        switch (type) {
+          case "VEHICLE":
+            return <DirectionsCar sx={{ fontSize: 16 }} />
+          case "MOTORBIKE":
+            return <TwoWheeler sx={{ fontSize: 16 }} />
+          case "SHOP":
+            return <Storefront sx={{ fontSize: 16 }} />
+          case "OFFICE":
+            return <Business sx={{ fontSize: 16 }} />
+          case "STAFF":
+            return <Person sx={{ fontSize: 16 }} />
+          default:
+            return <Receipt sx={{ fontSize: 16 }} />
+        }
+      }
+    
+      const getExpenseTypeColor = (type: string) => {
+        switch (type) {
+          case "VEHICLE":
+            return "primary"
+          case "MOTORBIKE":
+            return "secondary"
+          case "SHOP":
+            return "success"
+          case "OFFICE":
+            return "warning"
+          case "STAFF":
+            return "info"
+          default:
+            return "default"
+        }
+      }
+    
+      const getStatusIcon = (status: string) => {
+        switch (status) {
+          case "APPROVED":
+            return <CheckCircle sx={{ fontSize: 16, color: "success.main" }} />
+          case "PENDING":
+            return <Pending sx={{ fontSize: 16, color: "warning.main" }} />
+          case "REJECTED":
+            return <Warning sx={{ fontSize: 16, color: "error.main" }} />
+          case "PAID":
+            return <Payment sx={{ fontSize: 16, color: "info.main" }} />
+          default:
+            return <AccessTime sx={{ fontSize: 16 }} />
+        }
+      }
+    
+      const getStatusColor = (status: string) => {
+        switch (status) {
+          case "APPROVED":
+            return "success"
+          case "PENDING":
+            return "warning"
+          case "REJECTED":
+            return "error"
+          case "PAID":
+            return "info"
+          default:
+            return "default"
+        }
+      }
+    
+      const getPaymentMethodIcon = (method: string) => {
+        switch (method) {
+          case "MPESA":
+            return <AttachMoney sx={{ fontSize: 16 }} />
+          case "BANK_TRANSFER":
+            return <Payment sx={{ fontSize: 16 }} />
+          default:
+            return <Receipt sx={{ fontSize: 16 }} />
+        }
+      }
+    
+
+
+
   return (
     <div>
       {isMobile ? (
@@ -1013,10 +844,6 @@ const Expenses = () => {
                           sx={{
                             "&:last-child td": { border: 0 },
                             transition: "background-color 0.2s",
-                            bgcolor:
-                              expense.status === "PENDING"
-                                ? "action.hover"
-                                : "inherit",
                           }}
                         >
                           <TableCell>
@@ -1025,14 +852,13 @@ const Expenses = () => {
                             </Typography>
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Box>
                               <Typography
                                 variant="body2"
                                 sx={{ fontWeight: 500 }}
                               >
                                 {expense.title}
                               </Typography>
-                              {renderEmployeeAttachmentBadge(expense)}
                               {expense.description && (
                                 <Typography
                                   variant="caption"
@@ -1105,13 +931,7 @@ const Expenses = () => {
                             </Box>
                           </TableCell>
                           <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: 0.5,
-                                flexWrap: "wrap",
-                              }}
-                            >
+                            <Box sx={{ display: "flex", gap: 0.5 }}>
                               <Tooltip title="Edit">
                                 <IconButton
                                   size="small"
@@ -1121,60 +941,6 @@ const Expenses = () => {
                                   <Edit fontSize="small" />
                                 </IconButton>
                               </Tooltip>
-
-                              {expense.status === "PENDING" && (
-                                <>
-                                  <Tooltip title="Approve">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        handleClickApproveOpen(expense)
-                                      }
-                                      sx={{ color: "success.main" }}
-                                    >
-                                      <CheckCircle fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Reject">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        handleClickRejectOpen(expense)
-                                      }
-                                      sx={{ color: "error.main" }}
-                                    >
-                                      <Warning fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                </>
-                              )}
-
-                              {expense.status === "APPROVED" && (
-                                <Tooltip title="Mark as Paid">
-                                  <IconButton
-                                    size="small"
-                                    onClick={() =>
-                                      handleClickMarkPaidOpen(expense)
-                                    }
-                                    sx={{ color: "info.main" }}
-                                  >
-                                    <Payment fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-
-                              <Tooltip title="Attach to Employee">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    handleClickAttachToEmployeeOpen(expense)
-                                  }
-                                  sx={{ color: "secondary.main" }}
-                                >
-                                  <PersonAdd fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-
                               <Tooltip title="Delete">
                                 <IconButton
                                   size="small"
@@ -1700,257 +1466,6 @@ const Expenses = () => {
             </DialogActions>
           </Dialog>
 
-          {/* Approve Expense Dialog */}
-          <Dialog
-            open={openApprove}
-            onClose={() => setOpenApprove(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
-          >
-            <DialogTitle sx={{ fontWeight: 600, color: "success.main" }}>
-              <CheckCircle sx={{ mr: 1, verticalAlign: "middle" }} />
-              Approve Expense
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Are you sure you want to approve the expense:{" "}
-                <strong>{selectedExpense?.title}</strong>?
-              </DialogContentText>
-              <Box
-                sx={{ mt: 2, p: 2, bgcolor: "success.light", borderRadius: 1 }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ color: "success.contrastText" }}
-                >
-                  Amount: KSh{" "}
-                  {selectedExpense
-                    ? parseFloat(selectedExpense.total_amount).toLocaleString()
-                    : "0"}
-                </Typography>
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 0 }}>
-              <Button
-                onClick={() => setOpenApprove(false)}
-                variant="outlined"
-                sx={{ borderRadius: 2 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => handleApproveExpense(selectedExpense?.id)}
-                variant="contained"
-                color="success"
-                disabled={loading.approve}
-                sx={{ borderRadius: 2 }}
-              >
-                {loading.approve ? <CircularProgress size={24} /> : "Approve"}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Reject Expense Dialog */}
-          <Dialog
-            open={openReject}
-            onClose={() => setOpenReject(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
-          >
-            <DialogTitle sx={{ fontWeight: 600, color: "error.main" }}>
-              <Warning sx={{ mr: 1, verticalAlign: "middle" }} />
-              Reject Expense
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Are you sure you want to reject the expense:{" "}
-                <strong>{selectedExpense?.title}</strong>?
-              </DialogContentText>
-              <TextField
-                fullWidth
-                label="Rejection Reason"
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                multiline
-                rows={3}
-                sx={{ mt: 2 }}
-                required
-              />
-            </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 0 }}>
-              <Button
-                onClick={() => {
-                  setOpenReject(false)
-                  setRejectionReason("")
-                }}
-                variant="outlined"
-                sx={{ borderRadius: 2 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleRejectExpense}
-                variant="contained"
-                color="error"
-                disabled={loading.reject || !rejectionReason.trim()}
-                sx={{ borderRadius: 2 }}
-              >
-                {loading.reject ? <CircularProgress size={24} /> : "Reject"}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Mark as Paid Dialog */}
-          <Dialog
-            open={openMarkPaid}
-            onClose={() => setOpenMarkPaid(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
-          >
-            <DialogTitle sx={{ fontWeight: 600, color: "info.main" }}>
-              <Payment sx={{ mr: 1, verticalAlign: "middle" }} />
-              Mark as Paid
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText>
-                Are you sure you want to mark the expense as paid:{" "}
-                <strong>{selectedExpense?.title}</strong>?
-              </DialogContentText>
-              <Box sx={{ mt: 2, p: 2, bgcolor: "info.light", borderRadius: 1 }}>
-                <Typography variant="body2" sx={{ color: "info.contrastText" }}>
-                  Amount: KSh{" "}
-                  {selectedExpense
-                    ? parseFloat(selectedExpense.total_amount).toLocaleString()
-                    : "0"}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "info.contrastText", mt: 1 }}
-                >
-                  Payment Method: {selectedExpense?.payment_method}
-                </Typography>
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 0 }}>
-              <Button
-                onClick={() => setOpenMarkPaid(false)}
-                variant="outlined"
-                sx={{ borderRadius: 2 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => handleMarkAsPaid(selectedExpense?.id)}
-                variant="contained"
-                color="info"
-                disabled={loading.markPaid}
-                sx={{ borderRadius: 2 }}
-              >
-                {loading.markPaid ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  "Mark as Paid"
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Attach to Employee Dialog */}
-          <Dialog
-            open={openAttachToEmployee}
-            onClose={() => setOpenAttachToEmployee(false)}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
-          >
-            <DialogTitle sx={{ fontWeight: 600, color: "secondary.main" }}>
-              <PersonAdd sx={{ mr: 1, verticalAlign: "middle" }} />
-              Attach Expense to Employee
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText sx={{ mb: 2 }}>
-                Attach this expense to an employee for salary deduction.
-              </DialogContentText>
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Select Employee</InputLabel>
-                <Select
-                  name="employeeId"
-                  value={attachEmployeeData.employeeId}
-                  label="Select Employee"
-                  onChange={handleAttachEmployeeInputChange}
-                  required
-                >
-                  <MenuItem value="">
-                    <em>Select an employee</em>
-                  </MenuItem>
-                  {employees.map((employee) => (
-                    <MenuItem key={employee.id} value={employee.id}>
-                      {employee.first_name} {employee.last_name} -{" "}
-                      {employee.email}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Deduction Amount (KSh)"
-                name="deductionAmount"
-                type="number"
-                value={attachEmployeeData.deductionAmount}
-                onChange={handleAttachEmployeeInputChange}
-                sx={{ mb: 2 }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="Description (Optional)"
-                name="description"
-                value={attachEmployeeData.description}
-                onChange={handleAttachEmployeeInputChange}
-                multiline
-                rows={2}
-              />
-            </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 0 }}>
-              <Button
-                onClick={() => setOpenAttachToEmployee(false)}
-                variant="outlined"
-                sx={{ borderRadius: 2 }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAttachToEmployee}
-                variant="contained"
-                color="secondary"
-                disabled={loading.attachEmployee}
-                sx={{ borderRadius: 2 }}
-              >
-                {loading.attachEmployee ? (
-                  <CircularProgress size={24} />
-                ) : (
-                  "Attach"
-                )}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
           <footer>
             <AdminsFooter />
           </footer>
@@ -1979,4 +1494,4 @@ const Expenses = () => {
   )
 }
 
-export default Expenses
+export default EmployeeExpense
