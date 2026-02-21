@@ -54,6 +54,11 @@ import {
   fetchSalesTeamVehicle,
   selectAllSalesTeamVehicle,
 } from "../../features/salesTeam/salesTeamVehicleSlice"
+import {
+  fetchStore,
+  selectAllStore,
+  getStoreStatus,
+} from "../../features/store/storeSlice"
 import planStatus from "../../features/planStatus/planStatus"
 import { fetchSales, retriveSales } from "../../features/sales/salesSlice"
 
@@ -84,13 +89,14 @@ const AllSales = () => {
   const [showProductsTeamModal, setShowProductsTeamModal] = useState(false)
   const [showProductsVehicleModal, setShowProductsVehicleModal] =
     useState(false)
+  const [showStoreModal, setShowStoreModal] = useState(false)
   const [activeModalType, setActiveModalType] = useState("cylinders")
 
   // New state for record sale flow
   const [showRecordSaleModal, setShowRecordSaleModal] = useState(false)
   const [recordSaleStep, setRecordSaleStep] = useState(0)
   const [selectedTeamType, setSelectedTeamType] = useState<
-    "shop" | "vehicle" | null
+    "shop" | "vehicle" | "store" | null
   >(null)
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
   const [selectedSaleType, setSelectedSaleType] = useState<
@@ -102,12 +108,11 @@ const AllSales = () => {
 
   const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+  const allStores = useAppSelector(selectAllStore)
+  const storeStatus = useAppSelector(getStoreStatus)
   const [loading, setLoading] = useState(false)
 
   const [hasFetched, setHasFetched] = useState(false)
-
-
-  
 
   useEffect(() => {
     // Only fetch if we have businessId, haven't fetched yet, and arrays are empty
@@ -132,6 +137,12 @@ const AllSales = () => {
     allSalesTeam.length,
     allSalesVehicles.length,
   ])
+
+  useEffect(() => {
+    if (businessId && storeStatus !== "succeeded" && allStores.length === 0) {
+      dispatch(fetchStore({ businessId }))
+    }
+  }, [businessId, dispatch, storeStatus, allStores.length])
 
   const handleViewCylinderSales = () => {
     setActiveModalType("cylinders")
@@ -165,10 +176,22 @@ const AllSales = () => {
     }
   }
 
+  const handleViewStores = (type: "cylinders" | "products") => {
+    setActiveModalType(type)
+    if (type === "cylinders") {
+      setShowModal(false)
+      setShowStoreModal(true)
+    } else {
+      setShowProductsModal(false)
+      setShowStoreModal(true)
+    }
+  }
+
   const handleNavigate = (path: string) => {
     setShowModal(false)
     setShowTeamModal(false)
     setShowVehicleModal(false)
+    setShowStoreModal(false)
     setShowProductsModal(false)
     setShowProductsTeamModal(false)
     setShowProductsVehicleModal(false)
@@ -225,7 +248,7 @@ const AllSales = () => {
     setSelectedProductType(null)
   }
 
-  const handleSelectTeamType = (type: "shop" | "vehicle") => {
+  const handleSelectTeamType = (type: "shop" | "vehicle" | "store") => {
     setSelectedTeamType(type)
     setRecordSaleStep(1)
   }
@@ -252,13 +275,16 @@ const AllSales = () => {
   }
   const navigateToCylinderSales = () => {
     setShowRecordSaleModal(false)
-
+console.log("Selected Team Type:", selectedTeamType)
+console.log("Selected Team:", selectedTeam)
     // Build route based on selections
     let route = "/cylinders/sales/new"
     if (selectedTeamType === "shop" && selectedTeam) {
       route = `/cylinders/sales/new/shop/${selectedTeam.name}/${selectedTeam.id}`
     } else if (selectedTeamType === "vehicle" && selectedTeam) {
       route = `/cylinders/sales/new/vehicle/${selectedTeam.number_plate}/${selectedTeam.id}`
+    } else if (selectedTeamType === "store" && selectedTeam) {
+      route = `/cylinders/sales/new/store/${selectedTeam.name}/${selectedTeam.id}`
     }
 
     // Add sale type as query param
@@ -278,6 +304,8 @@ const AllSales = () => {
       route = `/products/sales/new/shop/${selectedTeam.id}`
     } else if (selectedTeamType === "vehicle" && selectedTeam) {
       route = `/products/sales/new/vehicle/${selectedTeam.id}`
+    } else if (selectedTeamType === "store" && selectedTeam) {
+      route = `/products/sales/new/store/${selectedTeam.id}`
     }
 
     // Add sale type as query param
@@ -434,12 +462,13 @@ const AllSales = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
-                      onClick={() => handleNavigate("/cylinders/stock/store")}
-                      // navigate(teamId ? `/admins/salesdata/${teamId}/${teamName}/${teamType}` : "/sales")
-
-                      // /admins/salesdata/${teamId}/${teamName}
-                      // /admins/salesdata/2/Downtown%20Branch%20upda/shop
-                      className="py-2 px-3 border border-blue-300 text-blue-600 rounded-lg text-sm hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                      onClick={() => handleViewStores("cylinders")}
+                      disabled={allStores.length === 0}
+                      className={`py-2 px-3 border rounded-lg text-sm transition-colors flex items-center justify-center gap-1 ${
+                        allStores.length === 0
+                          ? "border-gray-300 text-gray-400 bg-gray-50"
+                          : "border-blue-300 text-blue-600 hover:bg-blue-50"
+                      }`}
                     >
                       <Store className="text-sm" />
                       Store
@@ -491,8 +520,13 @@ const AllSales = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <button
-                      onClick={() => handleNavigate("/products/sales/store")}
-                      className="py-2 px-3 border border-green-300 text-green-600 rounded-lg text-sm hover:bg-green-50 transition-colors flex items-center justify-center gap-1"
+                      onClick={() => handleViewStores("products")}
+                      disabled={allStores.length === 0}
+                      className={`py-2 px-3 border rounded-lg text-sm transition-colors flex items-center justify-center gap-1 ${
+                        allStores.length === 0
+                          ? "border-gray-300 text-gray-400 bg-gray-50"
+                          : "border-green-300 text-green-600 hover:bg-green-50"
+                      }`}
                     >
                       <Store className="text-sm" />
                       Store
@@ -725,13 +759,8 @@ const AllSales = () => {
                           </button>
 
                           <button
-                            onClick={() => {
-                              // Direct store sale (no team)
-                              setSelectedTeamType(null)
-                              setSelectedTeam(null)
-                              setRecordSaleStep(2) // Skip to sale type
-                            }}
-                            className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all flex items-center justify-between group"
+                            onClick={() => handleSelectTeamType("store")}
+                            className="w-full p-4 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all flex items-center justify-between group"
                           >
                             <div className="flex items-center">
                               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
@@ -739,10 +768,10 @@ const AllSales = () => {
                               </div>
                               <div className="text-left">
                                 <h4 className="font-semibold text-gray-800">
-                                  Store Sale
+                                  Store
                                 </h4>
                                 <p className="text-sm text-gray-600">
-                                  Direct store sale (no team)
+                                  {allStores.length} store(s) available
                                 </p>
                               </div>
                             </div>
@@ -832,6 +861,43 @@ const AllSales = () => {
                                       }}
                                     />
                                     <ArrowForward className="text-gray-400" />
+                                  </ListItemButton>
+                                ))}
+                              </List>
+                            )
+                          ) : selectedTeamType === "store" ? (
+                            allStores.length === 0 ? (
+                              <div className="text-center py-8">
+                                <Store className="text-5xl text-gray-400 mx-auto mb-4" />
+                                <p className="text-gray-600">
+                                  No stores available
+                                </p>
+                              </div>
+                            ) : (
+                              <List>
+                                {allStores.map((store) => (
+                                  <ListItemButton
+                                    key={store.id}
+                                    onClick={() => handleSelectTeam(store)}
+                                    className="rounded-xl border border-gray-200 mb-3 hover:border-purple-500 hover:bg-purple-50 transition-all"
+                                  >
+                                    <ListItemIcon>
+                                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <Home className="text-purple-600" />
+                                      </div>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                      primary={store.name}
+                                      secondary={
+                                        store.location?.name
+                                          ? `Location: ${store.location.name}`
+                                          : null
+                                      }
+                                      primaryTypographyProps={{
+                                        className: "font-semibold",
+                                      }}
+                                    />
+                                    <ChevronRight className="text-gray-400" />
                                   </ListItemButton>
                                 ))}
                               </List>
@@ -1020,16 +1086,40 @@ const AllSales = () => {
             <DialogContent className="p-6">
               <List className="space-y-2 mb-4">
                 <ListItemButton
-                  onClick={() => handleNavigate("/cylinders/stock/store")}
-                  className="rounded-xl border border-blue-200 hover:border-blue-500 transition-all mb-3"
+                  onClick={() => handleViewStores("cylinders")}
+                  disabled={allStores.length === 0}
+                  className={`rounded-xl border transition-all mb-3 ${
+                    allStores.length === 0
+                      ? "border-gray-200 bg-gray-50"
+                      : "border-blue-200 hover:border-blue-500"
+                  }`}
                 >
                   <ListItemIcon>
-                    <Store className="text-blue-600" />
+                    <Store
+                      className={
+                        allStores.length === 0
+                          ? "text-gray-400"
+                          : "text-blue-600"
+                      }
+                    />
                   </ListItemIcon>
                   <ListItemText
                     primary="Store Sales"
-                    secondary="Main store cylinder sales"
+                    secondary={
+                      allStores.length === 0
+                        ? "No stores available"
+                        : `${allStores.length} store${
+                            allStores.length !== 1 ? "s" : ""
+                          } available`
+                    }
                   />
+                  {allStores.length > 0 && (
+                    <Badge
+                      badgeContent={allStores.length}
+                      color="primary"
+                      className="mr-2"
+                    />
+                  )}
                 </ListItemButton>
                 <ListItemButton
                   onClick={() => handleViewTeams("cylinders")}
@@ -1281,9 +1371,7 @@ const AllSales = () => {
                         key={team.id}
                         onClick={() =>
                           handleNavigate(
-                            `/admins/salesdata/${
-                              team.id
-                            }/${team.name}/shop`,
+                            `/admins/salesdata/${team.id}/${team.name}/shop`,
                           )
                         }
                         // navigate(teamId ? `/admins/salesdata/${teamId}/${teamName}/${teamType}` : "/sales")
@@ -1411,6 +1499,117 @@ const AllSales = () => {
             </DialogContent>
           </Dialog>
 
+          {/* Modal for selecting store (cylinders) */}
+          <Dialog
+            open={showStoreModal}
+            onClose={() => setShowStoreModal(false)}
+            maxWidth="sm"
+            fullWidth
+            BackdropComponent={Backdrop}
+            TransitionComponent={Fade}
+            PaperProps={{
+              className: "rounded-3xl overflow-hidden",
+            }}
+          >
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-500 p-6 text-white">
+              <DialogTitle className="text-white p-0">
+                <div className="flex items-center">
+                  <IconButton
+                    color="inherit"
+                    onClick={() => {
+                      setShowStoreModal(false)
+                      if (activeModalType === "cylinders") {
+                        setShowModal(true)
+                      } else {
+                        setShowProductsModal(true)
+                      }
+                    }}
+                    className="mr-3"
+                  >
+                    <ArrowBack />
+                  </IconButton>
+                  <div>
+                    <h3 className="text-xl font-bold">
+                      Select Store (
+                      {activeModalType === "cylinders"
+                        ? "Cylinders"
+                        : "Products"}
+                      )
+                    </h3>
+                    <p className="text-sm opacity-90 mt-1">
+                      Choose a store to view{" "}
+                      {activeModalType === "cylinders"
+                        ? "cylinder stock and sales"
+                        : "product sales"}
+                    </p>
+                  </div>
+                </div>
+              </DialogTitle>
+            </div>
+            <DialogContent className="p-0">
+              <div className="max-h-[400px] overflow-y-auto p-4">
+                {allStores.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Store className="text-5xl text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No stores available</p>
+                  </div>
+                ) : (
+                  <List>
+                    {allStores.map((store) => (
+                      <ListItemButton
+                        key={store.id}
+                        onClick={() =>
+                          handleNavigate(
+                            activeModalType === "cylinders"
+                              ? `/admins/salesdata/${
+                                  store.id
+                                }/${encodeURIComponent(store.name)}/store`
+                              : `/products/sales/store`,
+                          )
+                        }
+                        // onClick={() =>
+                        //   handleNavigate(
+                        //     `/admins/salesdata/${team.id}/${encodeURIComponent(
+                        //       team.name,
+                        //     )}`,
+                        //   )
+                        // }
+                        className="rounded-xl border border-gray-200 mb-3 hover:border-blue-500 hover:bg-blue-50 transition-all"
+                      >
+                        <ListItemIcon>
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Store className="text-blue-600" />
+                          </div>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={store.name}
+                          secondary={
+                            store.location?.name
+                              ? `Location: ${store.location.name}`
+                              : null
+                          }
+                          primaryTypographyProps={{
+                            className: "font-semibold",
+                          }}
+                        />
+                        <ChevronRight className="text-gray-400" />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                )}
+              </div>
+              <div className="border-t border-gray-200 p-4">
+                <button
+                  onClick={() => setShowStoreModal(false)}
+                  className="w-full py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Close />
+                  Cancel
+                </button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           {/* Modal for selecting cylinder vehicle */}
           <Dialog
             open={showVehicleModal}
@@ -1459,19 +1658,18 @@ const AllSales = () => {
                     {allSalesVehicles.map((vehicle) => (
                       <ListItemButton
                         key={vehicle.id}
-                        onClick={() =>
-                          handleNavigate(
-                            `/admins/salesdata/${
-                              vehicle.id
-                            }/${vehicle.number_plate}/vehicle`,
-                          )
-                        //   onClick={() =>
-                        //   handleNavigate(
-                        //     `/admins/salesdata/${
-                        //       team.id
-                        //     }/${team.name}/shop`,
-                        //   )
-                        // }
+                        onClick={
+                          () =>
+                            handleNavigate(
+                              `/admins/salesdata/${vehicle.id}/${vehicle.number_plate}/vehicle`,
+                            )
+                          //   onClick={() =>
+                          //   handleNavigate(
+                          //     `/admins/salesdata/${
+                          //       team.id
+                          //     }/${team.name}/shop`,
+                          //   )
+                          // }
                         }
                         className="rounded-xl border border-gray-200 mb-3 hover:border-cyan-500 hover:bg-cyan-50 transition-all"
                       >
@@ -1487,7 +1685,8 @@ const AllSales = () => {
                         <ListItemText
                           primary={
                             vehicle.number_plate ||
-                            vehicle.vehicleNumber || 'dd'
+                            vehicle.vehicleNumber ||
+                            "dd"
                             // `Vehicle ${vehicle.id}`
                           }
                           secondary={

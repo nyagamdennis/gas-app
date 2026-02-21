@@ -16,6 +16,8 @@ const CashReconciliation = ({
   onAssignShortage,
   isFinalized,
   mobile = false,
+  cashReconciliationRecord = null,
+  reconciliationRecord = null,
 }) => {
   const handleActualCashChange = (value) => {
     const actualCash = parseFloat(value) || 0
@@ -58,6 +60,35 @@ const CashReconciliation = ({
       </h3>
 
       <div className="space-y-6">
+        {reconciliationRecord && (
+          <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
+            <div className="flex items-center gap-2 text-green-800 font-medium">
+              <CheckCircle className="text-green-600" />
+              Reconciliation complete
+            </div>
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-green-700">
+              <span>
+                Reconciled:{" "}
+                {new Date(
+                  reconciliationRecord.reconciliation_time,
+                ).toLocaleString()}
+              </span>
+              {reconciliationRecord.cash_difference != null && (
+                <span>
+                  Difference:{" "}
+                  <FormattedAmount
+                    amount={parseFloat(reconciliationRecord.cash_difference)}
+                  />
+                </span>
+              )}
+            </div>
+            {reconciliationRecord.notes && (
+              <p className="mt-2 text-sm text-green-600">
+                {reconciliationRecord.notes}
+              </p>
+            )}
+          </div>
+        )}
         {/* Expected Cash Breakdown */}
         <div className="bg-blue-50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-800 mb-3">
@@ -106,6 +137,7 @@ const CashReconciliation = ({
               value={cashVerification.actualCash || ""}
               onChange={(e) => handleActualCashChange(e.target.value)}
               placeholder="0.00"
+              min="0"
               disabled={isFinalized}
             />
           </div>

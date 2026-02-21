@@ -58,12 +58,16 @@ const CylinderSales = () => {
   const pathParts = location.pathname.split("/")
 
   const teamId =
-    pathParts.includes("shop") || pathParts.includes("vehicle")
+    pathParts.includes("shop") ||
+    pathParts.includes("vehicle") ||
+    pathParts.includes("store")
       ? pathParts[pathParts.length - 1]
       : null
 
   const teamName =
-    pathParts.includes("shop") || pathParts.includes("vehicle")
+    pathParts.includes("shop") ||
+    pathParts.includes("vehicle") ||
+    pathParts.includes("store")
       ? decodeURIComponent(pathParts[pathParts.length - 2])
       : null
 
@@ -71,6 +75,8 @@ const CylinderSales = () => {
     ? "shop"
     : pathParts.includes("vehicle")
     ? "vehicle"
+    : pathParts.includes("store")
+    ? "store"
     : null
 
   // State
@@ -166,8 +172,11 @@ const CylinderSales = () => {
       } else if (teamType === "vehicle" && teamId) {
         // Fetch from vehicle
         response = await api.get(`/inventory/vehicles/${teamId}/cylinders/`)
+      } else if (teamType === "store" && teamId) {
+        // Fetch from specific store
+        response = await api.get(`/inventory/stores/${teamId}/cylinders/`)
       } else {
-        // Fetch from store (default)
+        // Fetch from store (default/all stores)
         response = await api.get(`/inventory/stores/cylinders/`)
       }
 
@@ -227,8 +236,11 @@ const CylinderSales = () => {
       } else if (teamType === "vehicle" && teamId) {
         // Fetch from vehicle
         response = await api.get(`/inventory/vehicles/${teamId}/products/`)
+      } else if (teamType === "store" && teamId) {
+        // Fetch from specific store
+        response = await api.get(`/inventory/stores/${teamId}/products/`)
       } else {
-        // Fetch from store (default)
+        // Fetch from store (default/all stores)
         response = await api.get(`/inventory/stores/products/`)
       }
 
@@ -761,7 +773,16 @@ const CylinderSales = () => {
 
     const isFullyPaid = paymentType === "FULLY_PAID"
     const totalAmount = calculateTotal()
-    const team_type = teamType?.toLocaleUpperCase()
+
+    // Determine location type based on team type
+    let location_type = null
+    if (teamType === "shop") {
+      location_type = "SHOP"
+    } else if (teamType === "vehicle") {
+      location_type = "VEHICLE"
+    } else if (teamType === "store" || !teamType) {
+      location_type = "STORE"
+    }
 
     // Filter out empty M-Pesa codes
     const validMpesaCodes = mpesaCodes.filter(
@@ -855,7 +876,7 @@ const CylinderSales = () => {
       exchanged_with_local: exchangedWithLocal,
       cylinder_exchanged_with: cylinderExchanged || null,
       location_id: teamId || null,
-      location_type: team_type || null,
+      location_type: location_type,
       location_data: hasLocation
         ? {
             latitude: locationCoordinates.latitude,
@@ -2724,7 +2745,7 @@ const CylinderSales = () => {
                         <span className="font-bold">{teamName}</span>
                       </p>
                       <p className="font-semibold">
-                        {teamType === "shop" ? "Shop Team" : "Vehicle Team"}
+                        {teamType === "shop" ? "Shop Team" : teamType === "vehicle" ? "Vehicle Team" : "Store Team"}
                       </p>
                     </div>
                   </div>

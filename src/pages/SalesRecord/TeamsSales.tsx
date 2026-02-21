@@ -310,7 +310,6 @@ const TeamsSales = () => {
   const dispatch = useAppDispatch()
   const allSalesData = useAppSelector(selectAllSales)
   const allExpenses = useAppSelector(selectAllExpenses)
-  console.log('all expenses ', allExpenses)
 
   // State Management
   const [loading, setLoading] = useState(false)
@@ -345,6 +344,9 @@ const TeamsSales = () => {
   const [activeSection, setActiveSection] = useState("overview")
   const [expandedSaleId, setExpandedSaleId] = useState(null)
 
+  const [cashReconciliationRecord, setCashReconciliationRecord] = useState(null)
+  const [mpesaReconciliationRecord, setMpesaReconciliationRecord] =
+    useState(null)
   // Enhanced Features State
   const [showExportModal, setShowExportModal] = useState(false)
   const [showSalesSummary, setShowSalesSummary] = useState(false)
@@ -365,6 +367,9 @@ const TeamsSales = () => {
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [realTimeEnabled, setRealTimeEnabled] = useState(false)
   const [dataVersion, setDataVersion] = useState(0)
+
+  const [hasCashReconciliation, setHasCashReconciliation] = useState(false)
+  const [hasMpesaReconciliation, setHasMpesaReconciliation] = useState(false)
 
   const [startDate, setStartDate] = useState<string>(() => {
     return getNairobiDateString() // Always get Nairobi date
@@ -416,6 +421,7 @@ const TeamsSales = () => {
   const [expenseAssignment, setExpenseAssignment] = useState({
     employeeId: "",
     isCompanyExpense: false,
+    deduction_amount: 0,
     notes: "",
   })
 
@@ -432,6 +438,7 @@ const TeamsSales = () => {
   const decodedTeamType = decodeURIComponent(teamtype || "")
   const teamId = Number(id) || 0
   const { businessName, businessId } = planStatus()
+  const companyId = businessId
 
   // Add these state declarations after your other modal states:
   const [showShortageAssignment, setShowShortageAssignment] = useState(false)
@@ -573,12 +580,13 @@ const TeamsSales = () => {
     setCompanyExpenses(companyExp)
   }, [])
 
-  // Calculate Expected Payments
+  // Calculate Expected Payments - Only Approved Expenses
   const calculateExpectedPayments = useCallback(
     (sales, currentExpenses = expenses) => {
       let totalExpectedCash = 0
       let totalExpectedMpesa = 0
       let unverifiedMpesaPayments = []
+      let verifiedMpesaPayments = []
 
       const salesArray = Array.isArray(sales) ? sales : []
 
@@ -592,15 +600,29 @@ const TeamsSales = () => {
             totalExpectedCash += parseFloat(payment.amount || 0)
           } else if (payment.payment_method === "MPESA") {
             totalExpectedMpesa += parseFloat(payment.amount || 0)
-            if (!payment.is_verified) {
-              unverifiedMpesaPayments.push({
-                saleId: sale.id,
-                invoice: sale.invoice_number,
-                amount: payment.amount,
-                receipt: payment.mpesa_receipt_number,
-                phone: payment.mpesa_phone_number,
-                timestamp: payment.created_at,
+
+            // Get invoice number from the nested sale object
+            const invoiceNumber =
+              payment.sale?.invoice_number || sale.invoice_number
+
+            const paymentData = {
+              saleId: sale.id,
+              invoice: invoiceNumber,
+              amount: payment.amount,
+              receipt: payment.mpesa_receipt_number || payment.reference_number,
+              phone: payment.mpesa_phone_number,
+              timestamp: payment.transaction_date || payment.created_at,
+              paymentId: payment.id,
+              mpesaTransactionId: payment.mpesa_transaction_id,
+            }
+
+            if (payment.is_verified) {
+              verifiedMpesaPayments.push({
+                ...paymentData,
+                verifiedAt: payment.verified_at || payment.created_at,
               })
+            } else {
+              unverifiedMpesaPayments.push(paymentData)
             }
           }
         })
@@ -610,22 +632,41 @@ const TeamsSales = () => {
         ? currentExpenses
         : []
 
+      // Calculate total Cash Expenses - Only APPROVED or PAID expenses
       const totalCashExpenses = expensesArray.reduce((sum, exp) => {
         if (!exp || typeof exp !== "object") return sum
-        return exp.payment_method === "CASH"
-          ? sum + parseFloat(exp.amount || 0)
-          : sum
+
+        if (
+          exp.payment_method === "CASH" &&
+          (exp.status === "APPROVED" || exp.status === "PAID")
+        ) {
+          return sum + parseFloat(exp.amount || 0)
+        }
+        return sum
       }, 0)
 
+      // Calculate total M-Pesa Expenses - Only APPROVED or PAID expenses
       const totalMpesaExpenses = expensesArray.reduce((sum, exp) => {
         if (!exp || typeof exp !== "object") return sum
-        return exp.payment_method === "MPESA"
-          ? sum + parseFloat(exp.amount || 0)
-          : sum
+
+        if (
+          exp.payment_method === "MPESA" &&
+          (exp.status === "APPROVED" || exp.status === "PAID")
+        ) {
+          return sum + parseFloat(exp.amount || 0)
+        }
+        return sum
       }, 0)
 
+      // Calculate net expected cash and M-Pesa
       const netExpectedCash = totalExpectedCash - totalCashExpenses
       const netExpectedMpesa = totalExpectedMpesa - totalMpesaExpenses
+
+      // Calculate actual M-Pesa from verified payments
+      const actualMpesa = verifiedMpesaPayments.reduce(
+        (sum, payment) => sum + parseFloat(payment.amount || 0),
+        0,
+      )
 
       setCashVerification((prev) => ({
         ...prev,
@@ -640,11 +681,18 @@ const TeamsSales = () => {
         expectedMpesa: netExpectedMpesa,
         totalSalesMpesa: totalExpectedMpesa,
         totalMpesaExpenses: totalMpesaExpenses,
+        actualMpesa: actualMpesa,
         unverifiedPayments: unverifiedMpesaPayments,
-        missingMpesa: netExpectedMpesa - (prev.actualMpesa || 0),
+        verifiedPayments: verifiedMpesaPayments,
+        missingMpesa: netExpectedMpesa - actualMpesa,
       }))
 
-      return { netExpectedCash, netExpectedMpesa, unverifiedMpesaPayments }
+      return {
+        netExpectedCash,
+        netExpectedMpesa,
+        unverifiedMpesaPayments,
+        verifiedMpesaPayments,
+      }
     },
     [expenses],
   )
@@ -807,7 +855,14 @@ const TeamsSales = () => {
     [expenses],
   )
 
-  // Check Existing Analysis - FIXED VERSION
+  const hasCashPayments = (statistics?.total_cash || 0) > 0
+  const hasMpesaPayments = (statistics?.total_mpesa || 0) > 0
+
+  const cashSideOk = !hasCashPayments || hasCashReconciliation // if no cash payments, ok; else need reconciliation
+
+  const mpesaSideOk = !hasMpesaPayments || hasMpesaReconciliation // same logic for M‑Pesa
+
+  const canFinalizeByReconciliation = cashSideOk && mpesaSideOk && !isFinalized
   // Check Existing Analysis - IMPROVED VERSION
   const checkExistingAnalysis = useCallback(async () => {
     try {
@@ -877,43 +932,44 @@ const TeamsSales = () => {
     }
   }, [decodedTeamType, teamId, startDate])
 
-  // Analyze Daily Sales - FIXED VERSION
-  const analyzeDailySales = useCallback(async () => {
-    try {
-      const response = await api.post(
-        "/sales/daily-analyses/analyze_daily_sales/",
-        {
-          team_type: decodedTeamType.toUpperCase(),
-          team_id: teamId,
-          analysis_date: startDate,
-          include_calculations: true,
-          analyze_items: true,
-          analyze_employees: true,
-        },
-      )
+  // Analyze Daily Sales - FIXED VERSION (accepts optional date for the date being loaded)
+  const analyzeDailySales = useCallback(
+    async (analysisDateOverride?: string) => {
+      const analysisDate = analysisDateOverride ?? startDate
+      try {
+        const response = await api.post(
+          "/sales/daily-analyses/analyze_daily_sales/",
+          {
+            team_type: decodedTeamType.toUpperCase(),
+            team_id: teamId,
+            analysis_date: analysisDate,
+            include_calculations: true,
+            analyze_items: true,
+            analyze_employees: true,
+          },
+        )
 
-      // Check if the response indicates data is already finalized
-      if (response.data?.detail?.includes("already finalized")) {
-        // If it's already finalized, just return the existing analysis
-        return await checkExistingAnalysis()
+        // Check if the response indicates data is already finalized
+        if (response.data?.detail?.includes("already finalized")) {
+          return await checkExistingAnalysis(analysisDate)
+        }
+
+        toast.success("Daily analysis completed!")
+        return response.data
+      } catch (error) {
+        console.error("Analysis error:", error)
+
+        if (error.response?.data?.detail?.includes("already finalized")) {
+          toast.info("Data is already finalized for this date")
+          return await checkExistingAnalysis(analysisDate)
+        }
+
+        toast.error("Failed to analyze daily sales")
+        throw error
       }
-
-      toast.success("Daily analysis completed!")
-      return response.data
-    } catch (error) {
-      console.error("Analysis error:", error)
-
-      // Check if error is about already finalized data
-      if (error.response?.data?.detail?.includes("already finalized")) {
-        toast.info("Data is already finalized for this date")
-        // Return the existing analysis instead
-        return await checkExistingAnalysis()
-      }
-
-      toast.error("Failed to analyze daily sales")
-      throw error
-    }
-  }, [decodedTeamType, teamId, startDate, checkExistingAnalysis])
+    },
+    [decodedTeamType, teamId, startDate, checkExistingAnalysis],
+  )
 
   // Add this function near other helper functions:
   const resetDateSpecificState = useCallback(() => {
@@ -954,7 +1010,6 @@ const TeamsSales = () => {
   // Add these functions near your other handler functions:
   // Handle opening shortage assignment modal for cash
   const handleAssignCashShortage = useCallback(() => {
-    console.log("clicked!")
     if (cashVerification.missingCash === 0) {
       toast.error("No cash shortage or excess to assign")
       return
@@ -1062,6 +1117,135 @@ const TeamsSales = () => {
     }
   }
 
+  // Add this function near fetchMpesaReconciliation
+  const fetchMpesaReconciliation = useCallback(async () => {
+    try {
+      const response = await api.get("/sales/mpesa-reconciliation/", {
+        params: {
+          team_id: teamId,
+          team_type: decodedTeamType,
+          date: startDate,
+        },
+      })
+
+      if (response.data && response.data.length > 0) {
+        const reconciliationData = response.data[0]
+
+        const apiVerified = reconciliationData.verified_payments
+        const apiUnverified = reconciliationData.unverified_payments
+        const hasPaymentLists =
+          (Array.isArray(apiVerified) && apiVerified.length > 0) ||
+          (Array.isArray(apiUnverified) && apiUnverified.length > 0)
+
+        let verifiedPayments, unverifiedPayments, actualMpesa
+
+        if (hasPaymentLists) {
+          verifiedPayments = apiVerified || []
+          unverifiedPayments = apiUnverified || []
+          actualMpesa = verifiedPayments.reduce(
+            (sum, p) => sum + parseFloat(p.amount || 0),
+            0,
+          )
+        } else {
+          // Reconciliation record has no payment lists; use actual_mpesa and keep existing lists
+          actualMpesa = parseFloat(reconciliationData.actual_mpesa) || 0
+          setMpesaVerification((prev) => ({
+            ...prev,
+            actualMpesa,
+            notes: reconciliationData.notes || "",
+            missingMpesa: (prev.expectedMpesa || 0) - actualMpesa,
+          }))
+          setHasMpesaReconciliation(true)
+          setMpesaReconciliationRecord(reconciliationData)
+          return
+        }
+
+        setMpesaVerification((prev) => ({
+          ...prev,
+          actualMpesa,
+          verifiedPayments,
+          unverifiedPayments,
+          notes: reconciliationData.notes || "",
+          missingMpesa: (prev.expectedMpesa || 0) - actualMpesa,
+        }))
+        setHasMpesaReconciliation(true)
+        setMpesaReconciliationRecord(reconciliationData)
+      } else {
+        setHasMpesaReconciliation(false)
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.log("No M-Pesa reconciliation found")
+        setHasMpesaReconciliation(false)
+        setMpesaReconciliationRecord(null)
+      } else {
+        console.error("Fetch M-Pesa reconciliation error:", error)
+      }
+    }
+  }, [teamId, decodedTeamType, startDate])
+
+  // Define fetchCashReconciliation with useCallback
+  const fetchCashReconciliation = useCallback(async () => {
+    try {
+      const response = await api.get("/sales/cash-reconciliation/", {
+        params: {
+          team_id: teamId,
+          team_type: decodedTeamType,
+          date: startDate,
+        },
+      })
+
+      if (response.data && response.data.length > 0) {
+        const reconciliationData = response.data[0]
+
+        setCashVerification((prev) => ({
+          ...prev,
+          actualCash: parseFloat(reconciliationData.actual_cash) || 0,
+          notes: reconciliationData.notes || "",
+          missingCash:
+            (prev.expectedCash || 0) -
+            (parseFloat(reconciliationData.actual_cash) || 0),
+        }))
+        setHasCashReconciliation(true)
+        setCashReconciliationRecord(reconciliationData)
+      } else {
+        setHasCashReconciliation(false)
+        setCashReconciliationRecord(null)
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.log("No cash reconciliation found")
+        setHasCashReconciliation(false)
+        setCashReconciliationRecord(null)
+      } else {
+        console.error("Fetch reconciliation error:", error)
+      }
+    }
+  }, [teamId, decodedTeamType, startDate])
+
+  // Add this function to save M-Pesa reconciliation
+  const saveMpesaReconciliation = useCallback(async () => {
+    try {
+      const response = await api.post("/sales/mpesa-reconciliation/", {
+        team_id: teamId,
+        team_type: decodedTeamType.toUpperCase(),
+        date: startDate,
+        expected_mpesa: mpesaVerification.expectedMpesa,
+        actual_mpesa: mpesaVerification.actualMpesa,
+        verified_payments: mpesaVerification.verifiedPayments || [],
+        unverified_payments: mpesaVerification.unverifiedPayments || [],
+        notes: mpesaVerification.notes,
+      })
+
+      toast.success("M-Pesa reconciliation saved")
+      return response.data
+    } catch (error) {
+      console.error("Error saving M-Pesa reconciliation:", error)
+      toast.error("Failed to save M-Pesa reconciliation")
+      throw error
+    }
+  }, [teamId, decodedTeamType, startDate, mpesaVerification])
+
   // Load Data with Caching - FIXED VERSION
   const loadDataForDate = useCallback(
     async (date, isDateChange = false, forceRefresh = false) => {
@@ -1102,6 +1286,42 @@ const TeamsSales = () => {
               calculateStatistics(parsed.salesData, parsed.expenses)
               setFormattedDate(formatDate(date, "full"))
               setLastUpdated(new Date().toLocaleTimeString())
+
+              // Fetch cash reconciliation data even when using cache
+              try {
+                await fetchCashReconciliation()
+              } catch (reconError) {
+                console.warn("Failed to fetch cash reconciliation:", reconError)
+              }
+
+              // Add this to fetch M-Pesa reconciliation
+              try {
+                await fetchMpesaReconciliation()
+              } catch (mpesaReconError) {
+                console.warn(
+                  "Failed to fetch M-Pesa reconciliation:",
+                  mpesaReconError,
+                )
+              }
+
+              // Fetch daily analysis for this date so finalization state is correct
+              try {
+                const analysisData = await checkExistingAnalysis(date)
+                if (analysisData) {
+                  setDailySettlement(analysisData)
+                  setIsFinalized(analysisData.is_finalized || false)
+                } else {
+                  setDailySettlement(null)
+                  setIsFinalized(false)
+                }
+              } catch (analysisError) {
+                console.warn(
+                  "Failed to fetch analysis from cache path:",
+                  analysisError,
+                )
+                setDailySettlement(null)
+                setIsFinalized(false)
+              }
 
               if (isDateChange) setDateChanging(false)
               return
@@ -1144,26 +1364,30 @@ const TeamsSales = () => {
           expensesData.push(...expensesArray)
         }
 
-        // Try to get analysis data separately to avoid breaking the whole flow
+        // Try to get analysis data for the date we're loading (use date, not startDate)
         try {
           let analysisData = null
           try {
-            analysisData = await analyzeDailySales()
+            analysisData = await analyzeDailySales(date)
           } catch (analysisError) {
             console.warn(
               "Daily analysis failed, checking existing:",
               analysisError,
             )
-            analysisData = await checkExistingAnalysis()
+            analysisData = await checkExistingAnalysis(date)
           }
 
           if (analysisData) {
             setDailySettlement(analysisData)
             setIsFinalized(analysisData.is_finalized || false)
+          } else {
+            setDailySettlement(null)
+            setIsFinalized(false)
           }
         } catch (analysisError) {
           console.warn("Failed to get analysis data:", analysisError)
-          // Don't fail the whole load if analysis fails
+          setDailySettlement(null)
+          setIsFinalized(false)
         }
 
         // Update state
@@ -1180,6 +1404,19 @@ const TeamsSales = () => {
         // Calculate
         calculateExpectedPayments(salesData, expensesData)
         calculateStatistics(salesData, expensesData)
+
+        // Fetch cash reconciliation data after calculations
+        try {
+          await fetchCashReconciliation()
+        } catch (reconError) {
+          console.warn("Failed to fetch cash reconciliation:", reconError)
+        }
+        // Fetch M-Pesa reconciliation data after calculations
+        try {
+          await fetchMpesaReconciliation()
+        } catch (reconError) {
+          console.warn("Failed to fetch M-Pesa reconciliation:", reconError)
+        }
 
         // Update UI
         setFormattedDate(formatDate(date, "full"))
@@ -1223,8 +1460,85 @@ const TeamsSales = () => {
       initialLoading,
       analyzeDailySales,
       checkExistingAnalysis,
+      fetchCashReconciliation, // Make sure to add this to the dependency array
     ],
   )
+
+  // Add these functions to your TeamsSales component
+  const verifyMpesaPayment = useCallback(
+    async (paymentId, verify = true) => {
+      try {
+        const response = await api.post(
+          `/sales/payments/${paymentId}/verify_payment/`,
+          {
+            is_verified: verify,
+          },
+        )
+
+        if (response.status === 200) {
+          toast.success(
+            `Payment ${verify ? "verified" : "unverified"} successfully`,
+          )
+
+          // Refresh data to get updated payment status
+          await loadDataForDate(startDate, false, true)
+
+          return response.data
+        }
+      } catch (error) {
+        console.error("Error updating payment verification:", error)
+        toast.error(`Failed to ${verify ? "verify" : "unverify"} payment`)
+        throw error
+      }
+    },
+    [startDate, loadDataForDate],
+  )
+
+  const unverifyMpesaPayment = useCallback(async () => {
+    console.log("Unverifying all payments for the selected date")
+    try {
+      // Call the API to unverify all payments for the selected date
+      const response = await api.post(
+        `/sales/payments/unverify_all_payments/`,
+        {
+          date: startDate,
+        },
+      )
+
+      if (response.status === 200) {
+        toast.success(
+          "All payments for the selected date unverified successfully",
+        )
+        await loadDataForDate(startDate, false, true)
+      } else {
+        toast.error("Failed to unverify all payments for the selected date")
+      }
+    } catch (error) {
+      console.error("Error unverifying all payments for selected date:", error)
+      toast.error("Failed to unverify all payments for the selected date")
+    }
+  }, [startDate, loadDataForDate])
+
+  const verifyAllMpesaPayments = useCallback(async () => {
+    try {
+      // Call the API to verify all payments for the selected date
+      const response = await api.post(`/sales/payments/verify_all_payments/`, {
+        date: startDate,
+      })
+
+      if (response.status === 200) {
+        toast.success(
+          "All payments for the selected date verified successfully",
+        )
+        await loadDataForDate(startDate, false, true)
+      } else {
+        toast.error("Failed to verify all payments for the selected date")
+      }
+    } catch (error) {
+      console.error("Error verifying all payments for selected date:", error)
+      toast.error("Failed to verify all payments for the selected date")
+    }
+  }, [startDate, loadDataForDate])
 
   // Enhanced Refresh
   const handleRefresh = useCallback(async () => {
@@ -1438,29 +1752,71 @@ const TeamsSales = () => {
   // Cash Reconciliation
   const performCashReconciliation = useCallback(async () => {
     try {
-      const response = await api.post("/cash/reconcile", {
+      const response = await api.post("/sales/cash-reconciliation/", {
+        company_id: companyId,
         team_id: teamId,
-        team_type: decodedTeamType,
+        team_type: decodedTeamType.toUpperCase(),
         date: startDate,
         expected_cash: cashVerification.expectedCash,
         actual_cash: cashVerification.actualCash,
         verification_notes: cashVerification.notes,
       })
-
+      setHasCashReconciliation(true)
+      setCashReconciliationRecord(response.data)
       toast.success("Cash reconciliation completed")
       return response.data
     } catch (error) {
       console.error("Reconciliation error:", error)
+      setHasCashReconciliation(false)
+      setCashReconciliationRecord(null)
       toast.error("Cash reconciliation failed")
       throw error
     }
   }, [teamId, decodedTeamType, startDate, cashVerification])
+
+  // Cash Reconciliation
+  const performMpesaReconciliation = useCallback(async () => {
+    try {
+      const response = await api.post("/sales/mpesa-reconciliation/", {
+        company_id: companyId,
+        team_id: teamId,
+        team_type: decodedTeamType.toUpperCase(),
+        date: startDate,
+        expected_mpesa: mpesaVerification.expectedMpesa,
+        actual_mpesa: mpesaVerification.actualMpesa,
+        verification_notes: mpesaVerification.notes,
+      })
+      setHasMpesaReconciliation(true)
+      setMpesaReconciliationRecord(response.data)
+      toast.success("M-Pesa reconciliation completed")
+      return response.data
+    } catch (error) {
+      console.error("Reconciliation error:", error)
+      setHasMpesaReconciliation(false)
+      setMpesaReconciliationRecord(null)
+      toast.error("M-Pesa reconciliation failed")
+      throw error
+    }
+  }, [teamId, decodedTeamType, startDate, mpesaVerification])
 
   // Finalize Settlement
   const finalizeSettlement = useCallback(async () => {
     try {
       if (!dailySettlement?.id) {
         toast.error("No daily analysis found")
+        return
+      }
+
+      const hasCashPayments = (statistics?.total_cash || 0) > 0
+      const hasMpesaPayments = (statistics?.total_mpesa || 0) > 0
+
+      const cashSideOk = !hasCashPayments || hasCashReconciliation
+      const mpesaSideOk = !hasMpesaPayments || hasMpesaReconciliation
+
+      if (!cashSideOk || !mpesaSideOk) {
+        toast.error(
+          "You must record cash and M‑Pesa reconciliation for this date before finalizing.",
+        )
         return
       }
 
@@ -1494,6 +1850,9 @@ const TeamsSales = () => {
     }
   }, [
     dailySettlement,
+    statistics,
+    hasCashReconciliation,
+    hasMpesaReconciliation,
     settlementNotes,
     selectedEmployee,
     mpesaVerification.notes,
@@ -1616,39 +1975,75 @@ const TeamsSales = () => {
   }, [])
 
   // Handle Expense Assignment
+  // console.log("expenses before assignment ", expenses)
   const handleAssignExpense = useCallback((expense) => {
     setSelectedExpense(expense)
     setExpenseAssignment({
       employeeId: expense.employee_id || "",
       isCompanyExpense: expense.is_company_expense || false,
+      deduction_amount: expense.amount || 0,
       notes: expense.assignment_notes || "",
     })
     setShowExpenseAssignment(true)
   }, [])
 
   // Save Expense Assignment
+  console.log("expenses assignment ", expenseAssignment)
   const saveExpenseAssignment = async () => {
     if (!selectedExpense) return
 
     try {
-      const response = await api.put(`/expenses/${selectedExpense.id}/assign`, {
-        employee_id: expenseAssignment.employeeId || null,
-        is_company_expense: expenseAssignment.isCompanyExpense,
-        assignment_notes: expenseAssignment.notes,
-      })
+      // Check if expense status is approved or paid
+      if (
+        selectedExpense.status &&
+        !["APPROVED", "PAID"].includes(selectedExpense.status.toUpperCase())
+      ) {
+        toast.error(
+          `This expense is ${
+            selectedExpense.status || "pending"
+          }. Only approved or paid expenses can be attached to employees.`,
+        )
+        return
+      }
 
-      if (response.status === 200) {
+      if (
+        !expenseAssignment.employeeId &&
+        !expenseAssignment.isCompanyExpense
+      ) {
+        toast.error("Please select an employee or mark as company expense")
+        return
+      }
+
+      const requestData = {
+        employee_id: expenseAssignment.employeeId, // Send as employee_id (not employeeId)
+        deduction_amount: expenseAssignment.deduction_amount, // Keep as deduction_amount
+        description: expenseAssignment.notes || "", // Send as 'description', not 'assignment_notes'
+      }
+
+      const response = await api.post(
+        `/expenses/expenses/${selectedExpense.id}/attach_to_employee/`,
+        requestData,
+      )
+      if (response.status === 200 || response.status === 201) {
         toast.success("Expense assigned successfully!")
         setShowExpenseAssignment(false)
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
       console.error("Error assigning expense:", error)
-      toast.error("Failed to assign expense")
+
+      // Check for specific error messages from the backend
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.error)
+      } else if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail)
+      } else {
+        toast.error(
+          "Failed to assign expense: " + (error.message || "Unknown error"),
+        )
+      }
     }
   }
-
-  // Save Item Deficit
 
   // Save Item Deficit - Updated to use correct endpoint
   const saveItemDeficit = async () => {
@@ -1746,7 +2141,6 @@ const TeamsSales = () => {
 
   // In the main TeamsSales component, add this state
   const [deficitData, setDeficitData] = useState([])
-  console.log("find deficit ", deficitData)
   const [showEditDeficitModal, setShowEditDeficitModal] = useState(false)
   const [selectedDeficit, setSelectedDeficit] = useState(null)
   const [editDeficitForm, setEditDeficitForm] = useState({
@@ -1990,7 +2384,7 @@ const TeamsSales = () => {
           setEmployees(employeesResponse.employees || [])
 
           // Load initial data
-          await loadDataForDate(startDate, false)
+          await loadDataForDate(startDate, false, true)
         } catch (error) {
           console.error("Initialization error:", error)
           setError({
@@ -2097,8 +2491,103 @@ const TeamsSales = () => {
     )
   }
 
-  // deficitData.deficits
-  // console.log("deficit data ", deficitData)
+  // In your TeamsSales component, update the cash verification handler:
+  const handleCashVerificationUpdate = (updatedVerification) => {
+    setCashVerification((prev) => ({
+      ...prev,
+      ...updatedVerification,
+      // Ensure missingCash is calculated as expected - actual
+      missingCash:
+        (prev.expectedCash || 0) - (updatedVerification.actualCash || 0),
+    }))
+  }
+
+  // Similarly for M-Pesa verification:
+  const handleMpesaVerificationUpdate = (updatedVerification) => {
+    setMpesaVerification((prev) => ({
+      ...prev,
+      ...updatedVerification,
+      // Calculate missing M-Pesa based on expected vs actual
+      missingMpesa:
+        (prev.expectedMpesa || 0) - (updatedVerification.actualMpesa || 0),
+    }))
+  }
+
+  const handleReassignExpense = async (expenseId, employeeId, data) => {
+    try {
+      const response = await api.post(
+        `/expenses/expenses/${expenseId}/attach_to_employee/`,
+        {
+          employee_id: employeeId,
+          deduction_amount: data.deduction_amount,
+          description: data.notes,
+        },
+      )
+      if (response.status === 201) {
+        toast.success("Expense reassigned successfully!")
+        await loadDataForDate(startDate, false, true)
+      }
+    } catch (error) {
+      console.error("Error reassigning expense:", error)
+      toast.error("Failed to reassign expense")
+    }
+  }
+
+  // Update the handleVerifyByReceipt function
+  const handleVerifyByReceipt = async () => {
+    if (!searchReceipt.trim()) return
+
+    const matchingPayments = mpesaVerification.unverifiedPayments.filter(
+      (payment) =>
+        payment.receipt?.toLowerCase().includes(searchReceipt.toLowerCase()),
+    )
+
+    if (matchingPayments.length > 0) {
+      try {
+        // Verify all matching payments
+        await Promise.all(
+          matchingPayments.map((payment) =>
+            onVerifyPayment(payment.paymentId, true),
+          ),
+        )
+
+        toast.success(`Verified ${matchingPayments.length} payment(s)`)
+        setSearchReceipt("")
+
+        // Data will be refreshed by the parent
+      } catch (error) {
+        console.error("Error verifying payments by receipt:", error)
+        toast.error("Failed to verify some payments")
+      }
+    }
+  }
+
+  // Update the handleUnverifyByReceipt function similarly
+  const handleUnverifyByReceipt = async () => {
+    if (!searchReceipt.trim()) return
+
+    const matchingPayments =
+      mpesaVerification.verifiedPayments?.filter((payment) =>
+        payment.receipt?.toLowerCase().includes(searchReceipt.toLowerCase()),
+      ) || []
+
+    if (matchingPayments.length > 0) {
+      try {
+        await Promise.all(
+          matchingPayments.map((payment) =>
+            onVerifyPayment(payment.paymentId, false),
+          ),
+        )
+
+        toast.success(`Unverified ${matchingPayments.length} payment(s)`)
+        setSearchReceipt("")
+      } catch (error) {
+        console.error("Error unverifying payments by receipt:", error)
+        toast.error("Failed to unverify some payments")
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
       {/* Enhanced Navbar */}
@@ -2925,6 +3414,10 @@ const TeamsSales = () => {
                   onAssignExpense={handleAssignExpense}
                   getEmployeeName={getEmployeeName}
                   isFinalized={isFinalized}
+                  employees={employees} // Pass employees list
+                  // onEditExpense={handleEditExpense} // Add edit handler
+                  // onDeleteExpense={handleDeleteExpense} // Add delete handler
+                  onReassignExpense={handleReassignExpense} // Add reassign handler
                 />
               )}
 
@@ -2952,12 +3445,18 @@ const TeamsSales = () => {
                     onUpdate={setCashVerification}
                     onReconcile={performCashReconciliation}
                     onAssignShortage={handleAssignCashShortage}
+                    reconciliationRecord={cashReconciliationRecord}
                     isFinalized={isFinalized}
                   />
                   <MpesaVerification
                     mpesaVerification={mpesaVerification}
+                    reconciliationRecord={mpesaReconciliationRecord}
                     onUpdate={setMpesaVerification}
-                    onVerify={recordCashVerification}
+                    onVerifyPayment={verifyMpesaPayment} // This is correct - passed as onVerifyPayment
+                    onUnverifyPayment={unverifyMpesaPayment} // This is correct - passed as onUnverifyPayment
+                    onVerifyAllPayments={verifyAllMpesaPayments} // This is correct - passed as onVerifyAllPayments
+                    onVerify={recordCashVerification} // This is a different function
+                    onMpesaReconcile={performMpesaReconciliation}
                     onAssignShortage={(totalUnverifiedAmount) => {
                       if (totalUnverifiedAmount > 0) {
                         setSelectedShortageType("mpesa")
@@ -2980,6 +3479,7 @@ const TeamsSales = () => {
               {/* Settlement */}
               {activeSection === "settlement" && (
                 <SettlementSummary
+                  canFinalizeByReconciliation={canFinalizeByReconciliation}
                   statistics={statistics}
                   cashVerification={cashVerification}
                   mpesaVerification={mpesaVerification}
@@ -3086,6 +3586,10 @@ const TeamsSales = () => {
                 getEmployeeName={getEmployeeName}
                 isFinalized={isFinalized}
                 mobile={true}
+                employees={employees} // Pass employees list
+                // onEditExpense={handleEditExpense} // Add edit handler
+                // onDeleteExpense={handleDeleteExpense} // Add delete handler
+                onReassignExpense={handleReassignExpense} // Add reassign handler
               />
             )}
 
@@ -3105,6 +3609,7 @@ const TeamsSales = () => {
             {activeSection === "verification" && (
               <div className="space-y-4">
                 <CashReconciliation
+                  reconciliationRecord={cashReconciliationRecord}
                   cashVerification={cashVerification}
                   onUpdate={setCashVerification}
                   onReconcile={performCashReconciliation}
@@ -3114,8 +3619,13 @@ const TeamsSales = () => {
                 />
                 <MpesaVerification
                   mpesaVerification={mpesaVerification}
+                  reconciliationRecord={mpesaReconciliationRecord}
                   onUpdate={setMpesaVerification}
-                  onVerify={recordCashVerification}
+                  onVerifyPayment={verifyMpesaPayment} // This is correct - passed as onVerifyPayment
+                  onUnverifyPayment={unverifyMpesaPayment} // This is correct - passed as onUnverifyPayment
+                  onVerifyAllPayments={verifyAllMpesaPayments} // This is correct - passed as onVerifyAllPayments
+                  onVerify={recordCashVerification} // This is a different function
+                  onMpesaReconcile={performMpesaReconciliation}
                   onAssignShortage={(totalUnverifiedAmount) => {
                     if (totalUnverifiedAmount > 0) {
                       setSelectedShortageType("mpesa")
@@ -3139,6 +3649,7 @@ const TeamsSales = () => {
             {/* Settlement (Mobile) */}
             {activeSection === "settlement" && (
               <SettlementSummary
+                canFinalizeByReconciliation={canFinalizeByReconciliation}
                 statistics={statistics}
                 cashVerification={cashVerification}
                 mpesaVerification={mpesaVerification}
@@ -4671,7 +5182,12 @@ const TeamsSales = () => {
                 {!isFinalized && (
                   <button
                     onClick={finalizeSettlement}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                    disabled={!canFinalizeByReconciliation}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      canFinalizeByReconciliation
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    }`}
                   >
                     Finalize Settlement
                   </button>

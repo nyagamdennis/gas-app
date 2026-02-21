@@ -20,21 +20,29 @@ const SettlementSummary = ({
   dailySettlement,
   isFinalized,
   onFinalize,
+  canFinalizeByReconciliation,
   mobile = false,
 }) => {
   const netBalance =
+    (cashVerification.actualCash || 0) + // Use actualCash instead of expectedCash
+    (mpesaVerification.actualMpesa || 0) // Use actualMpesa instead of expectedMpesa
+
+  const expectedTotal =
     (cashVerification.expectedCash || 0) +
     (mpesaVerification.expectedMpesa || 0)
-  const cashStatus =
-    cashVerification.missingCash === 0
-      ? "balanced"
-      : cashVerification.missingCash > 0
-      ? "shortage"
-      : "excess"
-  const mpesaStatus =
-    mpesaVerification.unverifiedPayments.length === 0
-      ? "verified"
-      : "unverified"
+
+  const variance = expectedTotal - netBalance
+
+ const cashStatus =
+   cashVerification.missingCash === 0
+     ? "balanced"
+     : cashVerification.missingCash > 0
+     ? "shortage"
+     : "excess"
+ const mpesaStatus =
+   mpesaVerification.unverifiedPayments.length === 0 ? "verified" : "unverified"
+
+
 
   const getCashStatusColor = () => {
     switch (cashStatus) {
@@ -237,15 +245,28 @@ const SettlementSummary = ({
       <div className="mt-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-6">
         <div className="flex justify-between items-center">
           <div>
-            <div className="text-sm opacity-90">Final Balance</div>
+            <div className="text-sm opacity-90">Final Balance (Verified)</div>
             <div className="text-3xl font-bold mt-1">
               <FormattedAmount amount={netBalance} />
             </div>
             <div className="text-sm opacity-90 mt-2">
-              Cash: <FormattedAmount amount={cashVerification.expectedCash} /> +
-              M-Pesa:{" "}
-              <FormattedAmount amount={mpesaVerification.expectedMpesa} />
+              Cash Verified:{" "}
+              <FormattedAmount amount={cashVerification.actualCash || 0} /> +
+              M-Pesa Verified:{" "}
+              <FormattedAmount amount={mpesaVerification.actualMpesa || 0} />
             </div>
+            {/* Show variance if any */}
+            {variance !== 0 && (
+              <div
+                className={`text-xs mt-1 ${
+                  variance > 0 ? "text-yellow-200" : "text-orange-200"
+                }`}
+              >
+                {variance > 0 ? "⚠ Shortage:" : "⚠ Excess:"}
+                <FormattedAmount amount={Math.abs(variance)} /> (Expected:{" "}
+                <FormattedAmount amount={expectedTotal} />)
+              </div>
+            )}
           </div>
           <div className="text-right">
             <div className="text-sm opacity-90">Daily Profit</div>
@@ -273,12 +294,16 @@ const SettlementSummary = ({
               Once finalized, no further changes can be made to this day's data.
             </div>
             <button
-              onClick={onFinalize}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 flex items-center"
-            >
-              <AssignmentTurnedIn className="mr-2" />
-              Finalize Settlement
-            </button>
+      onClick={onFinalize}
+      disabled={!canFinalizeByReconciliation}
+      className={`px-4 py-2 rounded-lg text-sm font-medium ${
+        canFinalizeByReconciliation
+          ? "bg-green-600 text-white hover:bg-green-700"
+          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+      }`}
+    >
+      Finalize Settlement
+    </button>
           </div>
         </div>
       )}

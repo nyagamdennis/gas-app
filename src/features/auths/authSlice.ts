@@ -126,7 +126,6 @@ export const authSlice = createSlice({
       // 🔥 NEW: Set status to failure
       state.loginStatus = "failure"
       state.loginError = action.payload
-      console.log("Login failure ", action.payload)
     },
     // 🔥 NEW: Reset login status (useful after showing error)
     resetLoginStatus: (state) => {

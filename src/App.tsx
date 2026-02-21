@@ -634,6 +634,15 @@ function App() {
           />
 
           <Route
+            path="/products/sales/new/store/:id"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <ProductSales />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/cylinders/sales/new"
             element={
               <ProtectedRoute requiredRole="is_admin">
@@ -651,6 +660,14 @@ function App() {
           />
           <Route
             path="/cylinders/sales/new/shop/:name/:id"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <CylinderSales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cylinders/sales/new/store/:name/:id"
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <CylinderSales />

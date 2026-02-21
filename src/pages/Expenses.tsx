@@ -10,6 +10,7 @@ import DialogActions from "@mui/material/DialogActions"
 import DialogContent from "@mui/material/DialogContent"
 import DialogContentText from "@mui/material/DialogContentText"
 import DialogTitle from "@mui/material/DialogTitle"
+import { styled } from "@mui/material/styles"
 
 import DateDisplay from "../components/DateDisplay"
 import {
@@ -19,32 +20,19 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Chip,
   Paper,
   Grid,
   Box,
   Typography,
   IconButton,
-  Tabs,
-  Tab,
+  Collapse,
+  Fade,
   Card,
   CardContent,
-  LinearProgress,
-  Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Avatar,
   Tooltip,
   Fab,
-  Collapse,
-  Fade,
 } from "@mui/material"
 import { useNavigate } from "react-router-dom"
 import Navbar from "../components/ui/mobile/admin/Navbar"
@@ -64,21 +52,15 @@ import {
   TrendingUp,
   AttachMoney,
   FilterList,
-  Download,
   Category,
   Storefront,
   DirectionsCar,
   TwoWheeler,
-  ArrowForward,
-  ExpandMore,
   Close,
   Search,
-  Sort,
-  DateRange,
-  ArrowUpward,
-  ArrowDownward,
-  CloudUpload,
   PersonAdd,
+  MoreVert,
+  CalendarToday,
 } from "@mui/icons-material"
 import {
   approveExpense,
@@ -98,21 +80,93 @@ import {
   updateExpense,
 } from "../features/expenses/expensesSlice"
 import Badge from "@mui/material/Badge"
-import { fetchEmployees, selectAllEmployees } from "../features/employees/employeesSlice"
+import {
+  fetchEmployees,
+  selectAllEmployees,
+} from "../features/employees/employeesSlice"
 import planStatus from "../features/planStatus/planStatus"
+
+// Styled components for mobile optimization
+const MobileContainer = styled("div")(({ theme }) => ({
+  minHeight: "100vh",
+  backgroundColor: "#f8fafc",
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  maxWidth: "100vw",
+  overflowX: "hidden",
+  position: "relative",
+}))
+
+const ContentWrapper = styled("main")(({ theme }) => ({
+  flexGrow: 1,
+  padding: "12px",
+  width: "100%",
+  maxWidth: "100%",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+}))
+
+const StatsGrid = styled("div")(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  marginBottom: "16px",
+  width: "100%",
+}))
+
+const StatCard = styled(Paper)(({ theme }) => ({
+  padding: "12px",
+  borderRadius: "12px",
+  border: "1px solid #e2e8f0",
+  backgroundColor: "#ffffff",
+  width: "100%",
+  boxSizing: "border-box",
+}))
+
+const SearchBar = styled(Paper)(({ theme }) => ({
+  padding: "12px",
+  marginBottom: "16px",
+  borderRadius: "12px",
+  border: "1px solid #e2e8f0",
+  backgroundColor: "#ffffff",
+  width: "100%",
+  boxSizing: "border-box",
+}))
+
+const ActionButtonsRow = styled("div")(({ theme }) => ({
+  display: "flex",
+  gap: "8px",
+  marginBottom: "16px",
+  flexWrap: "wrap",
+  width: "100%",
+}))
+
+const ExpenseCard = styled(Card)(({ theme }) => ({
+  marginBottom: "8px",
+  borderRadius: "12px",
+  border: "1px solid #e2e8f0",
+  boxShadow: "none",
+  width: "100%",
+  boxSizing: "border-box",
+}))
+
+const FilterChip = styled(Chip)(({ theme }) => ({
+  margin: "2px",
+}))
 
 const Expenses = () => {
   const {
-      isPro,
-      isTrial,
-      isExpired,
-      businessName,
-      businessId,
-      businessLogo,
-      subscriptionPlan,
-      employeeLimit,
-      planName,
-    } = planStatus()
+    isPro,
+    isTrial,
+    isExpired,
+    businessName,
+    businessId,
+    businessLogo,
+    subscriptionPlan,
+    employeeLimit,
+    planName,
+  } = planStatus()
   const theme = useTheme()
   const navigate = useNavigate()
 
@@ -125,6 +179,7 @@ const Expenses = () => {
   const [openReject, setOpenReject] = useState(false)
   const [openAttachToEmployee, setOpenAttachToEmployee] = useState(false)
   const [openMarkPaid, setOpenMarkPaid] = useState(false)
+  const [openActions, setOpenActions] = useState(null)
   const [selectedExpense, setSelectedExpense] = useState<any>(null)
   const [rejectionReason, setRejectionReason] = useState("")
 
@@ -192,21 +247,14 @@ const Expenses = () => {
     status: "ALL",
     start_date: "",
     end_date: "",
+    location_type: "ALL",
   })
-
-  // updated code start
 
   const expenses = useAppSelector(selectAllExpenses)
   const categories = useAppSelector(selectExpenseCategories)
   const subcategories = useAppSelector(selectExpenseSubCategories)
   const summary = useAppSelector(selectExpenseSummary)
   const employees = useAppSelector(selectAllEmployees)
-    // const all_employees = useAppSelector(selectAllEmployees)
-  
-
-  // const fuelCategory = categories.find((c) => c.code === "FUEL")
-
-  // console.log("category sub expenses are ", categories)
 
   useEffect(() => {
     dispatch(fetchExpenses())
@@ -228,21 +276,19 @@ const Expenses = () => {
     try {
       const formData = new FormData()
 
-      // Add all form data
       Object.entries(expenseData).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           formData.append(key, value.toString())
         }
       })
 
-      // Add company ID (you might need to get this from user context)
-      formData.append("company", "1") // Replace with actual company ID
+      formData.append("company", "1")
 
       await dispatch(createExpense(formData))
       setLoading({ ...loading, add: false })
       handleClose()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
+      dispatch(fetchExpenseSummary())
+      dispatch(fetchExpenses())
     } catch (error: any) {
       alert(error.message || "Failed to create expense")
       setLoading({ ...loading, add: false })
@@ -263,8 +309,8 @@ const Expenses = () => {
       )
       setLoading({ ...loading, update: false })
       handleCloseUpdate()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
+      dispatch(fetchExpenseSummary())
+      dispatch(fetchExpenses())
     } catch (error: any) {
       alert(error.message || "Failed to update expense")
       setLoading({ ...loading, update: false })
@@ -279,21 +325,21 @@ const Expenses = () => {
       await dispatch(deleteExpense(expenseId))
       setLoading({ ...loading, delete: false })
       handleDeleteClose()
-      dispatch(fetchExpenseSummary()) // Refresh summary
-      dispatch(fetchExpenses()) // Refresh expenses list
+      dispatch(fetchExpenseSummary())
+      dispatch(fetchExpenses())
     } catch (error: any) {
       setLoading({ ...loading, delete: false })
       alert(error.message || "Failed to delete expense")
     }
   }
 
-  // New functions for admin actions
   const handleApproveExpense = async (expenseId: number) => {
     setLoading({ ...loading, approve: true })
     try {
       await dispatch(approveExpense(expenseId))
       setLoading({ ...loading, approve: false })
       setOpenApprove(false)
+      setOpenActions(null)
       dispatch(fetchExpenses())
     } catch (error: any) {
       alert(error.message || "Failed to approve expense")
@@ -318,6 +364,7 @@ const Expenses = () => {
       setLoading({ ...loading, reject: false })
       setOpenReject(false)
       setRejectionReason("")
+      setOpenActions(null)
       dispatch(fetchExpenses())
     } catch (error: any) {
       alert(error.message || "Failed to reject expense")
@@ -331,6 +378,7 @@ const Expenses = () => {
       await dispatch(markExpenseAsPaid(expenseId))
       setLoading({ ...loading, markPaid: false })
       setOpenMarkPaid(false)
+      setOpenActions(null)
       dispatch(fetchExpenses())
     } catch (error: any) {
       alert(error.message || "Failed to mark expense as paid")
@@ -355,6 +403,7 @@ const Expenses = () => {
       )
       setLoading({ ...loading, attachEmployee: false })
       setOpenAttachToEmployee(false)
+      setOpenActions(null)
       setAttachEmployeeData({
         expenseId: "",
         employeeId: "",
@@ -371,16 +420,19 @@ const Expenses = () => {
   const handleClickApproveOpen = (expense: any) => {
     setSelectedExpense(expense)
     setOpenApprove(true)
+    setOpenActions(null)
   }
 
   const handleClickRejectOpen = (expense: any) => {
     setSelectedExpense(expense)
     setOpenReject(true)
+    setOpenActions(null)
   }
 
   const handleClickMarkPaidOpen = (expense: any) => {
     setSelectedExpense(expense)
     setOpenMarkPaid(true)
+    setOpenActions(null)
   }
 
   const handleClickAttachToEmployeeOpen = (expense: any) => {
@@ -389,6 +441,32 @@ const Expenses = () => {
       expenseId: expense.id.toString(),
     })
     setOpenAttachToEmployee(true)
+    setOpenActions(null)
+  }
+
+  const handleClickDeleteOpen = (expenseId: string, expenseTitle: string) => {
+    setDeleteData({
+      id: expenseId,
+      title: expenseTitle,
+    })
+    setOpenDelete(true)
+    setOpenActions(null)
+  }
+
+  const handleClickUpdateOpen = (expense: any) => {
+    setUpdateExpenseData({
+      id: expense.id,
+      title: expense.title,
+      category: expense.category?.id || "",
+      subcategory: expense.subcategory?.id || "",
+      description: expense.description || "",
+      amount: expense.amount,
+      tax_amount: expense.tax_amount || "0",
+      payment_method: expense.payment_method || "CASH",
+      payment_reference: expense.payment_reference || "",
+    })
+    setOpenUpdate(true)
+    setOpenActions(null)
   }
 
   const filteredExpenses = expenses.filter((expense) => {
@@ -429,7 +507,6 @@ const Expenses = () => {
       alert("Fuel category not found. Please ensure categories are loaded.")
     }
   }
-  // updated code end
 
   const handleClickOpen = () => {
     setOpen(true)
@@ -460,31 +537,8 @@ const Expenses = () => {
     setOpenUpdate(false)
   }
 
-  const handleClickDeleteOpen = (expenseId: string, expenseTitle: string) => {
-    setDeleteData({
-      id: expenseId,
-      title: expenseTitle,
-    })
-    setOpenDelete(true)
-  }
-
   const handleDeleteClose = () => {
     setOpenDelete(false)
-  }
-
-  const handleClickUpdateOpen = (expense: any) => {
-    setUpdateExpenseData({
-      id: expense.id,
-      title: expense.title,
-      category: expense.category?.id || "",
-      subcategory: expense.subcategory?.id || "",
-      description: expense.description || "",
-      amount: expense.amount,
-      tax_amount: expense.tax_amount || "0",
-      payment_method: expense.payment_method || "CASH",
-      payment_reference: expense.payment_reference || "",
-    })
-    setOpenUpdate(true)
   }
 
   const handleInputChange = (e: any) => {
@@ -503,20 +557,28 @@ const Expenses = () => {
     })
   }
 
+  const handleAttachEmployeeInputChange = (e: any) => {
+    const { name, value } = e.target
+    setAttachEmployeeData({
+      ...attachEmployeeData,
+      [name]: value,
+    })
+  }
+
   const getExpenseTypeIcon = (type: string) => {
     switch (type) {
       case "VEHICLE":
-        return <DirectionsCar sx={{ fontSize: 16 }} />
+        return <DirectionsCar sx={{ fontSize: 18 }} />
       case "MOTORBIKE":
-        return <TwoWheeler sx={{ fontSize: 16 }} />
+        return <TwoWheeler sx={{ fontSize: 18 }} />
       case "SHOP":
-        return <Storefront sx={{ fontSize: 16 }} />
+        return <Storefront sx={{ fontSize: 18 }} />
       case "OFFICE":
-        return <Business sx={{ fontSize: 16 }} />
+        return <Business sx={{ fontSize: 18 }} />
       case "STAFF":
-        return <Person sx={{ fontSize: 16 }} />
+        return <Person sx={{ fontSize: 18 }} />
       default:
-        return <Receipt sx={{ fontSize: 16 }} />
+        return <Receipt sx={{ fontSize: 18 }} />
     }
   }
 
@@ -540,13 +602,13 @@ const Expenses = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return <CheckCircle sx={{ fontSize: 16, color: "success.main" }} />
+        return <CheckCircle sx={{ fontSize: 16, color: "#2e7d32" }} />
       case "PENDING":
-        return <Pending sx={{ fontSize: 16, color: "warning.main" }} />
+        return <Pending sx={{ fontSize: 16, color: "#ed6c02" }} />
       case "REJECTED":
-        return <Warning sx={{ fontSize: 16, color: "error.main" }} />
+        return <Warning sx={{ fontSize: 16, color: "#d32f2f" }} />
       case "PAID":
-        return <Payment sx={{ fontSize: 16, color: "info.main" }} />
+        return <Payment sx={{ fontSize: 16, color: "#0288d1" }} />
       default:
         return <AccessTime sx={{ fontSize: 16 }} />
     }
@@ -567,33 +629,12 @@ const Expenses = () => {
     }
   }
 
-  const getPaymentMethodIcon = (method: string) => {
-    switch (method) {
-      case "MPESA":
-        return <AttachMoney sx={{ fontSize: 16 }} />
-      case "BANK_TRANSFER":
-        return <Payment sx={{ fontSize: 16 }} />
-      default:
-        return <Receipt sx={{ fontSize: 16 }} />
-    }
-  }
-
-  const handleAttachEmployeeInputChange = (e: any) => {
-    const { name, value } = e.target
-    setAttachEmployeeData({
-      ...attachEmployeeData,
-      [name]: value,
-    })
-  }
-
-  // Check if expense has employee attachments
   const hasEmployeeAttachment = (expense: any) => {
     return (
       expense.employee_attachments && expense.employee_attachments.length > 0
     )
   }
 
-  // Render employee attachments badge
   const renderEmployeeAttachmentBadge = (expense: any) => {
     if (hasEmployeeAttachment(expense)) {
       const count = expense.employee_attachments.length
@@ -602,183 +643,148 @@ const Expenses = () => {
           title={`Attached to ${count} employee(s) for salary deduction`}
         >
           <Badge badgeContent={count} color="secondary" sx={{ ml: 1 }}>
-            <PersonAdd fontSize="small" />
+            <PersonAdd sx={{ fontSize: 16 }} />
           </Badge>
         </Tooltip>
       )
     }
     return null
   }
+
+  const toggleActions = (expenseId: any) => {
+    if (openActions === expenseId) {
+      setOpenActions(null)
+    } else {
+      setOpenActions(expenseId)
+    }
+  }
+
   return (
     <div>
       {isMobile ? (
-        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+        <MobileContainer>
           <Navbar
-            headerMessage={"Expense Management"}
-            headerText={"Track and manage all company expenses"}
+            headerMessage="Expense Management"
+            headerText="Track and manage all company expenses"
           />
 
-          <main className="flex-grow m-2 p-1">
-            {/* Stats Overview */}
+          <ContentWrapper>
             {/* Stats Overview */}
             {summary && (
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={6} sm={3}>
-                  <Paper
-                    elevation={0}
+              <StatsGrid>
+                <StatCard>
+                  <Box
                     sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "grey.200",
-                      bgcolor: "background.paper",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <AttachMoney
-                        sx={{ color: "primary.main", fontSize: 20 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        Total
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "primary.main" }}
-                    >
-                      KSh{" "}
-                      {summary.summary.total_amount?.toLocaleString() || "0"}
+                    <AttachMoney sx={{ color: "primary.main", fontSize: 18 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Total
                     </Typography>
-                  </Paper>
-                </Grid>
+                  </Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "primary.main",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    KSh {summary.summary.total_amount?.toLocaleString() || "0"}
+                  </Typography>
+                </StatCard>
 
-                <Grid item xs={6} sm={3}>
-                  <Paper
-                    elevation={0}
+                <StatCard>
+                  <Box
                     sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "grey.200",
-                      bgcolor: "background.paper",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Receipt sx={{ color: "success.main", fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Count
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "success.main" }}
-                    >
-                      {summary.summary.count || 0}
+                    <Receipt sx={{ color: "success.main", fontSize: 18 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Count
                     </Typography>
-                  </Paper>
-                </Grid>
+                  </Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "success.main",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {summary.summary.count || 0}
+                  </Typography>
+                </StatCard>
 
-                <Grid item xs={6} sm={3}>
-                  <Paper
-                    elevation={0}
+                <StatCard>
+                  <Box
                     sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "grey.200",
-                      bgcolor: "background.paper",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <TrendingUp
-                        sx={{ color: "warning.main", fontSize: 20 }}
-                      />
-                      <Typography variant="body2" color="text.secondary">
-                        Avg/Expense
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "warning.main" }}
-                    >
-                      KSh{" "}
-                      {summary.summary.average_amount
-                        ? Math.round(
-                            summary.summary.average_amount,
-                          ).toLocaleString()
-                        : "0"}
+                    <TrendingUp sx={{ color: "warning.main", fontSize: 18 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Avg
                     </Typography>
-                  </Paper>
-                </Grid>
+                  </Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "warning.main",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    KSh{" "}
+                    {summary.summary.average_amount
+                      ? Math.round(
+                          summary.summary.average_amount,
+                        ).toLocaleString()
+                      : "0"}
+                  </Typography>
+                </StatCard>
 
-                <Grid item xs={6} sm={3}>
-                  <Paper
-                    elevation={0}
+                <StatCard>
+                  <Box
                     sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "grey.200",
-                      bgcolor: "background.paper",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        mb: 1,
-                      }}
-                    >
-                      <Warning sx={{ color: "error.main", fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Pending
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "error.main" }}
-                    >
-                      {summary.summary.pending_count || 0}
+                    <Warning sx={{ color: "error.main", fontSize: 18 }} />
+                    <Typography variant="caption" color="text.secondary">
+                      Pending
                     </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
+                  </Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: "error.main",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    {summary.summary.pending_count || 0}
+                  </Typography>
+                </StatCard>
+              </StatsGrid>
             )}
 
-            {/* Search and Filter Bar */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                mb: 3,
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                bgcolor: "background.paper",
-              }}
-            >
+            {/* Search Bar */}
+            <SearchBar>
               <Box
                 sx={{
                   display: "flex",
@@ -802,6 +808,7 @@ const Expenses = () => {
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
+                      fontSize: "0.9rem",
                     },
                   }}
                 />
@@ -811,6 +818,8 @@ const Expenses = () => {
                     border: "1px solid",
                     borderColor: "grey.300",
                     borderRadius: 2,
+                    width: 40,
+                    height: 40,
                   }}
                 >
                   <FilterList />
@@ -818,109 +827,119 @@ const Expenses = () => {
               </Box>
 
               <Collapse in={showAdvancedFilters}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Type</InputLabel>
-                      <Select
-                        value={filter.expense_type}
-                        label="Type"
-                        onChange={(e) =>
-                          setFilter({ ...filter, expense_type: e.target.value })
-                        }
-                      >
-                        <MenuItem value="ALL">All Types</MenuItem>
-                        <MenuItem value="VEHICLE">Vehicle</MenuItem>
-                        <MenuItem value="MOTORBIKE">Motorbike</MenuItem>
-                        <MenuItem value="SHOP">Shop</MenuItem>
-                        <MenuItem value="OFFICE">Office</MenuItem>
-                        <MenuItem value="STAFF">Staff</MenuItem>
-                        <MenuItem value="UTILITY">Utility</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                <Box sx={{ mt: 2 }}>
+                  <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                    <InputLabel sx={{ fontSize: "0.9rem" }}>Type</InputLabel>
+                    <Select
+                      value={filter.expense_type}
+                      label="Type"
+                      onChange={(e) =>
+                        setFilter({ ...filter, expense_type: e.target.value })
+                      }
+                      sx={{ fontSize: "0.9rem" }}
+                    >
+                      <MenuItem value="ALL">All Types</MenuItem>
+                      <MenuItem value="VEHICLE">Vehicle</MenuItem>
+                      <MenuItem value="MOTORBIKE">Motorbike</MenuItem>
+                      <MenuItem value="SHOP">Shop</MenuItem>
+                      <MenuItem value="OFFICE">Office</MenuItem>
+                      <MenuItem value="STAFF">Staff</MenuItem>
+                      <MenuItem value="UTILITY">Utility</MenuItem>
+                    </Select>
+                  </FormControl>
 
-                  <Grid item xs={6} sm={3}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Category</InputLabel>
-                      <Select
-                        value={filter.category}
-                        label="Category"
-                        onChange={(e) =>
-                          setFilter({ ...filter, category: e.target.value })
-                        }
-                      >
-                        <MenuItem value="">All Categories</MenuItem>
-                        {categories.map((cat) => (
-                          <MenuItem key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                  <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                    <InputLabel sx={{ fontSize: "0.9rem" }}>
+                      Category
+                    </InputLabel>
+                    <Select
+                      value={filter.category}
+                      label="Category"
+                      onChange={(e) =>
+                        setFilter({ ...filter, category: e.target.value })
+                      }
+                      sx={{ fontSize: "0.9rem" }}
+                    >
+                      <MenuItem value="">All Categories</MenuItem>
+                      {categories.map((cat) => (
+                        <MenuItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-                  <Grid item xs={6} sm={3}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Status</InputLabel>
-                      <Select
-                        value={filter.status}
-                        label="Status"
-                        onChange={(e) =>
-                          setFilter({ ...filter, status: e.target.value })
-                        }
-                      >
-                        <MenuItem value="ALL">All Status</MenuItem>
-                        <MenuItem value="PENDING">Pending</MenuItem>
-                        <MenuItem value="APPROVED">Approved</MenuItem>
-                        <MenuItem value="REJECTED">Rejected</MenuItem>
-                        <MenuItem value="PAID">Paid</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
+                  <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                    <InputLabel sx={{ fontSize: "0.9rem" }}>Status</InputLabel>
+                    <Select
+                      value={filter.status}
+                      label="Status"
+                      onChange={(e) =>
+                        setFilter({ ...filter, status: e.target.value })
+                      }
+                      sx={{ fontSize: "0.9rem" }}
+                    >
+                      <MenuItem value="ALL">All Status</MenuItem>
+                      <MenuItem value="PENDING">Pending</MenuItem>
+                      <MenuItem value="APPROVED">Approved</MenuItem>
+                      <MenuItem value="REJECTED">Rejected</MenuItem>
+                      <MenuItem value="PAID">Paid</MenuItem>
+                    </Select>
+                  </FormControl>
 
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        fullWidth
-                        onClick={() =>
-                          setFilter({
-                            expense_type: "ALL",
-                            category: "",
-                            status: "ALL",
-                            start_date: "",
-                            end_date: "",
-                          })
-                        }
-                      >
-                        Clear
-                      </Button>
-                    </Box>
-                  </Grid>
-                </Grid>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    onClick={() =>
+                      setFilter({
+                        expense_type: "ALL",
+                        category: "",
+                        status: "ALL",
+                        start_date: "",
+                        end_date: "",
+                      })
+                    }
+                    sx={{ borderRadius: 2, fontSize: "0.9rem" }}
+                  >
+                    Clear Filters
+                  </Button>
+                </Box>
               </Collapse>
-            </Paper>
+            </SearchBar>
 
             {/* Action Buttons */}
-            <Box sx={{ display: "flex", gap: 1, mb: 3, flexWrap: "wrap" }}>
+            <ActionButtonsRow>
               <Button
                 variant="contained"
                 startIcon={<Add />}
                 onClick={handleClickOpen}
-                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  flex: 1,
+                  minWidth: 0,
+                }}
               >
-                Add Expense
+                Add
               </Button>
 
               <Button
                 variant="outlined"
                 startIcon={<LocalGasStation />}
                 onClick={handleQuickFuel}
-                sx={{ borderRadius: 2, textTransform: "none", fontWeight: 600 }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  flex: 1,
+                  minWidth: 0,
+                }}
               >
-                Quick Fuel
+                Fuel
               </Button>
 
               <Button
@@ -938,133 +957,126 @@ const Expenses = () => {
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 600,
+                  fontSize: "0.85rem",
+                  flex: 1,
+                  minWidth: 0,
                 }}
               >
-                Shop Expense
+                Shop
               </Button>
-            </Box>
+            </ActionButtonsRow>
 
-            {/* Expenses Table */}
-            <Paper
-              elevation={0}
-              sx={{
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                overflow: "hidden",
-              }}
-            >
-              <Box sx={{ p: 2, bgcolor: "grey.50" }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {/* Expenses List - Card View for Mobile */}
+            <Box sx={{ width: "100%" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 1.5,
+                  px: 0.5,
+                }}
+              >
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                   Recent Expenses
-                  {filteredExpenses.length > 0 && (
-                    <Chip
-                      label={`${
-                        filteredExpenses.length
-                      } expenses · KSh ${totalExpenses.toLocaleString()}`}
-                      size="small"
-                      sx={{ ml: 2 }}
-                    />
-                  )}
                 </Typography>
+                {filteredExpenses.length > 0 && (
+                  <Chip
+                    label={`${
+                      filteredExpenses.length
+                    } · KSh ${totalExpenses.toLocaleString()}`}
+                    size="small"
+                    sx={{ fontSize: "0.75rem" }}
+                  />
+                )}
               </Box>
 
               {filteredExpenses.length === 0 ? (
-                <Box sx={{ p: 6, textAlign: "center" }}>
-                  <Receipt sx={{ fontSize: 64, color: "grey.300", mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                <Paper sx={{ p: 4, textAlign: "center", borderRadius: 2 }}>
+                  <Receipt sx={{ fontSize: 48, color: "grey.300", mb: 2 }} />
+                  <Typography
+                    variant="subtitle1"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     No expenses found
                   </Typography>
                   <Typography
-                    variant="body2"
+                    variant="caption"
                     color="text.secondary"
-                    sx={{ mb: 3 }}
+                    sx={{ display: "block", mb: 2 }}
                   >
                     {search
-                      ? "Try adjusting your search criteria"
-                      : "Add your first expense to get started"}
+                      ? "Try adjusting your search"
+                      : "Add your first expense"}
                   </Typography>
                   <Button
                     variant="contained"
                     startIcon={<Add />}
                     onClick={handleClickOpen}
+                    size="small"
                   >
                     Add Expense
                   </Button>
-                </Box>
+                </Paper>
               ) : (
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: "grey.50" }}>
-                        <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Amount</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                        <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredExpenses.map((expense) => (
-                        <TableRow
-                          key={expense.id}
-                          hover
+                <Box sx={{ width: "100%" }}>
+                  {filteredExpenses.map((expense) => (
+                    <ExpenseCard key={expense.id}>
+                      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                        {/* Header Row */}
+                        <Box
                           sx={{
-                            "&:last-child td": { border: 0 },
-                            transition: "background-color 0.2s",
-                            bgcolor:
-                              expense.status === "PENDING"
-                                ? "action.hover"
-                                : "inherit",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            mb: 1.5,
                           }}
                         >
-                          <TableCell>
-                            <Typography variant="body2">
-                              <DateDisplay date={expense.expense_date} />
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center" }}>
-                              <Typography
-                                variant="body2"
-                                sx={{ fontWeight: 500 }}
-                              >
-                                {expense.title}
-                              </Typography>
-                              {renderEmployeeAttachmentBadge(expense)}
-                              {expense.description && (
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{ display: "block", mt: 0.5 }}
-                                >
-                                  {expense.description.substring(0, 50)}...
-                                </Typography>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              flex: 1,
+                              minWidth: 0,
+                            }}
+                          >
+                            {getExpenseTypeIcon(expense.expense_type)}
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 600, fontSize: "0.95rem" }}
                             >
-                              {getExpenseTypeIcon(expense.expense_type)}
-                              <Chip
-                                label={expense.expense_type}
-                                size="small"
-                                color={
-                                  getExpenseTypeColor(
-                                    expense.expense_type,
-                                  ) as any
-                                }
-                              />
-                            </Box>
-                          </TableCell>
-                          <TableCell>
+                              {expense.title}
+                            </Typography>
+                            {renderEmployeeAttachmentBadge(expense)}
+                          </Box>
+                          <IconButton
+                            size="small"
+                            onClick={() => toggleActions(expense.id)}
+                            sx={{ ml: 1 }}
+                          >
+                            <MoreVert fontSize="small" />
+                          </IconButton>
+                        </Box>
+
+                        {/* Details Grid */}
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(2, 1fr)",
+                            gap: 1.5,
+                            mb: 1.5,
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 0.5 }}
+                            >
+                              Amount
+                            </Typography>
                             <Typography
                               variant="body2"
                               sx={{ fontWeight: 600, color: "success.main" }}
@@ -1074,25 +1086,63 @@ const Expenses = () => {
                                 expense.total_amount,
                               ).toLocaleString()}
                             </Typography>
-                            {parseFloat(expense.tax_amount) > 0 && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                (Tax: KSh{" "}
-                                {parseFloat(
-                                  expense.tax_amount,
-                                ).toLocaleString()}
-                                )
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell>
+                          </Box>
+
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 0.5 }}
+                            >
+                              Date
+                            </Typography>
                             <Box
                               sx={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 1,
+                                gap: 0.5,
+                              }}
+                            >
+                              <CalendarToday
+                                sx={{ fontSize: 12, color: "text.secondary" }}
+                              />
+                              <Typography variant="caption">
+                                <DateDisplay date={expense.expense_date} />
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 0.5 }}
+                            >
+                              Type
+                            </Typography>
+                            <Chip
+                              label={expense.expense_type}
+                              size="small"
+                              color={
+                                getExpenseTypeColor(expense.expense_type) as any
+                              }
+                              sx={{ height: 24, fontSize: "0.7rem" }}
+                            />
+                          </Box>
+
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block", mb: 0.5 }}
+                            >
+                              Status
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
                               }}
                             >
                               {getStatusIcon(expense.status)}
@@ -1101,114 +1151,265 @@ const Expenses = () => {
                                 size="small"
                                 color={getStatusColor(expense.status) as any}
                                 variant="outlined"
+                                sx={{ height: 24, fontSize: "0.7rem" }}
                               />
                             </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: 0.5,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <Tooltip title="Edit">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleClickUpdateOpen(expense)}
-                                  sx={{ color: "primary.main" }}
-                                >
-                                  <Edit fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
+                          </Box>
 
-                              {expense.status === "PENDING" && (
-                                <>
-                                  <Tooltip title="Approve">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        handleClickApproveOpen(expense)
-                                      }
-                                      sx={{ color: "success.main" }}
-                                    >
-                                      <CheckCircle fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Reject">
-                                    <IconButton
-                                      size="small"
-                                      onClick={() =>
-                                        handleClickRejectOpen(expense)
-                                      }
-                                      sx={{ color: "error.main" }}
-                                    >
-                                      <Warning fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                </>
-                              )}
+                          {/* Location/Asset Name - Show the actual name from the response */}
+                          {(expense.shop_name ||
+                            expense.store_name ||
+                            expense.vehicle_name ||
+                            expense.motorbike_name ||
+                            expense.location_name) && (
+                            <Box sx={{ gridColumn: "span 2" }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ display: "block", mb: 0.5 }}
+                              >
+                                Location / Asset
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                }}
+                              >
+                                {/* Shop Name */}
+                                {expense.shop_name && (
+                                  <Chip
+                                    icon={<Storefront sx={{ fontSize: 14 }} />}
+                                    label={expense.shop_name}
+                                    size="small"
+                                    color="success"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: "0.75rem" }}
+                                  />
+                                )}
 
-                              {expense.status === "APPROVED" && (
-                                <Tooltip title="Mark as Paid">
+                                {/* Store Name */}
+                                {expense.store_name && (
+                                  <Chip
+                                    icon={<Storefront sx={{ fontSize: 14 }} />}
+                                    label={expense.store_name}
+                                    size="small"
+                                    color="info"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: "0.75rem" }}
+                                  />
+                                )}
+
+                                {/* Vehicle Name */}
+                                {expense.vehicle_name && (
+                                  <Chip
+                                    icon={
+                                      <DirectionsCar sx={{ fontSize: 14 }} />
+                                    }
+                                    label={expense.vehicle_name}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: "0.75rem" }}
+                                  />
+                                )}
+
+                                {/* Motorbike Name */}
+                                {expense.motorbike_name && (
+                                  <Chip
+                                    icon={<TwoWheeler sx={{ fontSize: 14 }} />}
+                                    label={expense.motorbike_name}
+                                    size="small"
+                                    color="secondary"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: "0.75rem" }}
+                                  />
+                                )}
+
+                                {/* Location Name */}
+                                {expense.location_name && (
+                                  <Chip
+                                    icon={<Business sx={{ fontSize: 14 }} />}
+                                    label={expense.location_name}
+                                    size="small"
+                                    color="warning"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: "0.75rem" }}
+                                  />
+                                )}
+                              </Box>
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* Description if exists */}
+                        {expense.description && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ display: "block", mb: 1 }}
+                          >
+                            {expense.description.length > 60
+                              ? `${expense.description.substring(0, 60)}...`
+                              : expense.description}
+                          </Typography>
+                        )}
+
+                        {/* Actions Menu */}
+                        <Collapse in={openActions === expense.id}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              mt: 1,
+                              pt: 1,
+                              borderTop: "1px solid",
+                              borderColor: "grey.200",
+                            }}
+                          >
+                            <Tooltip title="Edit">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleClickUpdateOpen(expense)}
+                                sx={{
+                                  color: "primary.main",
+                                  bgcolor: "primary.50",
+                                  p: 1,
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            {expense.status === "PENDING" && (
+                              <>
+                                <Tooltip title="Approve">
                                   <IconButton
                                     size="small"
                                     onClick={() =>
-                                      handleClickMarkPaidOpen(expense)
+                                      handleClickApproveOpen(expense)
                                     }
-                                    sx={{ color: "info.main" }}
+                                    sx={{
+                                      color: "success.main",
+                                      bgcolor: "success.50",
+                                      p: 1,
+                                    }}
                                   >
-                                    <Payment fontSize="small" />
+                                    <CheckCircle fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
-                              )}
+                                <Tooltip title="Reject">
+                                  <IconButton
+                                    size="small"
+                                    onClick={() =>
+                                      handleClickRejectOpen(expense)
+                                    }
+                                    sx={{
+                                      color: "error.main",
+                                      bgcolor: "error.50",
+                                      p: 1,
+                                    }}
+                                  >
+                                    <Warning fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              </>
+                            )}
 
-                              <Tooltip title="Attach to Employee">
+                            {expense.status === "APPROVED" && (
+                              <Tooltip title="Mark as Paid">
                                 <IconButton
                                   size="small"
                                   onClick={() =>
-                                    handleClickAttachToEmployeeOpen(expense)
+                                    handleClickMarkPaidOpen(expense)
                                   }
-                                  sx={{ color: "secondary.main" }}
+                                  sx={{
+                                    color: "info.main",
+                                    bgcolor: "info.50",
+                                    p: 1,
+                                  }}
                                 >
-                                  <PersonAdd fontSize="small" />
+                                  <Payment fontSize="small" />
                                 </IconButton>
                               </Tooltip>
+                            )}
 
-                              <Tooltip title="Delete">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    handleClickDeleteOpen(
-                                      expense.id.toString(),
-                                      expense.title,
-                                    )
-                                  }
-                                  sx={{ color: "error.main" }}
-                                >
-                                  <Delete fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                            <Tooltip title="Attach to Employee">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleClickAttachToEmployeeOpen(expense)
+                                }
+                                sx={{
+                                  color: "secondary.main",
+                                  bgcolor: "secondary.50",
+                                  p: 1,
+                                }}
+                              >
+                                <PersonAdd fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Delete">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleClickDeleteOpen(
+                                    expense.id.toString(),
+                                    expense.title,
+                                  )
+                                }
+                                sx={{
+                                  color: "error.main",
+                                  bgcolor: "error.50",
+                                  p: 1,
+                                }}
+                              >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Collapse>
+                      </CardContent>
+                    </ExpenseCard>
+                  ))}
+                </Box>
               )}
-            </Paper>
-          </main>
+            </Box>
+          </ContentWrapper>
 
-          {/* Add Expense Dialog */}
+          <footer>
+            <AdminsFooter />
+          </footer>
+
+          {/* Floating Action Button */}
+          <Fab
+            color="primary"
+            sx={{
+              position: "fixed",
+              bottom: 80,
+              right: 16,
+              zIndex: 1000,
+              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
+              width: 48,
+              height: 48,
+            }}
+            onClick={handleClickOpen}
+          >
+            <Add />
+          </Fab>
+
+          {/* Dialogs - Keep all your existing dialogs but ensure they're optimized for mobile */}
           <Dialog
             open={open}
             onClose={handleClose}
-            maxWidth="sm"
-            fullWidth
+            fullScreen
             PaperProps={{
               sx: {
-                borderRadius: 3,
+                borderRadius: 0,
               },
             }}
           >
@@ -1216,41 +1417,27 @@ const Expenses = () => {
               sx={{
                 bgcolor: "primary.main",
                 color: "white",
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                p: 3,
+                p: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Add sx={{ fontSize: 28 }} />
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    Add New Expense
-                  </Typography>
-                </Box>
-                <IconButton
-                  onClick={handleClose}
-                  sx={{
-                    color: "white",
-                    "&:hover": {
-                      bgcolor: "rgba(255,255,255,0.1)",
-                    },
-                  }}
-                >
-                  <Close />
-                </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Add sx={{ fontSize: 20 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Add New Expense
+                </Typography>
               </Box>
+              <IconButton onClick={handleClose} sx={{ color: "white", p: 0.5 }}>
+                <Close />
+              </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ pt: 4 }}>
-              <form className="mt-4" onSubmit={handleAddExpense}>
+            <DialogContent sx={{ p: 2 }}>
+              <form onSubmit={handleAddExpense} className=" mt-4">
                 <Grid container spacing={2}>
+                  {/* All your form fields remain the same */}
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -1286,7 +1473,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Category</InputLabel>
                       <Select
@@ -1308,7 +1495,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Subcategory</InputLabel>
                       <Select
@@ -1329,7 +1516,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Amount (KSh)"
@@ -1342,7 +1529,7 @@ const Expenses = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Tax Amount (KSh)"
@@ -1354,7 +1541,7 @@ const Expenses = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Payment Method</InputLabel>
                       <Select
@@ -1373,7 +1560,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Payment Reference"
@@ -1422,15 +1609,9 @@ const Expenses = () => {
                   </Grid>
                 </Grid>
 
-                <Box
-                  sx={{
-                    mt: 3,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 2,
-                  }}
-                >
+                <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
                   <Button
+                    fullWidth
                     onClick={handleClose}
                     variant="outlined"
                     sx={{ borderRadius: 2 }}
@@ -1438,6 +1619,7 @@ const Expenses = () => {
                     Cancel
                   </Button>
                   <Button
+                    fullWidth
                     type="submit"
                     variant="contained"
                     disabled={loading.add}
@@ -1454,57 +1636,44 @@ const Expenses = () => {
             </DialogContent>
           </Dialog>
 
+          {/* Keep all other dialogs as is but ensure they're mobile-optimized */}
           {/* Update Expense Dialog */}
           <Dialog
             open={openUpdate}
             onClose={handleCloseUpdate}
-            maxWidth="sm"
-            fullWidth
+            fullScreen
             PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
+              sx: { borderRadius: 0 },
             }}
           >
             <DialogTitle
               sx={{
                 bgcolor: "warning.main",
                 color: "white",
-                borderTopLeftRadius: 12,
-                borderTopRightRadius: 12,
-                p: 3,
+                p: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Edit sx={{ fontSize: 28 }} />
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    Update Expense
-                  </Typography>
-                </Box>
-                <IconButton
-                  onClick={handleCloseUpdate}
-                  sx={{
-                    color: "white",
-                    "&:hover": {
-                      bgcolor: "rgba(255,255,255,0.1)",
-                    },
-                  }}
-                >
-                  <Close />
-                </IconButton>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Edit sx={{ fontSize: 20 }} />
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Update Expense
+                </Typography>
               </Box>
+              <IconButton
+                onClick={handleCloseUpdate}
+                sx={{ color: "white", p: 0.5 }}
+              >
+                <Close />
+              </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ pt: 4 }}>
-              <form className="mt-4" onSubmit={handleEdit}>
+            <DialogContent sx={{ p: 2 }}>
+              <form onSubmit={handleEdit}>
                 <Grid container spacing={2}>
+                  {/* All update form fields - similar structure to add form */}
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -1517,7 +1686,7 @@ const Expenses = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Category</InputLabel>
                       <Select
@@ -1539,7 +1708,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Subcategory</InputLabel>
                       <Select
@@ -1560,7 +1729,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Amount (KSh)"
@@ -1573,7 +1742,7 @@ const Expenses = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Tax Amount (KSh)"
@@ -1585,7 +1754,7 @@ const Expenses = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <FormControl fullWidth size="small">
                       <InputLabel>Payment Method</InputLabel>
                       <Select
@@ -1604,7 +1773,7 @@ const Expenses = () => {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       fullWidth
                       label="Payment Reference"
@@ -1629,15 +1798,9 @@ const Expenses = () => {
                   </Grid>
                 </Grid>
 
-                <Box
-                  sx={{
-                    mt: 3,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 2,
-                  }}
-                >
+                <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
                   <Button
+                    fullWidth
                     onClick={handleCloseUpdate}
                     variant="outlined"
                     sx={{ borderRadius: 2 }}
@@ -1645,47 +1808,36 @@ const Expenses = () => {
                     Cancel
                   </Button>
                   <Button
+                    fullWidth
                     type="submit"
                     variant="contained"
                     color="warning"
                     disabled={loading.update}
                     sx={{ borderRadius: 2 }}
                   >
-                    {loading.update ? (
-                      <CircularProgress size={24} />
-                    ) : (
-                      "Update Expense"
-                    )}
+                    {loading.update ? <CircularProgress size={24} /> : "Update"}
                   </Button>
                 </Box>
               </form>
             </DialogContent>
           </Dialog>
 
-          {/* Delete Confirmation Dialog */}
+          {/* Keep other dialogs but make them fullScreen for mobile */}
           <Dialog
             open={openDelete}
             onClose={handleDeleteClose}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
+            fullWidth
+            maxWidth="xs"
           >
             <DialogTitle sx={{ fontWeight: 600 }}>Confirm Delete</DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Are you sure you want to delete the expense:{" "}
-                <strong>{deleteData.title}</strong>? This action cannot be
+                Delete "<strong>{deleteData.title}</strong>"? This cannot be
                 undone.
               </DialogContentText>
             </DialogContent>
             <DialogActions sx={{ p: 2, pt: 0 }}>
-              <Button
-                onClick={handleDeleteClose}
-                variant="outlined"
-                sx={{ borderRadius: 2 }}
-              >
+              <Button onClick={handleDeleteClose} variant="outlined" fullWidth>
                 Cancel
               </Button>
               <Button
@@ -1693,39 +1845,30 @@ const Expenses = () => {
                 variant="contained"
                 color="error"
                 disabled={loading.delete}
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 {loading.delete ? <CircularProgress size={24} /> : "Delete"}
               </Button>
             </DialogActions>
           </Dialog>
 
-          {/* Approve Expense Dialog */}
           <Dialog
             open={openApprove}
             onClose={() => setOpenApprove(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
+            fullWidth
+            maxWidth="xs"
           >
             <DialogTitle sx={{ fontWeight: 600, color: "success.main" }}>
-              <CheckCircle sx={{ mr: 1, verticalAlign: "middle" }} />
               Approve Expense
             </DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Are you sure you want to approve the expense:{" "}
-                <strong>{selectedExpense?.title}</strong>?
+                Approve "<strong>{selectedExpense?.title}</strong>"?
               </DialogContentText>
               <Box
                 sx={{ mt: 2, p: 2, bgcolor: "success.light", borderRadius: 1 }}
               >
-                <Typography
-                  variant="body2"
-                  sx={{ color: "success.contrastText" }}
-                >
+                <Typography variant="body2">
                   Amount: KSh{" "}
                   {selectedExpense
                     ? parseFloat(selectedExpense.total_amount).toLocaleString()
@@ -1737,7 +1880,7 @@ const Expenses = () => {
               <Button
                 onClick={() => setOpenApprove(false)}
                 variant="outlined"
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 Cancel
               </Button>
@@ -1746,41 +1889,36 @@ const Expenses = () => {
                 variant="contained"
                 color="success"
                 disabled={loading.approve}
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 {loading.approve ? <CircularProgress size={24} /> : "Approve"}
               </Button>
             </DialogActions>
           </Dialog>
 
-          {/* Reject Expense Dialog */}
           <Dialog
             open={openReject}
             onClose={() => setOpenReject(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
+            fullWidth
+            maxWidth="xs"
           >
             <DialogTitle sx={{ fontWeight: 600, color: "error.main" }}>
-              <Warning sx={{ mr: 1, verticalAlign: "middle" }} />
               Reject Expense
             </DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Are you sure you want to reject the expense:{" "}
-                <strong>{selectedExpense?.title}</strong>?
+                Reject "<strong>{selectedExpense?.title}</strong>"?
               </DialogContentText>
               <TextField
                 fullWidth
-                label="Rejection Reason"
+                label="Reason"
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 multiline
                 rows={3}
                 sx={{ mt: 2 }}
                 required
+                size="small"
               />
             </DialogContent>
             <DialogActions sx={{ p: 2, pt: 0 }}>
@@ -1790,7 +1928,7 @@ const Expenses = () => {
                   setRejectionReason("")
                 }}
                 variant="outlined"
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 Cancel
               </Button>
@@ -1799,44 +1937,32 @@ const Expenses = () => {
                 variant="contained"
                 color="error"
                 disabled={loading.reject || !rejectionReason.trim()}
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 {loading.reject ? <CircularProgress size={24} /> : "Reject"}
               </Button>
             </DialogActions>
           </Dialog>
 
-          {/* Mark as Paid Dialog */}
           <Dialog
             open={openMarkPaid}
             onClose={() => setOpenMarkPaid(false)}
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
+            fullWidth
+            maxWidth="xs"
           >
             <DialogTitle sx={{ fontWeight: 600, color: "info.main" }}>
-              <Payment sx={{ mr: 1, verticalAlign: "middle" }} />
               Mark as Paid
             </DialogTitle>
             <DialogContent>
               <DialogContentText>
-                Are you sure you want to mark the expense as paid:{" "}
-                <strong>{selectedExpense?.title}</strong>?
+                Mark "<strong>{selectedExpense?.title}</strong>" as paid?
               </DialogContentText>
               <Box sx={{ mt: 2, p: 2, bgcolor: "info.light", borderRadius: 1 }}>
-                <Typography variant="body2" sx={{ color: "info.contrastText" }}>
+                <Typography variant="body2">
                   Amount: KSh{" "}
                   {selectedExpense
                     ? parseFloat(selectedExpense.total_amount).toLocaleString()
                     : "0"}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "info.contrastText", mt: 1 }}
-                >
-                  Payment Method: {selectedExpense?.payment_method}
                 </Typography>
               </Box>
             </DialogContent>
@@ -1844,7 +1970,7 @@ const Expenses = () => {
               <Button
                 onClick={() => setOpenMarkPaid(false)}
                 variant="outlined"
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 Cancel
               </Button>
@@ -1853,39 +1979,43 @@ const Expenses = () => {
                 variant="contained"
                 color="info"
                 disabled={loading.markPaid}
-                sx={{ borderRadius: 2 }}
+                fullWidth
               >
                 {loading.markPaid ? (
                   <CircularProgress size={24} />
                 ) : (
-                  "Mark as Paid"
+                  "Mark Paid"
                 )}
               </Button>
             </DialogActions>
           </Dialog>
 
-          {/* Attach to Employee Dialog */}
           <Dialog
             open={openAttachToEmployee}
             onClose={() => setOpenAttachToEmployee(false)}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-              sx: {
-                borderRadius: 3,
-              },
-            }}
+            fullScreen
           >
-            <DialogTitle sx={{ fontWeight: 600, color: "secondary.main" }}>
-              <PersonAdd sx={{ mr: 1, verticalAlign: "middle" }} />
-              Attach Expense to Employee
+            <DialogTitle
+              sx={{
+                fontWeight: 600,
+                color: "secondary.main",
+                bgcolor: "secondary.50",
+                p: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <PersonAdd />
+                <Typography variant="subtitle1">Attach to Employee</Typography>
+              </Box>
+              <IconButton onClick={() => setOpenAttachToEmployee(false)}>
+                <Close />
+              </IconButton>
             </DialogTitle>
-            <DialogContent>
-              <DialogContentText sx={{ mb: 2 }}>
-                Attach this expense to an employee for salary deduction.
-              </DialogContentText>
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
+            <DialogContent sx={{ p: 2}}>
+              <FormControl fullWidth sx={{ mb: 2, mt: 1 }} size="small">
                 <InputLabel>Select Employee</InputLabel>
                 <Select
                   name="employeeId"
@@ -1893,14 +2023,14 @@ const Expenses = () => {
                   label="Select Employee"
                   onChange={handleAttachEmployeeInputChange}
                   required
+                  size="small"
                 >
                   <MenuItem value="">
                     <em>Select an employee</em>
                   </MenuItem>
                   {employees.map((employee) => (
                     <MenuItem key={employee.id} value={employee.id}>
-                      {employee.first_name} {employee.last_name} -{" "}
-                      {employee.email}
+                      {employee.first_name} {employee.last_name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -1915,6 +2045,7 @@ const Expenses = () => {
                 onChange={handleAttachEmployeeInputChange}
                 sx={{ mb: 2 }}
                 required
+                size="small"
               />
 
               <TextField
@@ -1924,23 +2055,25 @@ const Expenses = () => {
                 value={attachEmployeeData.description}
                 onChange={handleAttachEmployeeInputChange}
                 multiline
-                rows={2}
+                rows={3}
+                size="small"
               />
             </DialogContent>
-            <DialogActions sx={{ p: 2, pt: 0 }}>
+            <DialogActions sx={{ p: 2 }}>
               <Button
+                fullWidth
                 onClick={() => setOpenAttachToEmployee(false)}
                 variant="outlined"
-                sx={{ borderRadius: 2 }}
+                sx={{ mb: 1 }}
               >
                 Cancel
               </Button>
               <Button
+                fullWidth
                 onClick={handleAttachToEmployee}
                 variant="contained"
                 color="secondary"
                 disabled={loading.attachEmployee}
-                sx={{ borderRadius: 2 }}
               >
                 {loading.attachEmployee ? (
                   <CircularProgress size={24} />
@@ -1950,26 +2083,7 @@ const Expenses = () => {
               </Button>
             </DialogActions>
           </Dialog>
-
-          <footer>
-            <AdminsFooter />
-          </footer>
-
-          {/* Floating Action Button */}
-          <Fab
-            color="primary"
-            sx={{
-              position: "fixed",
-              bottom: 80,
-              right: 16,
-              zIndex: 1000,
-              boxShadow: "0 8px 20px rgba(25, 118, 210, 0.3)",
-            }}
-            onClick={handleClickOpen}
-          >
-            <Add />
-          </Fab>
-        </div>
+        </MobileContainer>
       ) : (
         <div className="p-4">
           <p>Desktop view coming soon</p>
