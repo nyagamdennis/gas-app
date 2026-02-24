@@ -275,8 +275,7 @@ const AllSales = () => {
   }
   const navigateToCylinderSales = () => {
     setShowRecordSaleModal(false)
-console.log("Selected Team Type:", selectedTeamType)
-console.log("Selected Team:", selectedTeam)
+
     // Build route based on selections
     let route = "/cylinders/sales/new"
     if (selectedTeamType === "shop" && selectedTeam) {

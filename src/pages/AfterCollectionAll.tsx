@@ -44,13 +44,6 @@ const AfterCollectionAll = () => {
     if (!printComplete) {
       setIsPrinting(true)
       try {
-        // await axios.post(
-        //   `${apiUrl}/mark-print-return-complete/`,
-        //   { sales_team_id: salesTeamId?.id },
-        //   {
-        //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-        //   },
-        // )
         await api.post("/mark-print-return-complete/", {
           sales_team_id: salesTeamId?.id,
         })
@@ -62,8 +55,6 @@ const AfterCollectionAll = () => {
       } finally {
         setIsPrinting(false)
       }
-      // .then(() => setPrintComplete(true))
-      //     .catch(err => console.error("Error marking print complete:", err));
     } else {
       alert("Print already completed. No need to reprint.")
     }
@@ -115,7 +106,7 @@ const AfterCollectionAll = () => {
       printContent += "_________________________\n"
       printContent += "Signature: \n"
       printContent += "_________________________\n"
-      printContent += "\n\n\n\n\n" // Whitespace at the bottom
+      printContent += "\n\n\n\n\n"
 
       // Call the native print method
       window.AndroidBridge.printText(printContent)
@@ -128,13 +119,6 @@ const AfterCollectionAll = () => {
     if (!printComplete) {
       setIsSaving(true)
       try {
-        // await axios.post(
-        //   `${apiUrl}/mark-print-return-complete/`,
-        //   { sales_team_id: salesTeamId?.id },
-        //   {
-        //     headers: { Authorization: `Bearer ${Cookies.get("accessToken")}` },
-        //   },
-        // )
         await api.post("/mark-print-return-complete/", {
           sales_team_id: salesTeamId?.id,
         })
@@ -151,16 +135,19 @@ const AfterCollectionAll = () => {
   }
 
   const handleGeneratePDF = async () => {
-    if (!receiptData?.summary?.pdf_download_url) {
-      toast.error("PDF download URL not available")
+    if (!receiptData?.receipt?.receipt_number) {
+      toast.error("Receipt number not available")
       return
     }
 
     setIsDownloadingPDF(true)
     try {
-      const response = await api.get(receiptData.summary.pdf_download_url, {
-        responseType: "blob",
-      })
+      const response = await api.get(
+        `/inventory/receipts/${receiptData.receipt.receipt_number}/pdf/`,
+        {
+          responseType: "blob",
+        },
+      )
 
       // Create a blob URL and trigger download
       const blob = new Blob([response.data], { type: "application/pdf" })
@@ -185,7 +172,7 @@ const AfterCollectionAll = () => {
   return (
     <>
       <AdminNav
-        headerMessage={"Collect Cylinders"}
+        headerMessage={"Collect All Cylinders"}
         headerText={"Collect cylinders from your retailers or wholesalers"}
       />
 
@@ -321,253 +308,10 @@ const AfterCollectionAll = () => {
               </div>
             </div>
           )}
-
-        <h2 className="text-center font-bold text-2xl text-gray-800 mb-6 max-w-4xl mx-auto">
-          All Cylinders Returns
-        </h2>
-
-        {/*  */}
-        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.empties > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Empty Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.empties > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">{cylinder.empties}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        {/* filled cylinders */}
-        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.filled > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Filled Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.filled > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">{cylinder.filled}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        {/* spoiled cylinders */}
-        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.spoiled > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Spoiled Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.spoiled > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">{cylinder.spoiled}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        {/* lost filled cylinders */}
-        {/* cylinders && cylinders.length > 0 && cylinders.some(cylinder => cylinder.filled_lost > 0) */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.filled_lost > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Lost Filled Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.filled_lost > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">
-                          {cylinder.filled_lost}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        {/* lost empties */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.empties_lost > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Lost Empty Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.empties_lost > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">
-                          {cylinder.empties_lost}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        {/* less pay */}
-        {cylinders &&
-          cylinders.length > 0 &&
-          cylinders.some((cylinder) => cylinder.less_pay > 0) && (
-            <div>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">Less Pay Cylinders.</p>
-              </div>
-
-              <table className="w-full border-collapse border border-gray-300 text-sm">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th className="border px-4 py-2">Cylinder Name</th>
-                    <th className="border px-4 py-2">Weight (kg)</th>
-                    <th className="border px-4 py-2">Quantity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cylinders
-                    .filter((cylinder) => cylinder.less_pay > 0)
-                    .map((cylinder) => (
-                      <tr key={cylinder.id}>
-                        <td className="border px-4 py-2">
-                          {cylinder.gas_type}
-                        </td>
-                        <td className="border px-4 py-2">{cylinder.weight}</td>
-                        <td className="border px-4 py-2">
-                          {cylinder.less_pay}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-        <div className="mt-6 flex justify-center gap-4 ">
-          <button
-            className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600"
-            onClick={handlePrint}
-            disabled={isPrinting}
-          >
-            {isPrinting ? (
-              <CircularProgress color="white" size={20} thickness={4} />
-            ) : (
-              "print"
-            )}
-          </button>
-          <button
-            className="bg-green-500 text-white px-6 py-2 rounded shadow hover:bg-green-600"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <CircularProgress color="white" size={20} thickness={4} />
-            ) : (
-              "Save"
-            )}
-          </button>
-        </div>
       </div>
       <AdminsFooter />
     </>
   )
 }
 
-export default AfterCollectionAll
+export default AfterCollectionAll;
