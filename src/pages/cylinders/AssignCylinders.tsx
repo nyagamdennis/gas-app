@@ -98,7 +98,12 @@ const AssignCylinders = () => {
     setAssignments([])
   }
 
-  const handleInputChange = (cylinderId, value, maxQuantity) => {
+  const handleInputChange = (
+    storeInventoryId,
+    cylinderId,
+    value,
+    maxQuantity,
+  ) => {
     const inputValue = parseInt(value, 10)
 
     if (inputValue > maxQuantity) {
@@ -108,11 +113,14 @@ const AssignCylinders = () => {
 
     setAssignments((prev) => {
       const updated = [...prev]
-      const index = updated.findIndex((item) => item.cylinderId === cylinderId)
+      const index = updated.findIndex(
+        (item) => item.storeInventoryId === storeInventoryId,
+      )
 
       if (index !== -1) {
         if (inputValue > 0) {
           updated[index] = {
+            storeInventoryId,
             cylinderId,
             assigned_quantity: inputValue,
           }
@@ -121,6 +129,7 @@ const AssignCylinders = () => {
         }
       } else if (inputValue > 0) {
         updated.push({
+          storeInventoryId,
           cylinderId,
           assigned_quantity: inputValue,
         })
@@ -195,7 +204,7 @@ const AssignCylinders = () => {
           ? selectedTeam.number_plate
           : selectedTeam.name
 
-          console.log("Receipt Number for Navigation:", receipt_number)
+      console.log("Receipt Number for Navigation:", receipt_number)
       navigate(`/admins/afterassign/${receipt_number}`, {
         state: {
           salesTeamName: teamName,
@@ -287,7 +296,7 @@ const AssignCylinders = () => {
   const getAssignmentSummary = () => {
     return assignments.map((assignment) => {
       const cylinderData = storeCylinder.find(
-        (item) => item.id === assignment.cylinderId,
+        (item) => item.id === assignment.storeInventoryId,
       )
       return {
         ...assignment,
@@ -801,6 +810,7 @@ const AssignCylinders = () => {
                                                 className="w-20 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded px-2 py-1 text-center outline-none transition"
                                                 onChange={(e) =>
                                                   handleInputChange(
+                                                    item.id,
                                                     item.cylinder.id,
                                                     e.target.value,
                                                     item.full_cylinder_quantity,

@@ -41,6 +41,7 @@ const CollectCylinders = () => {
   const [expandedRows, setExpandedRows] = useState({})
   const [loadingReturnAll, setLoadingReturnAll] = useState(false)
   const [loadingReturnSome, setLoadingReturnSome] = useState(false)
+  const [selectedDestinationStore, setSelectedDestinationStore] = useState(null)
 
   // New state for loss reporting
   const [lossReports, setLossReports] = useState({})
@@ -80,6 +81,17 @@ const CollectCylinders = () => {
     }
   }, [selectedTeam, businessId, dispatch])
 
+  // Auto-select store if only one is available
+  useEffect(() => {
+    if (
+      Array.isArray(store) &&
+      store.length === 1 &&
+      !selectedDestinationStore
+    ) {
+      setSelectedDestinationStore(store[0])
+    }
+  }, [store, selectedDestinationStore])
+
   useEffect(() => {
     if (selectedTeam) {
       setLoading(true)
@@ -118,6 +130,7 @@ const CollectCylinders = () => {
     setSelectedTeamType(type)
     setAssignedCylinders([])
     setExpandedRows({})
+    setSelectedDestinationStore(null)
   }
 
   const handleBack = () => {
@@ -125,6 +138,7 @@ const CollectCylinders = () => {
     setSelectedTeamType(null)
     setAssignedCylinders([])
     setExpandedRows({})
+    setSelectedDestinationStore(null)
   }
 
   // Toggle row expansion
@@ -197,15 +211,13 @@ const CollectCylinders = () => {
     const cylinder = assignedCylinders.find((c) => c.id === cylinderId)
     if (!cylinder) return { filled_lost: 0, empties_lost: 0, less_pay: 0 }
 
-    const expectedFull =
-      expectedCounts[cylinderId]?.full_count || cylinder.full_cylinder_quantity
-    const expectedEmpty =
-      expectedCounts[cylinderId]?.empty_count ||
-      cylinder.empty_cylinder_quantity
+    // Use only the user-entered values, don't fall back to cylinder quantities
+    const expectedFull = expectedCounts[cylinderId]?.full_count || 0
+    const expectedEmpty = expectedCounts[cylinderId]?.empty_count || 0
     const actualFull = actualCounts[cylinderId]?.full_count || 0
     const actualEmpty = actualCounts[cylinderId]?.empty_count || 0
 
-    // Calculate differences
+    // Calculate differences: expected minus actual
     const filledLost = Math.max(0, expectedFull - actualFull)
     const emptiesLost = Math.max(0, expectedEmpty - actualEmpty)
 
@@ -221,9 +233,9 @@ const CollectCylinders = () => {
   }
 
   // Report cylinder loss using the new API
-  const handleReportLoss = (cylinderId) => {
-    const lossData = lossReports[cylinderId]
-    const employeeId = selectedEmployee[cylinderId]
+  const handleReportLoss = (inventoryId) => {
+    const lossData = lossReports[inventoryId]
+    const employeeId = selectedEmployee[inventoryId]
 
     if (!lossData) {
       toast.error("Please enter loss details")
@@ -232,6 +244,13 @@ const CollectCylinders = () => {
 
     if (!employeeId) {
       toast.error("Please select an employee")
+      return
+    }
+
+    // Get the cylinder record to access the actual cylinder ID
+    const cylinder = assignedCylinders.find((c) => c.id === inventoryId)
+    if (!cylinder) {
+      toast.error("Cylinder not found")
       return
     }
 
@@ -250,7 +269,6 @@ const CollectCylinders = () => {
       lossType = "LESS_PAY"
       quantity = lossData.less_pay
       // For less_pay, amount should be calculated based on cylinder price
-      const cylinder = assignedCylinders.find((c) => c.id === cylinderId)
       if (cylinder && cylinder.cylinder?.retail_refill_price) {
         amount = cylinder.cylinder.retail_refill_price * quantity
       } else {
@@ -261,12 +279,12 @@ const CollectCylinders = () => {
       return
     }
 
-    setLoadingLossReports((prev) => ({ ...prev, [cylinderId]: true }))
+    setLoadingLossReports((prev) => ({ ...prev, [inventoryId]: true }))
 
     const payload = {
       location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
       location_id: selectedTeam.id,
-      cylinder_id: cylinderId,
+      cylinder_id: cylinder.cylinder.id,
       loss_type: lossType,
       quantity: quantity,
       amount: amount,
@@ -282,36 +300,40 @@ const CollectCylinders = () => {
       .then((response) => {
         toast.success("Loss reported successfully")
 
+        const newLoss = response.data.loss
+
         // Update local state to reflect the loss
         setAssignedCylinders((prev) =>
-          prev.map((cylinder) =>
-            cylinder.id === cylinderId
+          prev.map((cyl) =>
+            cyl.id === cylinderId
               ? {
-                  ...cylinder,
+                  ...cyl,
                   // Update totals based on loss type
                   full_cylinder_quantity:
                     lossType === "FILLED"
-                      ? Math.max(0, cylinder.full_cylinder_quantity - quantity)
-                      : cylinder.full_cylinder_quantity,
+                      ? Math.max(0, cyl.full_cylinder_quantity - quantity)
+                      : cyl.full_cylinder_quantity,
                   empty_cylinder_quantity:
                     lossType === "EMPTY"
-                      ? Math.max(0, cylinder.empty_cylinder_quantity - quantity)
-                      : cylinder.empty_cylinder_quantity,
+                      ? Math.max(0, cyl.empty_cylinder_quantity - quantity)
+                      : cyl.empty_cylinder_quantity,
                   // Add to loss totals
                   filled_lost_total:
                     lossType === "FILLED"
-                      ? (cylinder.filled_lost_total || 0) + quantity
-                      : cylinder.filled_lost_total || 0,
+                      ? (cyl.filled_lost_total || 0) + quantity
+                      : cyl.filled_lost_total || 0,
                   empties_lost_total:
                     lossType === "EMPTY"
-                      ? (cylinder.empties_lost_total || 0) + quantity
-                      : cylinder.empties_lost_total || 0,
+                      ? (cyl.empties_lost_total || 0) + quantity
+                      : cyl.empties_lost_total || 0,
                   less_pay_total:
                     lossType === "LESS_PAY"
-                      ? (cylinder.less_pay_total || 0) + (amount || 0)
-                      : cylinder.less_pay_total || 0,
+                      ? (cyl.less_pay_total || 0) + (amount || 0)
+                      : cyl.less_pay_total || 0,
+                  // Add new loss to recent_losses array
+                  recent_losses: [newLoss, ...(cyl.recent_losses || [])],
                 }
-              : cylinder,
+              : cyl,
           ),
         )
 
@@ -342,6 +364,11 @@ const CollectCylinders = () => {
     const losses = calculateLossesFromCounts(cylinderId)
     const cylinder = assignedCylinders.find((c) => c.id === cylinderId)
 
+    if (!cylinder) {
+      toast.error("Cylinder not found")
+      return
+    }
+
     if (!losses.filled_lost && !losses.empties_lost) {
       toast.error("No losses detected based on counts")
       return
@@ -356,7 +383,7 @@ const CollectCylinders = () => {
       const payload = {
         location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
         location_id: selectedTeam.id,
-        cylinder_id: cylinderId,
+        cylinder_id: cylinder.cylinder.id,
         loss_type: "FILLED",
         quantity: losses.filled_lost,
         employee_id: employeeId,
@@ -372,7 +399,7 @@ const CollectCylinders = () => {
       const payload = {
         location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
         location_id: selectedTeam.id,
-        cylinder_id: cylinderId,
+        cylinder_id: cylinder.cylinder.id,
         loss_type: "EMPTY",
         quantity: losses.empties_lost,
         employee_id: employeeId,
@@ -384,30 +411,41 @@ const CollectCylinders = () => {
       promises.push(api.post("/inventory/losses/report/", payload))
     }
 
+    if (promises.length === 0) {
+      toast.error("No losses to report")
+      setLoadingLossReports((prev) => ({ ...prev, [cylinderId]: false }))
+      return
+    }
+
     Promise.all(promises)
-      .then(() => {
+      .then((responses) => {
+        // Extract loss data from all responses
+        const newLosses = responses.map((response) => response.data.loss)
+
         toast.success("Losses reported successfully")
 
-        // Update local state
+        // Update local state with new losses
         setAssignedCylinders((prev) =>
-          prev.map((cylinder) =>
-            cylinder.id === cylinderId
+          prev.map((cyl) =>
+            cyl.id === cylinderId
               ? {
-                  ...cylinder,
+                  ...cyl,
                   full_cylinder_quantity: Math.max(
                     0,
-                    cylinder.full_cylinder_quantity - losses.filled_lost,
+                    cyl.full_cylinder_quantity - losses.filled_lost,
                   ),
                   empty_cylinder_quantity: Math.max(
                     0,
-                    cylinder.empty_cylinder_quantity - losses.empties_lost,
+                    cyl.empty_cylinder_quantity - losses.empties_lost,
                   ),
                   filled_lost_total:
-                    (cylinder.filled_lost_total || 0) + losses.filled_lost,
+                    (cyl.filled_lost_total || 0) + losses.filled_lost,
                   empties_lost_total:
-                    (cylinder.empties_lost_total || 0) + losses.empties_lost,
+                    (cyl.empties_lost_total || 0) + losses.empties_lost,
+                  // Add new losses to the recent_losses array
+                  recent_losses: [...newLosses, ...(cyl.recent_losses || [])],
                 }
-              : cylinder,
+              : cyl,
           ),
         )
 
@@ -423,47 +461,81 @@ const CollectCylinders = () => {
       })
       .catch((error) => {
         console.error("Error reporting losses:", error)
-        toast.error("Failed to report losses")
+        toast.error(error.response?.data?.message || "Failed to report losses")
       })
       .finally(() =>
         setLoadingLossReports((prev) => ({ ...prev, [cylinderId]: false })),
       )
   }
 
+  // POST /api/inventory/transfer/empty/all/
+  // POST /api/inventory/transfer/empty/spoiled-only/
   // Handle return operations
   const handleReturnCylinders = () => {
+    if (!selectedDestinationStore) {
+      toast.error("Please select a destination store")
+      return
+    }
     setLoadingReturnSome(true)
-    const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
-
+    const payload = {
+      location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
+      location_id: selectedTeam.id,
+      destination_store_id: selectedDestinationStore.id,
+    }
     api
-      .post("/return-assigned-cylinders/", payload)
-      .then(() =>
+      .post("/inventory/transfer/empty/spoiled-only/", payload)
+      .then((response) => {
+        toast.success(
+          response.data.message || "Cylinders transferred successfully",
+        )
         navigate(`/admins/printcollect/${selectedTeam?.id}`, {
           state: {
             salesTeamName: getTeamDisplayName(selectedTeam, selectedTeamType),
             salesTeamType: selectedTeamType,
+            receiptData: response.data,
           },
-        }),
-      )
-      .catch((error) => console.error("Error in cylinder Collection.", error))
+        })
+      })
+      .catch((error) => {
+        console.error("Error in cylinder Collection.", error)
+        toast.error(
+          error.response?.data?.message || "Failed to transfer cylinders",
+        )
+      })
       .finally(() => setLoadingReturnSome(false))
   }
 
   const handleReturnAllCylinders = () => {
+    if (!selectedDestinationStore) {
+      toast.error("Please select a destination store")
+      return
+    }
     setLoadingReturnAll(true)
-    const payload = assignedCylinders.map((cylinder) => ({ id: cylinder.id }))
-
+    const payload = {
+      location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
+      location_id: selectedTeam.id,
+      destination_store_id: selectedDestinationStore.id,
+    }
     api
-      .post("/return-all-assigned-cylinders/", payload)
-      .then(() =>
+      .post("/inventory/transfer/empty/all/", payload)
+      .then((response) => {
+        toast.success(
+          response.data.message || "Cylinders transferred successfully",
+        )
         navigate(`/admins/printallcollect/${selectedTeam?.id}`, {
           state: {
             salesTeamName: getTeamDisplayName(selectedTeam, selectedTeamType),
             salesTeamType: selectedTeamType,
+            receiptData: response.data,
           },
-        }),
-      )
-      .catch((error) => console.error("Error in cylinder Collection.", error))
+        })
+      })
+      .catch((error) => {
+        console.error("Error in cylinder Collection.", error)
+        toast.error(
+          error.response?.data?.message || "Failed to transfer cylinders",
+        )
+      })
       .finally(() => setLoadingReturnAll(false))
   }
 
@@ -499,9 +571,7 @@ const CollectCylinders = () => {
 
     return {
       // Display: Original (Lost) = Remaining
-      fullDisplay: `${originalFull} (${filledLost}) = ${
-        cylinder.full_cylinder_quantity
-      }`,
+      fullDisplay: `${originalFull} (${filledLost}) = ${cylinder.full_cylinder_quantity}`,
       emptyDisplay: `${originalEmpty} (${emptiesLost}) = ${cylinder.empty_cylinder_quantity}`,
       // For tooltip/details
       originalFull,
@@ -999,7 +1069,8 @@ const CollectCylinders = () => {
                     )}
                   </p>
                   <p className="text-xs text-gray-500">
-                    Responsible to: {loss.employee_details?.full_name || "Unknown"}
+                    Responsible to:{" "}
+                    {loss.employee_details?.full_name || "Unknown"}
                   </p>
                 </div>
                 <div className="text-right">
@@ -1028,7 +1099,6 @@ const CollectCylinders = () => {
       </div>
     )
   }
-
 
   return (
     <div className="bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] min-h-screen flex flex-col">
@@ -1135,6 +1205,61 @@ const CollectCylinders = () => {
               </div>
             </div>
 
+            {/* Destination Store Selection */}
+            <div className="mb-4 bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-400">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                📍 Select Destination Store
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                {Array.isArray(store) && store.length === 1
+                  ? "Only one store available - automatically selected"
+                  : "Choose where the cylinders will be returned to"}
+              </p>
+              {!Array.isArray(store) || store.length === 0 ? (
+                <p className="text-gray-500 text-sm">Loading stores...</p>
+              ) : (
+                <div>
+                  <select
+                    value={selectedDestinationStore?.id || ""}
+                    onChange={(e) => {
+                      const storeId = parseInt(e.target.value, 10)
+                      const selected = store.find((s) => s.id === storeId)
+                      setSelectedDestinationStore(selected || null)
+                    }}
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-gray-800 font-medium"
+                    disabled={store.length === 1}
+                  >
+                    <option value="">
+                      {store.length === 1
+                        ? `${store[0].name} (Only store)`
+                        : "Select a store..."}
+                    </option>
+                    {store.length > 1 &&
+                      store.map((storeItem) => {
+                        const locationName =
+                          typeof storeItem.location === "object"
+                            ? storeItem.location?.name || storeItem.location
+                            : storeItem.location
+                        return (
+                          <option key={storeItem.id} value={storeItem.id}>
+                            {storeItem.name}{" "}
+                            {locationName ? `(${locationName})` : ""}
+                          </option>
+                        )
+                      })}
+                  </select>
+                </div>
+              )}
+              {selectedDestinationStore && (
+                <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200 text-sm flex items-center">
+                  <span className="text-green-600 mr-2">✓</span>
+                  <span className="font-semibold text-blue-700">
+                    Destination: {selectedDestinationStore.name}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {loading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, index) => (
@@ -1236,7 +1361,7 @@ const CollectCylinders = () => {
                     </p>
                     <p>
                       <strong>Less Pay: </strong>
-                       Money missing 
+                      Money missing
                     </p>
                   </div>
                 </div>
@@ -1266,15 +1391,23 @@ const CollectCylinders = () => {
                 </div>
 
                 {/* Action Buttons */}
+                {!selectedDestinationStore && (
+                  <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                    <p className="text-sm text-yellow-700">
+                      ⚠️ Please select a destination store above to proceed with
+                      cylinder collection
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sticky bottom-2 bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] pt-4 pb-2">
                   <button
                     className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold px-6 py-3 rounded-lg shadow-lg transition-all ${
-                      loadingReturnAll
+                      loadingReturnAll || !selectedDestinationStore
                         ? "opacity-50 cursor-not-allowed"
                         : "active:scale-95"
                     }`}
                     onClick={handleReturnAllCylinders}
-                    disabled={loadingReturnAll}
+                    disabled={loadingReturnAll || !selectedDestinationStore}
                   >
                     {loadingReturnAll ? (
                       <span className="flex items-center justify-center">
@@ -1305,12 +1438,12 @@ const CollectCylinders = () => {
                   </button>
                   <button
                     className={`bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold px-6 py-3 rounded-lg shadow-lg transition-all ${
-                      loadingReturnSome
+                      loadingReturnSome || !selectedDestinationStore
                         ? "opacity-50 cursor-not-allowed"
                         : "active:scale-95"
                     }`}
                     onClick={handleReturnCylinders}
-                    disabled={loadingReturnSome}
+                    disabled={loadingReturnSome || !selectedDestinationStore}
                   >
                     {loadingReturnSome ? (
                       <span className="flex items-center justify-center">
