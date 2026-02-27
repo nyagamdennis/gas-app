@@ -38,6 +38,7 @@ const Cylinders = () => {
   const [showVehicleListModal, setShowVehicleListModal] = useState(false)
   const [modalType, setModalType] = useState("") // 'view' or 'repair'
   const [loading, setLoading] = useState(false)
+  const [showMovementsModal, setShowMovementsModal] = useState(false);
 
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
   const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
@@ -56,6 +57,7 @@ const Cylinders = () => {
     setShowRepairLocationModal(false)
     setShowShopListModal(false)
     setShowVehicleListModal(false)
+    setShowMovementsModal(false)
   }
 
   // Handle View Stock button
@@ -67,6 +69,30 @@ const Cylinders = () => {
   // Handle Add or Repair button
   const handleAddRepair = () => {
     setShowAddRepairModal(true)
+  }
+
+  const handleCylinderMovements = () => {
+    setShowMovementsModal(true)
+  }
+
+  const handleMovementsOption = (option: string) => {
+    closeAllModals()
+    switch (option) {
+      case "refills":
+        navigate("/cylinders/movements/refills")
+        break
+      case "shops":
+        navigate("/cylinders/movements/shops")
+        break
+      case "vehicles":
+        navigate("/cylinders/movements/vehicles")
+        break
+      case "store":
+        navigate("/cylinders/movements/store")
+        break
+      default:
+        break
+    }
   }
 
   // Handle Repair Cylinders selection
@@ -230,6 +256,23 @@ const Cylinders = () => {
                     <p className="font-bold text-lg">Add or Repair</p>
                     <p className="text-sm text-red-100">
                       Manage cylinder inventory
+                    </p>
+                  </div>
+                </div>
+                <span className="text-2xl">→</span>
+              </button>
+
+              {/*  Cylinders Movements*/}
+              <button
+                onClick={handleCylinderMovements}
+                className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-4 px-6 rounded-lg shadow-lg hover:from-indigo-600 hover:to-indigo-700 transition-all active:scale-95 flex items-center justify-between"
+              >
+                <div className="flex items-center">
+                  <span className="text-3xl mr-4">🔄</span>
+                  <div className="text-left">
+                    <p className="font-bold text-lg">Cylinder Movements</p>
+                    <p className="text-sm text-indigo-100">
+                      Track cylinder movements
                     </p>
                   </div>
                 </div>
@@ -532,6 +575,68 @@ const Cylinders = () => {
                 >
                   Back
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Modal for Cylinder Movements */}
+          {showMovementsModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold mb-2 text-gray-800">
+                  Cylinder Movements
+                </h2>
+                <p className="text-sm text-gray-600 mb-6">
+                  Select what you want to track
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleMovementsOption("refills")}
+                    className="bg-blue-50 border-2 border-blue-500 text-blue-700 py-3 px-4 rounded-lg hover:bg-blue-100 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">📊</span>
+                      <span className="font-semibold">Today's Movements</span>
+                    </div>
+                    <span>→</span>
+                  </button>
+                  <button
+                    onClick={() => handleMovementsOption("shops")}
+                    className="bg-green-50 border-2 border-green-500 text-green-700 py-3 px-4 rounded-lg hover:bg-green-100 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🏪</span>
+                      <span className="font-semibold">Shops</span>
+                    </div>
+                    <span>→</span>
+                  </button>
+                  <button
+                    onClick={() => handleMovementsOption("vehicles")}
+                    className="bg-emerald-50 border-2 border-emerald-500 text-emerald-700 py-3 px-4 rounded-lg hover:bg-emerald-100 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🚚</span>
+                      <span className="font-semibold">Vehicles</span>
+                    </div>
+                    <span>→</span>
+                  </button>
+                  <button
+                    onClick={() => handleMovementsOption("store")}
+                    className="bg-purple-50 border-2 border-purple-500 text-purple-700 py-3 px-4 rounded-lg hover:bg-purple-100 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🏢</span>
+                      <span className="font-semibold">Store</span>
+                    </div>
+                    <span>→</span>
+                  </button>
+                  <button
+                    onClick={closeAllModals}
+                    className="bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-all font-semibold mt-2"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           )}

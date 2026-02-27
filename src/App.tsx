@@ -104,6 +104,11 @@ import VehicleProducts from "./pages/otherProducts/VehicleProducts"
 import AssignProducts from "./pages/otherProducts/AssignProducts"
 import ProductSales from "./pages/SalesRecord/ProductSales"
 import CylinderSales from "./pages/SalesRecord/CylinderSales"
+import RefillReport from "./pages/cylinders/RefillReport"
+import ShopCylinderMovements from "./pages/cylinders/ShopCylinderMovements"
+import StoreCylinderAggregate from "./pages/cylinders/StoreCylinderAggregate"
+import CompanyDetails from "./pages/company settings/CompanyDetails"
+import ProfileVerify from "./pages/company settings/ProfileVerify"
 
 function App() {
   useVerificationPolling()
@@ -117,6 +122,14 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/processing" element={<ProsessingPayment />} />
+          <Route
+            path="/verify-email"
+            element={
+              <ProtectedRoute>
+                <ProfileVerify />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin-only routes */}
           <Route
@@ -132,6 +145,32 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <CollectOtherProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cylinders/movements/refills"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <RefillReport />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cylinders/movements/shops"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <ShopCylinderMovements />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cylinders/movements/store"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <StoreCylinderAggregate />
               </ProtectedRoute>
             }
           />
@@ -392,10 +431,11 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute requiredRole="is_admin">
-                <Settings />
+                <CompanyDetails />
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/admins/editassigned/:id"
             element={

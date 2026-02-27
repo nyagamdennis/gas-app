@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, memo } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
   addFreeTrial,
@@ -8,43 +8,318 @@ import {
   selectAllSubscription,
 } from "../features/subscriptions/subscriptionSlice"
 import AdminsFooter from "../components/AdminsFooter"
-import AdminNav from "../components/ui/AdminNav"
 import FormattedAmount from "../components/FormattedAmount"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import {
   fetchBusiness,
   selectAllBusiness,
 } from "../features/company/companySlice"
-import DateDisplay from "../components/DateDisplay"
 import Datetime from "../components/Datetime"
 import SubscriptionCountdownTimer from "../components/SubscriptionCountdownTimer"
 import { useMediaQuery, useTheme } from "@mui/material"
 import Navbar from "../components/ui/mobile/admin/Navbar"
 
+// ─── Feature icon map ─────────────────────────────────────────────────────────
+const FEATURE_ICONS: Record<string, string> = {
+  Store: "🏪",
+  SMS: "💬",
+  analytics: "📊",
+  default: "⚡",
+}
+
+// ─── StatusBanner (memoized — no internal state, won't cause re-renders) ──────
+const StatusBanner = memo(
+  ({
+    business,
+    hasPlan,
+    isTrial,
+    isExpired,
+    planName,
+    trialEndsIn,
+    daysRemaining,
+    expiryDate,
+  }: any) => {
+    if (!business) return null
+
+    if (!hasPlan && !isTrial) {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl mb-5 bg-emerald-400/15 border border-emerald-400/30">
+          <span className="text-3xl">🎁</span>
+          <div>
+            <div className="text-sm font-bold text-white">
+              Free Trial Available
+            </div>
+            <div className="text-xs text-white/60 mt-0.5">
+              Start your 5-day free trial today
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (isTrial) {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl mb-5 bg-violet-500/15 border border-violet-500/35">
+          <span className="text-3xl">⚡</span>
+          <div>
+            <div className="text-sm font-bold text-white">
+              Free Trial Active
+            </div>
+            <div className="text-xs text-white/60 mt-0.5">
+              {trialEndsIn} day(s) remaining · Ends{" "}
+              <Datetime date={expiryDate} showTime={false} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (hasPlan && isExpired) {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl mb-5 bg-red-500/15 border border-red-500/30">
+          <span className="text-3xl">⚠️</span>
+          <div>
+            <div className="text-sm font-bold text-white">Plan Expired</div>
+            <div className="text-xs text-white/60 mt-0.5">
+              {planName} · Expired{" "}
+              <Datetime date={expiryDate} showTime={false} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    if (hasPlan) {
+      return (
+        <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl mb-5 bg-violet-500/15 border border-violet-500/35">
+          <span className="text-3xl">✅</span>
+          <div>
+            <div className="text-sm font-bold text-white">{planName} Plan</div>
+            <div className="text-xs text-white/60 mt-0.5">
+              {daysRemaining} day(s) left ·{" "}
+              <SubscriptionCountdownTimer expiryDate={expiryDate} />
+            </div>
+          </div>
+        </div>
+      )
+    }
+    return null
+  },
+)
+StatusBanner.displayName = "StatusBanner"
+
+// ─── PlanCard (memoized + own local state = zero parent re-renders) ────────────
+// KEY FIX: phone input and month selection are LOCAL to each card,
+// so typing/clicking no longer triggers a parent state change → no page "refresh"
+const PlanCard = memo(
+  ({
+    plan,
+    hasPlan,
+    isTrial,
+    isExpired,
+    onSubscribe,
+    onFreeTrial,
+    subscribing,
+    addingFreeTrial,
+  }: any) => {
+    const [months, setMonths] = useState(1)
+    const [paymentNumber, setPaymentNumber] = useState("")
+    const [showPayment, setShowPayment] = useState(false)
+
+    const isContact =
+      typeof plan.price === "string" &&
+      plan.price.toLowerCase().includes("contact")
+
+    const numericPrice = parseFloat(String(plan.price).replace(/[^0-9.]/g, ""))
+    const total = isNaN(numericPrice) ? 0 : numericPrice * months
+
+    return (
+      <div
+        className={`relative rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300
+        ${
+          plan.highlight
+            ? "bg-violet-900/20 border border-violet-500/50 shadow-[0_0_40px_rgba(139,92,246,0.15)]"
+            : "bg-white/5 border border-white/10"
+        }`}
+      >
+        {/* Popular badge */}
+        {plan.highlight && (
+          <div className="absolute top-4 right-4 bg-gradient-to-r from-violet-600 to-purple-500 text-white text-[9px] font-extrabold tracking-widest px-3 py-1 rounded-full">
+            ✦ MOST POPULAR
+          </div>
+        )}
+
+        {/* Header: name + price */}
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-xl font-extrabold text-white mb-1">
+              {plan.name}
+            </div>
+            {plan.description && (
+              <div className="text-xs text-white/50 max-w-[160px] leading-relaxed">
+                {plan.description}
+              </div>
+            )}
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-3xl font-extrabold text-violet-300 leading-none">
+              {isContact ? "Contact" : <FormattedAmount amount={plan.price} />}
+            </div>
+            {!isContact && (
+              <div className="text-[11px] text-white/40 mt-1">/mo</div>
+            )}
+          </div>
+        </div>
+
+        {/* Features */}
+        {plan.features?.length > 0 ? (
+          <div className="border-t border-b border-white/[0.07] py-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
+            {plan.features.map((feature: any, i: number) => {
+              const hasLimit =
+                feature.limits && Object.keys(feature.limits).length > 0
+              const icon =
+                FEATURE_ICONS[feature.code] ?? FEATURE_ICONS["default"]
+              return (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-sm mt-0.5 shrink-0">{icon}</span>
+                  <span
+                    className={`text-xs leading-snug ${
+                      feature.enabled
+                        ? "text-white/75"
+                        : "text-white/35 line-through"
+                    }`}
+                  >
+                    {feature.description}
+                    {hasLimit && feature.limits.max && (
+                      <span className="text-violet-300/90 font-semibold not-line-through">
+                        {" "}
+                        · {feature.limits.max}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="border-t border-b border-white/[0.07] py-4 flex items-center justify-center">
+            <span className="text-xs text-white/30 italic">
+              Contact us for full feature details
+            </span>
+          </div>
+        )}
+
+        {/* Month duration selector */}
+        {!isContact && (
+          <div>
+            <div className="text-[11px] font-semibold text-white/40 tracking-widest uppercase mb-2">
+              Duration
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1.5 flex-wrap">
+                {[1, 2, 3, 6, 12].map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setMonths(m)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150
+                    ${
+                      months === m
+                        ? "bg-violet-500/40 border-violet-400 text-white"
+                        : "bg-transparent border-white/15 text-white/60 hover:border-white/30 hover:text-white/80"
+                    }`}
+                  >
+                    {m}mo
+                  </button>
+                ))}
+              </div>
+              <div className="bg-violet-500/20 border border-violet-500/40 rounded-xl px-3 py-1.5 text-sm font-bold text-violet-300 whitespace-nowrap shrink-0">
+                <FormattedAmount amount={total} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Free trial CTA */}
+        {!hasPlan && !isTrial && (
+          <button
+            onClick={() => onFreeTrial(plan.id)}
+            disabled={addingFreeTrial}
+            className="w-full py-3 rounded-xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-400 text-sm font-bold tracking-wide hover:bg-emerald-400/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {addingFreeTrial
+              ? "⏳ Starting trial..."
+              : "🎁 Start 5-Day Free Trial"}
+          </button>
+        )}
+
+        {/* Payment flow */}
+        {showPayment ? (
+          <div className="bg-black/20 rounded-xl p-4 border border-white/[0.08] flex flex-col gap-3">
+            <div className="text-xs font-semibold text-white/60">
+              📱 M-Pesa Number
+            </div>
+            <input
+              type="tel"
+              value={paymentNumber}
+              onChange={(e) => setPaymentNumber(e.target.value)}
+              placeholder="e.g. 0712 345 678"
+              className="w-full rounded-xl px-4 py-3 text-white text-base outline-none placeholder:text-white/30 focus:border-violet-400/60 border border-white/15 transition-colors"
+              style={{ background: "rgba(255,255,255,0.07)" }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowPayment(false)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/60 text-sm font-semibold hover:bg-white/5 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => onSubscribe(plan.id, months, paymentNumber)}
+                disabled={subscribing || !paymentNumber.trim()}
+                className="flex-[2] py-2.5 rounded-xl bg-gradient-to-r from-violet-700 to-purple-500 text-white text-sm font-bold shadow-[0_4px_12px_rgba(139,92,246,0.35)] hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {subscribing ? "Processing..." : "Pay Now →"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowPayment(true)}
+            className={`w-full py-3.5 rounded-xl text-sm font-bold tracking-wide transition-all
+            ${
+              plan.highlight
+                ? "bg-gradient-to-r from-violet-700 to-purple-500 text-white shadow-[0_4px_20px_rgba(139,92,246,0.4)] hover:opacity-90"
+                : "bg-white/10 text-white hover:bg-white/15"
+            }`}
+          >
+            {isExpired
+              ? "Renew Plan →"
+              : hasPlan
+              ? "Upgrade →"
+              : "Choose Plan →"}
+          </button>
+        )}
+      </div>
+    )
+  },
+)
+PlanCard.displayName = "PlanCard"
+
+// ─── Main page component ──────────────────────────────────────────────────────
 const SubScriptionPlans = () => {
   const theme = useTheme()
   const dispatch = useAppDispatch()
   const my_business = useAppSelector(selectAllBusiness)
   const all_subscription = useAppSelector(selectAllSubscription)
-  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const [subscribing, setSubscribing] = useState(false)
-  const [paymentNumber, setPaymentNumber] = useState("")
-  const [paymentNumberInput, setPaymentNumberInput] = useState(false)
-  const [activePlanId, setActivePlanId] = useState(null)
-
   const [addingFreeTrial, setAddingFreeTrial] = useState(false)
-  const [selectedMonths, setSelectedMonths] = useState({})
-  const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+
   useEffect(() => {
     dispatch(fetchSubscription())
     dispatch(fetchBusiness())
   }, [dispatch])
 
   const business = my_business
-  console.log("business", business)
   const hasPlan = business?.subscription_plan
   const planName = business?.subscription_plan?.name
   const expiryDate = business?.subscription_plan_expiry
@@ -55,46 +330,30 @@ const SubScriptionPlans = () => {
   const trialEndsIn = business?.trial_ends_in
   const daysRemaining = business?.days_remaining
 
-  const handleMonthChange = (planName, months) => {
-    setSelectedMonths((prev) => ({ ...prev, [planName]: months }))
-  }
-
-  const calculateTotal = (priceString, months) => {
-    const numericPrice = parseFloat(priceString.replace(/[^0-9.]/g, ""))
-    return <FormattedAmount amount={numericPrice * months} />
-  }
-
-  const handleSubscription = async (id) => {
-    const selected = selectedMonths[planName] || 1
-    const formData = {
-      months: selected,
-      paymentNumber: paymentNumber,
-    }
-
+  const handleSubscribe = async (
+    id: number,
+    months: number,
+    paymentNumber: string,
+  ) => {
     try {
       setSubscribing(true)
-
       const response = await dispatch(
-        addSubscription({ formData, id }),
+        addSubscription({ formData: { months, paymentNumber }, id }),
       ).unwrap()
-
-      // Check if the backend response has a 'processing' status
       if (response.status === "processing" && response.checkoutRequestId) {
-        const plan = all_subscription.find((p) => p.id === id)
-
+        const plan = all_subscription.find((p: any) => p.id === id)
         navigate("/processing", {
           state: {
             planName: plan?.name || "Subscription Plan",
-            months: selected,
-            amount: parseFloat(plan?.price || "0") * selected,
+            months,
+            amount: parseFloat(plan?.price || "0") * months,
             checkoutRequestId: response.checkoutRequestId,
           },
         })
       } else {
         alert("Payment process could not be started.")
       }
-    } catch (error) {
-      console.error("Subscription error:", error)
+    } catch {
       alert(
         "Something went wrong while processing your payment. Try again later.",
       )
@@ -103,432 +362,121 @@ const SubScriptionPlans = () => {
     }
   }
 
-  const handleAddFreeTrial = async (id) => {
+  const handleFreeTrial = async (id: number) => {
     try {
       setAddingFreeTrial(true)
       await dispatch(addFreeTrial({ id }))
-      setAddingFreeTrial(false)
-    } catch (error) {
+    } catch {
       console.log("error")
-      // alert("Error starting free trial")
+    } finally {
+      setAddingFreeTrial(false)
     }
   }
 
+  // Shared props for both StatusBanner and PlanCard
+  const bannerProps = {
+    business,
+    hasPlan,
+    isTrial,
+    isExpired,
+    planName,
+    trialEndsIn,
+    daysRemaining,
+    expiryDate,
+  }
+  const cardProps = {
+    hasPlan,
+    isTrial,
+    isExpired,
+    onSubscribe: handleSubscribe,
+    onFreeTrial: handleFreeTrial,
+    subscribing,
+    addingFreeTrial,
+  }
+
+  const gradientText = {
+    background: "linear-gradient(90deg, #fff 0%, #c4b5fd 100%)",
+    WebkitBackgroundClip: "text" as const,
+    WebkitTextFillColor: "transparent" as const,
+  }
+
+  // ── Desktop ────────────────────────────────────────────────────────────────
+  if (!isMobile) {
+    return (
+      <div
+        className="min-h-screen text-white px-6 py-10"
+        style={{
+          background: "linear-gradient(160deg, #0f0c29, #302b63, #24243e)",
+          fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+        }}
+      >
+        <div className="max-w-[1100px] mx-auto">
+          <div className="text-center mb-10">
+            <div className="text-xs font-bold tracking-[4px] text-violet-400 uppercase mb-2">
+              Pricing
+            </div>
+            <div className="text-5xl font-black mb-3" style={gradientText}>
+              Choose Your Plan
+            </div>
+            <div className="text-sm text-white/50">
+              Scale your business with the right tools
+            </div>
+          </div>
+
+          {business && (
+            <div className="max-w-[480px] mx-auto">
+              <StatusBanner {...bannerProps} />
+            </div>
+          )}
+
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5 mt-8">
+            {all_subscription.map((plan: any) => (
+              <PlanCard key={plan.id} plan={plan} {...cardProps} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Mobile ─────────────────────────────────────────────────────────────────
   return (
-    <div>
-      {isMobile ? (
-        <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
-          <Navbar
-            headerMessage={"ERP"}
-            headerText={"Manage your operations with style and clarity"}
-          />
-          <main className="m-2 p-1">
-            <div className="max-w-6xl mx-auto px-4 py-1">
-              <h2 className="text-xl font-bold text-center mb-6">
-                Choose Your Plan
-              </h2>
+    <div
+      className="min-h-screen text-white flex flex-col"
+      style={{
+        background: "linear-gradient(160deg, #0f0c29, #302b63, #24243e)",
+        fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+      }}
+    >
+      <Navbar headerMessage={"Pricing"} headerText={"Choose your plan"} />
 
-              {business && (
-                <div className="mb-6 p-4 border rounded-md shadow bg-white space-y-2">
-                  {!hasPlan && !isTrial && (
-                    <p className="text-green-700 font-semibold">
-                      🎉 You're eligible for a free trial.
-                    </p>
-                  )}
-                  {isTrial && trialEndsIn !== null && (
-                    <p className="text-blue-600 font-semibold">
-                      You're on a <strong>free trial</strong>. It ends in{" "}
-                      <strong>{trialEndsIn} day(s)</strong> on{" "}
-                      <strong>
-                        <Datetime date={expiryDate} showTime />
-                      </strong>
-                      .
-                    </p>
-                  )}
-                  {hasPlan && !isTrial && (
-                    <>
-                      <p className="text-gray-800">
-                        You're on the <strong>{planName}</strong> plan.{" "}
-                        {expiryDate && (
-                          <p className="text-sm text-gray-700 mt-2">
-                            ⏰ Expires in:{" "}
-                            <SubscriptionCountdownTimer
-                              expiryDate={expiryDate}
-                            />
-                          </p>
-                        )}
-                        {isExpired ? (
-                          <span className="text-red-600">
-                            It expired on{" "}
-                            <strong>
-                              <Datetime date={expiryDate} showTime />
-                            </strong>
-                            .
-                          </span>
-                        ) : (
-                          <span>
-                            It expires in{" "}
-                            <strong>{daysRemaining} day(s)</strong> on{" "}
-                            <strong>
-                              <DateDisplay date={expiryDate} showTime />
-                            </strong>
-                            .
-                          </span>
-                        )}
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {all_subscription.map((plan) => {
-                  const months = selectedMonths[plan.name] || 1
-                  const isContact = plan.price.toLowerCase().includes("contact")
-                  return (
-                    <div
-                      key={plan.name}
-                      className={`flex flex-col border rounded-xl shadow-sm transition duration-300 p-6 bg-white ${
-                        plan.highlight
-                          ? "border-blue-600 shadow-md scale-105"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      {plan.highlight && (
-                        <div className="mb-2 text-sm font-semibold text-blue-600">
-                          Most Popular
-                        </div>
-                      )}
-                      <h3 className="text-xl font-semibold mb-2">
-                        {plan.name}
-                      </h3>
-                      <div className="text-2xl font-bold text-gray-800 mb-2">
-                        <FormattedAmount amount={plan.price} />
-                        <span className="text-sm">/month</span>
-                      </div>
-                      <p className="text-gray-600 mb-4">{plan.description}</p>
-
-                      <ul className="flex-1 space-y-2 mb-4">
-                        {plan.features?.map((feature, index) => (
-                          <li
-                            key={index}
-                            className="text-gray-700 flex items-center"
-                          >
-                            <span className="mr-2 text-blue-500">✔</span>
-                            {feature.name}
-                          </li>
-                        ))}
-                      </ul>
-
-                      {!isContact && (
-                        <>
-                          <label className="block text-sm mb-2 text-gray-700">
-                            Subscription duration
-                          </label>
-                          <select
-                            className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
-                            value={months}
-                            onChange={(e) =>
-                              handleMonthChange(
-                                plan.name,
-                                parseInt(e.target.value),
-                              )
-                            }
-                          >
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                              (m) => (
-                                <option key={m} value={m}>
-                                  {m} {m === 1 ? "month" : "months"}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                          <div className="text-gray-600 mb-4 text-sm">
-                            Total:{" "}
-                            <span className="font-semibold">
-                              {calculateTotal(plan.price, months)}
-                            </span>
-                          </div>
-                        </>
-                      )}
-
-                      {!hasPlan && !isTrial && (
-                        <button
-                          onClick={() => handleAddFreeTrial(plan.id)}
-                          className="w-full py-2 px-4 rounded-md text-white font-medium bg-green-600 hover:bg-green-700 mb-2"
-                        >
-                          Start 5-Day Free Trial
-                        </button>
-                      )}
-
-                      {activePlanId === plan.id && (
-                        <div>
-                          <p className="text-xs font-bold mb-2">
-                            Enter mpesa number to pay with
-                          </p>
-                          <form>
-                            <input
-                              type="text"
-                              required
-                              value={paymentNumber}
-                              onChange={(e) => setPaymentNumber(e.target.value)}
-                              placeholder="Enter payment number"
-                              className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
-                            />
-                            <div className="flex justify-between gap-2 flex-col-reverse mb-2">
-                              <button
-                                onClick={() => setActivePlanId(null)}
-                                className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleSubscription(plan.id)}
-                                disabled={subscribing}
-                                className={`flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700 ${
-                                  subscribing
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                }`}
-                              >
-                                {subscribing ? "Processing..." : "Make Payment"}
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      )}
-
-                      {activePlanId !== plan.id && (
-                        <button
-                          onClick={() => setActivePlanId(plan.id)}
-                          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                            plan.highlight
-                              ? "bg-blue-600 hover:bg-blue-700"
-                              : "bg-gray-700 hover:bg-gray-800"
-                          }`}
-                        >
-                          {isExpired ? "Renew Plan" : "Renew in Advance"}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </main>
-          <footer>
-            <AdminsFooter />
-          </footer>
+      <main className="flex-1 px-4 pt-4 pb-28">
+        <div className="text-center my-5 mb-6">
+          <div className="text-[11px] font-bold tracking-[3px] text-violet-400 uppercase mb-2">
+            Subscription Plans
+          </div>
+          <div
+            className="text-2xl font-extrabold leading-tight mb-2"
+            style={gradientText}
+          >
+            Power Up Your Business
+          </div>
+          <div className="text-xs text-white/50">Cancel or upgrade anytime</div>
         </div>
-      ) : (
-        <div className="p-4">
-          <main className="m-2 p-1">
-            <div className="max-w-6xl mx-auto px-4 py-1">
-              <h2 className="text-xl font-bold text-center mb-6">
-                Choose Your Plan
-              </h2>
 
-              {business && (
-                <div className="mb-6 p-4 border rounded-md shadow bg-white space-y-2">
-                  {!hasPlan && !isTrial && (
-                    <p className="text-green-700 font-semibold">
-                      🎉 You're eligible for a free trial.
-                    </p>
-                  )}
-                  {isTrial && trialEndsIn !== null && (
-                    <p className="text-blue-600 font-semibold">
-                      You're on a <strong>free trial</strong>. It ends in{" "}
-                      <strong>{trialEndsIn} day(s)</strong> on{" "}
-                      <strong>
-                        <Datetime date={expiryDate} showTime />
-                      </strong>
-                      .
-                    </p>
-                  )}
-                  {hasPlan && !isTrial && (
-                    <>
-                      <p className="text-gray-800">
-                        You're on the <strong>{planName}</strong> plan.{" "}
-                        {expiryDate && (
-                          <p className="text-sm text-gray-700 mt-2">
-                            ⏰ Expires in:{" "}
-                            <SubscriptionCountdownTimer
-                              expiryDate={expiryDate}
-                            />
-                          </p>
-                        )}
-                        {isExpired ? (
-                          <span className="text-red-600">
-                            It expired on{" "}
-                            <strong>
-                              <Datetime date={expiryDate} showTime />
-                            </strong>
-                            .
-                          </span>
-                        ) : (
-                          <span>
-                            It expires in{" "}
-                            <strong>{daysRemaining} day(s)</strong> on{" "}
-                            <strong>
-                              <DateDisplay date={expiryDate} showTime />
-                            </strong>
-                            .
-                          </span>
-                        )}
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
+        <StatusBanner {...bannerProps} />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {all_subscription.map((plan) => {
-                  const months = selectedMonths[plan.name] || 1
-                  const isContact = plan.price.toLowerCase().includes("contact")
-                  return (
-                    <div
-                      key={plan.name}
-                      className={`flex flex-col border rounded-xl shadow-sm transition duration-300 p-6 bg-white ${
-                        plan.highlight
-                          ? "border-blue-600 shadow-md scale-105"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      {plan.highlight && (
-                        <div className="mb-2 text-sm font-semibold text-blue-600">
-                          Most Popular
-                        </div>
-                      )}
-                      <h3 className="text-xl font-semibold mb-2">
-                        {plan.name}
-                      </h3>
-                      <div className="text-2xl font-bold text-gray-800 mb-2">
-                        <FormattedAmount amount={plan.price} />
-                        <span className="text-sm">/month</span>
-                      </div>
-                      <p className="text-gray-600 mb-4">{plan.description}</p>
-
-                      <ul className="flex-1 space-y-2 mb-4">
-                        {plan.features?.map((feature, index) => (
-                          <li
-                            key={index}
-                            className="text-gray-700 flex items-center"
-                          >
-                            <span className="mr-2 text-blue-500">✔</span>
-                            {feature.name}
-                          </li>
-                        ))}
-                      </ul>
-
-                      {!isContact && (
-                        <>
-                          <label className="block text-sm mb-2 text-gray-700">
-                            Subscription duration
-                          </label>
-                          <select
-                            className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
-                            value={months}
-                            onChange={(e) =>
-                              handleMonthChange(
-                                plan.name,
-                                parseInt(e.target.value),
-                              )
-                            }
-                          >
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(
-                              (m) => (
-                                <option key={m} value={m}>
-                                  {m} {m === 1 ? "month" : "months"}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                          <div className="text-gray-600 mb-4 text-sm">
-                            Total:{" "}
-                            <span className="font-semibold">
-                              {calculateTotal(plan.price, months)}
-                            </span>
-                          </div>
-                        </>
-                      )}
-
-                      {!hasPlan && !isTrial && (
-                        <button
-                          onClick={() => handleAddFreeTrial(plan.id)}
-                          className="w-full py-2 px-4 rounded-md text-white font-medium bg-green-600 hover:bg-green-700 mb-2"
-                        >
-                          Start 5-Day Free Trial
-                        </button>
-                      )}
-
-                      {activePlanId === plan.id && (
-                        <div>
-                          <p className="text-xs font-bold mb-2">
-                            Enter mpesa number to pay with
-                          </p>
-                          <form>
-                            <input
-                              type="text"
-                              required
-                              value={paymentNumber}
-                              onChange={(e) => setPaymentNumber(e.target.value)}
-                              placeholder="Enter payment number"
-                              className="mb-4 outline-none w-full border rounded-md px-3 py-2 text-sm"
-                            />
-                            <div className="flex justify-between gap-2 flex-col-reverse mb-2">
-                              <button
-                                onClick={() => setActivePlanId(null)}
-                                className="flex-1 py-2 px-4 rounded-md text-white font-medium bg-red-600 hover:bg-red-700"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleSubscription(plan.id)}
-                                disabled={subscribing}
-                                className={`flex-1 py-2 px-4 rounded-md text-white font-medium bg-blue-600 hover:bg-blue-700 ${
-                                  subscribing
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : ""
-                                }`}
-                              >
-                                {subscribing ? "Processing..." : "Make Payment"}
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-                      )}
-
-                      {activePlanId !== plan.id && (
-                        <button
-                          onClick={() => setActivePlanId(plan.id)}
-                          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                            plan.highlight
-                              ? "bg-blue-600 hover:bg-blue-700"
-                              : "bg-gray-700 hover:bg-gray-800"
-                          }`}
-                        >
-                          {isExpired ? "Renew Plan" : "Renew in Advance"}
-                        </button>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </main>
+        <div className="flex flex-col gap-4">
+          {all_subscription.map((plan: any) => (
+            <PlanCard key={plan.id} plan={plan} {...cardProps} />
+          ))}
         </div>
-      )}
+      </main>
+
+      <footer className="fixed bottom-0 left-0 right-0">
+        <AdminsFooter />
+      </footer>
     </div>
-    // <div className="flex flex-col min-h-screen">
-    //   <AdminNav
-    //     headerMessage="Manage your subscription plans"
-    //     headerText="Subscription Plans"
-    //   />
-
-    //   <footer className="bg-gray-100 mt-auto">
-    //     <AdminsFooter />
-    //   </footer>
-    // </div>
   )
 }
 

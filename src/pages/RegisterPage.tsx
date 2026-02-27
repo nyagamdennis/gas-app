@@ -50,14 +50,13 @@ const RegisterPage = () => {
     const formData = new FormData()
     formData.append("email", email)
     formData.append("password", password)
-    formData.append("phone_number", phone)
+    formData.append("phone", phone)
 
     if (businessInfo !== null){
       formData.append('businessId', businessInfo.id)
     }
-
     try {
-      await api.post("/users/register/", formData)
+      await api.post("/auth/register/", formData)
       // await axios.post(`${apiUrl}/users/register/`, formData)
 
       setSuccess(true)
@@ -84,6 +83,7 @@ const RegisterPage = () => {
     }
   }
 
+  console.log("register data phone ", phone, " email ", email, " password ", password, " confirm ", confirmPassword, " terms ", termsAccepted)
 
   return (
     <section className="h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-white to-green-100">

@@ -35,12 +35,15 @@ const RepairCylindersStore = () => {
 
   const [storeId, setStoreId] = useState("")
   const [repairData, setRepairData] = useState({})
+  // New state to track destination (filled/empty) per cylinder
+  const [repairDestination, setRepairDestination] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   })
+  const companyId = businessId
 
   // Fetch stores on component mount
   useEffect(() => {
@@ -61,8 +64,23 @@ const RepairCylindersStore = () => {
     if (storeId) {
       dispatch(fetchStoreCylinders({ storeId }))
       setRepairData({}) // Reset repair data when changing stores
+      setRepairDestination({}) // Reset destinations
     }
   }, [storeId, dispatch])
+
+  // Initialize repair destinations for each spoiled cylinder (default "empty")
+  useEffect(() => {
+    if (storeCylinders.length > 0) {
+      const initialDest = {}
+      storeCylinders.forEach((item) => {
+        if (item.spoiled_cylinder_quantity > 0) {
+          // Only set for items with spoiled quantity, default "empty"
+          initialDest[item.id] = "empty"
+        }
+      })
+      setRepairDestination(initialDest)
+    }
+  }, [storeCylinders])
 
   // Group cylinders by type
   const groupedCylinders = storeCylinders.reduce((acc, item) => {
@@ -82,15 +100,26 @@ const RepairCylindersStore = () => {
     }))
   }
 
+  const handleDestinationChange = (itemId, destination) => {
+    setRepairDestination((prev) => ({
+      ...prev,
+      [itemId]: destination,
+    }))
+  }
+
   const handleRepair = async () => {
     const payload = Object.entries(repairData)
       .filter(([_, quantity]) => quantity > 0)
       .map(([itemId, quantity]) => {
         const item = storeCylinders.find((c) => c.id === parseInt(itemId))
+        const destination = repairDestination[itemId] || "empty" // fallback
         return {
-          id: item.id,
-          cylinder: item.cylinder.id,
-          repair_quantity: quantity,
+          location_type: "store",
+          location_id: storeId,
+          company_id: companyId,
+          cylinder_id: item.cylinder.id,
+          quantity: quantity,
+          cylinder_type: destination.toUpperCase(),
         }
       })
 
@@ -108,8 +137,8 @@ const RepairCylindersStore = () => {
 
     try {
       // Replace with actual API endpoint
-      // await api.post('/inventory/cylinders/repair/', { payload })
-
+      await api.post("/inventory/repairs/", { repairs: payload })
+      // inventory/repairs/
       // Simulate API call for now
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -142,7 +171,9 @@ const RepairCylindersStore = () => {
         const item = storeCylinders.find((c) => c.id === parseInt(itemId))
         return {
           id: item.id,
-          cylinder: item.cylinder.id,
+          location_type: "store",
+          location_id: storeId,
+          cylinder_id: item.cylinder.id,
           write_off_quantity: quantity,
         }
       })
@@ -161,10 +192,7 @@ const RepairCylindersStore = () => {
 
     try {
       // Replace with actual API endpoint
-      // await api.post('/inventory/cylinders/writeoff/', { payload })
-
-      // Simulate API call for now
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await api.post("/inventory/write-offs/", { payload })
 
       setSnackbar({
         open: true,
@@ -364,22 +392,70 @@ const RepairCylindersStore = () => {
                             </div>
 
                             {item.spoiled_cylinder_quantity > 0 && (
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Repair/Write-off Quantity
-                                </label>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={item.spoiled_cylinder_quantity}
-                                  value={repairData[item.id] || ""}
-                                  onChange={(e) =>
-                                    handleRepairChange(item.id, e.target.value)
-                                  }
-                                  className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
-                                  placeholder={`Max: ${item.spoiled_cylinder_quantity}`}
-                                />
-                              </div>
+                              <>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Repair/Write-off Quantity
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={item.spoiled_cylinder_quantity}
+                                    value={repairData[item.id] || ""}
+                                    onChange={(e) =>
+                                      handleRepairChange(
+                                        item.id,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:outline-none"
+                                    placeholder={`Max: ${item.spoiled_cylinder_quantity}`}
+                                  />
+                                </div>
+                                {/* Destination selector for repair */}
+                                <div className="mt-2 flex items-center">
+                                  <span className="text-sm font-medium text-gray-700 mr-3">
+                                    Repair to:
+                                  </span>
+                                  <label className="inline-flex items-center mr-4">
+                                    <input
+                                      type="radio"
+                                      name={`dest-${item.id}`}
+                                      value="filled"
+                                      checked={
+                                        repairDestination[item.id] === "filled"
+                                      }
+                                      onChange={() =>
+                                        handleDestinationChange(
+                                          item.id,
+                                          "filled",
+                                        )
+                                      }
+                                      className="mr-1"
+                                    />
+                                    <span className="text-sm">Filled</span>
+                                  </label>
+                                  <label className="inline-flex items-center">
+                                    <input
+                                      type="radio"
+                                      name={`dest-${item.id}`}
+                                      value="empty"
+                                      checked={
+                                        repairDestination[item.id] ===
+                                          "empty" || !repairDestination[item.id]
+                                      }
+                                      onChange={() =>
+                                        handleDestinationChange(
+                                          item.id,
+                                          "empty",
+                                        )
+                                      }
+                                      className="mr-1"
+                                    />
+                                    <span className="text-sm">Empty</span>
+                                  </label>
+                                </div>
+                              </>
                             )}
 
                             {item.spoiled_cylinder_quantity === 0 && (

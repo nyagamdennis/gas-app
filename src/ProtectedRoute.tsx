@@ -4,9 +4,10 @@ import { Navigate, useLocation } from "react-router-dom"
 import { useAppSelector } from "./app/hooks"
 import {
   selectIsAuthenticated,
-  selectUserRole, // ✅ USE THIS INSTEAD - gets actual role
+  selectUserRole,
+  selectEmailIsVerified, // ✅ Add these selectors to your authSlice
+  selectPhoneIsVerified, // ✅ Add these selectors to your authSlice
 } from "./features/auths/authSlice"
-import planStatus from "./features/planStatus/planStatus"
 import { selectBusinessId } from "./features/plans/planStatusSlice"
 
 // All possible roles from backend
@@ -26,15 +27,19 @@ interface ProtectedRouteProps {
   requiredRole?: UserRole | UserRole[] | "is_admin" | "is_employee"
 }
 
+// Routes that should be accessible even without verification
+const VERIFICATION_EXEMPT_ROUTES = ["/verify-email", "/verify-phone", "/logout"]
+
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredRole,
 }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated)
-  const userRole = useAppSelector(selectUserRole) // ✅ This gets the actual role like "SALES_PERSON"
+  const userRole = useAppSelector(selectUserRole)
+  const emailIsVerified = useAppSelector(selectEmailIsVerified)
+  const phoneIsVerified = useAppSelector(selectPhoneIsVerified)
   const location = useLocation()
 
-  // Get plan status from Redux store
   const { isExpired, businessId, subscriptionPlan } = useAppSelector(
     (state) =>
       state.planStatus || {
@@ -43,14 +48,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         subscriptionPlan: null,
       },
   )
-  // const businessIsId = useAppSelector(selectBusinessId)
-  // console.log('expirarion ', businessId)
 
-  // 🐛 DEBUG: Log authentication state (remove after testing)
   console.log("🔍 ProtectedRoute Debug:", {
     isAuthenticated,
     userRole,
     requiredRole,
+    emailIsVerified,
+    phoneIsVerified,
     pathname: location.pathname,
   })
 
@@ -66,6 +70,27 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <div>Loading...</div>
   }
 
+  // 📧 Step 2: Check email & phone verification (skip for exempt routes)
+  const isExemptRoute = VERIFICATION_EXEMPT_ROUTES.some((route) =>
+    location.pathname.startsWith(route),
+  )
+
+  if (isExemptRoute) {
+    return <>{children}</>
+  }
+
+  // if (!isExemptRoute) {
+    if (!emailIsVerified) {
+      console.log("📧 Email not verified, redirecting to email verification")
+      return <Navigate to="/verify-email" state={{ from: location }} replace />
+    }
+
+    if (!phoneIsVerified) {
+      console.log("📱 Phone not verified, redirecting to phone verification")
+      return <Navigate to="/verify-phone" state={{ from: location }} replace />
+    }
+  // }
+
   // Define employee and admin roles
   const employeeRoles: UserRole[] = [
     "SHOP_ATTENDANT",
@@ -79,7 +104,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   const adminRoles: UserRole[] = ["SUPER_ADMIN", "COMPANY_ADMIN"]
 
-  // 🎯 Step 2: Determine allowed roles for this route
+  // 🎯 Step 3: Determine allowed roles for this route
   let allowedRoles: UserRole[] | null = null
 
   if (requiredRole === "is_admin") {
@@ -92,8 +117,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     allowedRoles = [requiredRole]
   }
 
-  // 🚫 Step 3: Check role authorization
-  // If route has role requirements AND user's role is NOT in allowed roles
+  // 🚫 Step 4: Check role authorization
   if (allowedRoles && !allowedRoles.includes(userRole as UserRole)) {
     console.log(
       `❌ User role ${userRole} not allowed. Required: ${allowedRoles.join(
@@ -101,29 +125,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       )}`,
     )
 
-    // User doesn't have permission - redirect to their home page
     if (adminRoles.includes(userRole as UserRole)) {
       return <Navigate to="/admins" replace />
     } else if (employeeRoles.includes(userRole as UserRole)) {
       return <Navigate to="/sales" replace />
     } else {
-      // Unknown role - send to login
       return <Navigate to="/login" replace />
     }
   }
 
-  // 🛑 Step 4: Admin-specific restrictions
+  // 🛑 Step 5: Admin-specific restrictions
   const isAdmin = adminRoles.includes(userRole as UserRole)
 
-  // Block admins with no business (except /settings)
-  if (isAdmin && !businessId && location.pathname !== "/settings") {
-    console.log("🏢 Admin has no business, redirecting to settings")
-    return <Navigate to="/settings" replace />
+  // if (isAdmin && !businessId && location.pathname !== "/settings") {
+  //   return <Navigate to="/settings" replace />
+  // }
+
+  if (isAdmin && !subscriptionPlan && location.pathname !== "/subscribe") {
+    return <Navigate to="/subscribe" replace />
   }
 
-  // Block admins with expired/no subscription (except /subscribe and /settings)
   if (
-    isAdmin &&
+    isAdmin && businessId &&
     (!subscriptionPlan || isExpired) &&
     location.pathname !== "/subscribe" &&
     location.pathname !== "/settings"
@@ -131,12 +154,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     console.log(
       "💳 Admin subscription expired/missing, redirecting to subscribe",
     )
-  
     return <Navigate to="/subscribe" replace />
   }
 
-  // ✅ All checks passed - render the protected content
-  console.log("✅ Access granted to", location.pathname)
+  // ✅ All checks passed
   return <>{children}</>
 }
 

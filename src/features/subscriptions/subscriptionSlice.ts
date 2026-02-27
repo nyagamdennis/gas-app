@@ -68,7 +68,7 @@ export const fetchSubscription = createAsyncThunk<Subscription[], void, {}>(
   "subscription/fetchSubscription",
   async () => {
    
-    const response = await api.get<Subscription[]>("/business/");
+    const response = await api.get<Subscription[]>("/billing/plans/")
     return response.data
   },
 )
