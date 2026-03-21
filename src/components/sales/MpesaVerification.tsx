@@ -326,7 +326,7 @@ const MpesaVerification = ({
       : mpesaVerification.verifiedPayments || []
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="bg-white rounded-xl shadow-sm border p-6 pb-32">
       <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
         <CreditScore className="mr-2 text-purple-600" />
         M-Pesa Verification
