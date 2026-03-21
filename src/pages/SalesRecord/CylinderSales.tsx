@@ -344,8 +344,6 @@ const CylinderSales = () => {
             // "Device location captured! Enter customer location separately.",
             ()
         } catch (error) {}
-
-        setLastLocationUpdate(new Date().toLocaleTimeString())
       },
       (error) => {
         navigator.geolocation.clearWatch(id)
@@ -1300,7 +1298,7 @@ const CylinderSales = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
               <button
                 onClick={() => {
                   setShowSuccessModal(false)
@@ -2106,7 +2104,7 @@ const CylinderSales = () => {
 
             {/* Action Buttons */}
             <div className="sticky bottom-0 bg-white pt-4 border-t">
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowSummary(false)}
@@ -2712,19 +2710,19 @@ const CylinderSales = () => {
   }, [numMpesaDeposits, remainingAmount, calculateTotal()])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
       <ToastContainer />
       {showSummary && renderOrderSummary()}
       {showSuccessModal && renderSuccessModal()}
 
       {isMobile ? (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen w-full max-w-[100vw] overflow-x-hidden">
           <Navbar
             headerMessage={getPageTitle()}
             headerText={getPageDescription()}
           />
 
-          <main className="flex-grow p-4">
+          <main className="flex-grow p-4 w-full">
             {/* Team Info (if applicable) */}
             {teamId && (
               <div
@@ -2732,27 +2730,33 @@ const CylinderSales = () => {
                   saleType === "retail"
                     ? "from-blue-500 to-blue-600"
                     : "from-green-500 to-green-600"
-                } text-white rounded-2xl p-4 mb-6`}
+                } text-white rounded-2xl p-4 mb-6 w-full`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center min-w-0">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                       {teamType === "shop" ? "🏪" : "🚚"}
                     </div>
-                    <div>
-                      <p className="text-sm opacity-90">
+                    <div className="min-w-0">
+                      <p className="text-sm opacity-90 break-words">
                         Recording {saleType} sale for:{" "}
-                        <span className="font-bold">{teamName}</span>
+                        <span className="font-bold break-words">
+                          {teamName}
+                        </span>
                       </p>
                       <p className="font-semibold">
-                        {teamType === "shop" ? "Shop Team" : teamType === "vehicle" ? "Vehicle Team" : "Store Team"}
+                        {teamType === "shop"
+                          ? "Shop Team"
+                          : teamType === "vehicle"
+                          ? "Vehicle Team"
+                          : "Store Team"}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleRefreshCylinders}
                     disabled={isLoadingCylinders}
-                    className="bg-white/20 hover:bg-white/30 p-2 rounded-lg"
+                    className="bg-white/20 hover:bg-white/30 p-2 rounded-lg flex-shrink-0"
                     title="Refresh cylinder data"
                   >
                     <Refresh
@@ -2764,16 +2768,16 @@ const CylinderSales = () => {
             )}
 
             {!teamId && (
-              <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl p-4 mb-6">
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-2xl p-4 mb-6 w-full">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                     🏬
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm opacity-90">
                       Recording {saleType} sale from:
                     </p>
-                    <p className="font-semibold">Main Store</p>
+                    <p className="font-semibold break-words">Main Store</p>
                   </div>
                 </div>
               </div>
@@ -2781,16 +2785,16 @@ const CylinderSales = () => {
 
             {/* Cylinder Fetch Status */}
             {cylinderFetchError && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 w-full">
                 <div className="flex items-center text-red-700">
                   <span className="mr-2">⚠️</span>
-                  <span>{cylinderFetchError}</span>
+                  <span className="break-words">{cylinderFetchError}</span>
                 </div>
               </div>
             )}
 
             {/* Sale Type Badge */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-6 w-full">
               <div
                 className={`px-6 py-2 rounded-full font-semibold ${
                   saleType === "retail"
@@ -2802,9 +2806,9 @@ const CylinderSales = () => {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 w-full">
               {/* Sales Type Selection */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-white rounded-2xl shadow-sm p-5 w-full overflow-x-auto">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <span className="mr-2">🏷️</span>
                   Sale Type
@@ -2821,8 +2825,10 @@ const CylinderSales = () => {
                     }`}
                   >
                     <span className="text-lg mb-1">🛢️</span>
-                    <span className="text-sm font-medium">Refill Sale</span>
-                    <span className="text-xs text-gray-500 mt-1">
+                    <span className="text-sm font-medium text-center">
+                      Refill Sale
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1 text-center">
                       Cylinder only
                     </span>
                   </button>
@@ -2837,8 +2843,10 @@ const CylinderSales = () => {
                     }`}
                   >
                     <span className="text-lg mb-1">🎁</span>
-                    <span className="text-sm font-medium">Complete Sale</span>
-                    <span className="text-xs text-gray-500 mt-1">
+                    <span className="text-sm font-medium text-center">
+                      Complete Sale
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1 text-center">
                       Cylinder + Accessories
                     </span>
                   </button>
@@ -2853,23 +2861,25 @@ const CylinderSales = () => {
                     }`}
                   >
                     <span className="text-lg mb-1">🏪</span>
-                    <span className="text-sm font-medium">Outlet Sale</span>
-                    <span className="text-xs text-gray-500 mt-1">
+                    <span className="text-sm font-medium text-center">
+                      Outlet Sale
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1 text-center">
                       Outlet price
                     </span>
                   </button>
                 </div>
 
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center">
-                    <span className="text-blue-700 font-medium mr-2">
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg w-full">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-blue-700 font-medium">
                       {salesType === "refill"
                         ? "Refill Sale"
                         : salesType === "complete"
                         ? "Complete Sale"
                         : "Outlet Sale"}
                     </span>
-                    <span className="text-blue-600 text-sm">
+                    <span className="text-blue-600 text-sm break-words">
                       {salesType === "refill"
                         ? "Cylinder refill only"
                         : salesType === "complete"
@@ -2881,7 +2891,7 @@ const CylinderSales = () => {
               </div>
 
               {/* Customer Details */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <span className="mr-2">👤</span>
                   {saleType === "wholesale"
@@ -2924,7 +2934,9 @@ const CylinderSales = () => {
                               }}
                               className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                             >
-                              <div className="font-medium">{customer.name}</div>
+                              <div className="font-medium break-words">
+                                {customer.name}
+                              </div>
                               <div className="text-sm text-gray-600">
                                 {customer.phone} • {customer.location}
                               </div>
@@ -2963,7 +2975,9 @@ const CylinderSales = () => {
                               }}
                               className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                             >
-                              <div className="font-medium">{customer.name}</div>
+                              <div className="font-medium break-words">
+                                {customer.name}
+                              </div>
                               <div className="text-sm text-gray-600">
                                 {customer.phone} • {customer.location}
                               </div>
@@ -2997,7 +3011,7 @@ const CylinderSales = () => {
 
                   {/* Device Location Capture Section */}
                   <div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex flex-wrap justify-between items-center mb-2 gap-2">
                       <label className="block text-sm font-medium text-gray-600">
                         Device Location (GPS)
                       </label>
@@ -3008,14 +3022,16 @@ const CylinderSales = () => {
                       )}
                     </div>
 
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
+                    <div className="flex flex-wrap gap-2">
+                      <div className="relative flex-1 min-w-[150px]">
                         <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50">
                           <div className="text-sm text-gray-600">
                             {hasLocation ? (
                               <div className="flex justify-between items-center">
-                                <span>GPS Location Captured ✓</span>
-                                <CheckCircle className="text-green-500 h-5 w-5" />
+                                <span className="break-words">
+                                  GPS Location Captured ✓
+                                </span>
+                                <CheckCircle className="text-green-500 h-5 w-5 flex-shrink-0" />
                               </div>
                             ) : (
                               "No GPS location captured"
@@ -3024,7 +3040,7 @@ const CylinderSales = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {/* Main location button */}
                         <button
                           type="button"
@@ -3089,8 +3105,8 @@ const CylinderSales = () => {
 
                     {/* Location details display */}
                     {hasLocation && locationCoordinates.latitude && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex justify-between items-center mb-2">
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200 w-full">
+                        <div className="flex flex-wrap justify-between items-center mb-2 gap-2">
                           <h4 className="text-sm font-semibold text-blue-800">
                             Device GPS Details:
                           </h4>
@@ -3103,17 +3119,17 @@ const CylinderSales = () => {
                           </button>
                         </div>
                         <div className="text-xs space-y-1">
-                          <div className="flex">
+                          <div className="flex flex-wrap">
                             <span className="font-medium text-blue-700 w-24">
                               Coordinates:
                             </span>
-                            <span className="text-blue-900">
+                            <span className="text-blue-900 break-words">
                               {locationCoordinates.latitude},{" "}
                               {locationCoordinates.longitude}
                             </span>
                           </div>
                           {locationCoordinates.accuracy && (
-                            <div className="flex">
+                            <div className="flex flex-wrap">
                               <span className="font-medium text-blue-700 w-24">
                                 Accuracy:
                               </span>
@@ -3123,17 +3139,17 @@ const CylinderSales = () => {
                             </div>
                           )}
                           {locationCoordinates.address && (
-                            <div className="flex">
+                            <div className="flex flex-wrap">
                               <span className="font-medium text-blue-700 w-24">
                                 Address:
                               </span>
-                              <span className="text-blue-900">
+                              <span className="text-blue-900 break-words">
                                 {locationCoordinates.address}
                               </span>
                             </div>
                           )}
                           {lastLocationUpdate && (
-                            <div className="flex">
+                            <div className="flex flex-wrap">
                               <span className="font-medium text-blue-700 w-24">
                                 Time:
                               </span>
@@ -3152,16 +3168,18 @@ const CylinderSales = () => {
 
                     {/* Location error display */}
                     {locationError && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg w-full">
                         <div className="flex items-center text-red-700">
-                          <LocationOff className="h-4 w-4 mr-2" />
-                          <span className="text-xs">{locationError}</span>
+                          <LocationOff className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="text-xs break-words">
+                            {locationError}
+                          </span>
                         </div>
                       </div>
                     )}
 
                     {/* Help text */}
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1 break-words">
                       {hasLocation
                         ? "Device GPS location captured and ready for submission."
                         : "Click the location button to capture device GPS coordinates."}
@@ -3171,16 +3189,16 @@ const CylinderSales = () => {
               </div>
 
               {/* Cylinders Section */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
+                <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center flex-wrap">
                     <span className="mr-2">🛢️</span>
                     Gas Cylinders
                     <span className="ml-2 text-sm font-normal text-gray-500">
                       ({availableCylinders.length} available)
                     </span>
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       onClick={handleRefreshCylinders}
@@ -3193,12 +3211,12 @@ const CylinderSales = () => {
                           isLoadingCylinders ? "animate-spin" : ""
                         }`}
                       />
-                      Refresh
+                      <span className="hidden xs:inline">Refresh</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleAddCylinderProduct}
-                      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+                      className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium whitespace-nowrap"
                     >
                       + Add Cylinder
                     </button>
@@ -3229,8 +3247,8 @@ const CylinderSales = () => {
                     <p className="text-gray-600 mt-2">Loading cylinders...</p>
                   </div>
                 ) : availableCylinders.length === 0 ? (
-                  <div className="text-center py-8 bg-red-50 rounded-xl border border-red-200">
-                    <p className="text-red-700">
+                  <div className="text-center py-8 bg-red-50 rounded-xl border border-red-200 w-full">
+                    <p className="text-red-700 break-words">
                       No cylinders available from this source
                     </p>
                     <button
@@ -3252,16 +3270,16 @@ const CylinderSales = () => {
 
               {/* Additional Products Section (Only for Complete Sales) */}
               {salesType === "complete" && (
-                <div className="bg-white rounded-2xl shadow-sm p-5">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
+                  <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+                    <h2 className="text-lg font-semibold text-gray-800 flex items-center flex-wrap">
                       <span className="mr-2">🛍️</span>
                       Additional Products & Accessories
                       <span className="ml-2 text-sm font-normal text-gray-500">
                         ({availableProducts.length} available)
                       </span>
                     </h2>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={handleRefreshProducts}
@@ -3274,12 +3292,12 @@ const CylinderSales = () => {
                             isLoadingProducts ? "animate-spin" : ""
                           }`}
                         />
-                        Refresh
+                        <span className="hidden xs:inline">Refresh</span>
                       </button>
                       <button
                         type="button"
                         onClick={handleAddAdditionalProduct}
-                        className="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+                        className="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium whitespace-nowrap"
                       >
                         + Add Product
                       </button>
@@ -3310,8 +3328,8 @@ const CylinderSales = () => {
                       <p className="text-gray-600 mt-2">Loading products...</p>
                     </div>
                   ) : availableProducts.length === 0 ? (
-                    <div className="text-center py-8 bg-yellow-50 rounded-xl border border-yellow-200">
-                      <p className="text-yellow-700">
+                    <div className="text-center py-8 bg-yellow-50 rounded-xl border border-yellow-200 w-full">
+                      <p className="text-yellow-700 break-words">
                         No additional products available from this source
                       </p>
                       <button
@@ -3333,7 +3351,7 @@ const CylinderSales = () => {
               )}
 
               {/* Cylinder Exchange */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   Cylinder Exchange
                 </h2>
@@ -3342,7 +3360,7 @@ const CylinderSales = () => {
                     <label className="block text-sm font-medium text-gray-600 mb-3">
                       Customer exchanging with another cylinder?
                     </label>
-                    <div className="flex space-x-4">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                       <button
                         type="button"
                         onClick={() => setExchangedWithLocal(false)}
@@ -3391,7 +3409,7 @@ const CylinderSales = () => {
               </div>
 
               {/* Payment Section */}
-              <div className="bg-white rounded-2xl shadow-sm p-5">
+              <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   💳 Payment Details
                 </h2>
@@ -3430,7 +3448,7 @@ const CylinderSales = () => {
 
                   {/* Debt Details */}
                   {paymentType === "DEBT" && (
-                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 w-full">
                       <h3 className="font-semibold text-yellow-800 mb-3">
                         Credit Details
                       </h3>
@@ -3544,8 +3562,8 @@ const CylinderSales = () => {
                   {/* M-Pesa Details */}
                   {(paymentMode === "mpesa" ||
                     paymentMode === "mpesa_cash") && (
-                    <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-                      <div className="flex justify-between items-center mb-4">
+                    <div className="bg-green-50 p-4 rounded-xl border border-green-200 w-full">
+                      <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
                         <h3 className="font-semibold text-green-800 flex items-center">
                           <img
                             src={mpesalogo}
@@ -3574,7 +3592,7 @@ const CylinderSales = () => {
                                 isCheckingMpesa ? "animate-spin" : ""
                               }`}
                             />
-                            Refresh
+                            <span className="hidden xs:inline">Refresh</span>
                           </button>
                         </div>
                       </div>
@@ -3619,7 +3637,7 @@ const CylinderSales = () => {
 
                         {/* First M-Pesa Payment */}
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center">
+                          <div className="flex flex-wrap justify-between items-center gap-2">
                             <label className="block text-sm font-medium text-green-700">
                               First M-Pesa Code
                             </label>
@@ -3648,7 +3666,7 @@ const CylinderSales = () => {
                         {numMpesaDeposits > 1 && (
                           <div className="space-y-4 pt-4 border-t border-green-200">
                             <div className="space-y-2">
-                              <div className="flex justify-between items-center">
+                              <div className="flex flex-wrap justify-between items-center gap-2">
                                 <label className="block text-sm font-medium text-green-700">
                                   Second M-Pesa Code
                                 </label>
@@ -3678,7 +3696,7 @@ const CylinderSales = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-2">
                                   Pay with same phone number?
                                 </label>
-                                <div className="flex space-x-4">
+                                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -3727,7 +3745,7 @@ const CylinderSales = () => {
                               )}
 
                               {/* Second Payment Buttons */}
-                              <div className="flex space-x-2 mt-3">
+                              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-3">
                                 <button
                                   type="button"
                                   onClick={() => handleMpesaPrompt(1)}
@@ -3759,7 +3777,7 @@ const CylinderSales = () => {
                                 mpesaCodes[1]?.code &&
                                 mpesaCodes[0].code === mpesaCodes[1].code && (
                                   <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                                    <p className="text-xs text-red-700">
+                                    <p className="text-xs text-red-700 break-words">
                                       ⚠️ The second M-Pesa code is the same as
                                       the first. Please wait for the second
                                       payment to be processed.
@@ -3783,7 +3801,7 @@ const CylinderSales = () => {
                           </h3>
 
                           <div className="mb-6">
-                            <p className="text-gray-600 mb-4">
+                            <p className="text-gray-600 mb-4 break-words">
                               Remaining amount to pay:{" "}
                               <span className="font-bold text-yellow-700">
                                 Ksh {remainingAmount}
@@ -3794,7 +3812,7 @@ const CylinderSales = () => {
                               <label className="block text-sm font-medium text-gray-600 mb-3">
                                 Use same phone number for payment?
                               </label>
-                              <div className="flex space-x-4">
+                              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                                 <button
                                   type="button"
                                   onClick={() => setUseSamePhone(true)}
@@ -3838,7 +3856,7 @@ const CylinderSales = () => {
                             )}
                           </div>
 
-                          <div className="flex space-x-3">
+                          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                             <button
                               type="button"
                               onClick={() => setIsPromptOpen(false)}
@@ -3875,7 +3893,7 @@ const CylinderSales = () => {
               </div>
 
               {/* Summary & Submit */}
-              <div className="sticky bottom-0 bg-white rounded-t-2xl shadow-lg p-5 border-t">
+              <div className="sticky bottom-0 bg-white rounded-t-2xl shadow-lg p-5 border-t w-full">
                 <div className="mb-4">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-600">Subtotal:</span>
@@ -3901,7 +3919,7 @@ const CylinderSales = () => {
                   )}
                   <div className="flex justify-between items-center mt-2 text-sm">
                     <span className="text-blue-600">Source:</span>
-                    <span className="font-medium text-blue-700">
+                    <span className="font-medium text-blue-700 break-words">
                       {teamType === "shop"
                         ? `Shop: ${teamName || "N/A"}`
                         : teamType === "vehicle"
