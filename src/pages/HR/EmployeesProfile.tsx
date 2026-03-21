@@ -23,6 +23,7 @@ import {
   selectAllSalesTeamShops,
 } from "../../features/salesTeam/salesTeamSlice"
 import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
+import api from "../../../utils/api"
 
 // Role options with icons
 const ROLE_OPTIONS = [
@@ -121,7 +122,6 @@ const Employee = () => {
   } = planStatus()
 
   const allEmployees = useAppSelector(selectAllEmployees)
-  console.log("all employees ", allEmployees)
   const allVehicles = useAppSelector(selectAllSalesTeamVehicle)
   const allShops = useAppSelector(selectAllSalesTeamShops)
   const allStores = useAppSelector(selectAllStore)
@@ -136,6 +136,7 @@ const Employee = () => {
   const [assignmentType, setAssignmentType] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
   const [vehicleRole, setVehicleRole] = useState("DRIVER")
+  const [isResending, setIsResending] = useState(false)
   const [realData, setRealData] = useState({
     stores: [],
     shops: [],
@@ -148,6 +149,8 @@ const Employee = () => {
     vehicles: [],
     motorcycles: [],
   })
+
+  const [resendingIds, setResendingIds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (businessId) {
@@ -889,6 +892,28 @@ const Employee = () => {
     toast.success("Link copied to clipboard!")
   }
 
+  const handleResendInvite = async (
+    employeeId: number,
+    employeeEmail: string,
+  ) => {
+    if (resendingIds.has(employeeId)) return
+    setResendingIds((prev) => new Set(prev).add(employeeId))
+    try {
+      // await dispatch(resendInvite({ businessId, employeeId })).unwrap()
+      await api.post(`employees/employees/${employeeId}/invite/`)
+      toast.success(`Invitation resent to ${employeeEmail}`)
+    } catch (error) {
+      console.error("Failed to resend invite:", error)
+      toast.error("Failed to resend invite. Please try again.")
+    } finally {
+      setResendingIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(employeeId)
+        return newSet
+      })
+    }
+  }
+
   // Calculate statistics
   const assignedCount = allEmployees.filter(isEmployeeAssigned).length
   const unassignedCount = allEmployees.length - assignedCount
@@ -1090,6 +1115,15 @@ const Employee = () => {
                               <p className="flex items-center gap-1">
                                 <span>📧</span>
                                 {employee.email}
+                                {employee.email_verified ? (
+                                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                    Verified
+                                  </span>
+                                ) : (
+                                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                                    Not Verified
+                                  </span>
+                                )}
                               </p>
                             )}
                             {employee.phone_number && (
@@ -1130,6 +1164,28 @@ const Employee = () => {
                         >
                           View
                         </button>
+                        {!employee.email_verified && (
+                          <button
+                            onClick={() =>
+                              handleResendInvite(employee.id, employee.email)
+                            }
+                            disabled={isResending}
+                            className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                              isResending
+                                ? "bg-gray-300 cursor-not-allowed"
+                                : "bg-blue-500 hover:bg-blue-600 text-white"
+                            }`}
+                          >
+                            {isResending ? (
+                              <CircularProgress
+                                size={16}
+                                style={{ color: "white" }}
+                              />
+                            ) : (
+                              "Resend Invite"
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1203,6 +1259,17 @@ const Employee = () => {
                     <p className="font-semibold text-gray-800">
                       {selectedEmployee.email}
                     </p>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedEmployee.email_verified
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedEmployee.email_verified
+                        ? "Verified"
+                        : "Not Verified"}
+                    </span>
                   </div>
                 )}
 
@@ -1267,6 +1334,39 @@ const Employee = () => {
                         </span>
                       )}
                     </div>
+                  </div>
+                )}
+                {selectedEmployee.email && !selectedEmployee.email_verified && (
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p className="text-xs text-gray-600 mb-2">
+                      Invitation Status
+                    </p>
+                    <button
+                      onClick={() =>
+                        handleResendInvite(
+                          selectedEmployee.id,
+                          selectedEmployee.email,
+                        )
+                      }
+                      disabled={resendingIds.has(selectedEmployee.id)}
+                      className={`w-full py-2 rounded-lg font-semibold transition ${
+                        resendingIds.has(selectedEmployee.id)
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600 text-white"
+                      }`}
+                    >
+                      {resendingIds.has(selectedEmployee.id) ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <CircularProgress
+                            size={18}
+                            style={{ color: "white" }}
+                          />
+                          Sending...
+                        </span>
+                      ) : (
+                        "Resend Invitation Email"
+                      )}
+                    </button>
                   </div>
                 )}
               </div>

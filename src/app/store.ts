@@ -46,11 +46,13 @@ import planStatusReducer from "../features/plans/planStatusSlice"
 import storeCylinderReducer from "../features/store/storeCylindersSlice"
 import salesTeamVehicleReducer from "../features/salesTeam/salesTeamVehicleSlice"
 import customerHistoryReducer from "../features/customers/customerHistorySlice"
+import smsReducer from "../features/sms/smsSlice"
 
 export const store = configureStore({
   reducer: {
     salesTeamVehicle: salesTeamVehicleReducer,
     customersHistory: customerHistoryReducer,
+    sms: smsReducer,
     storeCylinders: storeCylinderReducer,
     vehicles: vehiclesReducer,
     cylindersWeight: cylindersWeightReducer,

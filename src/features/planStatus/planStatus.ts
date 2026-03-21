@@ -5,6 +5,7 @@ import { fetchBusiness, selectAllBusiness } from "../company/companySlice"
 
 const planStatus = () => {
   const biz = useAppSelector(selectAllBusiness)
+  console.log("🔍 planStatus Debug - Business Data:", biz) // Debug log to check the structure of biz
   const dispatch = useAppDispatch()
 
   const businessName = biz?.name || null
@@ -18,9 +19,7 @@ const planStatus = () => {
   const planName = biz?.subscription_plan?.name || null
   const employeeLimit = biz?.subscription_plan?.employee_limit || null
 
-  // useEffect(() => {
-  //   dispatch(fetchBusiness())
-  // }, [dispatch])
+
 
   return {
     businessId,

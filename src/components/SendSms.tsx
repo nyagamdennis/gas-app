@@ -40,16 +40,7 @@ const SendSms: React.FC = () => {
         message: messageTextareaRef.current?.value,
       }
       console.log('selected_location', formData)
-      // const response = await axios.post(
-      //   `${apiUrl}/sendbulksms/`,
-      //   formData,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${Cookies.get("accessToken")}`,
-      //       "Content-Type": "application/json",
-      //     },
-      //   },
-      // )
+     
       const response = await api.post("/sendbulksms/", formData)
       if (response.status === 201) {
         setShowAlert(true);
@@ -144,9 +135,7 @@ const SendSms: React.FC = () => {
               </button>
         </div>
       </form>
-      {/* <div>
-        <RightContent />
-      </div> */}
+     
       </div>
       
     </div>

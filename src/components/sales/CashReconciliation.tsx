@@ -126,6 +126,7 @@ const CashReconciliation = ({
           </div>
         </div>
 
+
         {/* Actual Cash Input */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-800 mb-3">Actual Cash Count</h4>
@@ -145,6 +146,7 @@ const CashReconciliation = ({
             Enter the actual cash counted in the register
           </p>
         </div>
+
 
         {/* Status Display with Assign Button */}
         <div className={`p-4 rounded-lg border ${getStatusColor()}`}>

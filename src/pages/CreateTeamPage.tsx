@@ -18,13 +18,17 @@ import Navbar from "../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../components/AdminsFooter"
 import {
   addSalesTeam,
+  deleteSalesTeam,
   fetchSalesTeamShops,
   selectAllSalesTeamShops,
+  updateSalesTeam,
 } from "../features/salesTeam/salesTeamSlice"
 import {
   addVehicle,
+  deleteVehicle,
   fetchVehicles,
   getAllVehicles,
+  updateVehicle,
 } from "../features/deliveries/vehiclesSlice"
 import {
   addStore,
@@ -123,7 +127,7 @@ const CreateTeamPage = () => {
       color: "bg-green-100 text-green-700",
       source: "vehicle",
     },
-  ]
+  ] 
 
   const filteredTeams = allTeams.filter((team) => {
     const matchesType = filterType === "" || team.teamType === filterType
@@ -227,7 +231,7 @@ const CreateTeamPage = () => {
           await dispatch(deleteVehicle(selectedTeam.id)).unwrap()
           break
         case "shop":
-          // await dispatch(deleteShop(selectedTeam.id)).unwrap()
+          await dispatch(deleteSalesTeam(selectedTeam.id)).unwrap()
           break
       }
 
@@ -276,6 +280,7 @@ const CreateTeamPage = () => {
           ).unwrap()
           break
         case "shop":
+          await dispatch(updateSalesTeam({ id: selectedTeam.id, name: teamName })).unwrap()
           // Update shop logic
           break
       }
@@ -928,7 +933,7 @@ const CreateTeamPage = () => {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-xs text-gray-600 mb-1">Team ID</p>
                   <p className="font-semibold text-gray-800 font-mono">
-                    #{selectedTeam.id.toString().padStart(6, "0")}
+                    #{selectedTeam.id?.toString().padStart(6, "0")}
                   </p>
                 </div>
 

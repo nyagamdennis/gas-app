@@ -1988,7 +1988,6 @@ const TeamsSales = () => {
   }, [])
 
   // Save Expense Assignment
-  console.log("expenses assignment ", expenseAssignment)
   const saveExpenseAssignment = async () => {
     if (!selectedExpense) return
 
@@ -3543,6 +3542,14 @@ const TeamsSales = () => {
                     <p className="text-[10px] text-gray-500 mt-1">
                       {mpesaVerification.unverifiedPayments.length} unverified
                     </p>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 shadow-sm border col-span-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-600">Total Debt</p>
+                      <p className="text-lg font-bold text-red-600">
+                        <FormattedAmount amount={statistics?.total_debt || 0} />
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -5171,6 +5178,8 @@ const TeamsSales = () => {
                   </div>
                 </>
               )}
+
+              <div>ddd</div>
 
               <div className="flex justify-end space-x-2">
                 <button

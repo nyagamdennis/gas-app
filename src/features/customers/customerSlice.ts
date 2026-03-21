@@ -40,14 +40,17 @@ const initialState: CustomersState = {
 
 export const fetchCustomers = createAsyncThunk<
   any,
-  number | void,
+  { page?: number; pageSize?: number },
   { rejectValue: string }
->("customers/fetchCustomers", async (page = 1, { rejectWithValue }) => {
+>("customers/fetchCustomers", async (params, { rejectWithValue }) => {
+  const { page = 1, pageSize = 10 } = params;
+  const offset = (page - 1) * pageSize;
+
   try {
-    const response = await api.get(`/customers/?page=${page}`)
-    return response.data
+    const response = await api.get(`/customers/?page=${page}&limit=${pageSize}&offset=${offset}`);
+    return response.data;
   } catch (error: any) {
-    return rejectWithValue("Failed to fetch customers.")
+    return rejectWithValue("Failed to fetch customers.");
   }
 })
 
@@ -150,6 +153,11 @@ export const selectPagination = (state: any) => ({
   count: state.customers.count,
   currentPage: state.customers.currentPage,
 })
+
+
+export const customerCount = (state: { customers: CustomersState }) =>
+  state.customers.count
+
 
 
 export default customersSlice.reducer

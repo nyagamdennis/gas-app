@@ -95,7 +95,10 @@ export const updateOtherProduct = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await api.patch(`/inventory/store-products/${id}/`, dat)
+      const response = await api.patch(
+        `/inventory/stores/${id}/products/`,
+        dat,
+      )
       return response.data
     } catch (err: any) {
       if (err.response && err.response.data) {
@@ -108,9 +111,11 @@ export const updateOtherProduct = createAsyncThunk(
 
 export const deleteOtherProduct = createAsyncThunk(
   "products/deleteOtherProduct",
-  async ({ id }: { id: number | string }, { rejectWithValue }) => {
+  async ({ store_id, id }: { store_id: string; id: number | string }, { rejectWithValue }) => {
     try {
-      const response = await api.delete(`/inventory/store-products/${id}/`)
+      console.log("Deleting product with id:", id, "from store:", store_id)
+      const response = await api.delete(`/inventory/stores/${store_id}/products/`, {
+        data: { product_id: id }})
       return { id, ...response.data }
     } catch (err: any) {
       if (err.response && err.response.data) {

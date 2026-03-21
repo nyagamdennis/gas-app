@@ -16,6 +16,8 @@ import {
   clearAddEmployeeStatus,
 } from "../../features/employees/employeesSlice"
 import { CircularProgress } from "@mui/material"
+import api from "../../../utils/api"
+import { toast, ToastContainer } from "react-toastify"
 
 // Role options
 const ROLE_OPTIONS = [
@@ -66,12 +68,15 @@ const Recruitment = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showEmployeeModal, setShowEmployeeModal] = useState(false)
 
-  // Fetch employees on component mount
-  useEffect(() => {
-    if (businessId) {
-      dispatch(fetchEmployees({ businessId }))
-    }
-  }, [dispatch, businessId])
+  const [successMessage, setSuccessMessage] = useState("") // for invitation message
+  const [resendingIds, setResendingIds] = useState<Set<number>>(new Set()) // track resend loading
+  const [isResending, setIsResending] = useState(false)
+    // Fetch employees on component mount
+    useEffect(() => {
+      if (businessId) {
+        dispatch(fetchEmployees({ businessId }))
+      }
+    }, [dispatch, businessId])
 
   // Clear add employee status when component unmounts
   useEffect(() => {
@@ -79,6 +84,15 @@ const Recruitment = () => {
       dispatch(clearAddEmployeeStatus())
     }
   }, [dispatch])
+
+
+
+   useEffect(() => {
+     if (successMessage) {
+       const timer = setTimeout(() => setSuccessMessage(""), 5000)
+       return () => clearTimeout(timer)
+     }
+   }, [successMessage])
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -119,6 +133,31 @@ const Recruitment = () => {
     }
   }
 
+
+
+    const handleResendInvite = async (
+      employeeId: number,
+      employeeEmail: string,
+    ) => {
+      // Prevent double-click while loading
+      if (resendingIds.has(employeeId)) return
+
+      setResendingIds((prev) => new Set(prev).add(employeeId))
+      try {
+        await api.post(`employees/employees/${employeeId}/invite/`)
+        toast.success("Email invitation sent.")
+        setSuccessMessage(`Invitation resent to ${employeeEmail}.`)
+      } catch (error) {
+        console.error("Failed to resend invite:", error)
+        toast.error('An error occured, try again.')
+      } finally {
+        setResendingIds((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(employeeId)
+          return newSet
+        })
+      }
+    }
   // Filter employees based on search and filter
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch =
@@ -161,6 +200,9 @@ const Recruitment = () => {
 
       <main className="flex-grow m-2 p-1 mb-20">
         {/* Header Section */}
+        <div>
+          <ToastContainer />
+        </div>
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg mb-4">
           <div className="flex items-center justify-between">
             <div>
@@ -182,11 +224,9 @@ const Recruitment = () => {
         </div>
 
         {/* Success/Error Messages */}
-        {addEmployeeStatus === "succeeded" && (
+        {addEmployeeStatus === "succeeded" && successMessage && (
           <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4 rounded-lg">
-            <p className="text-green-700 font-medium">
-              ✓ Employee added successfully!
-            </p>
+            <p className="text-green-700 font-medium">✓ {successMessage}</p>
           </div>
         )}
 
@@ -415,8 +455,8 @@ const Recruitment = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {employee.first_name.charAt(0)}
-                            {employee.last_name.charAt(0)}
+                            {employee?.first_name?.charAt(0)}
+                            {employee?.last_name?.charAt(0)}
                           </div>
                           <div>
                             <h3 className="font-bold text-gray-800">
@@ -438,6 +478,17 @@ const Recruitment = () => {
                           <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-gray-700 border border-gray-300">
                             {getGenderIcon(employee.gender)} {employee.gender}
                           </span>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              employee.email_verified
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {employee.email_verified
+                              ? "✓ Email Verified"
+                              : "⏳ Email Not Verified"}
+                          </span>
                           {employee.status && (
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -453,8 +504,32 @@ const Recruitment = () => {
                           )}
                         </div>
                       </div>
-
-                      <div className="text-2xl">👁️</div>
+                      {/* Right side: view icon and resend button if needed */}
+                      <div className="flex flex-col items-end gap-2">
+                        {!employee.email_verified && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleResendInvite(employee.id, employee.email)
+                            }}
+                            disabled={isResending}
+                            className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                          >
+                            {isResending ? (
+                              <>
+                                <CircularProgress
+                                  size={12}
+                                  style={{ color: "white" }}
+                                />
+                                Sending...
+                              </>
+                            ) : (
+                              "📧 Resend Invite"
+                            )}
+                          </button>
+                        )}
+                        <div className="text-2xl">👁️</div>
+                      </div>
                     </div>
                   </div>
                 )
@@ -517,6 +592,50 @@ const Recruitment = () => {
                   <p className="font-semibold text-gray-800">
                     {selectedEmployee.phone_number}
                   </p>
+                </div>
+
+                {/* Email verification and resend */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-1">
+                    Email Verification
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                        selectedEmployee.email_verified
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedEmployee.email_verified
+                        ? "✓ Verified"
+                        : "⏳ Not Verified"}
+                    </span>
+                    {!selectedEmployee.email_verified && (
+                      <button
+                        onClick={() =>
+                          handleResendInvite(
+                            selectedEmployee.id,
+                            selectedEmployee.email,
+                          )
+                        }
+                        disabled={resendingIds.has(selectedEmployee.id)}
+                        className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {resendingIds.has(selectedEmployee.id) ? (
+                          <>
+                            <CircularProgress
+                              size={16}
+                              style={{ color: "white" }}
+                            />
+                            Sending...
+                          </>
+                        ) : (
+                          "Resend Invite"
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {selectedEmployee.status && (

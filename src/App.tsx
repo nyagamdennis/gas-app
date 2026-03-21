@@ -109,6 +109,11 @@ import ShopCylinderMovements from "./pages/cylinders/ShopCylinderMovements"
 import StoreCylinderAggregate from "./pages/cylinders/StoreCylinderAggregate"
 import CompanyDetails from "./pages/company settings/CompanyDetails"
 import ProfileVerify from "./pages/company settings/ProfileVerify"
+import ProcessingPayment from "./pages/ProcessingPayment"
+import EmployeePayment from "./pages/HR/EmployeePayment"
+import AddProducts from "./pages/otherProducts/AddProducts"
+import AfterProductCollect from "./pages/otherProducts/AfterProductCollect"
+import AllReceipts from "./pages/AllReceipts"
 
 function App() {
   useVerificationPolling()
@@ -121,7 +126,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/processing" element={<ProsessingPayment />} />
+          <Route path="/processing" element={<ProcessingPayment />} />
           <Route
             path="/verify-email"
             element={
@@ -287,6 +292,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* /admin/receipts */}
+          <Route
+            path="/admin/receipts"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <AllReceipts />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admins"
             element={
@@ -324,6 +338,15 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <PayRoll />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/hr/employee-payment/:id"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <EmployeePayment />
               </ProtectedRoute>
             }
           />
@@ -427,6 +450,15 @@ function App() {
             }
           />
 
+          {/* <Route 
+            path="/processing"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <ProcessingPayment />
+              </ProtectedRoute>   
+            }
+          /> */}
+
           <Route
             path="/settings"
             element={
@@ -444,6 +476,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* /admins/afterproductcollect/1 */}
+          <Route
+            path="/admins/afterproductcollect/:receiptNumber"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <AfterProductCollect />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admins/afterassign/:id"
             element={
@@ -575,7 +618,22 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/store/othersproductslist/add/:storeId"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <AddProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/store/othersproductslist/add/"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <AddProducts />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/products/assign"
             element={

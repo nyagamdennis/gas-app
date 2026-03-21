@@ -68,7 +68,7 @@ export const deleteVehicle = createAsyncThunk<
   { rejectValue: string } // Type for rejected value
 >("vehicles/deleteVehicle", async (vehicleId, { rejectWithValue }) => {
   try {
-    await api.delete(`/vehicles/${vehicleId}/`) // API call to delete the vehicle
+    await api.delete(`/vehicle/vehicle/${vehicleId}/`) // API call to delete the vehicle
     return vehicleId // Return the deleted vehicle ID
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -87,7 +87,7 @@ export const updateVehicle = createAsyncThunk(
   ) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await api.patch(`/vehicles/${id}/`, data)
+      const response = await api.patch(`/vehicle/vehicle/${id}/`, data)
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data || "Failed to update vehicle")

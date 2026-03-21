@@ -37,7 +37,7 @@ export const deleteSalesTeam = createAsyncThunk(
     //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
     //   },
     // })
-    const response = await api.delete(`/getsalesteam/${id}/`);
+    const response = await api.delete(`/shop/shops/${id}/`)
     return response.data
   },
 )
@@ -52,11 +52,11 @@ export const updateSalesTeam = createAsyncThunk(
     //     "Content-Type": "multipart/form-data",
     //   },
     // })
-    const response = await api.patch(`/getsalesteam/${id}/`, formData, {
+    const response = await api.patch(`/shop/shops/${id}/`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    });
+    })
     return response.data
   },
 )
@@ -151,10 +151,10 @@ const salesTeamSlice = createSlice({
       .addCase(updateSalesTeam.fulfilled, (state, action) => {
         state.status = "succeeded"
         const index = state.salesTeam.findIndex(
-          (salesTeam) => salesTeam.id === action.payload.id,
+          (salesTeam) => salesTeam.id === action.payload.shop.id,
         )
         if (index !== -1) {
-          state.salesTeam[index] = action.payload
+          state.salesTeam[index] = action.payload.shop
         }
       }
       )

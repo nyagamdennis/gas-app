@@ -1,6 +1,5 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react"
-import { useMediaQuery, useTheme } from "@mui/material"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
   fetchLocations,
@@ -11,118 +10,99 @@ import { fetchSales } from "../features/sales/salesSlice"
 import CustomerExcerpt from "../features/customers/CustomerExcerpt"
 import AdminsFooter from "../components/AdminsFooter"
 import Navbar from "../components/ui/mobile/admin/Navbar"
+import Pagination from "@mui/material/Pagination"
 import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import {
   fetchCustomers,
   getCustomerError,
   getCustomersStatus,
   selectAllCustomers,
   addCustomer,
+  customerCount,
 } from "../features/customers/customerSlice"
+import AddBoxIcon from "@mui/icons-material/AddBox"
+import CircularProgress from "@mui/material/CircularProgress"
 import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  TextField,
   Button,
-  InputAdornment,
-  Tabs,
-  Tab,
-  Card,
-  CardContent,
-  IconButton,
-  Grid,
-  Chip,
-  Avatar,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider,
-  Badge,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  CircularProgress,
-  Alert,
-  Fab,
-  useScrollTrigger,
-  Zoom,
-  Fade,
-  Collapse,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Skeleton,
 } from "@mui/material"
-import {
-  Search,
-  Add,
-  PersonAdd,
-  Business,
-  Person,
-  Phone,
-  LocationOn,
-  FilterList,
-  Sort,
-  Storefront,
-  MoneyOff,
-  Groups,
-  KeyboardArrowUp,
-  Close,
-  TrendingUp,
-  TrendingDown,
-  AttachMoney,
-  ShoppingBag,
-  Receipt,
-  Inventory,
-} from "@mui/icons-material"
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
+import ChevronRightIcon from "@mui/icons-material/ChevronRight"
 
-function ScrollTop(props) {
-  const { children } = props
-  const trigger = useScrollTrigger({
-    disableHysteresis: true,
-    threshold: 100,
-  })
-
-  const handleClick = (event) => {
-    const anchor = (event.target.ownerDocument || document).querySelector(
-      "#back-to-top-anchor",
-    )
-
-    if (anchor) {
-      anchor.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      })
-    }
-  }
-
-  return (
-    <Zoom in={trigger}>
-      <Box
-        onClick={handleClick}
-        role="presentation"
-        sx={{ position: "fixed", bottom: 80, right: 16 }}
-      >
-        {children}
-      </Box>
-    </Zoom>
-  )
+// Icons as components using emoji for consistency with StoreCylinders
+const Icons = {
+  Search: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      />
+    </svg>
+  ),
+  Add: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+      />
+    </svg>
+  ),
+  Close: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  ),
+  ArrowUp: () => (
+    <svg
+      className="w-5 h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 10l7-7m0 0l7 7m-7-7v18"
+      />
+    </svg>
+  ),
 }
 
 const AdminCustomer = () => {
-  const theme = useTheme()
-  const matches = useMediaQuery("(min-width:600px)")
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const dispatch = useAppDispatch()
   const customers = useAppSelector(selectAllCustomers)
-  const locations = useAppSelector(selectAllLocations)
+  const locations_list = useAppSelector(selectAllLocations)
   const customerStatus = useAppSelector(getCustomersStatus)
   const customerError = useAppSelector(getCustomerError)
 
@@ -130,70 +110,94 @@ const AdminCustomer = () => {
   const [locationId, setLocationId] = useState("")
   const [name, setName] = useState("")
   const [customerType, setCustomerType] = useState("RETAIL")
-  const [activeTab, setActiveTab] = useState(0)
   const [search, setSearch] = useState("")
   const [submitting, setSubmitting] = useState(false)
-  const [openDialog, setOpenDialog] = useState(false)
-  const [filteredType, setFilteredType] = useState("ALL")
-  const [sortBy, setSortBy] = useState("name")
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const [activeFilter, setActiveFilter] = useState("all")
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+    const customerCounts = useAppSelector(customerCount)
+
+
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
-    dispatch(fetchCustomers())
+    dispatch(fetchCustomers({ page }))
     dispatch(fetchLocations())
     dispatch(fetchProducts())
     dispatch(fetchSales())
-  }, [dispatch])
+  }, [dispatch, page])
 
-  const filtered = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c?.phone?.toString().includes(search),
-  )
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 100)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
-  const retailCustomers = filtered.filter((c) => c.sales === "RETAIL")
-  const wholesaleCustomers = filtered.filter((c) => c.sales === "WHOLESALE")
-  const debtors = filtered.filter((c) =>
-    c.customer_debt?.some((debt) => !debt.cleared),
-  )
+  // Reset to first page when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeFilter, search])
 
-  const getActiveCustomers = () => {
-    switch (activeTab) {
-      case 0:
-        return filtered
-      case 1:
-        return retailCustomers
-      case 2:
-        return wholesaleCustomers
-      case 3:
-        return debtors
+  // Filter customers based on search and active filter
+  const getFilteredCustomers = () => {
+    let filtered = customers
+
+    if (search) {
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c?.phone?.toString().includes(search),
+      )
+    }
+
+    switch (activeFilter) {
+      case "retail":
+        filtered = filtered.filter((c) => c.sales === "RETAIL")
+        break
+      case "wholesale":
+        filtered = filtered.filter((c) => c.sales === "WHOLESALE")
+        break
+      case "debtors":
+        // was: c.customer_debt?.some((d) => !d.cleared)
+        filtered = filtered.filter((c) => c.debt_summary !== null)
+        break
       default:
-        return filtered
+        break
     }
+
+    return filtered
+  }
+  const allFilteredCustomers = getFilteredCustomers()
+
+  // Pagination logic
+  const totalItems = allFilteredCustomers.length
+  const totalPages = Math.ceil(totalItems / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const displayedCustomers = allFilteredCustomers.slice(startIndex, endIndex)
+
+  // Calculate stats based on all customers (not filtered)
+  const stats = {
+    total: customers.length,
+    retail: customers.filter((c) => c.sales === "RETAIL").length,
+    wholesale: customers.filter((c) => c.sales === "WHOLESALE").length,
+    withDebt: customers.filter((c) => c.debt_summary !== null).length,
   }
 
-  const getTabLabel = (index) => {
-    const labels = ["All", "Retail", "Wholesale", "Debtors"]
-    const counts = [
-      filtered.length,
-      retailCustomers.length,
-      wholesaleCustomers.length,
-      debtors.length,
-    ]
-    return `${labels[index]} (${counts[index]})`
-  }
 
-  const getCustomerStats = () => {
-    return {
-      total: customers.length,
-      retail: customers.filter((c) => c.sales === "RETAIL").length,
-      wholesale: customers.filter((c) => c.sales === "WHOLESALE").length,
-      withDebt: customers.filter((c) =>
-        c.customer_debt?.some((d) => !d.cleared),
-      ).length,
-    }
+  // Calculate counts for filters based on all customers (not filtered by search)
+  const filterCounts = {
+    all: customers.length,
+    retail: customers.filter((c) => c.sales === "RETAIL").length,
+    wholesale: customers.filter((c) => c.sales === "WHOLESALE").length,
+    debtors: customers.filter((c) => c.debt_summary !== null).length,
   }
-
-  const stats = getCustomerStats()
 
   const handleAddNewCustomer = async (e) => {
     e.preventDefault()
@@ -209,15 +213,12 @@ const AdminCustomer = () => {
 
       await dispatch(addCustomer(formData)).unwrap()
       toast.success("Customer added successfully!")
-
-      // Reset form
       setName("")
       setPhone("")
       setLocationId("")
       setCustomerType("RETAIL")
-      setOpenDialog(false)
+      setDialogOpen(false)
     } catch (error) {
-      console.error("Error adding customer: ", error)
       toast.error(error?.message || "Failed to add customer. Please try again.")
     } finally {
       setSubmitting(false)
@@ -226,796 +227,576 @@ const AdminCustomer = () => {
 
   const handlePhoneChange = (e) => {
     const value = e.target.value.replace(/\D/g, "")
-    if (value.length <= 10) {
-      setPhone(value)
-    }
+    if (value.length <= 10) setPhone(value)
   }
 
   const formatPhoneNumber = (phone) => {
     const cleaned = phone.replace(/\D/g, "")
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/)
-    if (match) {
-      return "(" + match[1] + ") " + match[2] + "-" + match[3]
+    return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handleFilterClick = (filterType) => {
+    setActiveFilter(filterType)
+  }
+
+  // Pagination handlers
+  const goToPage = (page) => {
+    setCurrentPage(page)
+    scrollToTop()
+  }
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+      scrollToTop()
     }
-    return phone
   }
 
-  const handleOpenDialog = () => {
-    setOpenDialog(true)
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+      scrollToTop()
+    }
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setName("")
-    setPhone("")
-    setLocationId("")
-    setCustomerType("RETAIL")
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value))
+    setCurrentPage(1)
   }
 
-  if (!isMobile) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <Typography variant="h5" color="primary" gutterBottom>
-            Desktop Customer Management
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Full desktop view with advanced customer management features coming
-            soon
-          </Typography>
-        </Paper>
-      </Container>
-    )
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pageNumbers = []
+    const maxPagesToShow = 5
+
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i)
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i)
+        }
+        pageNumbers.push("...")
+        pageNumbers.push(totalPages)
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1)
+        pageNumbers.push("...")
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i)
+        }
+      } else {
+        pageNumbers.push(1)
+        pageNumbers.push("...")
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i)
+        }
+        pageNumbers.push("...")
+        pageNumbers.push(totalPages)
+      }
+    }
+
+    return pageNumbers
   }
+
+  const tabs = [
+    {
+      type: "all",
+      label: "All",
+      icon: "👥",
+      count: filterCounts.all,
+      color: "blue",
+    },
+    {
+      type: "retail",
+      label: "Retail",
+      icon: "🛒",
+      count: filterCounts.retail,
+      color: "green",
+    },
+    {
+      type: "wholesale",
+      label: "Wholesale",
+      icon: "🏭",
+      count: filterCounts.wholesale,
+      color: "purple",
+    },
+    {
+      type: "debtors",
+      label: "Debtors",
+      icon: "💰",
+      count: filterCounts.debtors,
+      color: "yellow",
+    },
+  ]
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50" }}>
-      <ToastContainer />
+    <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+      <ToastContainer position="top-center" />
       <Navbar
-        headerMessage={"Customer Management"}
-        headerText={"Manage retail, wholesale customers and track debts"}
+        headerMessage={"ERP"}
+        headerText={"Manage customers with style and clarity"}
       />
 
-      <div id="back-to-top-anchor" />
+      <main className="flex-grow m-2 p-1 pb-4">
+        {/* Header Section */}
+        <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+          <div className="flex flex-col space-y-3">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+              <span className="mr-2">👥</span>
+              Customer Management
+            </h2>
 
-      <Container maxWidth="sm" sx={{ py: 2 }}>
-        {/* Enhanced Stats Overview with Soft UI */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6} sm={3}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                textAlign: "center",
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                bgcolor: "background.paper",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "primary.50",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mx: "auto",
-                  mb: 1,
-                }}
-              >
-                <Groups sx={{ color: "primary.main", fontSize: 20 }} />
-              </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "primary.main", mb: 0.5 }}
-              >
-                {stats.total}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Total Customers
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                textAlign: "center",
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                bgcolor: "background.paper",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "secondary.50",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mx: "auto",
-                  mb: 1,
-                }}
-              >
-                <Person sx={{ color: "secondary.main", fontSize: 20 }} />
-              </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "secondary.main", mb: 0.5 }}
-              >
-                {stats.retail}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Retail
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                textAlign: "center",
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                bgcolor: "background.paper",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "success.50",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mx: "auto",
-                  mb: 1,
-                }}
-              >
-                <Business sx={{ color: "success.main", fontSize: 20 }} />
-              </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "success.main", mb: 0.5 }}
-              >
-                {stats.wholesale}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Wholesale
-              </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={6} sm={3}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                textAlign: "center",
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "grey.200",
-                bgcolor: "background.paper",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "warning.50",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mx: "auto",
-                  mb: 1,
-                }}
-              >
-                <MoneyOff sx={{ color: "warning.main", fontSize: 20 }} />
-              </Box>
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 700, color: "warning.main", mb: 0.5 }}
-              >
-                {stats.withDebt}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                With Debt
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Enhanced Search Bar */}
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            mb: 3,
-            borderRadius: 2,
-            border: "1px solid",
-            borderColor: "grey.200",
-            bgcolor: "background.paper",
-          }}
-        >
-          <TextField
-            fullWidth
-            placeholder="Search customers by name or phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: search && (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => setSearch("")}
-                    sx={{
-                      color: "text.secondary",
-                      "&:hover": {
-                        color: "primary.main",
-                      },
-                    }}
-                  >
-                    <Close fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            size="small"
-            variant="outlined"
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-              },
-            }}
-          />
-        </Paper>
-
-        {/* Enhanced Tabs with Soft UI */}
-        <Paper
-          elevation={0}
-          sx={{
-            mb: 3,
-            borderRadius: 2,
-            border: "1px solid",
-            borderColor: "grey.200",
-            overflow: "hidden",
-          }}
-        >
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              bgcolor: "grey.50",
-              "& .MuiTab-root": {
-                minWidth: 100,
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                textTransform: "none",
-                py: 1.5,
-                "&.Mui-selected": {
-                  color: "primary.main",
-                },
-              },
-              "& .MuiTabs-indicator": {
-                height: 3,
-                borderRadius: "3px 3px 0 0",
-              },
-            }}
-          >
-            {[0, 1, 2, 3].map((index) => (
-              <Tab
-                key={index}
-                label={getTabLabel(index)}
-                icon={
-                  index === 0 ? (
-                    <Groups fontSize="small" />
-                  ) : index === 1 ? (
-                    <Person fontSize="small" />
-                  ) : index === 2 ? (
-                    <Business fontSize="small" />
-                  ) : (
-                    <MoneyOff fontSize="small" />
-                  )
-                }
-                iconPosition="start"
+            {/* Search Bar */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <Icons.Search />
+              </div>
+              <input
+                type="text"
+                placeholder="Search customers by name or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
-            ))}
-          </Tabs>
-        </Paper>
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  <Icons.Close />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
-        {/* Customers List */}
-        {customerStatus === "loading" ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 8 }}>
-            <CircularProgress />
-          </Box>
-        ) : customerError ? (
-          <Alert
-            severity="error"
-            sx={{
-              mb: 2,
-              borderRadius: 2,
-              "& .MuiAlert-icon": {
-                alignItems: "center",
-              },
-            }}
-          >
-            Error loading customers: {customerError}
-          </Alert>
-        ) : (
-          <Box>
-            {getActiveCustomers().length > 0 ? (
-              <Box sx={{ "& > *:not(:last-child)": { mb: 2 } }}>
-                {getActiveCustomers().map((customer) => (
-                  <CustomerExcerpt key={customer.id} customer={customer} />
-                ))}
-              </Box>
-            ) : (
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  textAlign: "center",
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: "grey.200",
-                  bgcolor: "background.paper",
-                }}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Total Customers</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {stats.total}
+                </p>
+              </div>
+              <span className="text-3xl">👥</span>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Retail</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.retail}
+                </p>
+              </div>
+              <span className="text-3xl">🛒</span>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Wholesale</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {stats.wholesale}
+                </p>
+              </div>
+              <span className="text-3xl">🏭</span>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">With Debt</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {stats.withDebt}
+                </p>
+              </div>
+              <span className="text-3xl">💰</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div>
+          {/* Loading State */}
+          {customerStatus === "loading" && (
+            <div className="grid grid-cols-1 gap-4">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+                  <Skeleton variant="text" height={28} width="60%" />
+                  <Skeleton
+                    variant="rectangular"
+                    height={100}
+                    className="mt-3"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State - No Customers */}
+          {customerStatus === "succeeded" && customers.length === 0 && (
+            <div className="text-center p-12 bg-white rounded-lg shadow-md">
+              <div className="text-6xl mb-4">👥</div>
+              <p className="text-gray-500 mb-2 text-lg">
+                No customers available.
+              </p>
+              <button
+                onClick={() => setDialogOpen(true)}
+                className="bg-blue-500 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-600 transition flex items-center gap-2 mx-auto text-sm font-semibold"
               >
-                <Box sx={{ mb: 3 }}>
-                  {activeTab === 0 && (
-                    <Groups sx={{ fontSize: 64, color: "grey.300" }} />
-                  )}
-                  {activeTab === 1 && (
-                    <Person sx={{ fontSize: 64, color: "grey.300" }} />
-                  )}
-                  {activeTab === 2 && (
-                    <Business sx={{ fontSize: 64, color: "grey.300" }} />
-                  )}
-                  {activeTab === 3 && (
-                    <MoneyOff sx={{ fontSize: 64, color: "grey.300" }} />
-                  )}
-                </Box>
-                <Typography
-                  variant="h6"
-                  color="text.secondary"
-                  gutterBottom
-                  sx={{ fontWeight: 600 }}
-                >
-                  No customers found
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 3 }}
-                >
-                  {search
-                    ? "Try adjusting your search criteria"
-                    : activeTab === 1
-                    ? "No retail customers yet"
-                    : activeTab === 2
-                    ? "No wholesale customers yet"
-                    : activeTab === 3
-                    ? "No customers with outstanding debts"
-                    : "No customers found"}
-                </Typography>
-                {!search && (
-                  <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={handleOpenDialog}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                    }}
-                  >
-                    Add New Customer
-                  </Button>
-                )}
-              </Paper>
-            )}
-          </Box>
-        )}
-      </Container>
+                <AddBoxIcon sx={{ fontSize: 20 }} />
+                Add New Customer
+              </button>
+            </div>
+          )}
 
-      {/* Enhanced Add Customer Dialog */}
+          {/* Customer Cards */}
+          {customerStatus === "succeeded" && customers.length > 0 && (
+            <div className="space-y-4">
+              {/* Filter Tabs */}
+              <div className="bg-white p-2 rounded-lg shadow-md">
+                <div className="flex overflow-x-auto scrollbar-hide gap-2">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.type}
+                      onClick={() => handleFilterClick(tab.type)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
+                        activeFilter === tab.type
+                          ? `bg-${tab.color}-500 text-white shadow-md`
+                          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      <span>{tab.icon}</span>
+                      <span className="font-medium">{tab.label}</span>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          activeFilter === tab.type
+                            ? "bg-white bg-opacity-20 text-white"
+                            : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        {tab.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results Info */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Showing {startIndex + 1} - {Math.min(endIndex, totalItems)} of{" "}
+                  {totalItems}{" "}
+                  {activeFilter === "all" ? "customers" : activeFilter}
+                </p>
+                {activeFilter !== "all" && (
+                  <button
+                    onClick={() => setActiveFilter("all")}
+                    className="text-sm text-blue-500 hover:text-blue-600 font-medium"
+                  >
+                    Clear filter
+                  </button>
+                )}
+              </div>
+
+             
+
+              {/* Customer List */}
+              {displayedCustomers.length === 0 ? (
+                <div className="text-center p-12 bg-white rounded-lg shadow-md">
+                  <div className="text-6xl mb-4">🔍</div>
+                  <p className="text-gray-500 text-lg">
+                    {search
+                      ? `No customers found matching "${search}"`
+                      : `No ${activeFilter} customers found`}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {displayedCustomers.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className={`bg-white rounded-lg shadow-md border-l-4 ${
+                        customer.sales === "RETAIL"
+                          ? "border-green-500"
+                          : customer.sales === "WHOLESALE"
+                          ? "border-purple-500"
+                          : customer.customer_debt?.some((d) => !d.cleared)
+                          ? "border-yellow-500"
+                          : "border-blue-500"
+                      } overflow-hidden`}
+                    >
+                      <CustomerExcerpt customer={customer} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="my-2 flex justify-center">
+                <Pagination
+                  count={Math.ceil(customerCounts / 8)}
+                  page={page}
+                  onChange={(event, value) => setPage(value)}
+                  shape="rounded"
+                  color="primary"
+                />
+              </div>
+
+              {/* Pagination */}
+
+              {/* {totalPages > 1 && (
+                <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={goToPreviousPage}
+                      disabled={currentPage === 1}
+                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
+                        currentPage === 1
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-blue-600 hover:bg-blue-50"
+                      }`}
+                    >
+                      <ChevronLeftIcon fontSize="small" />
+                      <span className="hidden sm:inline">Previous</span>
+                    </button>
+
+                    <div className="flex items-center gap-1 overflow-x-auto">
+                      {getPageNumbers().map((page, index) => (
+                        <button
+                          key={index}
+                          onClick={() =>
+                            typeof page === "number" && goToPage(page)
+                          }
+                          disabled={page === "..."}
+                          className={`min-w-[40px] h-10 rounded-lg transition ${
+                            page === currentPage
+                              ? "bg-blue-500 text-white font-medium"
+                              : page === "..."
+                              ? "text-gray-500 cursor-default"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={goToNextPage}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
+                        currentPage === totalPages
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-blue-600 hover:bg-blue-50"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <ChevronRightIcon fontSize="small" />
+                    </button>
+                  </div>
+
+                  <div className="text-center text-sm text-gray-500 mt-2">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                </div>
+              )} */}
+            </div>
+          )}
+
+          {/* Error State */}
+          {customerStatus === "failed" && (
+            <div className="text-center p-12 bg-red-50 rounded-lg shadow-md">
+              <div className="text-6xl mb-4">⚠️</div>
+              <p className="text-red-500 font-medium text-lg">
+                Failed to load customer data. Please try again later.
+              </p>
+              <p className="text-red-400 text-sm mt-2">{customerError}</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Add Customer Dialog */}
       <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
-          },
+          className: "rounded-lg",
         }}
       >
-        <DialogTitle
-          sx={{
-            background: `linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)`,
-            color: "white",
-            borderTopLeftRadius: 12,
-            borderTopRightRadius: 12,
-            p: 3,
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              right: 0,
-              width: "150px",
-              height: "150px",
-              background:
-                "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
-              borderRadius: "50%",
-              transform: "translate(30%, -30%)",
-            },
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <PersonAdd sx={{ fontSize: 28 }} />
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Add New Customer
-              </Typography>
-            </Box>
-            <IconButton
-              onClick={handleCloseDialog}
-              sx={{
-                color: "white",
-                "&:hover": {
-                  bgcolor: "rgba(255,255,255,0.1)",
-                },
-              }}
-            >
-              <Close />
-            </IconButton>
-          </Box>
+        <DialogTitle className="font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">👤</span>
+            <span>Add New Customer</span>
+          </div>
         </DialogTitle>
-        <DialogContent sx={{ pt: 4, px: 3 }}>
-          <form className="mt-4" onSubmit={handleAddNewCustomer}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Customer Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-              </Grid>
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Phone Number"
-                  value={formatPhoneNumber(phone)}
-                  onChange={handlePhoneChange}
-                  required
-                  type="tel"
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Phone fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  helperText="Format: (123) 456-7890"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-              </Grid>
+        <DialogContent className="mt-4">
+          <form onSubmit={handleAddNewCustomer} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Customer Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                placeholder="Enter customer name"
+              />
+            </div>
 
-              <Grid item xs={12}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Location</InputLabel>
-                  <Select
-                    value={locationId}
-                    label="Location"
-                    onChange={(e) => setLocationId(e.target.value)}
-                    required
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <LocationOn fontSize="small" />
-                      </InputAdornment>
-                    }
-                    sx={{
-                      borderRadius: 2,
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Select a location</em>
-                    </MenuItem>
-                    {locations.map((loc) => (
-                      <MenuItem key={loc.id} value={loc.id}>
-                        {loc.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={formatPhoneNumber(phone)}
+                onChange={handlePhoneChange}
+                required
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                placeholder="(123) 456-7890"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Format: (123) 456-7890
+              </p>
+            </div>
 
-              <Grid item xs={12}>
-                <FormControl component="fieldset" fullWidth>
-                  <Typography
-                    variant="subtitle1"
-                    gutterBottom
-                    sx={{ fontWeight: 600, mb: 2 }}
-                  >
-                    Customer Type
-                  </Typography>
-                  <RadioGroup
-                    row
-                    value={customerType}
-                    onChange={(e) => setCustomerType(e.target.value)}
-                    sx={{
-                      "& .MuiFormControlLabel-root": {
-                        flex: 1,
-                        m: 0,
-                      },
-                    }}
-                  >
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: "2px solid",
-                        borderColor:
-                          customerType === "RETAIL"
-                            ? "primary.main"
-                            : "grey.200",
-                        bgcolor:
-                          customerType === "RETAIL"
-                            ? "primary.50"
-                            : "transparent",
-                        transition: "all 0.2s",
-                        flex: 1,
-                        mr: 1,
-                      }}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Location
+              </label>
+              <select
+                value={locationId}
+                onChange={(e) => setLocationId(e.target.value)}
+                required
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition bg-white"
+              >
+                <option value="">Select a location</option>
+                {locations_list.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Customer Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCustomerType("RETAIL")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    customerType === "RETAIL"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">🛒</span>
+                    <span
+                      className={`font-medium ${
+                        customerType === "RETAIL"
+                          ? "text-green-600"
+                          : "text-gray-700"
+                      }`}
                     >
-                      <FormControlLabel
-                        value="RETAIL"
-                        control={
-                          <Radio color="primary" sx={{ display: "none" }} />
-                        }
-                        label={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              gap: 1,
-                              cursor: "pointer",
-                            }}
-                            onClick={() => setCustomerType("RETAIL")}
-                          >
-                            <Person
-                              sx={{
-                                fontSize: 32,
-                                color:
-                                  customerType === "RETAIL"
-                                    ? "primary.main"
-                                    : "grey.600",
-                              }}
-                            />
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 600,
-                                color:
-                                  customerType === "RETAIL"
-                                    ? "primary.main"
-                                    : "text.primary",
-                              }}
-                            >
-                              Retail
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </Paper>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: "2px solid",
-                        borderColor:
-                          customerType === "WHOLESALE"
-                            ? "success.main"
-                            : "grey.200",
-                        bgcolor:
-                          customerType === "WHOLESALE"
-                            ? "success.50"
-                            : "transparent",
-                        transition: "all 0.2s",
-                        flex: 1,
-                      }}
+                      Retail
+                    </span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCustomerType("WHOLESALE")}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    customerType === "WHOLESALE"
+                      ? "border-purple-500 bg-purple-50"
+                      : "border-gray-200 hover:border-gray-300 bg-white"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">🏭</span>
+                    <span
+                      className={`font-medium ${
+                        customerType === "WHOLESALE"
+                          ? "text-purple-600"
+                          : "text-gray-700"
+                      }`}
                     >
-                      <FormControlLabel
-                        value="WHOLESALE"
-                        control={
-                          <Radio color="primary" sx={{ display: "none" }} />
-                        }
-                        label={
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              gap: 1,
-                              cursor: "pointer",
-                            }}
-                            onClick={() => setCustomerType("WHOLESALE")}
-                          >
-                            <Business
-                              sx={{
-                                fontSize: 32,
-                                color:
-                                  customerType === "WHOLESALE"
-                                    ? "success.main"
-                                    : "grey.600",
-                              }}
-                            />
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                fontWeight: 600,
-                                color:
-                                  customerType === "WHOLESALE"
-                                    ? "success.main"
-                                    : "text.primary",
-                              }}
-                            >
-                              Wholesale
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </Paper>
-                  </RadioGroup>
-                </FormControl>
-              </Grid>
-            </Grid>
+                      Wholesale
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
           </form>
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
+
+        <DialogActions className="p-4">
           <Button
-            onClick={handleCloseDialog}
-            variant="outlined"
-            sx={{
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 600,
-              px: 3,
-            }}
+            onClick={() => setDialogOpen(false)}
+            className="text-gray-600 hover:text-gray-800"
           >
             Cancel
           </Button>
           <Button
-            onClick={handleAddNewCustomer}
             variant="contained"
+            onClick={handleAddNewCustomer}
             disabled={submitting || !name || !phone || !locationId}
-            startIcon={submitting ? <CircularProgress size={20} /> : <Add />}
-            sx={{
-              borderRadius: 2,
-              textTransform: "none",
-              fontWeight: 600,
-              px: 3,
-              boxShadow: "0 4px 12px rgba(25, 118, 210, 0.3)",
-              "&:hover": {
-                boxShadow: "0 6px 20px rgba(25, 118, 210, 0.4)",
-              },
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+            style={{
+              backgroundColor: "#3b82f6",
+              color: "white",
             }}
           >
-            {submitting ? "Adding..." : "Add Customer"}
+            {submitting ? (
+              <CircularProgress size={24} style={{ color: "white" }} />
+            ) : (
+              "Add Customer"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Enhanced Floating Action Button */}
-      <Fab
-        color="primary"
-        sx={{
-          position: "fixed",
-          bottom: 80,
-          right: 16,
-          zIndex: 1000,
-          boxShadow: "0 8px 20px rgba(25, 118, 210, 0.3)",
-          "&:hover": {
-            boxShadow: "0 12px 30px rgba(25, 118, 210, 0.4)",
-            transform: "scale(1.05)",
-          },
-          transition: "all 0.2s ease",
-        }}
-        onClick={handleOpenDialog}
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setDialogOpen(true)}
+        className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center"
       >
-        <Add />
-      </Fab>
+        <AddBoxIcon />
+      </button>
 
       {/* Scroll to Top Button */}
-      <ScrollTop>
-        <Fab
-          color="secondary"
-          size="small"
-          sx={{
-            boxShadow: "0 4px 12px rgba(156, 39, 176, 0.3)",
-            "&:hover": {
-              boxShadow: "0 6px 20px rgba(156, 39, 176, 0.4)",
-            },
-          }}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-20 left-4 z-40 w-10 h-10 bg-purple-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center justify-center"
         >
-          <KeyboardArrowUp />
-        </Fab>
-      </ScrollTop>
+          <Icons.ArrowUp />
+        </button>
+      )}
 
-      <footer style={{ marginTop: "auto" }}>
+      <footer className="text-white mt-4">
         <AdminsFooter />
       </footer>
-    </Box>
+    </div>
   )
 }
 

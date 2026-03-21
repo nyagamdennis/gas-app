@@ -50,7 +50,7 @@ const CompanyDetails = () => {
       setLoading(true)
       setError(null)
       try {
-        const response = await api.get(`/companies/${businessId}/`)
+        const response = await api.get(`company/details/${businessId}/`)
         const data = response.data
         setCompanyName(data.name || "")
         setLogo(data.logo || "")
@@ -286,7 +286,7 @@ const CompanyDetails = () => {
 
                   {/* Company Name */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center">
                       <Business
                         className="mr-1 text-blue-500"
                         fontSize="small"
@@ -305,7 +305,7 @@ const CompanyDetails = () => {
 
                   {/* Location */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                    <label className="text-sm font-semibold text-gray-700 mb-1 flex items-center">
                       <LocationOn
                         className="mr-1 text-red-500"
                         fontSize="small"
@@ -323,7 +323,7 @@ const CompanyDetails = () => {
 
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                    <label className=" text-sm font-semibold text-gray-700 mb-1 flex items-center">
                       <Email className="mr-1 text-green-500" fontSize="small" />
                       Email
                     </label>
@@ -338,7 +338,7 @@ const CompanyDetails = () => {
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center">
+                    <label className=" text-sm font-semibold text-gray-700 mb-1 flex items-center">
                       <Phone
                         className="mr-1 text-purple-500"
                         fontSize="small"

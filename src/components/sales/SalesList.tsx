@@ -539,157 +539,184 @@ const SalesList = ({
                       Items
                     </h4>
                     <div className="space-y-1.5">
-                      {sale.cylinder_items?.map((cylinder, index) => {
-                        const itemDeficit = getItemDeficit(
-                          sale.invoice_number,
-                          cylinder.id,
-                          "CYLINDER",
-                        )
+                      {/* Cylinder Items Section */}
+                      {sale.cylinder_items &&
+                        sale.cylinder_items.length > 0 && (
+                          <>
+                            {sale.cylinder_items.map((cylinder, index) => {
+                              const itemDeficit = getItemDeficit(
+                                sale.invoice_number,
+                                cylinder.id,
+                                "CYLINDER",
+                              )
 
-                        return (
-                          <div
-                            key={index}
-                            className={`flex items-center justify-between p-2 rounded-lg ${
-                              itemDeficit
-                                ? "bg-red-50 border border-red-200"
-                                : "bg-blue-50"
-                            }`}
-                          >
-                            <div className="flex items-center flex-1 min-w-0">
-                              <LocalGasStation
-                                className={`${
-                                  itemDeficit ? "text-red-600" : "text-blue-600"
-                                } mr-2`}
-                                fontSize="small"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-0.5">
-                                  <p className="font-medium text-xs sm:text-sm truncate">
-                                    {cylinder.cylinder_name}
-                                  </p>
-                                  {itemDeficit && (
-                                    <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">
-                                      Deficit
+                              return (
+                                <div
+                                  key={`cylinder-${index}`}
+                                  className={`flex items-center justify-between p-2 rounded-lg ${
+                                    itemDeficit
+                                      ? "bg-red-50 border border-red-200"
+                                      : "bg-blue-50"
+                                  }`}
+                                >
+                                  <div className="flex items-center flex-1 min-w-0">
+                                    <LocalGasStation
+                                      className={`${
+                                        itemDeficit
+                                          ? "text-red-600"
+                                          : "text-blue-600"
+                                      } mr-2`}
+                                      fontSize="small"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between mb-0.5">
+                                        <p className="font-medium text-xs sm:text-sm truncate">
+                                          {cylinder.cylinder_name}
+                                        </p>
+                                        {itemDeficit && (
+                                          <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">
+                                            Deficit
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500">
+                                        <span>
+                                          {cylinder.quantity} ×{" "}
+                                          <FormattedAmount
+                                            amount={cylinder.unit_price}
+                                          />
+                                        </span>
+                                        {itemDeficit && (
+                                          <span className="ml-2 text-red-600">
+                                            Diff:{" "}
+                                            <FormattedAmount
+                                              amount={
+                                                itemDeficit.difference_amount
+                                              }
+                                            />
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 ml-2">
+                                    <span
+                                      className={`font-bold text-sm sm:text-base ${
+                                        itemDeficit ? "text-red-700" : ""
+                                      }`}
+                                    >
+                                      <FormattedAmount
+                                        amount={cylinder.total_price}
+                                      />
                                     </span>
-                                  )}
+                                    {!itemDeficit && !isFinalized && (
+                                      <button
+                                        onClick={() =>
+                                          onItemDeficit(
+                                            sale,
+                                            cylinder,
+                                            "cylinder",
+                                          )
+                                        }
+                                        className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-1 rounded hover:bg-orange-200"
+                                        title="Record Deficit"
+                                      >
+                                        <Warning fontSize="inherit" />
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="text-[10px] sm:text-xs text-gray-500">
-                                  <span>
-                                    {cylinder.quantity} ×{" "}
+                              )
+                            })}
+                          </>
+                        )}
+
+                      {/* Regular Items Section */}
+                      {sale.items && sale.items.length > 0 && (
+                        <>
+                          {sale.items.map((item, index) => {
+                            const itemDeficit = getItemDeficit(
+                              sale.invoice_number,
+                              item.id,
+                              "PRODUCT",
+                            )
+
+                            return (
+                              <div
+                                key={`item-${index}`}
+                                className={`flex items-center justify-between p-2 rounded-lg ${
+                                  itemDeficit
+                                    ? "bg-red-50 border border-red-200"
+                                    : "bg-gray-50"
+                                }`}
+                              >
+                                <div className="flex items-center flex-1 min-w-0">
+                                  <ShoppingCart
+                                    className={`${
+                                      itemDeficit
+                                        ? "text-red-600"
+                                        : "text-gray-600"
+                                    } mr-2`}
+                                    fontSize="small"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                      <p className="font-medium text-xs sm:text-sm truncate">
+                                        {item.product_name || item.name}
+                                      </p>
+                                      {itemDeficit && (
+                                        <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">
+                                          Deficit
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500">
+                                      <span>
+                                        {item.quantity} ×{" "}
+                                        <FormattedAmount
+                                          amount={item.unit_price}
+                                        />
+                                      </span>
+                                      {itemDeficit && (
+                                        <span className="ml-2 text-red-600">
+                                          Diff:{" "}
+                                          <FormattedAmount
+                                            amount={
+                                              itemDeficit.difference_amount
+                                            }
+                                          />
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 ml-2">
+                                  <span
+                                    className={`font-bold text-sm sm:text-base ${
+                                      itemDeficit ? "text-red-700" : ""
+                                    }`}
+                                  >
                                     <FormattedAmount
-                                      amount={cylinder.unit_price}
+                                      amount={item.total_price}
                                     />
                                   </span>
-                                  {itemDeficit && (
-                                    <span className="ml-2 text-red-600">
-                                      Diff:{" "}
-                                      <FormattedAmount
-                                        amount={itemDeficit.difference_amount}
-                                      />
-                                    </span>
+                                  {!itemDeficit && !isFinalized && (
+                                    <button
+                                      onClick={() =>
+                                        onItemDeficit(sale, item, "regular")
+                                      }
+                                      className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-1 rounded hover:bg-orange-200"
+                                      title="Record Deficit"
+                                    >
+                                      <Warning fontSize="inherit" />
+                                    </button>
                                   )}
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 ml-2">
-                              <span
-                                className={`font-bold text-sm sm:text-base ${
-                                  itemDeficit ? "text-red-700" : ""
-                                }`}
-                              >
-                                <FormattedAmount
-                                  amount={cylinder.total_price}
-                                />
-                              </span>
-                              {!itemDeficit && !isFinalized && (
-                                <button
-                                  onClick={() =>
-                                    onItemDeficit(sale, cylinder, "cylinder")
-                                  }
-                                  className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-1 rounded hover:bg-orange-200"
-                                  title="Record Deficit"
-                                >
-                                  <Warning fontSize="inherit" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
-
-                      {sale.items?.map((item, index) => {
-                        const itemDeficit = getItemDeficit(
-                          sale.invoice_number,
-                          item.id,
-                          "PRODUCT",
-                        )
-
-                        return (
-                          <div
-                            key={index}
-                            className={`flex items-center justify-between p-2 rounded-lg ${
-                              itemDeficit
-                                ? "bg-red-50 border border-red-200"
-                                : "bg-gray-50"
-                            }`}
-                          >
-                            <div className="flex items-center flex-1 min-w-0">
-                              <ShoppingCart
-                                className={`${
-                                  itemDeficit ? "text-red-600" : "text-gray-600"
-                                } mr-2`}
-                                fontSize="small"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between mb-0.5">
-                                  <p className="font-medium text-xs sm:text-sm truncate">
-                                    {item.name}
-                                  </p>
-                                  {itemDeficit && (
-                                    <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded ml-1">
-                                      Deficit
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-[10px] sm:text-xs text-gray-500">
-                                  <span>
-                                    {item.quantity} ×{" "}
-                                    <FormattedAmount amount={item.unit_price} />
-                                  </span>
-                                  {itemDeficit && (
-                                    <span className="ml-2 text-red-600">
-                                      Diff:{" "}
-                                      <FormattedAmount
-                                        amount={itemDeficit.difference_amount}
-                                      />
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 ml-2">
-                              <span
-                                className={`font-bold text-sm sm:text-base ${
-                                  itemDeficit ? "text-red-700" : ""
-                                }`}
-                              >
-                                <FormattedAmount amount={item.total_price} />
-                              </span>
-                              {!itemDeficit && !isFinalized && (
-                                <button
-                                  onClick={() =>
-                                    onItemDeficit(sale, item, "regular")
-                                  }
-                                  className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-1 rounded hover:bg-orange-200"
-                                  title="Record Deficit"
-                                >
-                                  <Warning fontSize="inherit" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )
-                      })}
+                            )
+                          })}
+                        </>
+                      )}
                     </div>
                   </div>
 

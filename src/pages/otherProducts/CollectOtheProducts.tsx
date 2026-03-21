@@ -7,14 +7,23 @@ import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 
 import { useNavigate } from "react-router-dom"
 import Skeleton from "@mui/material/Skeleton"
-import { fetchSalesTeamShops, selectAllSalesTeamShops } from "../../features/salesTeam/salesTeamSlice"
-import { fetchSalesTeamVehicle, selectAllSalesTeamVehicle } from "../../features/salesTeam/salesTeamVehicleSlice"
-import { fetchEmployees, selectAllEmployees } from "../../features/employees/employeesSlice"
+import {
+  fetchSalesTeamShops,
+  selectAllSalesTeamShops,
+} from "../../features/salesTeam/salesTeamSlice"
+import {
+  fetchSalesTeamVehicle,
+  selectAllSalesTeamVehicle,
+} from "../../features/salesTeam/salesTeamVehicleSlice"
+import {
+  fetchEmployees,
+  selectAllEmployees,
+} from "../../features/employees/employeesSlice"
 import api from "../../../utils/api"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
-import { fetchStore } from "../../features/store/storeSlice"
+import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
 import planStatus from "../../features/planStatus/planStatus"
 
 const CollectOtherProducts = () => {
@@ -23,11 +32,11 @@ const CollectOtherProducts = () => {
   const [activeTab, setActiveTab] = useState("shops")
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-
+  const store = useAppSelector(selectAllStore)
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
   const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
   const employees = useAppSelector(selectAllEmployees)
-
+  const [selectedDestinationStore, setSelectedDestinationStore] = useState(null)
   const [showStacked, setShowStacked] = useState<boolean>(false)
   const [loadingReturnAll, setLoadingReturnAll] = useState(false)
   const [loadingReturnSpoiled, setLoadingReturnSpoiled] = useState(false)
@@ -74,8 +83,21 @@ const CollectOtherProducts = () => {
     }
   }, [selectedTeam, businessId, dispatch])
 
-  const hasProducts = assignedProducts.length > 0
+  // Add this useEffect to automatically select the store when only one exists
+  useEffect(() => {
+    if (Array.isArray(store) && store.length === 1) {
+      setSelectedDestinationStore(store[0])
+    } else if (
+      Array.isArray(store) &&
+      store.length > 1 &&
+      !selectedDestinationStore
+    ) {
+      // Optional: reset to null when multiple stores exist and none selected
+      setSelectedDestinationStore(null)
+    }
+  }, [store, selectedDestinationStore])
 
+  const hasProducts = assignedProducts.length > 0
 
   useEffect(() => {
     if (selectedTeam) {
@@ -98,7 +120,8 @@ const CollectOtherProducts = () => {
   const getTeamDisplayName = (team, type) => {
     return type === "vehicle" ? team.number_plate : team.name
   }
-console.log('assigned product ', assignedProducts)
+  console.log("assigned product ", assignedProducts)
+
   const handleSelectTeam = (team, type) => {
     setSelectedTeam(team)
     setSelectedTeamType(type)
@@ -116,21 +139,26 @@ console.log('assigned product ', assignedProducts)
   const handleShowStacked = () => {
     setShowStacked(!showStacked)
   }
-
   const handleReturnAllProducts = () => {
     setLoadingReturnAll(true)
-    const payload = assignedProducts.map((product) => ({ id: product.id }))
-
     api
-      .post("/return-all-assigned-products/", payload)
-      .then(() =>
-        navigate(`/admins/printallcollect-products/${selectedTeam?.id}`, {
+      .post("inventory/collect/all-products/", {
+        from_location_type: selectedTeamType === "shop" ? "SHOP" : "VEHICLE",
+        from_location_id: selectedTeam.id,
+        store_id: selectedDestinationStore.id,
+      })
+      .then((response) => {
+        // Access the receipt_number from the response data
+        const receiptNumber = response.data.summary.receipt_number
+
+        // Update the navigation path to include the receiptNumber
+        navigate(`/admins/afterproductcollect/${receiptNumber}`, {
           state: {
             salesTeamName: getTeamDisplayName(selectedTeam, selectedTeamType),
             salesTeamType: selectedTeamType,
           },
-        }),
-      )
+        })
+      })
       .catch((error) => console.error("Error in product Collection.", error))
       .finally(() => setLoadingReturnAll(false))
   }
@@ -533,6 +561,61 @@ console.log('assigned product ', assignedProducts)
                     : "🚚 Vehicle Team"}
                 </p>
               </div>
+            </div>
+
+            {/* Destination Store Selection */}
+            <div className="mb-4 bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-400">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                📍 Select Destination Store
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                {Array.isArray(store) && store.length === 1
+                  ? "Only one store available - automatically selected"
+                  : "Choose where the cylinders will be returned to"}
+              </p>
+              {!Array.isArray(store) || store.length === 0 ? (
+                <p className="text-gray-500 text-sm">Loading stores...</p>
+              ) : (
+                <div>
+                  <select
+                    value={selectedDestinationStore?.id || ""}
+                    onChange={(e) => {
+                      const storeId = parseInt(e.target.value, 10)
+                      const selected = store.find((s) => s.id === storeId)
+                      setSelectedDestinationStore(selected || null)
+                    }}
+                    className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white text-gray-800 font-medium"
+                    disabled={store.length === 1}
+                  >
+                    <option value="">
+                      {store.length === 1
+                        ? `${store[0].name} (Only store)`
+                        : "Select a store..."}
+                    </option>
+                    {store.length > 1 &&
+                      store.map((storeItem) => {
+                        const locationName =
+                          typeof storeItem.location === "object"
+                            ? storeItem.location?.name || storeItem.location
+                            : storeItem.location
+                        return (
+                          <option key={storeItem.id} value={storeItem.id}>
+                            {storeItem.name}{" "}
+                            {locationName ? `(${locationName})` : ""}
+                          </option>
+                        )
+                      })}
+                  </select>
+                </div>
+              )}
+              {selectedDestinationStore && (
+                <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200 text-sm flex items-center">
+                  <span className="text-green-600 mr-2">✓</span>
+                  <span className="font-semibold text-blue-700">
+                    Destination: {selectedDestinationStore.name}
+                  </span>
+                </div>
+              )}
             </div>
 
             {loading ? (

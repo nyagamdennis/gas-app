@@ -253,7 +253,6 @@ const ProductsActions = () => {
                 title="Assign Products"
                 description="Distribute products to sales groups efficiently"
                 onClick={() => navigate("/products/assign")}
-                
                 gradient="bg-gradient-to-br from-green-500 to-green-700"
               />
 
@@ -263,6 +262,15 @@ const ProductsActions = () => {
                 description="Retrieve products from sales groups"
                 onClick={() => navigate("/store/collectotherproducts")}
                 gradient="bg-gradient-to-br from-amber-500 to-amber-700"
+              />
+              <ActionCard
+                icon="➕"
+                title="Add Products"
+                description="Add products to store"
+                onClick={() =>
+                  navigate("/store/othersproductslist/add/")
+                }
+                gradient="bg-gradient-to-br from-purple-500 to-purple-700"
               />
             </div>
           </main>

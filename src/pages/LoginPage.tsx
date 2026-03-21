@@ -67,10 +67,7 @@ const LoginPage = () => {
             await dispatch(
               setSubscriptionFromLogin(
                 loginData
-                // {
-                // company_id: loginData.company_id,
-                // subscription: loginData.subscription,
-              // }
+               
             ),
             )
             console.log("Subscription data stored successfully")

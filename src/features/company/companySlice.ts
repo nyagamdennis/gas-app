@@ -1,7 +1,5 @@
 /* eslint-disable prettier/prettier */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import Cookies from "cookies-js"
 import api from "../../../utils/api"
 
 

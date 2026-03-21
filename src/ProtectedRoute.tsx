@@ -49,6 +49,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       },
   )
 
+  
+  console.log('is expired:', isExpired)
+
   console.log("🔍 ProtectedRoute Debug:", {
     isAuthenticated,
     userRole,
@@ -80,15 +83,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // if (!isExemptRoute) {
-    if (!emailIsVerified) {
-      console.log("📧 Email not verified, redirecting to email verification")
-      return <Navigate to="/verify-email" state={{ from: location }} replace />
-    }
+  if (!emailIsVerified) {
+    console.log("📧 Email not verified, redirecting to email verification")
+    return <Navigate to="/verify-email" state={{ from: location }} replace />
+  }
 
-    if (!phoneIsVerified) {
-      console.log("📱 Phone not verified, redirecting to phone verification")
-      return <Navigate to="/verify-phone" state={{ from: location }} replace />
-    }
+  if (!phoneIsVerified) {
+    console.log("📱 Phone not verified, redirecting to phone verification")
+    return <Navigate to="/verify-phone" state={{ from: location }} replace />
+  }
   // }
 
   // Define employee and admin roles
@@ -145,8 +148,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/subscribe" replace />
   }
 
+  if (isAdmin && !businessId && subscriptionPlan && location.pathname !== "/settings") {
+    return <Navigate to="/settings" replace />
+  }
+
   if (
-    isAdmin && businessId &&
+    isAdmin &&
+    businessId &&
     (!subscriptionPlan || isExpired) &&
     location.pathname !== "/subscribe" &&
     location.pathname !== "/settings"

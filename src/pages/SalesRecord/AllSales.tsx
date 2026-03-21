@@ -501,7 +501,7 @@ const AllSales = () => {
               </div>
 
               {/* Other Products Card */}
-              <div className="bg-white rounded-2xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-all duration-200">
+              {/* <div className="bg-white rounded-2xl shadow-lg border-l-4 border-green-500 hover:shadow-xl transition-all duration-200">
                 <div className="p-5">
                   <div className="flex items-center mb-4">
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
@@ -556,7 +556,7 @@ const AllSales = () => {
                     </button>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Sales Teams Section */}
@@ -581,7 +581,7 @@ const AllSales = () => {
                           handleNavigate(
                             `/admins/salesdata/${team.id}/${encodeURIComponent(
                               team.name,
-                            )}`,
+                            )}/shop`,
                           )
                         }
                         className="w-full px-4 py-4 flex items-center hover:bg-gray-50 transition-colors"
@@ -628,13 +628,11 @@ const AllSales = () => {
                       <button
                         onClick={() =>
                           handleNavigate(
-                            `/admins/vehicle-sales/${
+                            `/admins/salesdata/${
                               vehicle.id
                             }/${encodeURIComponent(
-                              vehicle.name ||
-                                vehicle.vehicleNumber ||
-                                "Vehicle",
-                            )}`,
+                              vehicle.number_plate,
+                            )}/vehicle`,
                           )
                         }
                         className="w-full px-4 py-4 flex items-center hover:bg-gray-50 transition-colors"
@@ -1370,7 +1368,9 @@ const AllSales = () => {
                         key={team.id}
                         onClick={() =>
                           handleNavigate(
-                            `/admins/salesdata/${team.id}/${team.name}/shop`,
+                            `/admins/salesdata/${team.id}/${team.name}/${
+                              team.type_of_sales_team?.name || "shop"
+                            }`,
                           )
                         }
                         // navigate(teamId ? `/admins/salesdata/${teamId}/${teamName}/${teamType}` : "/sales")
