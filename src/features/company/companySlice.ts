@@ -36,6 +36,7 @@ export const fetchBusiness = createAsyncThunk<Business[], void, {}>(
     "business/fetchBusiness",
     async () => {
       const response = await api.get('/company/');
+      // console.log("Business data: ", response.data);
       return response.data;
     }
   );
