@@ -126,7 +126,7 @@ const SalesList = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border">
+    <div className="bg-white rounded-xl shadow-sm border mb-28">
       {/* Header - Mobile Optimized */}
       <div className="p-3 border-b">
         <div className="flex justify-between items-center">
