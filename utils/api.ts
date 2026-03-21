@@ -14,6 +14,11 @@ let refreshPromise: Promise<any> | null = null
 // REQUEST INTERCEPTOR
 // ======================
 api.interceptors.request.use(async (config) => {
+  if (config.headers) {
+    config.headers["ngrok-skip-browser-warning"] = "true"
+  }
+
+  
   const token = store.getState().auth.accessToken
 
   if (!token || !config.headers) return config
