@@ -901,10 +901,10 @@ const MpesaVerification = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-1">
           <button
             onClick={handleVerifyAll}
-            className="px-4 text-xs py-1 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50"
+            className="px-1 text-xs py-1 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50"
             disabled={
               isFinalized || mpesaVerification.unverifiedPayments?.length === 0
             }
@@ -913,7 +913,7 @@ const MpesaVerification = ({
           </button>
           <button
             onClick={handleUnverifyAll}
-            className="px-4 text-xs py-1 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50"
+            className="px-1 text-xs py-1 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 disabled:opacity-50"
             disabled={
               isFinalized || !mpesaVerification.verifiedPayments?.length
             }
@@ -922,7 +922,7 @@ const MpesaVerification = ({
           </button>
           <button
             onClick={onMpesaReconcile}
-            className="flex-1 px-4 text-xs py-1 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
+            className=" px-1 text-xs py-1 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50"
             disabled={isFinalized}
           >
             Record Reconciliation
