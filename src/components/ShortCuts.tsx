@@ -16,9 +16,11 @@ const ShortCuts = () => {
     dispatch(fetchDebtors())
   }, [dispatch])
 
-  useEffect(() => {
-    dispatch(fetchCustomers())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(fetchCustomers())
+  // }, [dispatch])
+
+
   const retail_customers = customers.filter(
     (retails) => retails.sales === "RETAIL",
   )

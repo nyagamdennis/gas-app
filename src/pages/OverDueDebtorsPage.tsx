@@ -39,7 +39,7 @@ const OverDueDebtorsPage = () => {
 
     useEffect(() => {
         dispatch(fetchDebtors());
-        dispatch(fetchCustomers());
+        // dispatch(fetchCustomers());
     }, [dispatch]);
 
 

@@ -43,9 +43,9 @@ const OverdueDebtors = () => {
       dispatch(fetchDebtors());
     }, [dispatch]);
   
-    useEffect(() => {
-      dispatch(fetchCustomers())
-    }, [dispatch])
+    // useEffect(() => {
+    //   dispatch(fetchCustomers())
+    // }, [dispatch])
   
 
     const handleClickOpen = (debtor:any) => {

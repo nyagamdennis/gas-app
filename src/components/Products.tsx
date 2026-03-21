@@ -19,9 +19,9 @@ const Products = () => {
   const dispatch = useAppDispatch()
 
 
-  useEffect(() => {
-    dispatch(fetchCustomers())
-  }, [dispatch])
+  // useEffect(() => {
+  //   dispatch(fetchCustomers())
+  // }, [dispatch])
 
   useEffect(() => {
     dispatch(fetchDebtors())
