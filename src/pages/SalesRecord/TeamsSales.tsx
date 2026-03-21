@@ -3386,7 +3386,7 @@ const TeamsSales = () => {
 
               {/* Sales List */}
 
-              {activeSection === "sales" && (
+              {activeSection  === "sales" && (
                 <SalesList
                   sales={filteredSales}
                   batchMode={batchMode}
