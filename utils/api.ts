@@ -14,9 +14,9 @@ let refreshPromise: Promise<any> | null = null
 // REQUEST INTERCEPTOR
 // ======================
 api.interceptors.request.use(async (config) => {
-  // if (config.headers) {
-  //   config.headers["ngrok-skip-browser-warning"] = "true"
-  // }
+  if (config.headers) {
+    config.headers["ngrok-skip-browser-warning"] = "69420"
+  }
 
 
   const token = store.getState().auth.accessToken
