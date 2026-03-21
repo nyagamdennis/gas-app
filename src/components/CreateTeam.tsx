@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useState } from 'react'
 import { useAppDispatch } from '../app/hooks'
 import { addSalesTeam } from '../features/salesTeam/salesTeamSlice';

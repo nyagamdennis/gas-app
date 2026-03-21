@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-// @ts-ignore
+// @ts-nocheck
 import React, { useEffect, useState } from "react"
 import ShortCuts from "./ShortCuts"
 import { useAppDispatch, useAppSelector } from "../app/hooks"

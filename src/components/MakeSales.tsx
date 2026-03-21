@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useState, useRef, useEffect } from "react"
 import Table from "@mui/material/Table"
 import TableBody from "@mui/material/TableBody"

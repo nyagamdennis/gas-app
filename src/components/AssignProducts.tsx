@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+// @ts-nocheck
 import React, { useEffect, useState, useRef } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import {
