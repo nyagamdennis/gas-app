@@ -59,6 +59,7 @@ import {
   updateThisStoreCylinders,
 } from "../../features/store/storeCylindersSlice"
 import { set } from "cookies"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const StoreCylinders = () => {
   const theme = useTheme()
@@ -102,6 +103,14 @@ const StoreCylinders = () => {
   const [emptyCylindersStock, setEmptyCylindersStock] = useState(0)
   const [spoiledCylindersStock, setSpoiledCylindersStock] = useState(0)
   const [gasType, setGasType] = useState<string>("")
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const [
     anotherCylinderMinWholeSaleSelling,
@@ -195,15 +204,19 @@ const StoreCylinders = () => {
     }
   }, [businessId, dispatch])
 
-   useEffect(() => {
-     if (urlStoreId) {
-       // If ID is in URL, use it immediately
-       setStoreId(urlStoreId)
-     } else if (fetchingStoreStatus === "succeeded" && store.length === 1 && !storeId) {
-       // If NO ID in URL, but stores are loaded, pick the first one as default
-       setStoreId(store[0].id.toString())
-     }
-   }, [urlStoreId, fetchingStoreStatus, store])
+  useEffect(() => {
+    if (urlStoreId) {
+      // If ID is in URL, use it immediately
+      setStoreId(urlStoreId)
+    } else if (
+      fetchingStoreStatus === "succeeded" &&
+      store.length === 1 &&
+      !storeId
+    ) {
+      // If NO ID in URL, but stores are loaded, pick the first one as default
+      setStoreId(store[0].id.toString())
+    }
+  }, [urlStoreId, fetchingStoreStatus, store])
 
   // useEffect(() => {
   //   if (fetchingStoreStatus === "succeeded" && store.length === 1 && !storeId) {
@@ -498,7 +511,15 @@ const StoreCylinders = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <main className="flex-grow m-2 p-1">
             {/* Header Section */}
             <div className="bg-white p-4 rounded-lg shadow-md mb-4">
@@ -1257,6 +1278,5 @@ const StoreCylinders = () => {
     </div>
   )
 }
-
 
 export default StoreCylinders

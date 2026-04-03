@@ -61,6 +61,7 @@ import {
 } from "../../features/store/storeSlice"
 import planStatus from "../../features/planStatus/planStatus"
 import { fetchSales, retriveSales } from "../../features/sales/salesSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const AllSales = () => {
   const dispatch = useAppDispatch()
@@ -68,6 +69,17 @@ const AllSales = () => {
   const [initialLoad, setInitialLoad] = useState(false)
   const navigate = useNavigate()
 
+   
+     // Advanced Features
+     const [batchMode, setBatchMode] = useState(false)
+     const [selectedBatchItems, setSelectedBatchItems] = useState([])
+     const [lastUpdated, setLastUpdated] = useState(null)
+     const [autoRefresh, setAutoRefresh] = useState(false)
+     const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+     const [dataVersion, setDataVersion] = useState(0)
+   
+
+     
   const {
     isPro,
     isTrial,
@@ -107,7 +119,13 @@ const AllSales = () => {
   >(null)
 
   const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+  const salesVehiclesOnly = useAppSelector(selectAllSalesTeamVehicle)
+
+  const allSalesVehicles = salesVehiclesOnly.filter(
+    (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+  )
+
+
   const allStores = useAppSelector(selectAllStore)
   const storeStatus = useAppSelector(getStoreStatus)
   const [loading, setLoading] = useState(false)
@@ -357,6 +375,15 @@ const AllSales = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <ToastContainer />
+       {/* Real-time Indicator */}
+            <div className="prevent-overflow">
+              <RealTimeIndicator
+                enabled={autoRefresh}
+                lastUpdated={lastUpdated}
+                dataVersion={dataVersion}
+                onToggle={() => setAutoRefresh(!autoRefresh)}
+              />
+            </div>
       {isMobile ? (
         <div className="flex flex-col min-h-screen">
           <Navbar

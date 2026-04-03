@@ -74,7 +74,6 @@ if (userCookie && accessTokenCookie && accessRefreshCookie) {
 
 
   } catch (e) {
-    console.log("l")
   }
 }
 
@@ -188,6 +187,8 @@ export const authSlice = createSlice({
       cookies.expire("user")
       cookies.expire("accessToken")
       cookies.expire("refreshToken")
+
+      sessionStorage.removeItem("notifications")
     },
   },
 })

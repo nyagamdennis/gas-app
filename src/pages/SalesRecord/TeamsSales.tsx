@@ -319,10 +319,10 @@ const TeamsSales = () => {
   const [error, setError] = useState(null)
   const [salesData, setSalesData] = useState([])
   const [statistics, setStatistics] = useState(null)
+  console.log('sales sata', statistics)
   const [teamInfo, setTeamInfo] = useState(null)
   const [employees, setEmployees] = useState([])
   const [filteredSales, setFilteredSales] = useState([])
-  // console.log("filtered sales ", filteredSales)
   const [expenses, setExpenses] = useState([])
   const [employeeExpenses, setEmployeeExpenses] = useState([])
   const [companyExpenses, setCompanyExpenses] = useState([])
@@ -334,6 +334,7 @@ const TeamsSales = () => {
   const [selectedEmployee, setSelectedEmployee] = useState("all")
   const [selectedSalespersonType, setSelectedSalespersonType] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
+  const [reconciling, setReconciling] = React.useState(false)
 
   // Sales Categorization
   const [cylinderSales, setCylinderSales] = useState([])
@@ -368,12 +369,15 @@ const TeamsSales = () => {
   const [realTimeEnabled, setRealTimeEnabled] = useState(false)
   const [dataVersion, setDataVersion] = useState(0)
 
+  const [totalSalesDebt, setTotalSalesDebt] = useState(0)
   const [hasCashReconciliation, setHasCashReconciliation] = useState(false)
   const [hasMpesaReconciliation, setHasMpesaReconciliation] = useState(false)
 
   const [startDate, setStartDate] = useState<string>(() => {
     return getNairobiDateString() // Always get Nairobi date
   })
+
+
 
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [formattedDate, setFormattedDate] = useState("")
@@ -390,6 +394,8 @@ const TeamsSales = () => {
     verifiedByEmployeeId: "",
     notes: "",
   })
+
+  const [isReconciling, setIsReconciling] = useState(false);
 
   const [mpesaVerification, setMpesaVerification] = useState({
     expectedMpesa: 0,
@@ -504,7 +510,6 @@ const TeamsSales = () => {
       }
       return date.toLocaleDateString("en-US", options[format] || options.full)
     } catch (error) {
-      console.error("Error formatting date:", error)
       return "Invalid Date"
     }
   }, [])
@@ -737,6 +742,7 @@ const TeamsSales = () => {
       let mixedCount = 0
       let cylinderAmount = 0
       let regularAmount = 0
+      let totalDebt = 0
 
       // Track hourly sales for peak hour calculation
       const hourlySales = {}
@@ -864,25 +870,23 @@ const TeamsSales = () => {
 
   const canFinalizeByReconciliation = cashSideOk && mpesaSideOk && !isFinalized
   // Check Existing Analysis - IMPROVED VERSION
-  const checkExistingAnalysis = useCallback(async () => {
+  const checkExistingAnalysis = useCallback(async (date: string) => {
     try {
       const response = await api.get("/sales/daily-analyses/", {
         params: {
           team_type: decodedTeamType.toUpperCase(),
           team_id: teamId,
-          analysis_date: startDate,
+          analysis_date: date,
         },
       })
 
       // Check if response and response.data exist
       if (!response) {
-        console.warn("No response from checkExistingAnalysis API")
         return null
       }
 
       // Check if response.data exists
       if (!response.data) {
-        console.warn("Response data is undefined")
         return null
       }
 
@@ -915,18 +919,11 @@ const TeamsSales = () => {
         return null
       }
 
-      console.error("Error checking analysis:", error)
       // Log more details about the error
       if (error.response) {
-        console.error(
-          "Error response:",
-          error.response.status,
-          error.response.data,
-        )
+       
       } else if (error.request) {
-        console.error("No response received:", error.request)
       } else {
-        console.error("Error setting up request:", error.message)
       }
       return null
     }
@@ -954,10 +951,9 @@ const TeamsSales = () => {
           return await checkExistingAnalysis(analysisDate)
         }
 
-        toast.success("Daily analysis completed!")
+        // toast.success("Daily analysis completed!")
         return response.data
       } catch (error) {
-        console.error("Analysis error:", error)
 
         if (error.response?.data?.detail?.includes("already finalized")) {
           toast.info("Data is already finalized for this date")
@@ -1112,19 +1108,19 @@ const TeamsSales = () => {
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
-      console.error("Error assigning shortage/excess:", error)
       toast.error(`Failed to assign ${isShortage() ? "shortage" : "excess"}`)
     }
   }
 
+
   // Add this function near fetchMpesaReconciliation
-  const fetchMpesaReconciliation = useCallback(async () => {
+  const fetchMpesaReconciliation = useCallback(async (date: string) => {
     try {
       const response = await api.get("/sales/mpesa-reconciliation/", {
         params: {
           team_id: teamId,
           team_type: decodedTeamType,
-          date: startDate,
+          date: date,
         },
       })
 
@@ -1175,29 +1171,28 @@ const TeamsSales = () => {
       }
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        console.log("No M-Pesa reconciliation found")
         setHasMpesaReconciliation(false)
         setMpesaReconciliationRecord(null)
       } else {
-        console.error("Fetch M-Pesa reconciliation error:", error)
       }
     }
   }, [teamId, decodedTeamType, startDate])
 
+
+
   // Define fetchCashReconciliation with useCallback
-  const fetchCashReconciliation = useCallback(async () => {
+  const fetchCashReconciliation = useCallback(async (date: string) => {
     try {
       const response = await api.get("/sales/cash-reconciliation/", {
         params: {
           team_id: teamId,
           team_type: decodedTeamType,
-          date: startDate,
+          date: date,
         },
       })
 
       if (response.data && response.data.length > 0) {
         const reconciliationData = response.data[0]
-
         setCashVerification((prev) => ({
           ...prev,
           actualCash: parseFloat(reconciliationData.actual_cash) || 0,
@@ -1214,11 +1209,9 @@ const TeamsSales = () => {
       }
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        console.log("No cash reconciliation found")
         setHasCashReconciliation(false)
         setCashReconciliationRecord(null)
       } else {
-        console.error("Fetch reconciliation error:", error)
       }
     }
   }, [teamId, decodedTeamType, startDate])
@@ -1240,7 +1233,6 @@ const TeamsSales = () => {
       toast.success("M-Pesa reconciliation saved")
       return response.data
     } catch (error) {
-      console.error("Error saving M-Pesa reconciliation:", error)
       toast.error("Failed to save M-Pesa reconciliation")
       throw error
     }
@@ -1250,7 +1242,6 @@ const TeamsSales = () => {
   const loadDataForDate = useCallback(
     async (date, isDateChange = false, forceRefresh = false) => {
       if (!date || !teamId || !decodedTeamType) {
-        console.error("Missing required parameters for loadDataForDate")
         return
       }
 
@@ -1289,19 +1280,15 @@ const TeamsSales = () => {
 
               // Fetch cash reconciliation data even when using cache
               try {
-                await fetchCashReconciliation()
+                await fetchCashReconciliation(date)
               } catch (reconError) {
-                console.warn("Failed to fetch cash reconciliation:", reconError)
               }
 
               // Add this to fetch M-Pesa reconciliation
               try {
-                await fetchMpesaReconciliation()
+                await fetchMpesaReconciliation(date)
               } catch (mpesaReconError) {
-                console.warn(
-                  "Failed to fetch M-Pesa reconciliation:",
-                  mpesaReconError,
-                )
+                
               }
 
               // Fetch daily analysis for this date so finalization state is correct
@@ -1315,10 +1302,7 @@ const TeamsSales = () => {
                   setIsFinalized(false)
                 }
               } catch (analysisError) {
-                console.warn(
-                  "Failed to fetch analysis from cache path:",
-                  analysisError,
-                )
+                
                 setDailySettlement(null)
                 setIsFinalized(false)
               }
@@ -1370,10 +1354,7 @@ const TeamsSales = () => {
           try {
             analysisData = await analyzeDailySales(date)
           } catch (analysisError) {
-            console.warn(
-              "Daily analysis failed, checking existing:",
-              analysisError,
-            )
+            
             analysisData = await checkExistingAnalysis(date)
           }
 
@@ -1385,7 +1366,6 @@ const TeamsSales = () => {
             setIsFinalized(false)
           }
         } catch (analysisError) {
-          console.warn("Failed to get analysis data:", analysisError)
           setDailySettlement(null)
           setIsFinalized(false)
         }
@@ -1407,15 +1387,13 @@ const TeamsSales = () => {
 
         // Fetch cash reconciliation data after calculations
         try {
-          await fetchCashReconciliation()
+          await fetchCashReconciliation(date)
         } catch (reconError) {
-          console.warn("Failed to fetch cash reconciliation:", reconError)
         }
         // Fetch M-Pesa reconciliation data after calculations
         try {
-          await fetchMpesaReconciliation()
+          await fetchMpesaReconciliation(date)
         } catch (reconError) {
-          console.warn("Failed to fetch M-Pesa reconciliation:", reconError)
         }
 
         // Update UI
@@ -1433,9 +1411,8 @@ const TeamsSales = () => {
         localStorage.setItem(cacheKey, JSON.stringify(cacheData))
 
         setError(null)
-        toast.success("Data loaded successfully")
+        // toast.success("Data loaded successfully")
       } catch (error) {
-        console.error("Error loading data:", error)
         toast.error("Failed to load data")
         setError({
           message: "Failed to load data",
@@ -1451,7 +1428,7 @@ const TeamsSales = () => {
       decodedTeamType,
       dispatch,
       locationFilter,
-      startDate,
+
       categorizeSales,
       categorizeExpenses,
       calculateExpectedPayments,
@@ -1461,9 +1438,9 @@ const TeamsSales = () => {
       analyzeDailySales,
       checkExistingAnalysis,
       fetchCashReconciliation, // Make sure to add this to the dependency array
+      fetchMpesaReconciliation,
     ],
   )
-
   // Add these functions to your TeamsSales component
   const verifyMpesaPayment = useCallback(
     async (paymentId, verify = true) => {
@@ -1486,7 +1463,6 @@ const TeamsSales = () => {
           return response.data
         }
       } catch (error) {
-        console.error("Error updating payment verification:", error)
         toast.error(`Failed to ${verify ? "verify" : "unverify"} payment`)
         throw error
       }
@@ -1495,7 +1471,6 @@ const TeamsSales = () => {
   )
 
   const unverifyMpesaPayment = useCallback(async () => {
-    console.log("Unverifying all payments for the selected date")
     try {
       // Call the API to unverify all payments for the selected date
       const response = await api.post(
@@ -1514,7 +1489,6 @@ const TeamsSales = () => {
         toast.error("Failed to unverify all payments for the selected date")
       }
     } catch (error) {
-      console.error("Error unverifying all payments for selected date:", error)
       toast.error("Failed to unverify all payments for the selected date")
     }
   }, [startDate, loadDataForDate])
@@ -1535,7 +1509,6 @@ const TeamsSales = () => {
         toast.error("Failed to verify all payments for the selected date")
       }
     } catch (error) {
-      console.error("Error verifying all payments for selected date:", error)
       toast.error("Failed to verify all payments for the selected date")
     }
   }, [startDate, loadDataForDate])
@@ -1547,7 +1520,6 @@ const TeamsSales = () => {
       await loadDataForDate(startDate, false, true)
       toast.success("Data refreshed successfully!")
     } catch (error) {
-      console.error("Refresh error:", error)
       toast.error("Failed to refresh data")
     } finally {
       setRefreshing(false)
@@ -1572,7 +1544,6 @@ const TeamsSales = () => {
       setStartDate(newDate)
       loadDataForDate(newDate, true)
     } catch (error) {
-      console.error("Error going to previous day:", error)
       toast.error("Failed to navigate to previous day")
     }
   }, [startDate, loadDataForDate, resetDateSpecificState])
@@ -1593,7 +1564,6 @@ const TeamsSales = () => {
       setStartDate(newDate)
       loadDataForDate(newDate, true)
     } catch (error) {
-      console.error("Error going to next day:", error)
       toast.error("Failed to navigate to next day")
     }
   }, [startDate, loadDataForDate, resetDateSpecificState])
@@ -1614,7 +1584,6 @@ const TeamsSales = () => {
         toast.info("You're already viewing today's data")
       }
     } catch (error) {
-      console.error("Error going to today:", error)
       toast.error("Failed to navigate to today")
     }
   }, [startDate, loadDataForDate, resetDateSpecificState])
@@ -1672,7 +1641,6 @@ const TeamsSales = () => {
 
       setFilteredSales(filtered)
     } catch (error) {
-      console.error("Error applying filters:", error)
       setFilteredSales(Array.isArray(salesData) ? salesData : [])
     }
   }, [
@@ -1742,7 +1710,6 @@ const TeamsSales = () => {
 
         toast.success(`Data exported successfully as ${format.toUpperCase()}`)
       } catch (error) {
-        console.error("Export error:", error)
         toast.error("Failed to export data")
       }
     },
@@ -1751,6 +1718,7 @@ const TeamsSales = () => {
 
   // Cash Reconciliation
   const performCashReconciliation = useCallback(async () => {
+    setIsReconciling(true)
     try {
       const response = await api.post("/sales/cash-reconciliation/", {
         company_id: companyId,
@@ -1764,12 +1732,14 @@ const TeamsSales = () => {
       setHasCashReconciliation(true)
       setCashReconciliationRecord(response.data)
       toast.success("Cash reconciliation completed")
+      setIsReconciling(false)
       return response.data
+
     } catch (error) {
-      console.error("Reconciliation error:", error)
       setHasCashReconciliation(false)
       setCashReconciliationRecord(null)
       toast.error("Cash reconciliation failed")
+      setIsReconciling(false)
       throw error
     }
   }, [teamId, decodedTeamType, startDate, cashVerification])
@@ -1791,7 +1761,6 @@ const TeamsSales = () => {
       toast.success("M-Pesa reconciliation completed")
       return response.data
     } catch (error) {
-      console.error("Reconciliation error:", error)
       setHasMpesaReconciliation(false)
       setMpesaReconciliationRecord(null)
       toast.error("M-Pesa reconciliation failed")
@@ -1844,7 +1813,6 @@ const TeamsSales = () => {
 
       return response.data
     } catch (error) {
-      console.error("Settlement error:", error)
       toast.error("Failed to finalize settlement")
       throw error
     }
@@ -1975,7 +1943,6 @@ const TeamsSales = () => {
   }, [])
 
   // Handle Expense Assignment
-  // console.log("expenses before assignment ", expenses)
   const handleAssignExpense = useCallback((expense) => {
     setSelectedExpense(expense)
     setExpenseAssignment({
@@ -2029,7 +1996,6 @@ const TeamsSales = () => {
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
-      console.error("Error assigning expense:", error)
 
       // Check for specific error messages from the backend
       if (error.response?.data?.error) {
@@ -2087,8 +2053,7 @@ const TeamsSales = () => {
       // OR if you're still using the old record_deficit endpoint:
       // const endpoint = `/sales/daily-analyses/${dailySettlement.id}/record_deficit/`;
 
-      console.log("Sending payload to:", endpoint)
-      console.log("Payload:", payload)
+  
 
       const response = await api.post(endpoint, payload)
 
@@ -2108,11 +2073,9 @@ const TeamsSales = () => {
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
-      console.error("Error recording item deficit/excess:", error)
 
       // Provide more specific error message
       if (error.response) {
-        console.error("Error response:", error.response.data)
         if (error.response.status === 404) {
           toast.error(
             "Daily analysis not found. Please analyze daily sales first.",
@@ -2168,7 +2131,6 @@ const TeamsSales = () => {
         },
       )
 
-      // console.log("Deficits API Response:", response)
 
       if (response.data?.deficits) {
         setDeficitData(response.data.deficits)
@@ -2176,9 +2138,7 @@ const TeamsSales = () => {
         setDeficitData([])
       }
 
-      // console.log("Deficit/Excess Data:", response.data)
     } catch (error) {
-      console.error("Error fetching deficits/excesses:", error)
       toast.error("Failed to fetch item differences")
     }
   }
@@ -2225,7 +2185,6 @@ const TeamsSales = () => {
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
-      console.error("Error updating deficit:", error)
       toast.error("Failed to update deficit")
     }
   }
@@ -2255,7 +2214,6 @@ const TeamsSales = () => {
       toast.success("Cash verification recorded!")
       return response.data
     } catch (error) {
-      console.error("Verification error:", error)
       toast.error("Failed to record verification")
       throw error
     }
@@ -2309,7 +2267,6 @@ const TeamsSales = () => {
             toast.info(`Batch operation: ${operation}`)
         }
       } catch (error) {
-        console.error("Batch operation error:", error)
         toast.error("Failed to perform batch operation")
       }
     },
@@ -2385,7 +2342,6 @@ const TeamsSales = () => {
           // Load initial data
           await loadDataForDate(startDate, false, true)
         } catch (error) {
-          console.error("Initialization error:", error)
           setError({
             message: "Failed to initialize",
             details: error.message || "Please refresh the page",
@@ -2527,7 +2483,6 @@ const TeamsSales = () => {
         await loadDataForDate(startDate, false, true)
       }
     } catch (error) {
-      console.error("Error reassigning expense:", error)
       toast.error("Failed to reassign expense")
     }
   }
@@ -2555,7 +2510,6 @@ const TeamsSales = () => {
 
         // Data will be refreshed by the parent
       } catch (error) {
-        console.error("Error verifying payments by receipt:", error)
         toast.error("Failed to verify some payments")
       }
     }
@@ -2581,7 +2535,6 @@ const TeamsSales = () => {
         toast.success(`Unverified ${matchingPayments.length} payment(s)`)
         setSearchReceipt("")
       } catch (error) {
-        console.error("Error unverifying payments by receipt:", error)
         toast.error("Failed to unverify some payments")
       }
     }
@@ -3386,7 +3339,7 @@ const TeamsSales = () => {
 
               {/* Sales List */}
 
-              {activeSection  === "sales" && (
+              {activeSection === "sales" && (
                 <SalesList
                   sales={filteredSales}
                   batchMode={batchMode}
@@ -3446,6 +3399,7 @@ const TeamsSales = () => {
                     onAssignShortage={handleAssignCashShortage}
                     reconciliationRecord={cashReconciliationRecord}
                     isFinalized={isFinalized}
+                    isReconciling={isReconciling}
                   />
                   <MpesaVerification
                     mpesaVerification={mpesaVerification}
@@ -3547,7 +3501,7 @@ const TeamsSales = () => {
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-gray-600">Total Debt</p>
                       <p className="text-lg font-bold text-red-600">
-                        <FormattedAmount amount={statistics?.total_debt || 0} />
+                        <FormattedAmount amount={statistics?.total_debt_remaining || 0} />
                       </p>
                     </div>
                   </div>
@@ -3622,6 +3576,7 @@ const TeamsSales = () => {
                   onReconcile={performCashReconciliation}
                   onAssignShortage={handleAssignCashShortage}
                   isFinalized={isFinalized}
+                  isReconciling ={isReconciling}
                   mobile={true}
                 />
                 <MpesaVerification
@@ -3757,7 +3712,6 @@ const TeamsSales = () => {
         employees={employees}
         onApply={(filters) => {
           // Apply advanced filters
-          console.log("Applying filters:", filters)
         }}
       />
 

@@ -28,7 +28,7 @@ interface ProtectedRouteProps {
 }
 
 // Routes that should be accessible even without verification
-const VERIFICATION_EXEMPT_ROUTES = ["/verify-email", "/verify-phone", "/logout"]
+const VERIFICATION_EXEMPT_ROUTES = ["/verify-email", "/logout"]
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -90,7 +90,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (!phoneIsVerified) {
     console.log("📱 Phone not verified, redirecting to phone verification")
-    return <Navigate to="/verify-phone" state={{ from: location }} replace />
+    return <Navigate to="/verify-email" state={{ from: location }} replace />
   }
   // }
 

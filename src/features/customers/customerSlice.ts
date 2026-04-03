@@ -37,65 +37,62 @@ const initialState: CustomersState = {
   currentPage: 1,
 }
 
-
 export const fetchCustomers = createAsyncThunk<
   any,
-  { page?: number; pageSize?: number },
+  { page?: number; pageSize?: number; type?: string },
   { rejectValue: string }
 >("customers/fetchCustomers", async (params, { rejectWithValue }) => {
-  const { page = 1, pageSize = 10 } = params;
-  const offset = (page - 1) * pageSize;
+  console.log("Fetching customers with params:", params)
+  const { page = 1, type, pageSize = 10 } = params
+  const offset = (page - 1) * pageSize
 
   try {
-    const response = await api.get(`/customers/?page=${page}&limit=${pageSize}&offset=${offset}`);
-    return response.data;
+    const response = await api.get(
+      `/customers/?page=${page}&limit=${pageSize}&offset=${offset}&type=${type}`,
+    )
+    return response.data
   } catch (error: any) {
-    return rejectWithValue("Failed to fetch customers.");
+    return rejectWithValue("Failed to fetch customers.")
   }
 })
-
-
 
 export const addCustomer = createAsyncThunk<
   any,
   { name: string; phone: string; location: { name: string }; sales: string },
   { rejectValue: string }
->(
-  "customers/addCustomer",
-  async (formData, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/customer/", formData);
-      return response.data;
-    } catch (error: any) {
-      if (error.response && error.response.data) {
-        const data = error.response.data;
+>("customers/addCustomer", async (formData, { rejectWithValue }) => {
+  try {
+    const response = await api.post("/customer/", formData)
+    return response.data
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      const data = error.response.data
 
-        // 🧠 Extract a clean message:
-        let message = "Failed to add customer.";
+      // 🧠 Extract a clean message:
+      let message = "Failed to add customer."
 
-        if (typeof data === "string") {
-          message = data;
-        } else if (data.error) {
-          message = data.error;
-        } else if (data.detail) {
-          message = data.detail;
-        } else if (Array.isArray(data)) {
-          message = data.join(" ");
-        } else if (typeof data === "object") {
-          // For field-level errors like { phone: ["message"], location: ["message"] }
-          const firstKey = Object.keys(data)[0];
-          const firstValue = data[firstKey];
-          if (Array.isArray(firstValue)) message = firstValue.join(" ");
-          else if (typeof firstValue === "string") message = firstValue;
-        }
-
-        return rejectWithValue(message);
+      if (typeof data === "string") {
+        message = data
+      } else if (data.error) {
+        message = data.error
+      } else if (data.detail) {
+        message = data.detail
+      } else if (Array.isArray(data)) {
+        message = data.join(" ")
+      } else if (typeof data === "object") {
+        // For field-level errors like { phone: ["message"], location: ["message"] }
+        const firstKey = Object.keys(data)[0]
+        const firstValue = data[firstKey]
+        if (Array.isArray(firstValue)) message = firstValue.join(" ")
+        else if (typeof firstValue === "string") message = firstValue
       }
 
-      return rejectWithValue("Failed to add customer. Please try again.");
+      return rejectWithValue(message)
     }
+
+    return rejectWithValue("Failed to add customer. Please try again.")
   }
-);
+})
 
 // export const addCustomer = createAsyncThunk<void, {}>(
 //   "customers/addCustomer",
@@ -109,34 +106,33 @@ const customersSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers(builder) {
+    builder.addCase(fetchCustomers.pending, (state) => {
+      state.status = "loading"
+    })
     builder
-      .addCase(fetchCustomers.pending, (state) => {
+      .addCase(fetchCustomers.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.customers = action.payload.results
+        state.nextPage = action.payload.next
+        state.previousPage = action.payload.previous
+        state.count = action.payload.count
+      })
+
+      .addCase(fetchCustomers.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = action.error.message || "Failed to fetch customers"
+      })
+      .addCase(addCustomer.pending, (state) => {
         state.status = "loading"
       })
-     builder
-       .addCase(fetchCustomers.fulfilled, (state, action) => {
-         state.status = "succeeded"
-         state.customers = action.payload.results
-         state.nextPage = action.payload.next
-         state.previousPage = action.payload.previous
-         state.count = action.payload.count
-       })
-
-       .addCase(fetchCustomers.rejected, (state, action) => {
-         state.status = "failed"
-         state.error = action.error.message || "Failed to fetch customers"
-       })
-       .addCase(addCustomer.pending, (state) => {
-         state.status = "loading"
-       })
-       .addCase(addCustomer.fulfilled, (state, action) => {
-         state.status = "succeeded"
-         state.customers.push(action.payload)
-       })
-       .addCase(addCustomer.rejected, (state, action) => {
-         state.status = "failed"
-         state.error = (action.payload as string) || "Failed to create customer"
-       })
+      .addCase(addCustomer.fulfilled, (state, action) => {
+        state.status = "succeeded"
+        state.customers.push(action.payload)
+      })
+      .addCase(addCustomer.rejected, (state, action) => {
+        state.status = "failed"
+        state.error = (action.payload as string) || "Failed to create customer"
+      })
   },
 })
 
@@ -154,10 +150,7 @@ export const selectPagination = (state: any) => ({
   currentPage: state.customers.currentPage,
 })
 
-
 export const customerCount = (state: { customers: CustomersState }) =>
   state.customers.count
-
-
 
 export default customersSlice.reducer

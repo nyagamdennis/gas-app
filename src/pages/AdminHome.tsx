@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { logout } from "../features/auths/authSlice"
@@ -40,6 +40,7 @@ import {
   selectBusinessName,
 } from "../features/plans/planStatusSlice"
 import { ReceiptIcon } from "lucide-react"
+import RealTimeIndicator from "../components/sales/RealTimeIndicator"
 
 // ─── Plan badge config ─────────────────────────────────────────────────────────
 // Maps plan_code from backend to display config
@@ -387,11 +388,31 @@ const AdminHome = () => {
     dispatch(fetchBusiness())
   }, [dispatch])
 
+
+
+    // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
+
   return (
     <div>
       {isMobile ? (
         // ── Mobile ──────────────────────────────────────────────────────────
         <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <Navbar
             headerMessage="ERP"
             headerText="Manage your operations with style and clarity"

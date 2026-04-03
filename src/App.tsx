@@ -114,12 +114,17 @@ import EmployeePayment from "./pages/HR/EmployeePayment"
 import AddProducts from "./pages/otherProducts/AddProducts"
 import AfterProductCollect from "./pages/otherProducts/AfterProductCollect"
 import AllReceipts from "./pages/AllReceipts"
+import NotificationsPage from "./pages/NotificationsPage"
+import RealTimeIndicator from "./components/sales/RealTimeIndicator"
+import { SoundManager } from "./components/SoundManager"
 
 function App() {
   useVerificationPolling()
 
   return (
     <div>
+      {/* <RealTimeIndicator enabled={true} /> */}
+      {/* <SoundManager /> */}
       <Router>
         <Routes>
           {/* Public routes */}
@@ -127,6 +132,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/processing" element={<ProcessingPayment />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route
             path="/verify-email"
             element={

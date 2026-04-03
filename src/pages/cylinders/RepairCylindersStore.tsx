@@ -20,6 +20,7 @@ import {
   getStoreCylindersStatus,
 } from "../../features/store/storeCylindersSlice"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const RepairCylindersStore = () => {
   const dispatch = useAppDispatch()
@@ -44,6 +45,14 @@ const RepairCylindersStore = () => {
     severity: "success",
   })
   const companyId = businessId
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   // Fetch stores on component mount
   useEffect(() => {
@@ -240,6 +249,16 @@ const RepairCylindersStore = () => {
             headerMessage={"Cylinder Repair"}
             headerText={"Manage store cylinder repairs and write-offs"}
           />
+
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
 
           <main className="flex-grow p-4 pb-24">
             {/* Store Selection Header */}

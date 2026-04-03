@@ -8,6 +8,16 @@ const PayrollPeriods = () => {
       api.get("/payroll/periods/").then((res) => setPeriods(res.data))
     }, [])
 
+
+    // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
+      
     const generatePayslips = (id) => {
       api.post(`/payroll/periods/${id}/generate/`).then(() => {
         // refresh list or show toast

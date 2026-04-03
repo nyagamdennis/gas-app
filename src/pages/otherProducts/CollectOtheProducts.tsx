@@ -25,6 +25,7 @@ import AdminsFooter from "../../components/AdminsFooter"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
 import planStatus from "../../features/planStatus/planStatus"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const CollectOtherProducts = () => {
   const [selectedTeam, setSelectedTeam] = useState(null)
@@ -56,6 +57,14 @@ const CollectOtherProducts = () => {
     useState({})
   const [loadingLessPay, setLoadingLessPay] = useState({})
   const [loading, setLoading] = useState(false)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const {
     isPro,
@@ -464,6 +473,14 @@ const CollectOtherProducts = () => {
         headerMessage={"ERP"}
         headerText={"Collect other products from sales teams"}
       />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <main className="flex-grow m-2 p-1">
         {!selectedTeam ? (

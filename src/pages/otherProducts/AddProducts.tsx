@@ -15,6 +15,7 @@ import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
 import AdminsFooter from "../../components/AdminsFooter"
 import KenyanCurrencyInput from "../../components/KenyanCurrencyInput"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 // Import product actions – adjust the path to match your actual slice
 
@@ -35,6 +36,15 @@ const AddProducts = () => {
   const [quantity, setQuantity] = useState(0)
   const [addingNewProduct, setAddingNewProduct] = useState(false)
 
+
+  // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
   // Data from Redux
   const stores = useAppSelector(selectAllStore)
   let storeProducts
@@ -131,6 +141,14 @@ const AddProducts = () => {
             headerText={"Add regulators, burners and other accessories"}
           />
           <ToastContainer />
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
 
           <main className="flex-grow p-4 pb-6">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">

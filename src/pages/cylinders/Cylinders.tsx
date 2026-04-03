@@ -16,6 +16,7 @@ import {
   selectAllSalesTeamVehicle,
 } from "../../features/salesTeam/salesTeamVehicleSlice"
 import Skeleton from "@mui/material/Skeleton"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const Cylinders = () => {
   const theme = useTheme()
@@ -38,10 +39,18 @@ const Cylinders = () => {
   const [showVehicleListModal, setShowVehicleListModal] = useState(false)
   const [modalType, setModalType] = useState("") // 'view' or 'repair'
   const [loading, setLoading] = useState(false)
-  const [showMovementsModal, setShowMovementsModal] = useState(false);
+  const [showMovementsModal, setShowMovementsModal] = useState(false)
 
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
   const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     setLoading(true)
@@ -166,6 +175,15 @@ const Cylinders = () => {
     <div>
       {isMobile ? (
         <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <Navbar
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}

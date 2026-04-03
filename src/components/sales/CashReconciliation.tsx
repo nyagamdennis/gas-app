@@ -6,6 +6,7 @@ import {
   CheckCircle,
   AssignmentLate,
   ErrorOutline,
+  Edit,
 } from "@mui/icons-material"
 import FormattedAmount from "../FormattedAmount"
 
@@ -13,8 +14,10 @@ const CashReconciliation = ({
   cashVerification,
   onUpdate,
   onReconcile,
+  onUpdateReconciliation, // Add this prop for update functionality
   onAssignShortage,
   isFinalized,
+  isReconciling,
   mobile = false,
   cashReconciliationRecord = null,
   reconciliationRecord = null,
@@ -28,6 +31,16 @@ const CashReconciliation = ({
       actualCash,
       missingCash,
     })
+  }
+
+  const handleUpdate = () => {
+    if (onUpdateReconciliation) {
+      onUpdateReconciliation({
+        actualCash: cashVerification.actualCash,
+        notes: cashVerification.notes,
+        // Add any other fields needed for update
+      })
+    }
   }
 
   const getStatusColor = () => {
@@ -52,6 +65,10 @@ const CashReconciliation = ({
     return "Cash Excess"
   }
 
+  // Check if there's a reconciliation record
+  const hasReconciliation =
+    reconciliationRecord !== null && reconciliationRecord !== undefined
+
   return (
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
@@ -60,7 +77,7 @@ const CashReconciliation = ({
       </h3>
 
       <div className="space-y-6">
-        {reconciliationRecord && (
+        {hasReconciliation && (
           <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
             <div className="flex items-center gap-2 text-green-800 font-medium">
               <CheckCircle className="text-green-600" />
@@ -70,7 +87,8 @@ const CashReconciliation = ({
               <span>
                 Reconciled:{" "}
                 {new Date(
-                  reconciliationRecord.reconciliation_time,
+                  reconciliationRecord.reconciliation_time ||
+                    reconciliationRecord.created_at,
                 ).toLocaleString()}
               </span>
               {reconciliationRecord.cash_difference != null && (
@@ -89,6 +107,7 @@ const CashReconciliation = ({
             )}
           </div>
         )}
+
         {/* Expected Cash Breakdown */}
         <div className="bg-blue-50 p-4 rounded-lg">
           <h4 className="font-medium text-blue-800 mb-3">
@@ -126,7 +145,6 @@ const CashReconciliation = ({
           </div>
         </div>
 
-
         {/* Actual Cash Input */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="font-medium text-gray-800 mb-3">Actual Cash Count</h4>
@@ -147,7 +165,6 @@ const CashReconciliation = ({
           </p>
         </div>
 
-
         {/* Status Display with Assign Button */}
         <div className={`p-4 rounded-lg border ${getStatusColor()}`}>
           <div className="flex items-center justify-between mb-2">
@@ -156,18 +173,13 @@ const CashReconciliation = ({
               <span className="font-medium ml-2">{getStatusText()}</span>
             </div>
 
-            {/* Assign Shortage Button - Positioned in the header */}
-
+            {/* Assign Shortage Button */}
             {cashVerification.missingCash !== 0 && !isFinalized && (
               <button
-                // onClick={onAssignShortage}
                 onClick={(e) => {
-                  console.log("Button clicked directly!", e)
                   if (onAssignShortage) {
-                    console.log("Handler exists, calling it...")
                     onAssignShortage()
                   } else {
-                    console.error("onAssignShortage handler is undefined!")
                   }
                 }}
                 className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 flex items-center gap-1"
@@ -194,17 +206,6 @@ const CashReconciliation = ({
                   ? "There is less cash than expected. Please investigate."
                   : "There is more cash than expected. Please verify."}
               </p>
-
-              {/* Alternative: Button could also go here */}
-              {/* {cashVerification.missingCash !== 0 && !isFinalized && (
-                <button
-                  onClick={onAssignShortage}
-                  className="mt-3 w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 flex items-center justify-center gap-2"
-                >
-                  <AssignmentLate fontSize="small" />
-                  {cashVerification.missingCash > 0 ? "Assign Shortage to Employee/Company" : "Assign Excess to Employee/Company"}
-                </button>
-              )} */}
             </div>
           )}
         </div>
@@ -226,7 +227,7 @@ const CashReconciliation = ({
           />
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Conditional based on reconciliation status */}
         <div className="flex gap-3">
           <button
             onClick={() =>
@@ -237,13 +238,26 @@ const CashReconciliation = ({
           >
             Set to Expected
           </button>
-          <button
-            onClick={onReconcile}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
-            disabled={isFinalized}
-          >
-            Record Reconciliation
-          </button>
+
+          {/* Conditional Button: Show Edit if reconciliation exists, otherwise Show Record */}
+          {hasReconciliation ? (
+            <button
+              onClick={handleUpdate}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              disabled={isFinalized || isReconciling}
+            >
+              <Edit fontSize="small" />
+              {isReconciling ? "Updating..." : "Update Reconciliation"}
+            </button>
+          ) : (
+            <button
+              onClick={onReconcile}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              disabled={isFinalized || isReconciling}
+            >
+              {isReconciling ? "Reconciling..." : "Record Reconciliation"}
+            </button>
+          )}
         </div>
       </div>
     </div>

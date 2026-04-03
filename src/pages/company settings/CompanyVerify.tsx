@@ -6,6 +6,7 @@ import { Alert, Snackbar, Skeleton } from "@mui/material"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const CompanyVerify = () => {
   const theme = useTheme()
@@ -28,6 +29,14 @@ const CompanyVerify = () => {
   const [phoneSending, setPhoneSending] = useState(false)
   const [emailVerifying, setEmailVerifying] = useState(false)
   const [phoneVerifying, setPhoneVerifying] = useState(false)
+   // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
 
   // Snackbar feedback
   const [snackbar, setSnackbar] = useState({
@@ -221,6 +230,15 @@ const CompanyVerify = () => {
             headerMessage={"Verification"}
             headerText={"Verify your company contact details"}
           />
+          {/* Real-time Indicator */}
+                      <div className="prevent-overflow">
+                        <RealTimeIndicator
+                          enabled={autoRefresh}
+                          lastUpdated={lastUpdated}
+                          dataVersion={dataVersion}
+                          onToggle={() => setAutoRefresh(!autoRefresh)}
+                        />
+                      </div>
 
           <main className="flex-grow p-4 pb-24">
             <div className="bg-white rounded-xl shadow-lg p-6">

@@ -19,6 +19,7 @@ import {
   FilterList,
   Search,
 } from "@mui/icons-material"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const Attendance = () => {
   const theme = useTheme()
@@ -107,6 +108,14 @@ const Attendance = () => {
   const [selectedRecord, setSelectedRecord] = useState(null)
   const [currentTime, setCurrentTime] = useState(new Date())
 
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
@@ -188,7 +197,14 @@ const Attendance = () => {
           headerText={"Manage your operations with style and clarity"}
         />
         <ToastContainer />
-
+        <div className="prevent-overflow">
+          <RealTimeIndicator
+            enabled={autoRefresh}
+            lastUpdated={lastUpdated}
+            dataVersion={dataVersion}
+            onToggle={() => setAutoRefresh(!autoRefresh)}
+          />
+        </div>
         <main className="flex-grow m-2 p-1 mb-20">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg mb-4">

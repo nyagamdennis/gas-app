@@ -20,6 +20,7 @@ import AdminsFooter from "../../components/AdminsFooter"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { Link } from "react-router-dom"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const RefillCylinders = () => {
   const [refillingCylinders, setRefillingCylinders] = useState(false)
@@ -50,7 +51,14 @@ const RefillCylinders = () => {
   const storeCylinders = useAppSelector(selectAllStoreCylinders)
   const store = useAppSelector(selectAllStore)
 
-  console.log("Store Cylinders:", storeCylinders)
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -362,6 +370,15 @@ const RefillCylinders = () => {
 
       {isMobile ? (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
+          {/* Real-time Indicator */}
+                      <div className="prevent-overflow">
+                        <RealTimeIndicator
+                          enabled={autoRefresh}
+                          lastUpdated={lastUpdated}
+                          dataVersion={dataVersion}
+                          onToggle={() => setAutoRefresh(!autoRefresh)}
+                        />
+                      </div>
           <Navbar
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}

@@ -7,6 +7,7 @@ import AdminsFooter from "../../components/AdminsFooter"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const Complaints = () => {
   const theme = useTheme()
@@ -118,6 +119,16 @@ const Complaints = () => {
     priority: "Medium",
     anonymous: false,
   })
+
+  // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
+    
 
   const complaintTypes = [
     {
@@ -321,6 +332,14 @@ const Complaints = () => {
           headerText={"Manage your operations with style and clarity"}
         />
         <ToastContainer />
+        <div className="prevent-overflow">
+                  <RealTimeIndicator
+                    enabled={autoRefresh}
+                    lastUpdated={lastUpdated}
+                    dataVersion={dataVersion}
+                    onToggle={() => setAutoRefresh(!autoRefresh)}
+                  />
+                </div>
 
         <main className="flex-grow m-2 p-1 mb-20">
           {/* Header Section */}

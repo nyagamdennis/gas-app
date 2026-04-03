@@ -4,6 +4,7 @@ import { useMediaQuery, useTheme } from "@mui/material"
 import AdminsFooter from "../../components/AdminsFooter"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const RefillReport = () => {
   const theme = useTheme()
@@ -18,6 +19,14 @@ const RefillReport = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [refillData, setRefillData] = useState(null) // new state
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     const fetchRefills = async () => {
@@ -57,6 +66,15 @@ const RefillReport = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
+          {/* Real-time Indicator */}
+                      <div className="prevent-overflow">
+                        <RealTimeIndicator
+                          enabled={autoRefresh}
+                          lastUpdated={lastUpdated}
+                          dataVersion={dataVersion}
+                          onToggle={() => setAutoRefresh(!autoRefresh)}
+                        />
+                      </div>
 
           <main className="flex-grow m-2 p-1">
             {/* Date picker */}

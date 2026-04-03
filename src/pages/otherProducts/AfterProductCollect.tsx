@@ -8,13 +8,22 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks'
 import { selectAllCollections } from '../../features/collections/collectionsSlice'
 import { getAssignsError } from '../../features/assigns/assignsSlice'
 import AdminsFooter from '../../components/AdminsFooter'
+import RealTimeIndicator from '../../components/sales/RealTimeIndicator'
 
 const AfterProductCollect = () => {
     const [isDownloadingPDF, setIsDownloadingPDF] = useState(false)
   const { receiptNumber } = useParams()
   const dispatch = useAppDispatch()
-  console.log("receipt number ", receiptNumber)
 
+
+  // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
   
   const [receiptData, setReceiptData] = useState([])
 
@@ -97,6 +106,14 @@ const AfterProductCollect = () => {
         headerMessage={"Collect All Cylinders"}
         headerText={"Collect cylinders from your retailers or wholesalers"}
       />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
         {receiptData && (
@@ -141,8 +158,7 @@ const AfterProductCollect = () => {
                     To Location
                   </p>
                   <p className="text-gray-600">
-                    {receiptData.to_store_name ||
-                      receiptData.to_location_name}
+                    {receiptData.to_store_name || receiptData.to_location_name}
                   </p>
                   <p className="text-xs text-gray-500">
                     {receiptData.to_location_type}
@@ -158,9 +174,7 @@ const AfterProductCollect = () => {
                   </p>
                   <p className="text-gray-600">
                     <span className="font-semibold">Transfer Date:</span>{" "}
-                    {new Date(
-                      receiptData.transfer_date,
-                    ).toLocaleString()}
+                    {new Date(receiptData.transfer_date).toLocaleString()}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -188,46 +202,45 @@ const AfterProductCollect = () => {
           </div>
         )}
 
-        {receiptData?.items &&
-          receiptData.items.length > 0 && (
-            <div className="max-w-4xl mx-auto mb-6 bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">
-                Transfer Summary
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                {receiptData.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-4 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-800">
-                        {item.item_name}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Quantity:{" "}
-                        <span className="font-bold">{item.quantity}</span>
-                        {item.spoiled_quantity > 0 && (
-                          <>
-                            {" | "}Spoiled:{" "}
-                            <span className="font-bold">
-                              {item.spoiled_quantity}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-green-600">
-                        {item.total_quantity}
-                      </p>
-                      <p className="text-xs text-gray-500">units</p>
-                    </div>
+        {receiptData?.items && receiptData.items.length > 0 && (
+          <div className="max-w-4xl mx-auto mb-6 bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">
+              Transfer Summary
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              {receiptData.items.map((item, index) => (
+                <div
+                  key={index}
+                  className="p-4 bg-green-50 rounded-lg border border-green-200 flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {item.item_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Quantity:{" "}
+                      <span className="font-bold">{item.quantity}</span>
+                      {item.spoiled_quantity > 0 && (
+                        <>
+                          {" | "}Spoiled:{" "}
+                          <span className="font-bold">
+                            {item.spoiled_quantity}
+                          </span>
+                        </>
+                      )}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-green-600">
+                      {item.total_quantity}
+                    </p>
+                    <p className="text-xs text-gray-500">units</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
       </div>
       <AdminsFooter />
     </>

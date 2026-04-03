@@ -22,6 +22,7 @@ import {
   fetchEmployeeStatistics,
   selectEmployeeStatistics,
 } from "../../features/employees/employeesSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const HrDirection = () => {
   const theme = useTheme()
@@ -49,7 +50,6 @@ const HrDirection = () => {
     // Dispatch any actions if needed
   }, [dispatch])
 
-  console.log("Employee Statistics:", staticsEmployees)
 
   const hrMenuItems = [
     {
@@ -162,6 +162,16 @@ const HrDirection = () => {
     },
   ]
 
+
+  // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
+    
   return (
     <div>
       {isMobile ? (
@@ -170,7 +180,14 @@ const HrDirection = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           {/* Welcome Section */}
           <div className="mx-2 mt-2 mb-4 p-4 bg-white rounded-xl shadow-lg">
             <h1 className="text-2xl font-bold text-gray-800 mb-1">

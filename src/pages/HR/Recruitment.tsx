@@ -18,6 +18,7 @@ import {
 import { CircularProgress } from "@mui/material"
 import api from "../../../utils/api"
 import { toast, ToastContainer } from "react-toastify"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 // Role options
 const ROLE_OPTIONS = [
@@ -51,6 +52,14 @@ const Recruitment = () => {
   const addEmployeeStatus = useAppSelector(selectAddEmployeeStatus)
   const addEmployeeError = useAppSelector(selectAddEmployeeError)
 
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   // Local state
   const [formData, setFormData] = useState({
     first_name: "",
@@ -71,12 +80,12 @@ const Recruitment = () => {
   const [successMessage, setSuccessMessage] = useState("") // for invitation message
   const [resendingIds, setResendingIds] = useState<Set<number>>(new Set()) // track resend loading
   const [isResending, setIsResending] = useState(false)
-    // Fetch employees on component mount
-    useEffect(() => {
-      if (businessId) {
-        dispatch(fetchEmployees({ businessId }))
-      }
-    }, [dispatch, businessId])
+  // Fetch employees on component mount
+  useEffect(() => {
+    if (businessId) {
+      dispatch(fetchEmployees({ businessId }))
+    }
+  }, [dispatch, businessId])
 
   // Clear add employee status when component unmounts
   useEffect(() => {
@@ -85,14 +94,12 @@ const Recruitment = () => {
     }
   }, [dispatch])
 
-
-
-   useEffect(() => {
-     if (successMessage) {
-       const timer = setTimeout(() => setSuccessMessage(""), 5000)
-       return () => clearTimeout(timer)
-     }
-   }, [successMessage])
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [successMessage])
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -127,37 +134,37 @@ const Recruitment = () => {
       })
 
       setShowAddForm(false)
+      toast.success("Employee added successfully. An email invitation has been sent.")
       dispatch(fetchEmployees({ businessId }))
     } catch (error) {
+      toast.error("Failed to add employee. Please check the form and try again.", error.message)
       console.error("Failed to add employee:", error)
     }
   }
 
+  const handleResendInvite = async (
+    employeeId: number,
+    employeeEmail: string,
+  ) => {
+    // Prevent double-click while loading
+    if (resendingIds.has(employeeId)) return
 
-
-    const handleResendInvite = async (
-      employeeId: number,
-      employeeEmail: string,
-    ) => {
-      // Prevent double-click while loading
-      if (resendingIds.has(employeeId)) return
-
-      setResendingIds((prev) => new Set(prev).add(employeeId))
-      try {
-        await api.post(`employees/employees/${employeeId}/invite/`)
-        toast.success("Email invitation sent.")
-        setSuccessMessage(`Invitation resent to ${employeeEmail}.`)
-      } catch (error) {
-        console.error("Failed to resend invite:", error)
-        toast.error('An error occured, try again.')
-      } finally {
-        setResendingIds((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(employeeId)
-          return newSet
-        })
-      }
+    setResendingIds((prev) => new Set(prev).add(employeeId))
+    try {
+      await api.post(`employees/employees/${employeeId}/invite/`)
+      toast.success("Email invitation sent.")
+      setSuccessMessage(`Invitation resent to ${employeeEmail}.`)
+    } catch (error) {
+      console.error("Failed to resend invite:", error)
+      toast.error("An error occured, try again.")
+    } finally {
+      setResendingIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(employeeId)
+        return newSet
+      })
     }
+  }
   // Filter employees based on search and filter
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch =
@@ -202,6 +209,14 @@ const Recruitment = () => {
         {/* Header Section */}
         <div>
           <ToastContainer />
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
         </div>
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg shadow-lg mb-4">
           <div className="flex items-center justify-between">

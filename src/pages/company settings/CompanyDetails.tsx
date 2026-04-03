@@ -14,6 +14,7 @@ import {
   Phone,
   Upload,
 } from "@mui/icons-material"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const CompanyDetails = () => {
   const theme = useTheme()
@@ -42,6 +43,15 @@ const CompanyDetails = () => {
   const [logoFile, setLogoFile] = useState(null)
   const [logoPreview, setLogoPreview] = useState("")
   const [uploadProgress, setUploadProgress] = useState(0)
+
+   // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
 
   // Fetch company details on mount
   useEffect(() => {
@@ -207,6 +217,16 @@ const CompanyDetails = () => {
             headerMessage={"Company Settings"}
             headerText={"Manage your company information"}
           />
+
+          {/* Real-time Indicator */}
+                      <div className="prevent-overflow">
+                        <RealTimeIndicator
+                          enabled={autoRefresh}
+                          lastUpdated={lastUpdated}
+                          dataVersion={dataVersion}
+                          onToggle={() => setAutoRefresh(!autoRefresh)}
+                        />
+                      </div>
 
           <main className="flex-grow p-4 pb-24">
             <div className="bg-white rounded-xl shadow-lg p-6">

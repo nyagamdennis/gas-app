@@ -56,7 +56,6 @@ const decodeTokenData = (): Partial<PlanStatusState> => {
     if (!accessToken) return {}
 
     const decoded = jwt_decode<DecodedToken>(accessToken)
-    console.log("Decoded JWT in planStatusSlice:", decoded)
 
     const sub = decoded.subscription
     const isExpired = sub
@@ -76,7 +75,6 @@ const decodeTokenData = (): Partial<PlanStatusState> => {
       businessId: decoded.company_id ? String(decoded.company_id) : null,
     }
   } catch (err) {
-    console.warn("Failed to decode token in planStatusSlice:", err)
     return {}
   }
 }
@@ -109,7 +107,6 @@ export const fetchCompanyData = createAsyncThunk(
   async (companyId: number, { rejectWithValue }) => {
     try {
       const response = await api.get(`/company/details/${companyId}/`)
-      console.log("Fetched company data:", response.data)
       return response.data
     } catch (error: any) {
       return rejectWithValue(

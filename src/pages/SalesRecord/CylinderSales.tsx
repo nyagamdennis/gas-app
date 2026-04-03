@@ -25,6 +25,7 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 import api from "../../../utils/api"
 import planStatus from "../../features/planStatus/planStatus"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const CylinderSales = () => {
   const theme = useTheme()
@@ -139,6 +140,14 @@ const CylinderSales = () => {
   const [deposit, setDeposit] = useState(0)
   const [repayDate, setRepayDate] = useState("")
   const [exchangedWithLocal, setExchangedWithLocal] = useState(false)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   // Payment mode
   const [paymentMode, setPaymentMode] = useState("cash")
@@ -393,6 +402,34 @@ const CylinderSales = () => {
       }
     }, 25000)
   }
+
+  const exchangeCylinders = React.useMemo(() => {
+    // Extract selected cylinder IDs (as numbers)
+    const selectedIds = cylinderProducts
+      .map((p) => Number(p.productId))
+      .filter((id) => !isNaN(id))
+    return availableCylinders.filter(
+      (cylinder) => !selectedIds.includes(cylinder.id),
+    )
+  }, [availableCylinders, cylinderProducts])
+
+  // Clear exchange selection if the chosen cylinder is no longer available (e.g., after adding a new cylinder product)
+  useEffect(() => {
+    if (
+      cylinderExchanged &&
+      !exchangeCylinders.some((c) => c.id === Number(cylinderExchanged))
+    ) {
+      setCylinderExchanged("")
+    }
+  }, [exchangeCylinders, cylinderExchanged])
+
+  // Reset exchange state when sales type changes away from refill
+  useEffect(() => {
+    if (salesType !== "refill") {
+      setExchangedWithLocal(false)
+      setCylinderExchanged("")
+    }
+  }, [salesType])
 
   // Don't forget to clear watch on component unmount
   useEffect(() => {
@@ -791,6 +828,15 @@ const CylinderSales = () => {
       0,
     )
 
+    let exchangeCylinderId = null
+    if (exchangedWithLocal && cylinderExchanged) {
+      const selectedExchangeCylinder = availableCylinders.find(
+        (cyl) => cyl.id === Number(cylinderExchanged),
+      )
+      exchangeCylinderId =
+        selectedExchangeCylinder?.cylinder_type_id || Number(cylinderExchanged)
+    }
+
     const formData: any = {
       company_id: businessId,
       customer_details: {
@@ -814,31 +860,62 @@ const CylinderSales = () => {
 
       sale_type: saleType.toUpperCase(),
       notes: salesNote,
-      cylinder_items: [
-        // Cylinder products
-        ...cylinderProducts.map((product) => {
-          const selectedProduct = availableCylinders.find(
-            (prod) => prod.id === Number(product.productId),
-          )
+      cylinder_items: cylinderProducts.map((product) => {
+        const selectedProduct = availableCylinders.find(
+          (prod) => prod.id === Number(product.productId),
+        )
 
-          let unitPrice = 0
+        let unitPrice = 0
+        if (product.paymentAmount === "CUSTOM" && product.customPrice) {
+          unitPrice = parseFloat(product.customPrice)
+        } else {
+          unitPrice = getCylinderPrice(selectedProduct)
+        }
 
-          if (product.paymentAmount === "CUSTOM" && product.customPrice) {
-            unitPrice = parseFloat(product.customPrice)
-          } else {
-            unitPrice = getCylinderPrice(selectedProduct)
-          }
+        // Base cylinder item
+        const cylinderItem = {
+          cylinder_id: selectedProduct?.cylinder_type_id || product.productId, // ⚠️ you may want to change this to selectedProduct?.id later
+          sale_type: salesType.toUpperCase(),
+          quantity: product.quantity,
+          unit_price: unitPrice * product.quantity,
+          is_custom_price: product.paymentAmount === "CUSTOM",
+          empties_returned: product.quantity,
+        }
 
-          return {
-            cylinder_id: selectedProduct?.cylinder_type_id || product.productId,
-            sale_type: salesType.toUpperCase(),
-            quantity: product.quantity,
-            unit_price: unitPrice * product.quantity,
-            is_custom_price: product.paymentAmount === "CUSTOM",
-            empties_returned: product.quantity,
-          }
-        }),
-      ],
+        // Add exchange fields if enabled
+        if (exchangedWithLocal) {
+          cylinderItem.exchanged_with_local = true
+          cylinderItem.cylinder_exchanged_with = cylinderExchanged
+            ? Number(cylinderExchanged)
+            : null
+        }
+
+        return cylinderItem
+      }),
+      // cylinder_items: [
+      //   ...cylinderProducts.map((product) => {
+      //     const selectedProduct = availableCylinders.find(
+      //       (prod) => prod.id === Number(product.productId),
+      //     )
+
+      //     let unitPrice = 0
+
+      //     if (product.paymentAmount === "CUSTOM" && product.customPrice) {
+      //       unitPrice = parseFloat(product.customPrice)
+      //     } else {
+      //       unitPrice = getCylinderPrice(selectedProduct)
+      //     }
+
+      //     return {
+      //       cylinder_id: selectedProduct?.cylinder_type_id || product.productId,
+      //       sale_type: salesType.toUpperCase(),
+      //       quantity: product.quantity,
+      //       unit_price: unitPrice * product.quantity,
+      //       is_custom_price: product.paymentAmount === "CUSTOM",
+      //       empties_returned: product.quantity,
+      //     }
+      //   }),
+      // ],
       items: [
         ...(salesType === "complete"
           ? additionalProducts.map((product) => {
@@ -872,7 +949,8 @@ const CylinderSales = () => {
       repayment_date: !isFullyPaid ? repayDate : null,
       is_fully_paid: isFullyPaid,
       exchanged_with_local: exchangedWithLocal,
-      cylinder_exchanged_with: cylinderExchanged || null,
+      // cylinder_exchanged_with: cylinderExchanged || null,
+      cylinder_exchanged_with: exchangeCylinderId,
       location_id: teamId || null,
       location_type: location_type,
       location_data: hasLocation
@@ -979,33 +1057,7 @@ const CylinderSales = () => {
     }
   }
 
-  // // Update your M-Pesa validation in the form to show warnings
-  // useEffect(() => {
-  //   if (paymentMode === "mpesa" || paymentMode === "mpesa_cash") {
-  //     const validCodes = mpesaCodes.filter(
-  //       (code) => code.code && code.code.trim() !== "",
-  //     )
-  //     if (validCodes.length > 0) {
-  //       const totalEntered = validCodes.reduce((sum, code) => {
-  //         return sum + (parseFloat(code.amount) || 0)
-  //       }, 0)
-
-  //       let expectedTotal = calculateTotal()
-  //       if (paymentMode === "mpesa_cash") {
-  //         expectedTotal = calculateTotal() - cashAmount
-  //       }
-  //       console.log('expected total is ', expectedTotal)
-  //       console.log("total entere is ", totalEntered)
-
-  //       if (totalEntered !== expectedTotal) {
-  //         // Show a warning but don't prevent submission
-  //         console.warn(
-  //           `M-Pesa total (${totalEntered}) doesn't match expected (${expectedTotal})`,
-  //         )
-  //       }
-  //     }
-  //   }
-  // }, [mpesaCodes, paymentMode, calculateTotal, cashAmount])
+ 
 
   // Update the distributeMpesaAmounts function to be called explicitly when needed
   const distributeMpesaAmounts = (depositCount) => {
@@ -1154,6 +1206,7 @@ const CylinderSales = () => {
                               </p>
                             </div>
                           </div>
+
                           <div className="grid grid-cols-2 gap-4 text-sm mt-3">
                             <div>
                               <p className="text-gray-600">Empties Returned</p>
@@ -1168,6 +1221,35 @@ const CylinderSales = () => {
                               </p>
                             </div>
                           </div>
+
+                          {/* Exchange Information */}
+                          {item.exchanged_with_local &&
+                            item.cylinder_exchanged_with_detail && (
+                              <div className="mt-3 pt-3 border-t border-green-200 flex items-center text-sm">
+                                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center">
+                                  <svg
+                                    className="w-4 h-4 mr-1"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                                    />
+                                  </svg>
+                                  Exchanged with:{" "}
+                                  <span className="font-semibold ml-1">
+                                    {
+                                      item.cylinder_exchanged_with_detail
+                                        .display_name
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                         </div>
                       ))}
                     </div>
@@ -1257,12 +1339,7 @@ const CylinderSales = () => {
                       </span>
                     </div>
                   </div>
-                  {/* <div className="flex justify-between">
-                    <span className="text-gray-600">Total Cost:</span>
-                    <span className="font-medium text-gray-700">
-                      {formatCurrency(saleResponse.total_cost)}
-                    </span>
-                  </div> */}
+
                   <div className="flex justify-between">
                     <span className="text-gray-600">Amount Paid:</span>
                     <span className="font-medium text-green-700">
@@ -1917,6 +1994,7 @@ const CylinderSales = () => {
             </div>
 
             {/* Cylinder Products */}
+            {console.log("Summary data:", summary)}
             {summary.cylinders.length > 0 && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-700 mb-2">Cylinders</h3>
@@ -2087,7 +2165,7 @@ const CylinderSales = () => {
             </div>
 
             {/* Exchange Info */}
-            {exchangedWithLocal && cylinderExchanged && (
+            {/* {exchangedWithLocal && cylinderExchanged && (
               <div className="mb-6">
                 <h3 className="font-semibold text-gray-700 mb-2">
                   Cylinder Exchange
@@ -2096,6 +2174,33 @@ const CylinderSales = () => {
                   <div className="flex items-center">
                     <span className="text-yellow-700">
                       Customer exchanging with another cylinder
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )} */}
+            {exchangedWithLocal && cylinderExchanged && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-gray-700 mb-2">
+                  Cylinder Exchange
+                </h3>
+                <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Exchanging with:</span>
+                    <span className="font-medium text-yellow-700">
+                      {availableCylinders.find(
+                        (c) => c.id === Number(cylinderExchanged),
+                      )
+                        ? `${
+                            availableCylinders.find(
+                              (c) => c.id === Number(cylinderExchanged),
+                            ).gas_type
+                          } ${
+                            availableCylinders.find(
+                              (c) => c.id === Number(cylinderExchanged),
+                            ).weight
+                          }kg`
+                        : "Selected cylinder"}
                     </span>
                   </div>
                 </div>
@@ -2712,6 +2817,17 @@ const CylinderSales = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
       <ToastContainer />
+
+      {/* Real-time Indicator */}
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
+
       {showSummary && renderOrderSummary()}
       {showSuccessModal && renderSuccessModal()}
 
@@ -3351,62 +3467,67 @@ const CylinderSales = () => {
               )}
 
               {/* Cylinder Exchange */}
-              <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                  Cylinder Exchange
-                </h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-3">
-                      Customer exchanging with another cylinder?
-                    </label>
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => setExchangedWithLocal(false)}
-                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
-                          !exchangedWithLocal
-                            ? "bg-blue-100 border-blue-500 text-blue-600"
-                            : "bg-gray-100 border-gray-300 hover:border-gray-400"
-                        }`}
-                      >
-                        No Exchange
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setExchangedWithLocal(true)}
-                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
-                          exchangedWithLocal
-                            ? "bg-green-100 border-green-500 text-green-600"
-                            : "bg-gray-100 border-gray-300 hover:border-gray-400"
-                        }`}
-                      >
-                        With Exchange
-                      </button>
-                    </div>
-                  </div>
-
-                  {exchangedWithLocal && (
+              {salesType === "refill" && (
+                <div className="bg-white rounded-2xl shadow-sm p-5 w-full">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                    Cylinder Exchange
+                  </h2>
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Exchange Cylinder Type
+                      <label className="block text-sm font-medium text-gray-600 mb-3">
+                        Customer exchanging with another cylinder?
                       </label>
-                      <select
-                        value={cylinderExchanged}
-                        onChange={(e) => setCylinderExchanged(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      >
-                        <option value="">Select cylinder type</option>
-                        {availableCylinders.map((cylinder) => (
-                          <option key={cylinder.id} value={cylinder.id}>
-                            {cylinder.gas_type} {cylinder.weight}kg
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExchangedWithLocal(false)
+                            setCylinderExchanged("") // Clear exchange selection
+                          }}
+                          className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                            !exchangedWithLocal
+                              ? "bg-blue-100 border-blue-500 text-blue-600"
+                              : "bg-gray-100 border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          No Exchange
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setExchangedWithLocal(true)}
+                          className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                            exchangedWithLocal
+                              ? "bg-green-100 border-green-500 text-green-600"
+                              : "bg-gray-100 border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          With Exchange
+                        </button>
+                      </div>
                     </div>
-                  )}
+
+                    {exchangedWithLocal && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Exchange Cylinder Type
+                        </label>
+                        <select
+                          value={cylinderExchanged}
+                          onChange={(e) => setCylinderExchanged(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="">Select cylinder type</option>
+                          {exchangeCylinders.map((cylinder) => (
+                            <option key={cylinder.id} value={cylinder.id}>
+                              {cylinder.gas_type} {cylinder.weight}kg
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Payment Section */}
               <div className="bg-white rounded-2xl shadow-sm p-5 w-full">

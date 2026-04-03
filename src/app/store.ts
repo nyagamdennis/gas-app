@@ -47,9 +47,12 @@ import storeCylinderReducer from "../features/store/storeCylindersSlice"
 import salesTeamVehicleReducer from "../features/salesTeam/salesTeamVehicleSlice"
 import customerHistoryReducer from "../features/customers/customerHistorySlice"
 import smsReducer from "../features/sms/smsSlice"
+import notificationReducer from "../features/notification/notificationSlice";
+import { wsMiddleware } from "../middleware/wsMiddleware"
 
 export const store = configureStore({
   reducer: {
+    notifications: notificationReducer,
     salesTeamVehicle: salesTeamVehicleReducer,
     customersHistory: customerHistoryReducer,
     sms: smsReducer,
@@ -99,6 +102,8 @@ export const store = configureStore({
     teamExpenses: teamExpensesReducer,
     planStatus: planStatusReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(wsMiddleware),
 })
 
 export type AppDispatch = typeof store.dispatch

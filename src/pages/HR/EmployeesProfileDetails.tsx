@@ -74,6 +74,7 @@ import {
   clearLeaveStatus,
   clearReactivationStatus,
 } from "../../features/employees/singleEmployeeSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 // Helper function to get team type display
 const getTeamTypeDisplay = (type) => {
@@ -127,6 +128,16 @@ const EmployeesProfileDetails = () => {
   const leaveData = useAppSelector(selectLeaveData)
   const leaveStatus = useAppSelector(selectLeaveStatus)
 
+
+  // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
+    
   // Local state
   const [activeTab, setActiveTab] = useState(0)
   const [terminateDialogOpen, setTerminateDialogOpen] = useState(false)
@@ -335,6 +346,14 @@ const EmployeesProfileDetails = () => {
           headerMessage="Employee Details"
           headerText="Employee not found"
         />
+        <div className="prevent-overflow">
+                  <RealTimeIndicator
+                    enabled={autoRefresh}
+                    lastUpdated={lastUpdated}
+                    dataVersion={dataVersion}
+                    onToggle={() => setAutoRefresh(!autoRefresh)}
+                  />
+                </div>
         <main className="flex-grow flex flex-col items-center justify-center p-4">
           <div className="text-center py-12">
             <div className="text-6xl mb-4 opacity-30">😞</div>

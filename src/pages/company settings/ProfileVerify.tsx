@@ -7,7 +7,7 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 import api from "../../../utils/api"
 import {
-    refreshAccessToken,
+  refreshAccessToken,
   selectEmailIsVerified,
   selectPhoneIsVerified,
   selectUserEmail,
@@ -15,13 +15,13 @@ import {
 } from "../../features/auths/authSlice"
 import { Email, Phone, Verified, AccessTime } from "@mui/icons-material"
 import { useNavigate } from "react-router-dom"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const ProfileVerify = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const { businessId } = useAppSelector((state) => state.planStatus)
 
-  
   const emailIsVerified = useAppSelector(selectEmailIsVerified)
   const phoneIsVerified = useAppSelector(selectPhoneIsVerified)
   const userEmail = useAppSelector(selectUserEmail)
@@ -48,6 +48,14 @@ const ProfileVerify = () => {
   const [phoneTimer, setPhoneTimer] = useState(0)
   const emailTimerRef = useRef(null)
   const phoneTimerRef = useRef(null)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   // Snackbar feedback
   const [snackbar, setSnackbar] = useState({
@@ -294,7 +302,15 @@ const ProfileVerify = () => {
             headerMessage={"Verification"}
             headerText={"Verify your contact details"}
           />
-
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <main className="flex-grow p-4 pb-24">
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">

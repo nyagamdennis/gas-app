@@ -25,6 +25,7 @@ import {
 } from "../features/salesTeam/salesTeamVehicleSlice"
 import Skeleton from "@mui/material/Skeleton"
 import { toast } from "react-toastify"
+import RealTimeIndicator from "../components/sales/RealTimeIndicator"
 
 const CollectCylinders = () => {
   const dispatch = useAppDispatch()
@@ -42,6 +43,14 @@ const CollectCylinders = () => {
   const [loadingReturnAll, setLoadingReturnAll] = useState(false)
   const [loadingReturnSome, setLoadingReturnSome] = useState(false)
   const [selectedDestinationStore, setSelectedDestinationStore] = useState(null)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   // New state for loss reporting
   const [lossReports, setLossReports] = useState({})
@@ -1106,7 +1115,15 @@ const CollectCylinders = () => {
         headerMessage={"ERP"}
         headerText={"Collect cylinders from sales teams"}
       />
-
+      {/* Real-time Indicator */}
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
       <main className="flex-grow m-2 p-1">
         {!selectedTeam ? (
           <div>

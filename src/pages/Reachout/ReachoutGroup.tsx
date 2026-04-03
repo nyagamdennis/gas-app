@@ -77,6 +77,7 @@ import {
   fetchEmployees,
   selectAllEmployees,
 } from "../../features/employees/employeesSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 // ── Inline SVG icons matching the app style ──────────────────────────────────
 const Icons = {
@@ -160,6 +161,14 @@ const ReachoutGroup = () => {
   const [messageHistory, setMessageHistory] = useState<any[]>([])
   const [openPreview, setOpenPreview] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const messageTemplates = [
     {
@@ -392,6 +401,14 @@ const ReachoutGroup = () => {
         headerText="Reach out to customers and employees efficiently"
       />
 
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
       <main className="flex-grow m-2 p-1 pb-4">
         {/* ── Header ── */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-4">

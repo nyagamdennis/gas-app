@@ -31,6 +31,7 @@ import LocalMallIcon from "@mui/icons-material/LocalMall"
 import InventoryIcon from "@mui/icons-material/Inventory"
 import WarningIcon from "@mui/icons-material/Warning"
 import StorefrontIcon from "@mui/icons-material/Storefront"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const AssignProducts = () => {
   const theme = useTheme()
@@ -66,6 +67,14 @@ const AssignProducts = () => {
   const [loadingAssign, setLoadingAssign] = useState(false)
   const [storeId, setStoreId] = useState("")
   const [storeName, setStoreName] = useState("")
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     dispatch(fetchSalesTeamShops())
@@ -177,7 +186,8 @@ const AssignProducts = () => {
       const result = await dispatch(assignOthers(bulkPayload)).unwrap()
       const totalTransferred =
         result?.summary?.total_items_transferred ||
-        result?.transfers?.length || 0
+        result?.transfers?.length ||
+        0
 
       toast.success(
         `Successfully transferred ${totalTransferred} product types`,
@@ -441,6 +451,15 @@ const AssignProducts = () => {
             headerText={"Assign products to sales teams"}
           />
           <ToastContainer />
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
+
           <main className="flex-grow m-2 p-1">
             <div className="">
               {!selectedTeam ? (
@@ -583,7 +602,7 @@ const AssignProducts = () => {
                   </div>
 
                   <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <StorefrontIcon className="text-gray-500" />
                       Select Store to Assign From
                     </label>

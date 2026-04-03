@@ -7,6 +7,7 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { Link, useParams } from "react-router-dom"
 import AdminsFooter from "../../components/AdminsFooter"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const RepairTeamCylinders = () => {
   const theme = useTheme()
@@ -35,6 +36,14 @@ const RepairTeamCylinders = () => {
     message: "",
     severity: "success",
   })
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const idParams = useParams()
   const teamId = idParams?.teamId
@@ -172,7 +181,15 @@ const RepairTeamCylinders = () => {
             headerMessage={"Cylinder Repair"}
             headerText={"Manage cylinder repairs and write-offs"}
           />
-
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <main className="flex-grow p-4 pb-24">
             <div className="bg-white p-4 rounded-xl shadow-lg">
               <div className="mb-6">

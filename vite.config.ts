@@ -9,6 +9,16 @@ export default defineConfig({
   // },
   server: {
     open: true,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+      },
+      "/ws": {
+        target: "ws://127.0.0.1:8000",
+        ws: true,
+      },
+    },
     // allowedHosts: ["88c1-102-215-12-245.ngrok-free.app"],
   },
   build: {

@@ -597,6 +597,17 @@ const SalesList = ({
                                           </span>
                                         )}
                                       </div>
+                                      {/* Display exchanged cylinder information */}
+                                      {cylinder.cylinder_exchanged_with_detail && (
+                                        <div className="text-[10px] text-gray-500 mt-0.5">
+                                          Exchanged with:{" "}
+                                          {
+                                            cylinder
+                                              .cylinder_exchanged_with_detail
+                                              .display_name
+                                          }
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1.5 ml-2">

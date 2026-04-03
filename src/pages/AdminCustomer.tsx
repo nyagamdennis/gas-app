@@ -5,8 +5,6 @@ import {
   fetchLocations,
   selectAllLocations,
 } from "../features/location/locationSlice"
-import { fetchProducts } from "../features/product/productSlice"
-import { fetchSales } from "../features/sales/salesSlice"
 import CustomerExcerpt from "../features/customers/CustomerExcerpt"
 import AdminsFooter from "../components/AdminsFooter"
 import Navbar from "../components/ui/mobile/admin/Navbar"
@@ -29,13 +27,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
   Skeleton,
 } from "@mui/material"
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
-import ChevronRightIcon from "@mui/icons-material/ChevronRight"
+import RealTimeIndicator from "../components/sales/RealTimeIndicator"
+import api from "../../utils/api"
 
-// Icons as components using emoji for consistency with StoreCylinders
 const Icons = {
   Search: () => (
     <svg
@@ -49,21 +45,6 @@ const Icons = {
         strokeLinejoin="round"
         strokeWidth={2}
         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-      />
-    </svg>
-  ),
-  Add: () => (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
       />
     </svg>
   ),
@@ -116,38 +97,76 @@ const AdminCustomer = () => {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [activeFilter, setActiveFilter] = useState("all")
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
-    const customerCounts = useAppSelector(customerCount)
+  const customerCounts = useAppSelector(customerCount)
 
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
+  const [customersStatistics, setCustomersStatistics] = useState(null)
+  const [statisticsLoading, setStatisticsLoading] = useState(false)
   const [page, setPage] = useState(1)
 
+  // Fetch statistics once on mount
   useEffect(() => {
-    dispatch(fetchCustomers({ page }))
-    dispatch(fetchLocations())
-    dispatch(fetchProducts())
-    dispatch(fetchSales())
-  }, [dispatch, page])
+    const fetchStatistics = async () => {
+      setStatisticsLoading(true)
+      try {
+        const response = await api.get("/customers/statistics/")
+        setCustomersStatistics(response.data)
+      } catch (error) {
+        console.error("Failed to fetch customer statistics:", error)
+      } finally {
+        setStatisticsLoading(false)
+      }
+    }
+    fetchStatistics()
+  }, [])
+
+  // Fetch customers when page or filter changes
+  useEffect(() => {
+    dispatch(fetchCustomers({ page, type: activeFilter }))
+  }, [dispatch, page, activeFilter])
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 100)
-    }
+    dispatch(fetchLocations())
+  }, [dispatch])
+
+  useEffect(() => {
+    setPage(1)
+  }, [activeFilter, search])
+
+  useEffect(() => {
+    const handleScroll = () => setShowScrollTop(window.scrollY > 100)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // Reset to first page when filter or search changes
+  // Reset frontend pagination when filter or search changes
   useEffect(() => {
     setCurrentPage(1)
   }, [activeFilter, search])
 
-  // Filter customers based on search and active filter
+  // Static counts from statistics (never change, no loader on tabs)
+  const stats = {
+    total: customersStatistics?.total_customers ?? 0,
+    retail: customersStatistics?.total_retail_customers ?? 0,
+    wholesale: customersStatistics?.total_wholesale_customers ?? 0,
+    withDebt: customersStatistics?.total_debtors ?? 0,
+  }
+
+  const filterCounts = {
+    all: customersStatistics?.total_customers ?? 0,
+    retail: customersStatistics?.total_retail_customers ?? 0,
+    wholesale: customersStatistics?.total_wholesale_customers ?? 0,
+    debtors: customersStatistics?.total_debtors ?? 0,
+  }
+
+  // Filter customers for display (client‑side)
   const getFilteredCustomers = () => {
     let filtered = customers
-
     if (search) {
       filtered = filtered.filter(
         (c) =>
@@ -155,7 +174,6 @@ const AdminCustomer = () => {
           c?.phone?.toString().includes(search),
       )
     }
-
     switch (activeFilter) {
       case "retail":
         filtered = filtered.filter((c) => c.sales === "RETAIL")
@@ -164,45 +182,23 @@ const AdminCustomer = () => {
         filtered = filtered.filter((c) => c.sales === "WHOLESALE")
         break
       case "debtors":
-        // was: c.customer_debt?.some((d) => !d.cleared)
         filtered = filtered.filter((c) => c.debt_summary !== null)
         break
       default:
         break
     }
-
     return filtered
   }
-  const allFilteredCustomers = getFilteredCustomers()
 
-  // Pagination logic
+  const allFilteredCustomers = getFilteredCustomers()
   const totalItems = allFilteredCustomers.length
-  const totalPages = Math.ceil(totalItems / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = startIndex + itemsPerPage
   const displayedCustomers = allFilteredCustomers.slice(startIndex, endIndex)
 
-  // Calculate stats based on all customers (not filtered)
-  const stats = {
-    total: customers.length,
-    retail: customers.filter((c) => c.sales === "RETAIL").length,
-    wholesale: customers.filter((c) => c.sales === "WHOLESALE").length,
-    withDebt: customers.filter((c) => c.debt_summary !== null).length,
-  }
-
-
-  // Calculate counts for filters based on all customers (not filtered by search)
-  const filterCounts = {
-    all: customers.length,
-    retail: customers.filter((c) => c.sales === "RETAIL").length,
-    wholesale: customers.filter((c) => c.sales === "WHOLESALE").length,
-    debtors: customers.filter((c) => c.debt_summary !== null).length,
-  }
-
   const handleAddNewCustomer = async (e) => {
     e.preventDefault()
     setSubmitting(true)
-
     try {
       const formData = {
         name,
@@ -210,7 +206,6 @@ const AdminCustomer = () => {
         phone,
         sales: customerType,
       }
-
       await dispatch(addCustomer(formData)).unwrap()
       toast.success("Customer added successfully!")
       setName("")
@@ -236,73 +231,12 @@ const AdminCustomer = () => {
     return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone
   }
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" })
 
-  const handleFilterClick = (filterType) => {
-    setActiveFilter(filterType)
-  }
+  const handleFilterClick = (filterType) => setActiveFilter(filterType)
 
-  // Pagination handlers
-  const goToPage = (page) => {
-    setCurrentPage(page)
-    scrollToTop()
-  }
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-      scrollToTop()
-    }
-  }
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-      scrollToTop()
-    }
-  }
-
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value))
-    setCurrentPage(1)
-  }
-
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pageNumbers = []
-    const maxPagesToShow = 5
-
-    if (totalPages <= maxPagesToShow) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i)
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pageNumbers.push(i)
-        }
-        pageNumbers.push("...")
-        pageNumbers.push(totalPages)
-      } else if (currentPage >= totalPages - 2) {
-        pageNumbers.push(1)
-        pageNumbers.push("...")
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pageNumbers.push(i)
-        }
-      } else {
-        pageNumbers.push(1)
-        pageNumbers.push("...")
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pageNumbers.push(i)
-        }
-        pageNumbers.push("...")
-        pageNumbers.push(totalPages)
-      }
-    }
-
-    return pageNumbers
+  const refreshCustomers = () => {
+    dispatch(fetchCustomers({ page, type: activeFilter }))
   }
 
   const tabs = [
@@ -343,6 +277,14 @@ const AdminCustomer = () => {
         headerMessage={"ERP"}
         headerText={"Manage customers with style and clarity"}
       />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <main className="flex-grow m-2 p-1 pb-4">
         {/* Header Section */}
@@ -352,8 +294,6 @@ const AdminCustomer = () => {
               <span className="mr-2">👥</span>
               Customer Management
             </h2>
-
-            {/* Search Bar */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                 <Icons.Search />
@@ -394,9 +334,13 @@ const AdminCustomer = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Retail</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.retail}
-                </p>
+                {statisticsLoading ? (
+                  <Skeleton variant="text" width={60} height={32} />
+                ) : (
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.retail}
+                  </p>
+                )}
               </div>
               <span className="text-3xl">🛒</span>
             </div>
@@ -425,13 +369,42 @@ const AdminCustomer = () => {
           </div>
         </div>
 
-        {/* Content Section */}
+        {/* Filter Tabs - ALWAYS VISIBLE, NEVER LOADING */}
+        <div className="bg-white p-2 rounded-lg shadow-md mb-4">
+          <div className="flex overflow-x-auto scrollbar-hide gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.type}
+                onClick={() => handleFilterClick(tab.type)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
+                  activeFilter === tab.type
+                    ? `bg-${tab.color}-500 text-white shadow-md`
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span className="font-medium">{tab.label}</span>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    activeFilter === tab.type
+                      ? "bg-white bg-opacity-20 text-white"
+                      : "bg-blue-500 text-white"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Customer List Area */}
         <div>
-          {/* Loading State */}
+          {/* Loading skeletons for customer containers */}
           {customerStatus === "loading" && (
             <div className="grid grid-cols-1 gap-4">
-              {[...Array(3)].map((_, index) => (
-                <div key={index} className="bg-white p-4 rounded-lg shadow-md">
+              {[...Array(3)].map((_, idx) => (
+                <div key={idx} className="bg-white p-4 rounded-lg shadow-md">
                   <Skeleton variant="text" height={28} width="60%" />
                   <Skeleton
                     variant="rectangular"
@@ -443,7 +416,7 @@ const AdminCustomer = () => {
             </div>
           )}
 
-          {/* Empty State - No Customers */}
+          {/* Empty state when no customers exist */}
           {customerStatus === "succeeded" && customers.length === 0 && (
             <div className="text-center p-12 bg-white rounded-lg shadow-md">
               <div className="text-6xl mb-4">👥</div>
@@ -460,39 +433,9 @@ const AdminCustomer = () => {
             </div>
           )}
 
-          {/* Customer Cards */}
+          {/* Actual customer list */}
           {customerStatus === "succeeded" && customers.length > 0 && (
             <div className="space-y-4">
-              {/* Filter Tabs */}
-              <div className="bg-white p-2 rounded-lg shadow-md">
-                <div className="flex overflow-x-auto scrollbar-hide gap-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.type}
-                      onClick={() => handleFilterClick(tab.type)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
-                        activeFilter === tab.type
-                          ? `bg-${tab.color}-500 text-white shadow-md`
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      <span>{tab.icon}</span>
-                      <span className="font-medium">{tab.label}</span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          activeFilter === tab.type
-                            ? "bg-white bg-opacity-20 text-white"
-                            : "bg-blue-500 text-white"
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Results Info */}
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-600">
                   Showing {startIndex + 1} - {Math.min(endIndex, totalItems)} of{" "}
@@ -509,9 +452,6 @@ const AdminCustomer = () => {
                 )}
               </div>
 
-             
-
-              {/* Customer List */}
               {displayedCustomers.length === 0 ? (
                 <div className="text-center p-12 bg-white rounded-lg shadow-md">
                   <div className="text-6xl mb-4">🔍</div>
@@ -531,12 +471,15 @@ const AdminCustomer = () => {
                           ? "border-green-500"
                           : customer.sales === "WHOLESALE"
                           ? "border-purple-500"
-                          : customer.customer_debt?.some((d) => !d.cleared)
+                          : customer.debt_summary !== null
                           ? "border-yellow-500"
                           : "border-blue-500"
                       } overflow-hidden`}
                     >
-                      <CustomerExcerpt customer={customer} />
+                      <CustomerExcerpt
+                        customer={customer}
+                        refreshCustomers={refreshCustomers}
+                      />
                     </div>
                   ))}
                 </div>
@@ -546,74 +489,15 @@ const AdminCustomer = () => {
                 <Pagination
                   count={Math.ceil(customerCounts / 8)}
                   page={page}
-                  onChange={(event, value) => setPage(value)}
+                  onChange={(_, value) => setPage(value)}
                   shape="rounded"
                   color="primary"
                 />
               </div>
-
-              {/* Pagination */}
-
-              {/* {totalPages > 1 && (
-                <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={goToPreviousPage}
-                      disabled={currentPage === 1}
-                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
-                        currentPage === 1
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-blue-600 hover:bg-blue-50"
-                      }`}
-                    >
-                      <ChevronLeftIcon fontSize="small" />
-                      <span className="hidden sm:inline">Previous</span>
-                    </button>
-
-                    <div className="flex items-center gap-1 overflow-x-auto">
-                      {getPageNumbers().map((page, index) => (
-                        <button
-                          key={index}
-                          onClick={() =>
-                            typeof page === "number" && goToPage(page)
-                          }
-                          disabled={page === "..."}
-                          className={`min-w-[40px] h-10 rounded-lg transition ${
-                            page === currentPage
-                              ? "bg-blue-500 text-white font-medium"
-                              : page === "..."
-                              ? "text-gray-500 cursor-default"
-                              : "text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={goToNextPage}
-                      disabled={currentPage === totalPages}
-                      className={`flex items-center gap-1 px-3 py-2 rounded-lg transition ${
-                        currentPage === totalPages
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-blue-600 hover:bg-blue-50"
-                      }`}
-                    >
-                      <span className="hidden sm:inline">Next</span>
-                      <ChevronRightIcon fontSize="small" />
-                    </button>
-                  </div>
-
-                  <div className="text-center text-sm text-gray-500 mt-2">
-                    Page {currentPage} of {totalPages}
-                  </div>
-                </div>
-              )} */}
             </div>
           )}
 
-          {/* Error State */}
+          {/* Error state */}
           {customerStatus === "failed" && (
             <div className="text-center p-12 bg-red-50 rounded-lg shadow-md">
               <div className="text-6xl mb-4">⚠️</div>
@@ -632,9 +516,6 @@ const AdminCustomer = () => {
         onClose={() => setDialogOpen(false)}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          className: "rounded-lg",
-        }}
       >
         <DialogTitle className="font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <div className="flex items-center gap-2">
@@ -642,7 +523,6 @@ const AdminCustomer = () => {
             <span>Add New Customer</span>
           </div>
         </DialogTitle>
-
         <DialogContent className="mt-4">
           <form onSubmit={handleAddNewCustomer} className="space-y-4">
             <div>
@@ -658,7 +538,6 @@ const AdminCustomer = () => {
                 placeholder="Enter customer name"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
@@ -675,7 +554,6 @@ const AdminCustomer = () => {
                 Format: (123) 456-7890
               </p>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Location
@@ -694,7 +572,6 @@ const AdminCustomer = () => {
                 ))}
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Customer Type
@@ -748,7 +625,6 @@ const AdminCustomer = () => {
             </div>
           </form>
         </DialogContent>
-
         <DialogActions className="p-4">
           <Button
             onClick={() => setDialogOpen(false)}
@@ -761,10 +637,7 @@ const AdminCustomer = () => {
             onClick={handleAddNewCustomer}
             disabled={submitting || !name || !phone || !locationId}
             className="bg-blue-500 hover:bg-blue-600 text-white"
-            style={{
-              backgroundColor: "#3b82f6",
-              color: "white",
-            }}
+            style={{ backgroundColor: "#3b82f6", color: "white" }}
           >
             {submitting ? (
               <CircularProgress size={24} style={{ color: "white" }} />
@@ -783,7 +656,6 @@ const AdminCustomer = () => {
         <AddBoxIcon />
       </button>
 
-      {/* Scroll to Top Button */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}

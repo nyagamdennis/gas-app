@@ -106,6 +106,7 @@ import {
   Menu as MenuIcon,
   KeyboardArrowUp,
 } from "@mui/icons-material"
+import RealTimeIndicator from "../components/sales/RealTimeIndicator"
 
 // Custom responsive hook
 const useResponsive = () => {
@@ -163,6 +164,14 @@ const Dashboard = () => {
   const [menuAnchor, setMenuAnchor] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [activeView, setActiveView] = useState("overview") // overview, financial, products, teams
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const all_expenses = analysis_data?.expenses || []
   const total_expenses = analysis_data?.sales_summary?.total_expenses || 0
@@ -1179,6 +1188,16 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 touch-manipulation">
       {/* Back to top anchor */}
       <div id="back-to-top-anchor" />
+
+      {/* Real-time Indicator */}
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <Navbar
         headerMessage={"ERP Dashboard"}

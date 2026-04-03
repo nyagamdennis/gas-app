@@ -5,7 +5,6 @@ import { fetchBusiness, selectAllBusiness } from "../company/companySlice"
 
 const planStatus = () => {
   const biz = useAppSelector(selectAllBusiness)
-  console.log("🔍 planStatus Debug - Business Data:", biz) // Debug log to check the structure of biz
   const dispatch = useAppDispatch()
 
   const businessName = biz?.name || null

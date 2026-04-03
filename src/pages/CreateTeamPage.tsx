@@ -37,6 +37,10 @@ import {
   selectAllStore,
   updateStore,
 } from "../features/store/storeSlice"
+import {
+  fetchEmployees,
+  selectAllEmployees,
+} from "../features/employees/employeesSlice"
 
 const CreateTeamPage = () => {
   const theme = useTheme()
@@ -44,18 +48,27 @@ const CreateTeamPage = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
+  // Form states
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [teamName, setTeamName] = useState("")
   const [numberPlate, setNumberPlate] = useState("")
   const [engineSize, setEngineSize] = useState("")
   const [locationName, setLocationName] = useState("")
   const [locationCoordinates, setLocationCoordinates] = useState("")
-  const [teamType, setTeamType] = useState("SHOP") // SHOP, STORE, VEHICLE
+  const [teamType, setTeamType] = useState("SHOP") // SHOP, STORE, VEHICLE, MOTORBIKE
+
+  // Driver and conductor states
+  const [driverId, setDriverId] = useState<string>("")
+  const [conductorId, setConductorId] = useState<string>("")
+  const [editDriverId, setEditDriverId] = useState<string>("")
+  const [editConductorId, setEditConductorId] = useState<string>("")
+
+  // Modal states
   const [openDelete, setOpenDelete] = useState(false)
   const [openUpdate, setOpenUpdate] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
   const [selectedTeamSource, setSelectedTeamSource] = useState<
-    "shop" | "vehicle" | "store"
+    "shop" | "vehicle" | "store" | "motorbike"
   >("shop")
   const [addingTeam, setAddingTeam] = useState(false)
   const [updatingTeam, setUpdatingTeam] = useState(false)
@@ -65,22 +78,34 @@ const CreateTeamPage = () => {
   const [filterType, setFilterType] = useState("")
   const [showTeamDetails, setShowTeamDetails] = useState(false)
 
+  // Employee assignment warning modal
+  const [openAssignedModal, setOpenAssignedModal] = useState(false)
+  const [selectedEmployeeForModal, setSelectedEmployeeForModal] =
+    useState<any>(null)
+
   const allSalesTeamShops = useAppSelector(selectAllSalesTeamShops)
   const allVehicles = useAppSelector(getAllVehicles)
-  console.log("all shops ", allSalesTeamShops)
   const allStores = useAppSelector(selectAllStore)
+
+
+  const all_employees = useAppSelector(selectAllEmployees)
 
   const { businessName, businessId } = planStatus()
 
+
+
+  // Fetch initial data
   useEffect(() => {
     if (businessId) {
       dispatch(fetchSalesTeamShops())
       dispatch(fetchVehicles({ businessId }))
       dispatch(fetchStore({ businessId }))
+      dispatch(fetchEmployees({ businessId }))
     }
   }, [dispatch, businessId])
 
-  // Combine all teams for display
+ 
+  // Combine all teams without duplication - now based on type_of_vehicle
   const allTeams = [
     ...allStores.map((store) => ({
       ...store,
@@ -96,8 +121,9 @@ const CreateTeamPage = () => {
     })),
     ...allVehicles.map((vehicle) => ({
       ...vehicle,
-      teamType: "VEHICLE",
-      source: "vehicle",
+      teamType:
+        vehicle.type_of_vehicle === "MOTORBIKE" ? "MOTORBIKE" : "VEHICLE",
+      source: vehicle.type_of_vehicle === "MOTORBIKE" ? "motorbike" : "vehicle",
       displayName: `${vehicle.number_plate} - ${vehicle.engine_size}`,
     })),
   ]
@@ -127,7 +153,15 @@ const CreateTeamPage = () => {
       color: "bg-green-100 text-green-700",
       source: "vehicle",
     },
-  ] 
+    {
+      value: "MOTORBIKE",
+      label: "Motorbike Team",
+      icon: "🏍️",
+      description: "Motorbike delivery teams",
+      color: "bg-yellow-100 text-yellow-700",
+      source: "motorbike",
+    },
+  ]
 
   const filteredTeams = allTeams.filter((team) => {
     const matchesType = filterType === "" || team.teamType === filterType
@@ -141,6 +175,49 @@ const CreateTeamPage = () => {
 
     return matchesType && matchesSearch
   })
+
+  // Reset form when team type changes
+  useEffect(() => {
+    if (teamType !== "VEHICLE" && teamType !== "MOTORBIKE") {
+      setDriverId("")
+      setConductorId("")
+    }
+  }, [teamType])
+
+  const handleEmployeeSelection = (
+    employeeId: string,
+    isDriver: boolean,
+    isEdit: boolean = false,
+  ) => {
+    const employee = all_employees.find((emp) => emp.id === Number(employeeId))
+    if (employee?.assigned_to?.type && employee?.assigned_to?.name) {
+      setSelectedEmployeeForModal(employee)
+      setOpenAssignedModal(true)
+    }
+
+    if (isEdit) {
+      if (isDriver) {
+        setEditDriverId(employeeId)
+      } else {
+        setEditConductorId(employeeId)
+      }
+    } else {
+      if (isDriver) {
+        setDriverId(employeeId)
+      } else {
+        setConductorId(employeeId)
+      }
+    }
+  }
+
+  const getEmployeeDisplayText = (employee) => {
+    if (!employee) return "Not assigned"
+    const name = `${employee.first_name} ${employee.last_name}`
+    if (employee.assigned_to?.type && employee.assigned_to?.name) {
+      return `${name} (Assigned to ${employee.assigned_to.type}: ${employee.assigned_to.name})`
+    }
+    return name
+  }
 
   const handleSaveClick = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -159,7 +236,6 @@ const CreateTeamPage = () => {
             addStore({
               name: teamName,
               location_name: locationName,
-              // location_coordinates: locationCoordinates,
             }),
           ).unwrap()
           break
@@ -175,7 +251,6 @@ const CreateTeamPage = () => {
             location_name: locationName,
           }
           await dispatch(addSalesTeam(Data)).unwrap()
-
           break
 
         case "VEHICLE":
@@ -184,11 +259,31 @@ const CreateTeamPage = () => {
             setAddingTeam(false)
             return
           }
-          const formData = {
+          const vehicleData = {
             number_plate: numberPlate,
             engine_size: engineSize,
+            business: businessId,
+            type_of_vehicle: "VEHICLE",
+            driver: driverId || null,
+            conductor: conductorId || null,
           }
-          await dispatch(addVehicle(formData)).unwrap()
+          await dispatch(addVehicle(vehicleData)).unwrap()
+          break
+
+        case "MOTORBIKE":
+          if (!numberPlate || !engineSize) {
+            toast.error("Number plate and engine size are required!")
+            setAddingTeam(false)
+            return
+          }
+          const motorbikeData = {
+            number_plate: numberPlate,
+            engine_size: engineSize,
+            business: businessId,
+            type_of_vehicle: "MOTORBIKE",
+            driver: driverId || null,
+          }
+          await dispatch(addVehicle(motorbikeData)).unwrap()
           break
 
         default:
@@ -205,12 +300,15 @@ const CreateTeamPage = () => {
       setEngineSize("")
       setLocationName("")
       setLocationCoordinates("")
+      setDriverId("")
+      setConductorId("")
       setTeamType("SHOP")
       setShowAdd(false)
 
       // Refresh data
-      dispatch(fetchVehicles())
+      dispatch(fetchVehicles({ businessId }))
       dispatch(fetchStore({ businessId }))
+      dispatch(fetchSalesTeamShops())
     } catch (error: any) {
       toast.error(error.message || "Failed to create team")
       setAddingTeam(false)
@@ -228,6 +326,7 @@ const CreateTeamPage = () => {
           await dispatch(deleteStore(selectedTeam.id)).unwrap()
           break
         case "vehicle":
+        case "motorbike":
           await dispatch(deleteVehicle(selectedTeam.id)).unwrap()
           break
         case "shop":
@@ -241,8 +340,9 @@ const CreateTeamPage = () => {
       setSelectedTeam(null)
 
       // Refresh data
-      dispatch(fetchVehicles())
+      dispatch(fetchVehicles({ businessId }))
       dispatch(fetchStore({ businessId }))
+      dispatch(fetchSalesTeamShops())
     } catch (error: any) {
       toast.error(error.message || "Failed to delete team")
       setDeletingTeam(false)
@@ -275,13 +375,32 @@ const CreateTeamPage = () => {
               data: {
                 number_plate: numberPlate,
                 engine_size: engineSize,
+                driver: editDriverId || null,
+                conductor: editConductorId || null,
+              },
+            }),
+          ).unwrap()
+          break
+        case "motorbike":
+          await dispatch(
+            updateVehicle({
+              id: selectedTeam.id,
+              data: {
+                number_plate: numberPlate,
+                engine_size: engineSize,
+                driver: editDriverId || null,
               },
             }),
           ).unwrap()
           break
         case "shop":
-          await dispatch(updateSalesTeam({ id: selectedTeam.id, name: teamName })).unwrap()
-          // Update shop logic
+          await dispatch(
+            updateSalesTeam({
+              id: selectedTeam.id,
+              name: teamName,
+              location_name: locationName,
+            }),
+          ).unwrap()
           break
       }
 
@@ -295,11 +414,16 @@ const CreateTeamPage = () => {
       setEngineSize("")
       setLocationName("")
       setLocationCoordinates("")
+      setDriverId("")
+      setConductorId("")
+      setEditDriverId("")
+      setEditConductorId("")
       setSelectedTeam(null)
 
       // Refresh data
-      dispatch(fetchVehicles())
+      dispatch(fetchVehicles({ businessId }))
       dispatch(fetchStore({ businessId }))
+      dispatch(fetchSalesTeamShops())
     } catch (error: any) {
       toast.error(error.message || "Failed to update team")
       setUpdatingTeam(false)
@@ -307,7 +431,7 @@ const CreateTeamPage = () => {
     }
   }
 
-  // Update the form fields based on selected team type
+  // Update form fields when editing
   useEffect(() => {
     if (selectedTeam && openUpdate) {
       if (selectedTeamSource === "store") {
@@ -317,6 +441,12 @@ const CreateTeamPage = () => {
       } else if (selectedTeamSource === "vehicle") {
         setNumberPlate(selectedTeam.number_plate || "")
         setEngineSize(selectedTeam.engine_size || "")
+        setEditDriverId(selectedTeam.driver?.id?.toString() || "")
+        setEditConductorId(selectedTeam.conductor?.id?.toString() || "")
+      } else if (selectedTeamSource === "motorbike") {
+        setNumberPlate(selectedTeam.number_plate || "")
+        setEngineSize(selectedTeam.engine_size || "")
+        setEditDriverId(selectedTeam.driver?.id?.toString() || "")
       } else if (selectedTeamSource === "shop") {
         setTeamName(selectedTeam.name || "")
         setLocationName(selectedTeam.location?.name || "")
@@ -333,6 +463,7 @@ const CreateTeamPage = () => {
         navigate(`/cylinders/stock/team/${team.id}/${team.name}`)
         break
       case "VEHICLE":
+      case "MOTORBIKE":
         navigate(`/cylinders/stock/vehicle/${team.id}/${team.number_plate}`)
         break
       default:
@@ -340,12 +471,17 @@ const CreateTeamPage = () => {
     }
   }
 
-
   const handleViewTeam = (team: any) => {
     setSelectedTeam(team)
     setSelectedTeamSource(team.source)
     setShowTeamDetails(true)
   }
+
+  // Filter employees for driver/conductor selection (exclude already assigned ones if needed)
+  const getAvailableEmployees = (excludeId?: string) => {
+    return all_employees.filter((emp) => emp.id !== Number(excludeId))
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
       <Navbar
@@ -416,10 +552,27 @@ const CreateTeamPage = () => {
               <div>
                 <div className="text-sm text-gray-600 mb-1">Vehicles</div>
                 <div className="text-2xl font-bold text-green-600">
-                  {allVehicles.length}
+                  {
+                    allVehicles.filter((v) => v.type_of_vehicle === "VEHICLE")
+                      .length
+                  }
                 </div>
               </div>
               <span className="text-2xl">🚚</span>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm text-gray-600 mb-1">Motorbikes</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {
+                    allVehicles.filter((v) => v.type_of_vehicle === "MOTORBIKE")
+                      .length
+                  }
+                </div>
+              </div>
+              <span className="text-2xl">🏍️</span>
             </div>
           </div>
         </div>
@@ -528,7 +681,7 @@ const CreateTeamPage = () => {
                 </>
               )}
 
-              {teamType === "VEHICLE" && (
+              {(teamType === "VEHICLE" || teamType === "MOTORBIKE") && (
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -547,7 +700,7 @@ const CreateTeamPage = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Engine Size
+                      Engine Size (CC)
                     </label>
                     <input
                       type="text"
@@ -555,9 +708,54 @@ const CreateTeamPage = () => {
                       onChange={(e) => setEngineSize(e.target.value)}
                       required
                       className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
-                      placeholder="e.g., 2.0L Turbo"
+                      placeholder="e.g., 2000"
                     />
                   </div>
+
+                  {/* Driver Selection */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Driver{" "}
+                      {teamType === "MOTORBIKE" ? "(Required)" : "(Optional)"}
+                    </label>
+                    <select
+                      value={driverId}
+                      onChange={(e) =>
+                        handleEmployeeSelection(e.target.value, true, false)
+                      }
+                      className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
+                    >
+                      <option value="">Select Driver</option>
+                      {all_employees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {getEmployeeDisplayText(emp)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Conductor Selection (Only for VEHICLE) */}
+                  {teamType === "VEHICLE" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Conductor (Optional)
+                      </label>
+                      <select
+                        value={conductorId}
+                        onChange={(e) =>
+                          handleEmployeeSelection(e.target.value, false, false)
+                        }
+                        className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
+                      >
+                        <option value="">Select Conductor</option>
+                        {all_employees.map((emp) => (
+                          <option key={emp.id} value={emp.id}>
+                            {getEmployeeDisplayText(emp)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -688,12 +886,32 @@ const CreateTeamPage = () => {
                             {team.engine_size && ` • ${team.engine_size} CC`}
                           </p>
 
+                          {/* Show driver/conductor info if available */}
+                          {(team.driver || team.conductor) && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {team.driver && (
+                                <span>
+                                  🚗 Driver: {team.driver.first_name}{" "}
+                                  {team.driver.last_name}
+                                </span>
+                              )}
+                              {team.conductor && (
+                                <span className="ml-2">
+                                  👥 Conductor: {team.conductor.first_name}{" "}
+                                  {team.conductor.last_name}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           <div className="flex gap-2 mt-2 flex-wrap">
                             <span className="bg-white px-2 py-1 rounded text-xs font-medium text-gray-700 border border-gray-300">
                               {team.teamType === "VEHICLE"
                                 ? "🚚 Vehicle"
                                 : team.teamType === "STORE"
                                 ? "🏬 Store"
+                                : team.teamType === "MOTORBIKE"
+                                ? "🏍️ Motorbike"
                                 : "🏪 Shop"}
                             </span>
                             {team.created_at && (
@@ -717,22 +935,12 @@ const CreateTeamPage = () => {
                     </div>
 
                     <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-                      {team.teamType !== "VEHICLE" && (
-                        <button
-                          onClick={() => handleStockNavigation(team)}
-                          className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold transition text-sm"
-                        >
-                          📦 Stock
-                        </button>
-                      )}
-                      {team.teamType === "VEHICLE" && (
-                        <button
-                          onClick={() => handleStockNavigation(team)}
-                          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg font-semibold transition text-sm"
-                        >
-                          📦 Stock
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleStockNavigation(team)}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg font-semibold transition text-sm"
+                      >
+                        📦 Stock
+                      </button>
                       <button
                         onClick={() => {
                           setSelectedTeam(team)
@@ -806,7 +1014,8 @@ const CreateTeamPage = () => {
                   </>
                 )}
 
-                {selectedTeamSource === "vehicle" && (
+                {(selectedTeamSource === "vehicle" ||
+                  selectedTeamSource === "motorbike") && (
                   <>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -823,7 +1032,7 @@ const CreateTeamPage = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Engine Size
+                        Engine Size (CC)
                       </label>
                       <input
                         type="text"
@@ -832,6 +1041,53 @@ const CreateTeamPage = () => {
                         className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                       />
                     </div>
+
+                    {/* Driver Selection - Edit */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Driver{" "}
+                        {selectedTeamSource === "motorbike"
+                          ? "(Required)"
+                          : "(Optional)"}
+                      </label>
+                      <select
+                        value={editDriverId}
+                        onChange={(e) =>
+                          handleEmployeeSelection(e.target.value, true, true)
+                        }
+                        className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                      >
+                        <option value="">Select Driver</option>
+                        {all_employees.map((emp) => (
+                          <option key={emp.id} value={emp.id}>
+                            {getEmployeeDisplayText(emp)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Conductor Selection - Edit (Only for VEHICLE) */}
+                    {selectedTeamSource === "vehicle" && (
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Conductor (Optional)
+                        </label>
+                        <select
+                          value={editConductorId}
+                          onChange={(e) =>
+                            handleEmployeeSelection(e.target.value, false, true)
+                          }
+                          className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                        >
+                          <option value="">Select Conductor</option>
+                          {all_employees.map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                              {getEmployeeDisplayText(emp)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -875,6 +1131,8 @@ const CreateTeamPage = () => {
                     setEngineSize("")
                     setLocationName("")
                     setLocationCoordinates("")
+                    setEditDriverId("")
+                    setEditConductorId("")
                   }}
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-semibold transition"
                 >
@@ -963,7 +1221,7 @@ const CreateTeamPage = () => {
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-xs text-gray-600 mb-1">Engine Size</p>
                     <p className="font-semibold text-gray-800">
-                      🚗 {selectedTeam.engine_size}
+                      🚗 {selectedTeam.engine_size} CC
                     </p>
                   </div>
                 )}
@@ -973,6 +1231,26 @@ const CreateTeamPage = () => {
                     <p className="text-xs text-gray-600 mb-1">Number Plate</p>
                     <p className="font-semibold text-gray-800">
                       🚗 {selectedTeam.number_plate}
+                    </p>
+                  </div>
+                )}
+
+                {selectedTeam.driver && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Driver</p>
+                    <p className="font-semibold text-gray-800">
+                      🚗 {selectedTeam.driver.first_name}{" "}
+                      {selectedTeam.driver.last_name}
+                    </p>
+                  </div>
+                )}
+
+                {selectedTeam.conductor && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="text-xs text-gray-600 mb-1">Conductor</p>
+                    <p className="font-semibold text-gray-800">
+                      👥 {selectedTeam.conductor.first_name}{" "}
+                      {selectedTeam.conductor.last_name}
                     </p>
                   </div>
                 )}
@@ -1013,6 +1291,7 @@ const CreateTeamPage = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {openDelete && selectedTeam && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -1058,12 +1337,15 @@ const CreateTeamPage = () => {
                   </div>
                 )}
 
-                {selectedTeam.teamType === "VEHICLE" && (
+                {(selectedTeam.teamType === "VEHICLE" ||
+                  selectedTeam.teamType === "MOTORBIKE") && (
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
                     <p className="text-yellow-700 text-sm">
                       <span className="font-bold">Note:</span> Deleting this
-                      vehicle will remove all delivery records associated with
-                      it.
+                      {selectedTeam.teamType === "VEHICLE"
+                        ? " vehicle"
+                        : " motorbike"}{" "}
+                      will remove all delivery records associated with it.
                     </p>
                   </div>
                 )}
@@ -1120,6 +1402,51 @@ const CreateTeamPage = () => {
         </div>
       )}
 
+      {/* Employee Assignment Warning Modal */}
+      {openAssignedModal && selectedEmployeeForModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="text-6xl mb-4">⚠️</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                Employee Already Assigned
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {selectedEmployeeForModal.first_name}{" "}
+                {selectedEmployeeForModal.last_name} is already assigned to:
+              </p>
+              <div className="bg-gray-50 p-3 rounded-lg mb-4">
+                <p className="font-semibold">
+                  {selectedEmployeeForModal.assigned_to?.type}:{" "}
+                  {selectedEmployeeForModal.assigned_to?.name}
+                </p>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">
+                Assigning them to another team may cause conflicts. Do you want
+                to proceed?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setOpenAssignedModal(false)}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setOpenAssignedModal(false)
+                    // Proceed with assignment - the selection will be kept
+                  }}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold transition"
+                >
+                  Proceed Anyway
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="fixed bottom-0 left-0 right-0">
         <AdminsFooter />
       </footer>
@@ -1136,6 +1463,8 @@ const getTeamColor = (teamType: string) => {
       return "from-blue-500 to-blue-600"
     case "VEHICLE":
       return "from-green-500 to-green-600"
+    case "MOTORBIKE":
+      return "from-yellow-500 to-yellow-600"
     default:
       return "from-indigo-500 to-indigo-600"
   }
@@ -1149,6 +1478,8 @@ const getTeamBorderColor = (teamType: string) => {
       return "border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50"
     case "VEHICLE":
       return "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50"
+    case "MOTORBIKE":
+      return "border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50"
     default:
       return "border-gray-200 bg-gradient-to-r from-gray-50 to-slate-50"
   }
@@ -1179,6 +1510,14 @@ const getTeamTypeInfo = (type: string) => {
       description: "Delivery and transportation teams",
       color: "bg-green-100 text-green-700",
       source: "vehicle",
+    },
+    {
+      value: "MOTORBIKE",
+      label: "Motorbike Team",
+      icon: "🏍️",
+      description: "Motorbike delivery teams",
+      color: "bg-yellow-100 text-yellow-700",
+      source: "motorbike",
     },
   ]
   return teamTypes.find((t) => t.value === type) || teamTypes[0]

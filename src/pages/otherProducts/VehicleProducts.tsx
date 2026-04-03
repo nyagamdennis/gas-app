@@ -17,6 +17,7 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday"
 import UpdateIcon from "@mui/icons-material/Update"
 import StorefrontIcon from "@mui/icons-material/Storefront"
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const VehicleProducts = () => {
   const theme = useTheme()
@@ -44,6 +45,14 @@ const VehicleProducts = () => {
   const idParams = useParams()
   const shopId = idParams.id
   const shopName = idParams.name ? decodeURIComponent(idParams.name) : ""
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     if (shopId) {
@@ -179,6 +188,14 @@ const VehicleProducts = () => {
             headerMessage={"ERP"}
             headerText={"Manage your shop products with style and clarity"}
           />
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
 
           <main className="flex-grow m-2 p-1">
             {/* Header Section */}

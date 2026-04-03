@@ -23,6 +23,7 @@ import {
   CheckCircle,
   LocationOff,
 } from "@mui/icons-material"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const CylinderSales = () => {
   const theme = useTheme()
@@ -100,6 +101,15 @@ const CylinderSales = () => {
   const allAssignedProducts = useAppSelector(selectAllAssignedProducts)
   const operationError = useAppSelector(getSalesError)
 
+
+  // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
   // Function to get current location
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -474,6 +484,14 @@ const CylinderSales = () => {
             headerMessage={getPageTitle()}
             headerText={getPageDescription()}
           />
+          <div className="prevent-overflow">
+                      <RealTimeIndicator
+                        enabled={autoRefresh}
+                        lastUpdated={lastUpdated}
+                        dataVersion={dataVersion}
+                        onToggle={() => setAutoRefresh(!autoRefresh)}
+                      />
+                    </div>
 
           <main className="flex-grow p-4">
             {/* Team Info (if applicable) */}

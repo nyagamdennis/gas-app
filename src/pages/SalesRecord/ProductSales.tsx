@@ -19,6 +19,7 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import AdminsFooter from "../../components/AdminsFooter"
 import api from "../../../utils/api"
 import planStatus from "../../features/planStatus/planStatus"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const ProductSales = () => {
   const theme = useTheme()
@@ -1609,6 +1610,14 @@ const ProductSales = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <ToastContainer />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
       {showSummary && renderOrderSummary()}
       {showSuccessModal && renderSuccessModal()}
 

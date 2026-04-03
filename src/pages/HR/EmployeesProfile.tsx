@@ -13,7 +13,7 @@ import {
   selectAllEmployees,
 } from "../../features/employees/employeesSlice"
 import defaultProfile from "../../components/media/default.png"
-import { WhatsappShareButton, WhatsappIcon } from "react-share"
+import { CircularProgress } from "@mui/material"
 import {
   fetchSalesTeamVehicle,
   selectAllSalesTeamVehicle,
@@ -24,6 +24,7 @@ import {
 } from "../../features/salesTeam/salesTeamSlice"
 import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 // Role options with icons
 const ROLE_OPTIONS = [
@@ -121,6 +122,14 @@ const Employee = () => {
     planName,
   } = planStatus()
 
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   const allEmployees = useAppSelector(selectAllEmployees)
   const allVehicles = useAppSelector(selectAllSalesTeamVehicle)
   const allShops = useAppSelector(selectAllSalesTeamShops)
@@ -136,6 +145,8 @@ const Employee = () => {
   const [assignmentType, setAssignmentType] = useState("")
   const [selectedLocation, setSelectedLocation] = useState("")
   const [vehicleRole, setVehicleRole] = useState("DRIVER")
+  // New state for shop and store assignment role
+  const [assignmentRole, setAssignmentRole] = useState("")
   const [isResending, setIsResending] = useState(false)
   const [realData, setRealData] = useState({
     stores: [],
@@ -289,6 +300,10 @@ const Employee = () => {
   const handleStartAssignment = (employee) => {
     setSelectedForAssignment(employee)
     setAssignmentStep(1)
+    setAssignmentType("")
+    setSelectedLocation("")
+    setVehicleRole("DRIVER")
+    setAssignmentRole("") // Reset assignment role
     setShowAssignmentModal(true)
   }
 
@@ -298,17 +313,25 @@ const Employee = () => {
     }
     if (assignmentType === "STORE") {
       formData.store_id = selectedLocation.id
+      formData.role = assignmentRole // e.g., "STORE_MAN" or "SECURITY"
     } else if (assignmentType === "VEHICLE") {
       formData.vehicle_id = selectedLocation.id
+      // For vehicles, we use the selected vehicleRole (e.g., "TRUCK_DRIVER" or "CONDUCTOR")
+      formData.role = vehicleRole
     } else if (assignmentType === "SHOP") {
       formData.shop_id = selectedLocation.id
+      formData.role = assignmentRole // e.g., "SALES_PERSON" or "SHOP_ATTENDANT"
+    } else if (assignmentType === "DELIVERY") {
+      // For motorcycles, we'll assign as delivery person
+      formData.vehicle_id = selectedLocation.id
+      formData.role = "DELIVERY_GUY" // or we could have a separate role selection for motorcycles
     }
+
     const teamName = selectedLocation.name
-    // Here you would typically make an API call
     try {
       await dispatch(assignEmployee({ formData, teamName }))
       toast.success(
-        `Assigned ${selectedForAssignment.first_name} to ${selectedLocation.name}`,
+        `Assigned ${selectedForAssignment.first_name} to ${selectedLocation.name} as ${formData.role}`,
       )
     } catch (error) {
       console.error("error ", error)
@@ -321,27 +344,32 @@ const Employee = () => {
     setAssignmentType("")
     setSelectedLocation("")
     setVehicleRole("DRIVER")
+    setAssignmentRole("")
     setAssignmentStep(1)
   }
-
   const handleChangeAssignToLocation = async () => {
     const formData = {
       employee_id: selectedForAssignment.id,
     }
     if (assignmentType === "STORE") {
       formData.store_id = selectedLocation.id
+      formData.role = assignmentRole
     } else if (assignmentType === "VEHICLE") {
       formData.vehicle_id = selectedLocation.id
+      formData.role = vehicleRole
     } else if (assignmentType === "SHOP") {
       formData.shop_id = selectedLocation.id
+      formData.role = assignmentRole
+    } else if (assignmentType === "DELIVERY") {
+      formData.vehicle_id = selectedLocation.id
+      formData.role = "DELIVERY_GUY"
     }
     const teamName = selectedLocation.name
 
-    // Here you would typically make an API call
     try {
       await dispatch(changeAssignEmployee({ formData, teamName }))
       toast.success(
-        `Transferred ${selectedForAssignment.first_name} to ${selectedLocation.name}`,
+        `Transferred ${selectedForAssignment.first_name} to ${selectedLocation.name} as ${formData.role}`,
       )
     } catch (error) {
       console.error("error ", error)
@@ -354,6 +382,7 @@ const Employee = () => {
     setAssignmentType("")
     setSelectedLocation("")
     setVehicleRole("DRIVER")
+    setAssignmentRole("")
     setAssignmentStep(1)
   }
 
@@ -396,6 +425,7 @@ const Employee = () => {
                   onClick={() => {
                     setAssignmentType(type.value)
                     setAssignmentStep(2)
+                    setAssignmentRole("") // Reset role when changing type
                   }}
                   className="p-4 border-2 border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition text-left"
                 >
@@ -418,17 +448,18 @@ const Employee = () => {
                 <h3 className="text-lg font-bold text-gray-800">
                   Select New Store
                 </h3>
-                {isChangingAssignment && (
-                  <div className="mb-3 p-2 bg-blue-50 rounded">
-                    <p className="text-sm text-blue-700">
-                      <span className="font-semibold">Current:</span>{" "}
-                      {selectedForAssignment.assigned_to.name}
-                    </p>
-                    <p className="text-xs text-blue-600">
-                      (Current store is excluded from the list below)
-                    </p>
-                  </div>
-                )}
+                {isChangingAssignment &&
+                  selectedForAssignment.assigned_to.type === "STORE" && (
+                    <div className="mb-3 p-2 bg-blue-50 rounded">
+                      <p className="text-sm text-blue-700">
+                        <span className="font-semibold">Current:</span>{" "}
+                        {selectedForAssignment.assigned_to.name}
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        (Current store is excluded from the list below)
+                      </p>
+                    </div>
+                  )}
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {dataToUse.stores.length > 0 ? (
                     dataToUse.stores.map((store) => (
@@ -459,10 +490,38 @@ const Employee = () => {
                     ))
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      No other stores available for transfer
+                      No stores available. Please add a store first.
                     </div>
                   )}
                 </div>
+
+                {/* Store Role Selection */}
+                {selectedLocation && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assign as:
+                    </label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "STORE_MAN", label: "📦 Store Manager" },
+                        { value: "SECURITY", label: "🛡️ Security" },
+                      ].map((role) => (
+                        <button
+                          key={role.value}
+                          onClick={() => setAssignmentRole(role.value)}
+                          className={`flex-1 p-3 border-2 rounded-lg ${
+                            assignmentRole === role.value
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          <div className="font-semibold">{role.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setAssignmentStep(1)}
@@ -471,10 +530,12 @@ const Employee = () => {
                     ← Back
                   </button>
                   <button
-                    onClick={() => selectedLocation && setAssignmentStep(3)}
-                    disabled={!selectedLocation}
+                    onClick={() =>
+                      selectedLocation && assignmentRole && setAssignmentStep(3)
+                    }
+                    disabled={!selectedLocation || !assignmentRole}
                     className={`flex-1 px-4 py-2 rounded-lg font-semibold ${
-                      selectedLocation
+                      selectedLocation && assignmentRole
                         ? "bg-blue-500 text-white hover:bg-blue-600"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -533,10 +594,38 @@ const Employee = () => {
                     ))
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      No other shops available for transfer
+                      No shops available. Please add a shop first.
                     </div>
                   )}
                 </div>
+
+                {/* Shop Role Selection */}
+                {selectedLocation && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assign as:
+                    </label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "SALES_PERSON", label: "💼 Sales Person" },
+                        { value: "SHOP_ATTENDANT", label: "🏪 Shop Attendant" },
+                      ].map((role) => (
+                        <button
+                          key={role.value}
+                          onClick={() => setAssignmentRole(role.value)}
+                          className={`flex-1 p-3 border-2 rounded-lg ${
+                            assignmentRole === role.value
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          <div className="font-semibold">{role.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <button
                     onClick={() => setAssignmentStep(1)}
@@ -545,10 +634,12 @@ const Employee = () => {
                     ← Back
                   </button>
                   <button
-                    onClick={() => selectedLocation && setAssignmentStep(3)}
-                    disabled={!selectedLocation}
+                    onClick={() =>
+                      selectedLocation && assignmentRole && setAssignmentStep(3)
+                    }
+                    disabled={!selectedLocation || !assignmentRole}
                     className={`flex-1 px-4 py-2 rounded-lg font-semibold ${
-                      selectedLocation
+                      selectedLocation && assignmentRole
                         ? "bg-blue-500 text-white hover:bg-blue-600"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
@@ -615,7 +706,7 @@ const Employee = () => {
                     ))
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      No other vehicles available for transfer
+                      No vehicles available. Please add a vehicle first.
                     </div>
                   )}
                 </div>
@@ -624,19 +715,20 @@ const Employee = () => {
                     Assign as:
                   </label>
                   <div className="flex gap-2">
-                    {["DRIVER", "CONDUCTOR"].map((role) => (
+                    {[
+                      { value: "TRUCK_DRIVER", label: "👨‍✈️ Driver" },
+                      { value: "CONDUCTOR", label: "🎫 Conductor" },
+                    ].map((role) => (
                       <button
-                        key={role}
-                        onClick={() => setVehicleRole(role)}
+                        key={role.value}
+                        onClick={() => setVehicleRole(role.value)}
                         className={`flex-1 p-3 border-2 rounded-lg ${
-                          vehicleRole === role
+                          vehicleRole === role.value
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-300 hover:border-gray-400"
                         }`}
                       >
-                        <div className="font-semibold">
-                          {role === "DRIVER" ? "👨‍✈️ Driver" : "🎫 Conductor"}
-                        </div>
+                        <div className="font-semibold">{role.label}</div>
                       </button>
                     ))}
                   </div>
@@ -719,7 +811,7 @@ const Employee = () => {
                     ))
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      No other motorcycles available for transfer
+                      No motorcycles available. Please add a motorcycle first.
                     </div>
                   )}
                 </div>
@@ -751,6 +843,23 @@ const Employee = () => {
 
       case 3:
         const isChanging = isEmployeeAssigned(selectedForAssignment)
+        // Determine which role to display based on assignment type
+        let displayRole = ""
+        if (assignmentType === "STORE" || assignmentType === "SHOP") {
+          const roleOption = ROLE_OPTIONS.find(
+            (r) => r.value === assignmentRole,
+          )
+          displayRole = roleOption
+            ? `${roleOption.icon} ${roleOption.label}`
+            : assignmentRole
+        } else if (assignmentType === "VEHICLE") {
+          const roleOption = ROLE_OPTIONS.find((r) => r.value === vehicleRole)
+          displayRole = roleOption
+            ? `${roleOption.icon} ${roleOption.label}`
+            : vehicleRole
+        } else if (assignmentType === "DELIVERY") {
+          displayRole = "🏍️ Delivery Person"
+        }
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-gray-800">
@@ -805,11 +914,10 @@ const Employee = () => {
                   <div className="text-gray-700">
                     {selectedLocation?.name || "No location selected"}
                   </div>
-                  {assignmentType === "VEHICLE" && (
+                  {displayRole && (
                     <div className="mt-2">
                       <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                        Role:{" "}
-                        {vehicleRole === "DRIVER" ? "Driver" : "Conductor"}
+                        Role: {displayRole}
                       </span>
                     </div>
                   )}
@@ -899,7 +1007,6 @@ const Employee = () => {
     if (resendingIds.has(employeeId)) return
     setResendingIds((prev) => new Set(prev).add(employeeId))
     try {
-      // await dispatch(resendInvite({ businessId, employeeId })).unwrap()
       await api.post(`employees/employees/${employeeId}/invite/`)
       toast.success(`Invitation resent to ${employeeEmail}`)
     } catch (error) {
@@ -918,6 +1025,52 @@ const Employee = () => {
   const assignedCount = allEmployees.filter(isEmployeeAssigned).length
   const unassignedCount = allEmployees.length - assignedCount
 
+  useEffect(() => {
+    // Separate vehicles and motorcycles based on type_of_vehicle
+    const vehiclesList = allVehicles
+      .filter((vehicle) => vehicle.type_of_vehicle === "VEHICLE")
+      .map((vehicle) => ({
+        id: vehicle.id,
+        type: "Vehicle",
+        plate: vehicle.number_plate || "No Plate",
+        capacity: vehicle.engine_size
+          ? `${vehicle.engine_size}cc`
+          : "Not specified",
+        status: vehicle.driver ? "Assigned" : "Available",
+      }))
+
+    const motorcyclesList = allVehicles
+      .filter((vehicle) => vehicle.type_of_vehicle === "MOTORBIKE")
+      .map((vehicle) => ({
+        id: vehicle.id,
+        type: "Motorbike",
+        plate: vehicle.number_plate || "No Plate",
+        capacity: vehicle.engine_size
+          ? `${vehicle.engine_size}cc`
+          : "Not specified",
+        status: vehicle.driver ? "Assigned" : "Available",
+      }))
+
+    const formattedData = {
+      stores: allStores.map((store) => ({
+        id: store.id,
+        name: store.name || "Unnamed Store",
+        location: store.location?.name || "Location not specified",
+        capacity: store.capacity || "Capacity not specified",
+      })),
+      shops: allShops.map((shop) => ({
+        id: shop.id,
+        name: shop.name || "Unnamed Shop",
+        location: shop.location?.name || "Location not specified",
+        type: shop.type_of_sales_team?.name || "Shop",
+        status: "Active",
+      })),
+      vehicles: vehiclesList,
+      motorcycles: motorcyclesList,
+    }
+    setRealData(formattedData)
+  }, [allStores, allShops, allVehicles])
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
       <Navbar
@@ -925,6 +1078,14 @@ const Employee = () => {
         headerText={"Manage your operations with style and clarity"}
       />
       <ToastContainer />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <main className="flex-grow m-2 p-1 mb-20">
         {/* Header Section */}

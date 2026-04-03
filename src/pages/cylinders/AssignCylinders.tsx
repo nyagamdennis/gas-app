@@ -35,6 +35,7 @@ import {
   selectAllStoreCylinders,
 } from "../../features/store/storeCylindersSlice"
 import { toast, ToastContainer } from "react-toastify"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const AssignCylinders = () => {
   const theme = useTheme()
@@ -76,6 +77,14 @@ const AssignCylinders = () => {
   const [assignments, setAssignments] = useState([])
   const [loadingAssign, setLoadingAssign] = useState(false)
   const [showSummary, setShowSummary] = useState(false)
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     if (businessId) {
@@ -519,6 +528,15 @@ const AssignCylinders = () => {
           />
           <main className="flex-grow m-2 p-1">
             <ToastContainer />
+            {/* Real-time Indicator */}
+            <div className="prevent-overflow">
+              <RealTimeIndicator
+                enabled={autoRefresh}
+                lastUpdated={lastUpdated}
+                dataVersion={dataVersion}
+                onToggle={() => setAutoRefresh(!autoRefresh)}
+              />
+            </div>
             <div className="">
               {!selectedTeam ? (
                 <div>

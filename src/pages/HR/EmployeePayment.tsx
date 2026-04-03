@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { useMediaQuery, useTheme } from "@mui/material"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const EmployeePayment = () => {
   const theme = useTheme()
@@ -37,6 +38,16 @@ const EmployeePayment = () => {
   const [bankName, setBankName] = useState("")
   const [bankAccount, setBankAccount] = useState("")
   const [bankBranch, setBankBranch] = useState("")
+
+  // Advanced Features
+    const [batchMode, setBatchMode] = useState(false)
+    const [selectedBatchItems, setSelectedBatchItems] = useState([])
+    const [lastUpdated, setLastUpdated] = useState(null)
+    const [autoRefresh, setAutoRefresh] = useState(false)
+    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+    const [dataVersion, setDataVersion] = useState(0)
+  
+    
 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMonth, setPaymentMonth] = useState(new Date().getMonth() + 1) // 1-12
@@ -215,7 +226,14 @@ const EmployeePayment = () => {
         employeeData.deficits?.reduce((sum, d) => {
           if (d.is_salary_deductible) {
             return sum + (parseFloat(d.total_difference) || 0)
-          }
+          } // Advanced Features
+          const [batchMode, setBatchMode] = useState(false)
+          const [selectedBatchItems, setSelectedBatchItems] = useState([])
+          const [lastUpdated, setLastUpdated] = useState(null)
+          const [autoRefresh, setAutoRefresh] = useState(false)
+          const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+          const [dataVersion, setDataVersion] = useState(0)
+
           return sum
         }, 0) || 0
     }
@@ -323,6 +341,14 @@ const EmployeePayment = () => {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0]">
         <Navbar headerMessage="Error" headerText="No employee data" />
+        <div className="prevent-overflow">
+                  <RealTimeIndicator
+                    enabled={autoRefresh}
+                    lastUpdated={lastUpdated}
+                    dataVersion={dataVersion}
+                    onToggle={() => setAutoRefresh(!autoRefresh)}
+                  />
+                </div>
         <main className="flex-grow p-6">
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             <p className="text-red-500">Could not load employee information.</p>

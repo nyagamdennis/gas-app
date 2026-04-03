@@ -28,6 +28,7 @@ import {
   selectAllStore,
 } from "../../features/store/storeSlice"
 import { useNavigate } from "react-router-dom"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const Products = () => {
   const theme = useTheme()
@@ -53,6 +54,15 @@ const Products = () => {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+
+  // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
   // 1. Fetch stores on mount
   useEffect(() => {
     if (businessId) {
@@ -244,6 +254,14 @@ const Products = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
       <ToastContainer />
       <Navbar headerMessage="ERP" headerText="Manage your product inventory" />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <main className="flex-grow m-2 p-1">
         {/* Header + Store Selector */}

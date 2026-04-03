@@ -9,6 +9,7 @@ import api from "../../../utils/api"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import AdminsFooter from "../../components/AdminsFooter"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const TeamsCylindersVehicle = () => {
   const theme = useTheme()
@@ -35,15 +36,16 @@ const TeamsCylindersVehicle = () => {
   const teamId = idParams.id
   const teamName = idParams.name ? decodeURIComponent(idParams.name) : ""
 
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
-
-  
-    const [showStacked, setShowStacked] = useState(false)
-    const [expandedRows, setExpandedRows] = useState({})
-  
-    
-
-  
+  const [showStacked, setShowStacked] = useState(false)
+  const [expandedRows, setExpandedRows] = useState({})
 
   useEffect(() => {
     if (teamId) {
@@ -58,8 +60,6 @@ const TeamsCylindersVehicle = () => {
         })
     }
   }, [teamId])
-
-
 
   const toggleRowExpansion = (cylinderId) => {
     setExpandedRows((prev) => ({
@@ -106,7 +106,7 @@ const TeamsCylindersVehicle = () => {
     return grouped
   }
 
-    const groupedCylinders = assignedCylinders.length > 0 ? groupByType() : {}
+  const groupedCylinders = assignedCylinders.length > 0 ? groupByType() : {}
 
   return (
     <div>
@@ -116,6 +116,15 @@ const TeamsCylindersVehicle = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
+          {/* Real-time Indicator */}
+                      <div className="prevent-overflow">
+                        <RealTimeIndicator
+                          enabled={autoRefresh}
+                          lastUpdated={lastUpdated}
+                          dataVersion={dataVersion}
+                          onToggle={() => setAutoRefresh(!autoRefresh)}
+                        />
+                      </div>
           <main className="flex-grow m-2 p-1">
             {/* Header Section */}
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg mb-4">

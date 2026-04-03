@@ -161,7 +161,7 @@ const SalesInsights = ({ salesData, statistics, expenses, mobile = false }) => {
       </div>
 
       {/* Summary Stats */}
-      <div className="mt-8 pt-6 border-t">
+      <div className="mt-8 pt-6 pb-24 border-t">
         <h4 className="font-bold text-gray-800 mb-4">Summary Statistics</h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-3 bg-gray-50 rounded-lg">

@@ -11,6 +11,7 @@ import {
   selectAllSalesTeamShops,
 } from "../../features/salesTeam/salesTeamSlice"
 import { fetchSalesTeamVehicle, selectAllSalesTeamVehicle } from "../../features/salesTeam/salesTeamVehicleSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const ProductsActions = () => {
   const theme = useTheme()
@@ -43,6 +44,16 @@ const ProductsActions = () => {
   const [showRepairLocationModal, setShowRepairLocationModal] = useState(false)
   const [showShopListModal, setShowShopListModal] = useState(false)
   const [showVehicleListModal, setShowVehicleListModal] = useState(false)
+
+
+  // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
 
   const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
@@ -229,6 +240,15 @@ const ProductsActions = () => {
             headerText={"Manage your operations with style and clarity"}
           />
 
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
+
           <main className="flex-grow p-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -267,9 +287,7 @@ const ProductsActions = () => {
                 icon="➕"
                 title="Add Products"
                 description="Add products to store"
-                onClick={() =>
-                  navigate("/store/othersproductslist/add/")
-                }
+                onClick={() => navigate("/store/othersproductslist/add/")}
                 gradient="bg-gradient-to-br from-purple-500 to-purple-700"
               />
             </div>

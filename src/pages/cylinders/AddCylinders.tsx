@@ -39,6 +39,7 @@ import {
   fetchStoreCylinders,
   selectAllStoreCylinders,
 } from "../../features/store/storeCylindersSlice"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const AddCylinders = () => {
   const theme = useTheme()
@@ -72,6 +73,14 @@ const AddCylinders = () => {
   const [addingNewWeight, setAddingNewWeight] = useState(false)
   const [newBrandName, setNewBrandName] = useState("")
   const [storeId, setStoreId] = useState("")
+
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   const handleAddCylinder = async (e: any) => {
     e.preventDefault()
@@ -245,6 +254,16 @@ const AddCylinders = () => {
             headerText={"Add new cylinders to your inventory"}
           />
           <ToastContainer />
+
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
 
           <main className="flex-grow p-4 pb-6">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">

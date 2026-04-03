@@ -8,6 +8,7 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import api from "../../../utils/api"
+import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
 
 const PayRoll = () => {
   const theme = useTheme()
@@ -169,6 +170,14 @@ const PayRoll = () => {
   )
   const totalAdvances = employees.reduce((sum, e) => sum + e.advances, 0)
 
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   // Handlers
   const handleSetSalary = (employee) => {
     // Navigate to employee payment page for full salary structure
@@ -212,6 +221,14 @@ const PayRoll = () => {
     return (
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0]">
         <Navbar headerMessage="Error" headerText="Payroll data" />
+        <div className="prevent-overflow">
+                  <RealTimeIndicator
+                    enabled={autoRefresh}
+                    lastUpdated={lastUpdated}
+                    dataVersion={dataVersion}
+                    onToggle={() => setAutoRefresh(!autoRefresh)}
+                  />
+                </div>
         <main className="flex-grow p-6">
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             <p className="text-red-500">{error}</p>
