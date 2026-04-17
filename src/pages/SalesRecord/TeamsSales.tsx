@@ -708,7 +708,10 @@ const TeamsSales = () => {
       const salesArray = Array.isArray(sales) ? sales : []
       const expensesArray = Array.isArray(expensesData) ? expensesData : []
 
-      if (salesArray.length === 0 && expensesArray.length === 0) {
+      // Filter out voided sales
+      const activeSales = salesArray.filter((sale) => !sale.is_void)
+
+      if (activeSales.length === 0 && expensesArray.length === 0) {
         const emptyStats = {
           total_sales: 0,
           total_cash: 0,
@@ -742,7 +745,6 @@ const TeamsSales = () => {
       let mixedCount = 0
       let cylinderAmount = 0
       let regularAmount = 0
-      let totalDebt = 0
 
       // Track hourly sales for peak hour calculation
       const hourlySales = {}
@@ -750,7 +752,7 @@ const TeamsSales = () => {
       const customerSales = {}
       const paymentDistribution = { CASH: 0, MPESA: 0, OTHER: 0 }
 
-      salesArray.forEach((sale) => {
+      activeSales.forEach((sale) => {
         if (!sale || typeof sale !== "object") return
 
         const totalAmount = parseFloat(sale.total_amount || 0)

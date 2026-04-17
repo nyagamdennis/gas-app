@@ -29,7 +29,13 @@ const ProductSales = () => {
   const dispatch = useAppDispatch()
 
   const { businessId } = planStatus()
-
+ // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
   // Get query parameters
   const queryParams = new URLSearchParams(location.search)
   const saleType = queryParams.get("type") || "retail" // 'retail' or 'wholesale'

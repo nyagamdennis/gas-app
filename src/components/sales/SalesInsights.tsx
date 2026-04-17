@@ -13,10 +13,23 @@ import {
 } from "@mui/icons-material"
 import FormattedAmount from "../FormattedAmount"
 
-const SalesInsights = ({ salesData, statistics, expenses, mobile = false }) => {
-  // Calculate insights
+const SalesInsights = ({
+  salesData,
+  statistics,
+  expenses,
+  mobile = false,
+  hideVoided = true,
+}) => {
+  // Filter out voided sales if hideVoided is true
+  const activeSalesData = useMemo(() => {
+    if (!hideVoided) return salesData
+    if (!Array.isArray(salesData)) return []
+    return salesData.filter((sale) => !sale.is_void)
+  }, [salesData, hideVoided])
+
+  // Calculate insights using active sales data
   const insights = useMemo(() => {
-    if (!statistics || salesData.length === 0) {
+    if (!statistics || activeSalesData.length === 0) {
       return []
     }
 
@@ -109,9 +122,9 @@ const SalesInsights = ({ salesData, statistics, expenses, mobile = false }) => {
     }
 
     return insightsList
-  }, [statistics, salesData])
+  }, [statistics, activeSalesData])
 
-  if (!statistics || salesData.length === 0) {
+  if (!statistics || activeSalesData.length === 0) {
     return (
       <div className="bg-white rounded-xl p-6 text-center">
         <Insights className="text-gray-300 text-4xl mx-auto mb-3" />

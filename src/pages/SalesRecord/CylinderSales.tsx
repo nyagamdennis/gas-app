@@ -848,6 +848,7 @@ const CylinderSales = () => {
             coordinates: {
               latitude: locationCoordinates.latitude,
               longitude: locationCoordinates.longitude,
+             
               accuracy: locationCoordinates.accuracy,
               address: locationCoordinates.address,
               timestamp: lastLocationUpdate,

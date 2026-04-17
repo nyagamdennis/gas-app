@@ -50,7 +50,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   )
 
   
-  console.log('is expired:', isExpired)
 
   console.log("🔍 ProtectedRoute Debug:", {
     isAuthenticated,

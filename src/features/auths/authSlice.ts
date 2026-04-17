@@ -6,6 +6,7 @@ import cookies from "cookies-js"
 import api from "../../../utils/api"
 
 interface User {
+  user_id: string
   email: string
   first_name: string
   last_name: string
@@ -18,6 +19,7 @@ interface User {
   email_is_verified?: boolean
   phone_is_verified?: boolean
   phone?: string
+ 
 }
 
 interface AuthState {
@@ -133,7 +135,6 @@ export const authSlice = createSlice({
     loginStart: (state) => {
       state.isLoading = true
       state.error = null
-      // 🔥 NEW: Set status to loading
       state.loginStatus = "loading"
       state.loginError = null
     },
@@ -210,6 +211,7 @@ export const login = (credentials: any) => async (dispatch: any) => {
     const decodedToken: any = jwt_decode(accessToken)
 
     const user: User = {
+      user_id: decodedToken.user_id,
       email: decodedToken.email,
       first_name: decodedToken.first_name,
       last_name: decodedToken.last_name,
@@ -309,7 +311,7 @@ export const selectDecodedUserFromToken = createSelector(
 
 export const selectUserData = createSelector(
   (state: RootState) => state.auth.user,
-  (user) => (user ? { ...user, employee_id: user.employee_id } : null),
+  (user) => (user ? { ...user, user_id: user.user_id, employee_id: user.employee_id } : null),
 )
 
 export const selectUserRole = (state: { auth: AuthState }) =>

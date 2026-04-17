@@ -25,6 +25,10 @@ import Navbar from "../../components/ui/mobile/admin/Navbar"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
+import LocationOnIcon from "@mui/icons-material/LocationOn"
+import HomeIcon from "@mui/icons-material/Home"
+import MeetingRoomIcon from "@mui/icons-material/MeetingRoom"
+// import PhoneIcon from "@mui/icons-material/Phone"
 import {
   addVehicle,
   deleteVehicle,
@@ -61,7 +65,7 @@ import {
   getStoreStatus,
 } from "../../features/store/storeSlice"
 import api from "../../../utils/api"
-import { RefreshCwIcon } from "lucide-react"
+import { PhoneIcon, RefreshCwIcon } from "lucide-react"
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -101,9 +105,11 @@ const Delivery = () => {
   const [availableCylinders, setAvailableCylinders] = useState([])
   const [availableProducts, setAvailableProducts] = useState([])
   const [isLoadingItems, setIsLoadingItems] = useState(false)
+  // Cylinder cart: each item has productId, quantity, customPrice, saleType ("refill"/"outlet")
   const [cartCylinders, setCartCylinders] = useState([
-    { productId: "", quantity: 1, customPrice: "" },
+    { productId: "", quantity: 1, customPrice: "", saleType: "refill" },
   ])
+  // Product cart: each item has productId, quantity, customPrice
   const [cartProducts, setCartProducts] = useState([
     { productId: "", quantity: 1, customPrice: "" },
   ])
@@ -111,7 +117,7 @@ const Delivery = () => {
   const [loadingDeliveries, setLoadingDeliveries] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
-  // NEW: Delivery type (wholesale or retail)
+  // Delivery type (wholesale or retail)
   const [deliveryType, setDeliveryType] = useState("RETAIL") // "RETAIL" or "WHOLESALE"
 
   // Existing vehicle management state (keep for compatibility)
@@ -136,6 +142,13 @@ const Delivery = () => {
   const [editDriver, setEditDriver] = useState("")
   const [editConductor, setEditConductor] = useState("")
   const [editing, setEditing] = useState(false)
+
+
+
+  const [customerPhone, setCustomerPhone] = useState("")
+  const [customerLocation, setCustomerLocation] = useState("")
+  const [apartmentName, setApartmentName] = useState("")
+  const [roomNumber, setRoomNumber] = useState("")
 
   // Advanced Features
   const [batchMode, setBatchMode] = useState(false)
@@ -261,7 +274,7 @@ const Delivery = () => {
   const handleAddCylinder = () => {
     setCartCylinders([
       ...cartCylinders,
-      { productId: "", quantity: 1, customPrice: "" },
+      { productId: "", quantity: 1, customPrice: "", saleType: "refill" },
     ])
   }
   const handleRemoveCylinder = (index) => {
@@ -293,12 +306,16 @@ const Delivery = () => {
     )
   }
 
-  // Helper to get default price based on delivery type
-  const getDefaultCylinderPrice = (cylinder) => {
+  // Helper to get default price based on deliveryType + saleType
+  const getDefaultCylinderPrice = (cylinder, saleType) => {
     if (deliveryType === "RETAIL") {
-      return cylinder.retail_refil_price || 0
+      return saleType === "refill"
+        ? cylinder.cylinder?.retail_refill_price || 0
+        : cylinder.cylinder?.outlet_retail_price || 0
     } else {
-      return cylinder.wholesale_refill_price || 0
+      return saleType === "refill"
+        ? cylinder.cylinder?.wholesale_refill_price || 0
+        : cylinder.cylinder?.outlet_wholesale_price || 0
     }
   }
 
@@ -310,17 +327,17 @@ const Delivery = () => {
     }
   }
 
-  // Calculate cart total using delivery type for fallback
+  // Calculate cart total using delivery type + saleType for fallback
   const calculateCartTotal = () => {
     let total = 0
     cartCylinders.forEach((item) => {
       const product = availableCylinders.find(
-        (p) => p.id === parseInt(item.productId),
+        (p) => p.cylinder.id === parseInt(item.productId),
       )
       if (product) {
         const price = item.customPrice
           ? parseFloat(item.customPrice)
-          : getDefaultCylinderPrice(product)
+          : getDefaultCylinderPrice(product, item.saleType)
         total += price * item.quantity
       }
     })
@@ -357,18 +374,23 @@ const Delivery = () => {
     }
 
     setSubmitting(true)
+    // Determine sales_type from deliveryType (lowercase)
+    const salesType = deliveryType.toLowerCase() // "retail" or "wholesale"
+
     const payload = {
       driver_id: parseInt(selectedDriver),
       motorbike_id: selectedDriverMotorbike?.id || null,
       source_type: sourceType,
       source_id: selectedSource.id,
-      delivery_type: deliveryType, // include delivery type
+      delivery_type: deliveryType,
       cylinders: cartCylinders
         .filter((c) => c.productId)
         .map((c) => ({
           cylinder_id: parseInt(c.productId),
           quantity: c.quantity,
           custom_price: c.customPrice ? parseFloat(c.customPrice) : null,
+          sales_type: salesType, // "retail" or "wholesale"
+          sales_category: c.saleType, // "refill" or "outlet"
         })),
       products: cartProducts
         .filter((p) => p.productId)
@@ -376,20 +398,36 @@ const Delivery = () => {
           product_id: parseInt(p.productId),
           quantity: p.quantity,
           custom_price: p.customPrice ? parseFloat(p.customPrice) : null,
+          sales_type: salesType, // "retail" or "wholesale"
         })),
       assigned_at: new Date().toISOString(),
+    }
+
+    if (customerPhone.trim() || customerLocation.trim()) {
+      payload.customer = {
+        customerPhone: customerPhone.trim(),
+        location: customerLocation.trim(),
+        apertmentName: apartmentName.trim(),
+        roomNumber: roomNumber.trim(),
+      }
     }
 
     try {
       await api.post("vehicle/deliveries/", payload)
       toast.success("Delivery assigned successfully!")
       // Reset cart and source
-      setCartCylinders([{ productId: "", quantity: 1, customPrice: "" }])
+      setCartCylinders([
+        { productId: "", quantity: 1, customPrice: "", saleType: "refill" },
+      ])
       setCartProducts([{ productId: "", quantity: 1, customPrice: "" }])
       setSelectedSource(null)
       setSourceType(null)
       setAvailableCylinders([])
       setAvailableProducts([])
+      setCustomerPhone("")
+      setCustomerLocation("")
+      setApartmentName("")
+      setRoomNumber("")
       fetchDeliveries() // Refresh list
     } catch (error) {
       console.error("Assignment failed:", error)
@@ -422,15 +460,43 @@ const Delivery = () => {
     })`
   }
 
-  console.log("Available products:", availableProducts)
-  // Updated row renderers with clickable price chips
+  // Updated cylinder row renderer with sale type toggle and dynamic price chips
   const renderCylinderRow = (item, idx) => {
     const selectedProduct = availableCylinders.find(
-      (p) => p.id === parseInt(item.productId),
+      (p) => p.cylinder.id === parseInt(item.productId),
     )
-    const retailPrice = selectedProduct?.cylinder?.retail_refill_price || 0
+    if (!selectedProduct) {
+      return (
+        <div key={idx} className="bg-blue-50 rounded-xl p-3 mb-3">
+          <select
+            value={item.productId}
+            onChange={(e) =>
+              handleCylinderChange(idx, "productId", e.target.value)
+            }
+            className="w-full p-2 border rounded-lg mb-2"
+          >
+            <option value="">Select cylinder</option>
+            {availableCylinders.map((cyl) => (
+              <option key={cyl.id} value={cyl.cylinder?.id}>
+                {cyl.cylinder?.display_name || `Cylinder ${cyl.id}`} -{" "}
+                {cyl.full_cylinder_quantity || 0} in stock
+              </option>
+            ))}
+          </select>
+        </div>
+      )
+    }
+
+    const cylinderData = selectedProduct.cylinder
+    // Prices based on current saleType
+    const retailPrice =
+      item.saleType === "refill"
+        ? cylinderData.retail_refill_price || 0
+        : cylinderData.outlet_retail_price || 0
     const wholesalePrice =
-      selectedProduct?.cylinder?.wholesale_refill_price || 0
+      item.saleType === "refill"
+        ? cylinderData.wholesale_refill_price || 0
+        : cylinderData.outlet_wholesale_price || 0
 
     return (
       <div key={idx} className="bg-blue-50 rounded-xl p-3 mb-3">
@@ -452,33 +518,58 @@ const Delivery = () => {
               ))}
             </select>
 
-            {selectedProduct && (
-              <div className="flex gap-2 mb-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleCylinderChange(idx, "customPrice", retailPrice)
-                  }
-                  className="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-medium hover:bg-green-200 transition"
-                >
-                  Retail: Ksh {retailPrice.toLocaleString()}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleCylinderChange(idx, "customPrice", wholesalePrice)
-                  }
-                  className="px-2 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-medium hover:bg-orange-200 transition"
-                >
-                  Wholesale: Ksh {wholesalePrice.toLocaleString()}
-                </button>
-                {item.customPrice && (
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs">
-                    Custom: Ksh {parseFloat(item.customPrice).toLocaleString()}
-                  </span>
-                )}
-              </div>
-            )}
+            {/* Sale Type Toggle */}
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => handleCylinderChange(idx, "saleType", "refill")}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                  item.saleType === "refill"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                Refill
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCylinderChange(idx, "saleType", "outlet")}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                  item.saleType === "outlet"
+                    ? "bg-orange-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                Outlet
+              </button>
+            </div>
+
+            {/* Price Chips - use dynamic retail/wholesale based on saleType */}
+            <div className="flex gap-2 mb-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() =>
+                  handleCylinderChange(idx, "customPrice", retailPrice)
+                }
+                className="px-2 py-1 bg-green-100 text-green-800 rounded-lg text-xs font-medium hover:bg-green-200 transition"
+              >
+                Retail: Ksh {retailPrice.toLocaleString()}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleCylinderChange(idx, "customPrice", wholesalePrice)
+                }
+                className="px-2 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-medium hover:bg-orange-200 transition"
+              >
+                Wholesale: Ksh {wholesalePrice.toLocaleString()}
+              </button>
+              {item.customPrice && (
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs">
+                  Custom: Ksh {parseFloat(item.customPrice).toLocaleString()}
+                </span>
+              )}
+            </div>
 
             <div className="flex gap-2">
               <input
@@ -518,7 +609,7 @@ const Delivery = () => {
 
   const renderProductRow = (item, idx) => {
     const selectedProduct = availableProducts.find(
-      (p) => p.id === parseInt(item.productId),
+      (p) => p.product.id === parseInt(item.productId),
     )
     const retailPrice =
       selectedProduct?.product?.prices?.retail_sales_price || 0
@@ -609,7 +700,7 @@ const Delivery = () => {
     )
   }
 
-  // Existing vehicle management handlers (unchanged but keep for compatibility)
+  // Existing vehicle management handlers (unchanged - kept for compatibility)
   const handleShowForm = () => {
     setShowForm((prev) => {
       const newShowForm = !prev
@@ -847,7 +938,7 @@ const Delivery = () => {
               )}
             </div>
 
-            {/* NEW: Delivery Type Selection */}
+            {/* Delivery Type Selection (Wholesale / Retail) */}
             <div className="bg-white rounded-2xl shadow-sm p-5 mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <LocalAtmIcon className="text-yellow-600" />
@@ -921,6 +1012,56 @@ const Delivery = () => {
                   </button>
                 </div>
               )}
+            </div>
+
+            {/* Customer Details (Optional) */}
+            <div className="bg-white rounded-2xl shadow-sm p-5 mb-6">
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <PhoneIcon className="text-purple-600" />
+                Customer Details (Optional)
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-gray-50">
+                  <PhoneIcon className="text-gray-500" />
+                  <input
+                    type="tel"
+                    placeholder="Customer phone number"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-gray-50">
+                  <LocationOnIcon className="text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Location / Area"
+                    value={customerLocation}
+                    onChange={(e) => setCustomerLocation(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-gray-50">
+                  <HomeIcon className="text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Apartment / Hostel name"
+                    value={apartmentName}
+                    onChange={(e) => setApartmentName(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-gray-50">
+                  <MeetingRoomIcon className="text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Room / Floor number"
+                    value={roomNumber}
+                    onChange={(e) => setRoomNumber(e.target.value)}
+                    className="w-full bg-transparent outline-none"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Items to Deliver */}
@@ -997,62 +1138,257 @@ const Delivery = () => {
               </div>
             )}
 
-            {/* Existing Deliveries List */}
-            <div className="bg-white rounded-2xl shadow-sm p-5">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">
+            {/* Existing Deliveries List - improved UI (unchanged) */}
+            <div className="bg-white rounded-2xl shadow-md p-5">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <LocalShippingIcon className="text-blue-600" />
                   Assigned Deliveries
                 </h2>
-                <button onClick={fetchDeliveries} className="text-blue-600">
-                  <RefreshCwIcon />
+                <button
+                  onClick={fetchDeliveries}
+                  className="text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-full hover:bg-blue-50"
+                >
+                  <RefreshCwIcon size={20} />
                 </button>
               </div>
+
               {loadingDeliveries ? (
-                <div className="text-center py-8">
-                  <CircularProgress />
+                <div className="text-center py-12">
+                  <CircularProgress size={40} />
                 </div>
               ) : deliveries.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No deliveries assigned yet
+                <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl">
+                  <LocalShippingIcon className="text-gray-300 text-4xl mx-auto mb-2" />
+                  <p>No deliveries assigned yet</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {deliveries.map((del) => (
-                    <div key={del.id} className="border rounded-xl p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">
-                            Driver: {del.driver_name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Motorbike: {del.motorbike_plate || "Not assigned"}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Source: {del.source_name} ({del.source_type})
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Type: {del.delivery_type || "N/A"}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Items: {del.cylinders?.length || 0} cylinders,{" "}
-                            {del.products?.length || 0} products
-                          </p>
+                  {deliveries.map((del) => {
+                    const cylinderItems = del.items.filter(
+                      (item) => item.cylinder !== null,
+                    )
+                    const productItems = del.items.filter(
+                      (item) => item.product !== null,
+                    )
+                    const totalCylinders = cylinderItems.reduce(
+                      (sum, item) => sum + (item.cylinder_quantity || 0),
+                      0,
+                    )
+                    const totalProducts = productItems.reduce(
+                      (sum, item) => sum + (item.product_quantity || 0),
+                      0,
+                    )
+
+                    // Calculate total value
+                    const totalValue = [
+                      ...cylinderItems,
+                      ...productItems,
+                    ].reduce(
+                      (sum, item) =>
+                        sum +
+                        (item.custom_price || 0) *
+                          (item.cylinder_quantity ||
+                            item.product_quantity ||
+                            0),
+                      0,
+                    )
+
+                    return (
+                      <div
+                        key={del.id}
+                        className="border border-gray-100 rounded-xl p-4 transition-all duration-200 hover:shadow-md hover:border-blue-100 bg-white"
+                      >
+                        {del.customer ? (
+                          <div className="mb-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                            <p className="text-sm font-semibold text-purple-800 mb-2">
+                              📞 Customer Details
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="flex items-center gap-1">
+                                <PhoneIcon
+                                  fontSize="small"
+                                  className="text-purple-600"
+                                />
+                                <span>
+                                  <a
+                                    type="tel"
+                                    href={`tel:${del.customer.customerPhone}`}
+                                  >
+                                    {del.customer.customerPhone}
+                                  </a>
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <LocationOnIcon
+                                  fontSize="small"
+                                  className="text-purple-600"
+                                />
+                                <span>{del.customer.location}</span>
+                              </div>
+                              {del.customer.apertmentName && (
+                                <div className="flex items-center gap-1">
+                                  <HomeIcon
+                                    fontSize="small"
+                                    className="text-purple-600"
+                                  />
+                                  <span>{del.customer.apertmentName}</span>
+                                </div>
+                              )}
+                              {del.customer.roomNumber && (
+                                <div className="flex items-center gap-1">
+                                  <MeetingRoomIcon
+                                    fontSize="small"
+                                    className="text-purple-600"
+                                  />
+                                  <span>{del.customer.roomNumber}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mb-3 p-3 bg-gray-50 rounded-lg text-gray-500 text-sm italic">
+                            No customer details recorded
+                          </div>
+                        )}
+                        {/* Header with status */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                            <div className="flex items-center gap-1 text-gray-700">
+                              <PersonIcon
+                                fontSize="small"
+                                className="text-blue-500"
+                              />
+                              <span className="font-medium">
+                                {del.driver_name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-500">
+                              <TwoWheelerIcon fontSize="small" />
+                              <span>
+                                {del.delivery_vehicle_number_plate ||
+                                  "Not assigned"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-500">
+                              <StorefrontIcon fontSize="small" />
+                              <span>
+                                {del.source_location_name} (
+                                {del.source_location_type})
+                              </span>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${
+                              del.status === "Delivered"
+                                ? "bg-green-100 text-green-800 border border-green-200"
+                                : "bg-amber-100 text-amber-800 border border-amber-200"
+                            }`}
+                          >
+                            {del.status || "Pending"}
+                          </span>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            del.status === "Delivered"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {del.status || "Pending"}
-                        </span>
+
+                        {/* Summary chips */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {totalCylinders > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
+                              <span>🛢️</span> {totalCylinders} cylinder
+                              {totalCylinders !== 1 && "s"}
+                            </span>
+                          )}
+                          {totalProducts > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs">
+                              <span>📦</span> {totalProducts} product
+                              {totalProducts !== 1 && "s"}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded-full text-xs">
+                            <span>💰</span> Total: Ksh{" "}
+                            {totalValue.toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* Items detail section */}
+                        {(productItems.length > 0 ||
+                          cylinderItems.length > 0) && (
+                          <div className="mt-2 bg-gray-50 rounded-lg p-3 text-sm">
+                            {productItems.length > 0 && (
+                              <div className="mb-3">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                  Products
+                                </p>
+                                <div className="space-y-1">
+                                  {productItems.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="flex justify-between items-center text-gray-700"
+                                    >
+                                      <span className="text-sm">
+                                        {item.product_name}
+                                      </span>
+                                      <div className="flex gap-3 text-xs">
+                                        <span className="font-medium">
+                                          Qty: {item.product_quantity}
+                                        </span>
+                                        <span className="text-green-600 font-medium">
+                                          Ksh{" "}
+                                          {item.custom_price?.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {cylinderItems.length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                  Cylinders
+                                </p>
+                                <div className="space-y-1">
+                                  {cylinderItems.map((item) => (
+                                    <div
+                                      key={item.id}
+                                      className="flex justify-between items-center text-gray-700"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-sm">
+                                          Cylinder #{item.cylinder_name} (
+                                          {item.cylinder_weight}kg)
+                                        </span>
+                                        <span className="text-xs bg-gray-200 px-1.5 py-0.5 rounded-full">
+                                          {item.sale_type || "refill"}
+                                        </span>
+                                      </div>
+                                      <div className="flex gap-3 text-xs">
+                                        <span className="font-medium">
+                                          Qty: {item.cylinder_quantity}
+                                        </span>
+                                        <span className="text-green-600 font-medium">
+                                          Ksh{" "}
+                                          {item.custom_price?.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Timestamp */}
+                        <div className="text-xs text-gray-400 mt-3 flex items-center gap-1">
+                          <span>🕒</span>
+                          {del.created_at
+                            ? new Date(del.created_at).toLocaleString()
+                            : "Date N/A"}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-400 mt-2">
-                        {new Date(del.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1118,9 +1454,6 @@ const Delivery = () => {
               <Button onClick={() => setShowSourceModal(false)}>Cancel</Button>
             </DialogActions>
           </Dialog>
-
-          {/* Vehicle Management UI (unchanged - keep for compatibility) */}
-          {/* ... (all existing vehicle management dialogs and footer) ... */}
 
           {/* Assigned Employee Warning Modal */}
           <Dialog

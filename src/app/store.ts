@@ -48,10 +48,12 @@ import salesTeamVehicleReducer from "../features/salesTeam/salesTeamVehicleSlice
 import customerHistoryReducer from "../features/customers/customerHistorySlice"
 import smsReducer from "../features/sms/smsSlice"
 import notificationReducer from "../features/notification/notificationSlice";
+import employeesTeamReducer from "../features/employees/employeesTeamSlice"
 import { wsMiddleware } from "../middleware/wsMiddleware"
 
 export const store = configureStore({
   reducer: {
+    employeesTeam: employeesTeamReducer,
     notifications: notificationReducer,
     salesTeamVehicle: salesTeamVehicleReducer,
     customersHistory: customerHistoryReducer,

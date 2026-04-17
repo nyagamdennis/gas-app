@@ -54,6 +54,12 @@ import { useEffect } from "react"
 import { fetchBusiness } from "./features/company/companySlice"
 import { useAppDispatch, useAppSelector } from "./app/hooks"
 import useVerificationPolling from "./features/employees/useVerificationPolling"
+import { fetchEmployeesTeam } from "./features/employees/employeesTeamSlice"
+import {
+  selectUserRole,
+  selectUserData,
+  userDataType,
+} from "./features/auths/authSlice"
 import Expenses from "./pages/Expenses"
 import AiPredict from "./pages/AiPredict"
 import AdminOtherProductsSalesRecord from "./pages/AdminOtherProductsSalesRecord"
@@ -117,9 +123,52 @@ import AllReceipts from "./pages/AllReceipts"
 import NotificationsPage from "./pages/NotificationsPage"
 import RealTimeIndicator from "./components/sales/RealTimeIndicator"
 import { SoundManager } from "./components/SoundManager"
+import EmployeeExpenses from "./pages/employeePages/employeeExpenses"
+import EmployeeCylinders from "./pages/employeePages/employeeCylinders"
+import EmployeeDebts from "./pages/employeePages/EmployeeDebts"
+import OutSource from "./pages/employeePages/OutSource"
+import SalesPersonDelivery from "./pages/employeePages/SalesPersonDelivery"
+import MyDeliveries from "./pages/employeePages/MyDeliveries"
+import RecordSales from "./pages/employeePages/Sales/RecordSales"
+
+// fetchEmployeesTeam
+
+type UserRole =
+  | "SUPER_ADMIN"
+  | "COMPANY_ADMIN"
+  | "SHOP_ATTENDANT"
+  | "DELIVERY_GUY"
+  | "STORE_MAN"
+  | "SECURITY"
+  | "TRUCK_DRIVER"
+  | "CONDUCTOR"
+  | "SALES_PERSON"
 
 function App() {
   useVerificationPolling()
+  const dispatch = useAppDispatch()
+  const userRole = useAppSelector(selectUserRole)
+  const userData = useAppSelector(selectUserData)
+  const usedatatype = useAppSelector(userDataType)
+
+  // Define employee roles (same as ProtectedRoute)
+  const employeeRoles: UserRole[] = [
+    "SHOP_ATTENDANT",
+    "DELIVERY_GUY",
+    "STORE_MAN",
+    "SECURITY",
+    "TRUCK_DRIVER",
+    "CONDUCTOR",
+    "SALES_PERSON",
+  ]
+
+  const isEmployee = employeeRoles.includes(userRole as UserRole)
+
+  useEffect(() => {
+    if (isEmployee && userData?.user_id) {
+      dispatch(fetchEmployeesTeam(userData?.user_id) as any)
+    }
+  }, [isEmployee, userData?.user_id, dispatch])
 
   return (
     <div>
@@ -194,6 +243,14 @@ function App() {
             }
           />
           <Route
+            path="/salesperson/delivery"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <SalesPersonDelivery />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/sendsms"
             element={
               <ProtectedRoute requiredRole="is_admin">
@@ -217,6 +274,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/mydeliveries"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <MyDeliveries />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/outsource"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <OutSource />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admins/salesdata"
             element={
@@ -262,6 +338,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <Expenses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employee/expenses"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <EmployeeExpenses />
               </ProtectedRoute>
             }
           />
@@ -373,6 +457,25 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/employees/cylinders/stock/team/:id/:name"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <EmployeeCylinders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/employee/debts"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <EmployeeDebts />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/cylinders/stock/vehicle/:id/:name"
             element={
@@ -387,6 +490,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <ShopProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="employee/products/stock/team/:id/:name"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <OtherProductsSale />
               </ProtectedRoute>
             }
           />
@@ -710,6 +821,43 @@ function App() {
             }
           />
 
+          {/* employee product sales */}
+          <Route
+            path="/product/sales/new"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <ProductSales />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/product/sales/new/shop/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <ProductSales />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/product/sales/new/vehicle/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <ProductSales />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/product/sales/new/store/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <ProductSales />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/products/sales/new"
             element={
@@ -754,6 +902,34 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* employee cylinder sales */}
+          <Route
+            path="/cylinder/sales/employee/vehicle/:name/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <RecordSales />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cylinder/sales/employee/shop/:name/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <RecordSales />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cylinder/sales/employee/store/:name/:id"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <RecordSales />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/cylinders/sales/new/vehicle/:name/:id"
             element={
@@ -841,7 +1017,7 @@ function App() {
             }
           />
           <Route
-            path="/sales/whatsells/retail"
+            path="/sales/employee-sales"
             element={
               <ProtectedRoute requiredRole="is_employee">
                 <CylinderRetail />

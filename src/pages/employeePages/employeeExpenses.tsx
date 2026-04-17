@@ -1,38 +1,35 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react"
-import AdminsFooter from "../components/AdminsFooter"
-import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useMediaQuery, useTheme } from "@mui/material"
-import DateDisplay from "../components/DateDisplay"
-import { useNavigate } from "react-router-dom"
-import Navbar from "../components/ui/mobile/admin/Navbar"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+
+import EmployeeFooter from "../../components/ui/EmployeeFooter"
+import Navbar from "../../components/ui/mobile/employees/Navbar"
+import { useAppDispatch, useAppSelector } from "../../app/hooks"
+import DateDisplay from "../../components/DateDisplay"
+import planStatus from "../../features/planStatus/planStatus"
 import {
-  approveExpense,
-  attachExpenseToEmployee,
   createExpense,
+  updateExpense,
   deleteExpense,
   fetchExpenseCategories,
   fetchExpenses,
   fetchExpenseSubCategories,
   fetchExpenseSummary,
-  markExpenseAsPaid,
-  rejectExpense,
   selectAllExpenses,
   selectExpenseCategories,
   selectExpenseSubCategories,
   selectExpenseSummary,
-  updateExpense,
-} from "../features/expenses/expensesSlice"
+} from "../../features/expenses/expensesSlice"
 import {
   fetchEmployees,
   selectAllEmployees,
-} from "../features/employees/employeesSlice"
-import planStatus from "../features/planStatus/planStatus"
-import api from "../../utils/api"
+} from "../../features/employees/employeesSlice"
+import { selectEmployeeTeam } from "../../features/employees/employeesTeamSlice"
+import api from "../../../utils/api"
 
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Icons (unchanged) ──────────────────────────────────────────────────────
 const Icon = {
   Receipt: () => (
     <svg
@@ -124,21 +121,6 @@ const Icon = {
       />
     </svg>
   ),
-  Check: () => (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M5 13l4 4L19 7"
-      />
-    </svg>
-  ),
   Close: () => (
     <svg
       className="w-5 h-5"
@@ -189,7 +171,7 @@ const Icon = {
       />
     </svg>
   ),
-  Warning: () => (
+  Shop: () => (
     <svg
       className="w-4 h-4"
       fill="none"
@@ -200,22 +182,7 @@ const Icon = {
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    </svg>
-  ),
-  Payment: () => (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
       />
     </svg>
   ),
@@ -234,24 +201,9 @@ const Icon = {
       />
     </svg>
   ),
-  Shop: () => (
-    <svg
-      className="w-4 h-4"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-      />
-    </svg>
-  ),
 }
 
-// ── Reusable form input ───────────────────────────────────────────────────────
+// ── Reusable form components (unchanged) ───────────────────────────────────
 const Input = ({ label, ...props }) => (
   <div>
     {label && (
@@ -265,7 +217,6 @@ const Input = ({ label, ...props }) => (
     />
   </div>
 )
-
 const SelectInput = ({ label, children, ...props }) => (
   <div>
     {label && (
@@ -281,7 +232,6 @@ const SelectInput = ({ label, children, ...props }) => (
     </select>
   </div>
 )
-
 const Textarea = ({ label, ...props }) => (
   <div>
     {label && (
@@ -296,7 +246,7 @@ const Textarea = ({ label, ...props }) => (
   </div>
 )
 
-// ── Full-screen drawer/modal ──────────────────────────────────────────────────
+// ── Drawer and ConfirmDialog (unchanged) ──────────────────────────────────
 const Drawer = ({
   open,
   onClose,
@@ -329,7 +279,6 @@ const Drawer = ({
   )
 }
 
-// ── Confirm dialog ────────────────────────────────────────────────────────────
 const ConfirmDialog = ({
   open,
   onClose,
@@ -377,7 +326,7 @@ const ConfirmDialog = ({
   )
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
+// ── Badges (unchanged) ────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {
   const map = {
     APPROVED: "bg-green-100 text-green-700",
@@ -396,7 +345,6 @@ const StatusBadge = ({ status }) => {
   )
 }
 
-// ── Type badge ────────────────────────────────────────────────────────────────
 const TypeBadge = ({ type }) => {
   const map = {
     VEHICLE: "bg-blue-100 text-blue-700",
@@ -425,20 +373,69 @@ const TypeBadge = ({ type }) => {
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-const Expenses = () => {
+// ── Main Component ─────────────────────────────────────────────────────────
+const EmployeeExpenses = () => {
   const { businessId } = planStatus()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const dispatch = useAppDispatch()
 
-  const expenses = useAppSelector(selectAllExpenses)
+  const allExpenses = useAppSelector(selectAllExpenses)
   const categories = useAppSelector(selectExpenseCategories)
   const subcategories = useAppSelector(selectExpenseSubCategories)
   const summary = useAppSelector(selectExpenseSummary)
   const employees = useAppSelector(selectAllEmployees)
 
-  // Helper to get employee name from ID
+  const myTeamData = useAppSelector(selectEmployeeTeam)
+  const assignmentData = myTeamData?.[0]
+  const userId = assignmentData?.user
+  const teamType = assignmentData?.assigned_to?.type
+  let teamId = null
+  if (assignmentData?.assigned_to) {
+    if (teamType === "Shop") teamId = assignmentData.assigned_to.shop_id
+    else if (teamType === "Vehicle")
+      teamId = assignmentData.assigned_to.vehicle_id
+    else if (teamType === "Motorbike")
+      teamId = assignmentData.assigned_to.motorbike_id
+    else if (teamType === "Store") teamId = assignmentData.assigned_to.store_id
+  }
+
+  const currentEmployee = employees.find((emp) => emp.user === userId)
+  const currentEmployeeId = currentEmployee?.user // this is the user ID, matches attached_by_id
+  const forcedExpenseType = teamType === "Shop" ? "SHOP" : null
+
+  const [teamMemberIds, setTeamMemberIds] = useState([])
+  useEffect(() => {
+    if (!currentEmployee || !teamType || !teamId || employees.length === 0) {
+      setTeamMemberIds(currentEmployeeId ? [currentEmployeeId] : [])
+      return
+    }
+    const ids = employees
+      .filter((emp) => {
+        if (!emp.assigned_to) return false
+        if (teamType === "Shop" && emp.assigned_to.shop_id === teamId)
+          return true
+        if (teamType === "Vehicle" && emp.assigned_to.vehicle_id === teamId)
+          return true
+        if (teamType === "Motorbike" && emp.assigned_to.motorbike_id === teamId)
+          return true
+        if (teamType === "Store" && emp.assigned_to.store_id === teamId)
+          return true
+        return false
+      })
+      .map((emp) => emp.id) // employee ID, not user ID
+    setTeamMemberIds(ids)
+  }, [currentEmployee, teamType, teamId, employees, currentEmployeeId])
+
+  const filteredExpenses = allExpenses.filter((exp) => {
+    if (!exp.employee_attachments || exp.employee_attachments.length === 0)
+      return false
+    return exp.employee_attachments.some((att) =>
+      teamMemberIds.includes(att.employee),
+    )
+  })
+
+  // Helper to get employee name from employee ID
   const getEmployeeName = (employeeId) => {
     const emp = employees.find((e) => e.id === employeeId)
     return emp
@@ -446,19 +443,19 @@ const Expenses = () => {
       : `Employee #${employeeId}`
   }
 
-  // ── Dialog open states ──────────────────────────────────────────────────
+  // NEW: Check if current user attached this expense
+  const isAttachedByCurrentUser = (exp) => {
+    if (!exp.employee_attachments) return false
+    return exp.employee_attachments.some(
+      (att) => Number(att.attached_by_id) === currentEmployeeId,
+    )
+  }
+
   const [openAdd, setOpenAdd] = useState(false)
   const [openUpdate, setOpenUpdate] = useState(false)
   const [openDelete, setOpenDelete] = useState(false)
-  const [openApprove, setOpenApprove] = useState(false)
-  const [openReject, setOpenReject] = useState(false)
-  const [openMarkPaid, setOpenMarkPaid] = useState(false)
-  const [openAttach, setOpenAttach] = useState(false)
   const [openActions, setOpenActions] = useState(null)
-  const [selectedExpense, setSelectedExpense] = useState(null)
-  const [rejectionReason, setRejectionReason] = useState("")
 
-  // ── UI state ────────────────────────────────────────────────────────────
   const [search, setSearch] = useState("")
   const [showFilters, setShowFilters] = useState(false)
   const [activeFilter, setActiveFilter] = useState("ALL")
@@ -468,21 +465,15 @@ const Expenses = () => {
     status: "ALL",
   })
 
-  // ── Loading ─────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState({
     add: false,
     update: false,
     delete: false,
-    approve: false,
-    reject: false,
-    markPaid: false,
-    attach: false,
   })
 
-  // ── Form states ─────────────────────────────────────────────────────────
   const blankExpense = {
     title: "",
-    expense_type: "SHOP",
+    expense_type: forcedExpenseType || "SHOP",
     category: "",
     subcategory: "",
     description: "",
@@ -497,12 +488,11 @@ const Expenses = () => {
   const [expenseData, setExpenseData] = useState(blankExpense)
   const [updateData, setUpdateData] = useState({})
   const [deleteData, setDeleteData] = useState({ id: "", title: "" })
-  const [attachData, setAttachData] = useState({
-    expenseId: "",
-    employeeId: "",
-    deductionAmount: "",
-    description: "",
-  })
+  const [selectedEmployeeId, setSelectedEmployeeId] =
+    useState(currentEmployeeId)
+  const availableEmployees = employees.filter((emp) =>
+    teamMemberIds.includes(emp.id),
+  )
 
   useEffect(() => {
     dispatch(fetchExpenses())
@@ -516,24 +506,52 @@ const Expenses = () => {
       dispatch(fetchExpenseSubCategories(parseInt(expenseData.category)))
   }, [expenseData.category, dispatch])
 
-  // ── Handlers ────────────────────────────────────────────────────────────
   const handleAdd = async (e) => {
     e.preventDefault()
     setLoading({ ...loading, add: true })
     try {
-      const fd = new FormData()
-      Object.entries(expenseData).forEach(
-        ([k, v]) => v !== "" && fd.append(k, v.toString()),
+      const payload = {
+        user_id: selectedEmployeeId,
+        expense_data: {
+          company: businessId,
+          expense_type: expenseData.expense_type,
+          category: expenseData.category
+            ? parseInt(expenseData.category)
+            : null,
+          title: expenseData.title,
+          amount: expenseData.amount,
+          payment_method: expenseData.payment_method,
+          subcategory: expenseData.subcategory
+            ? parseInt(expenseData.subcategory)
+            : null,
+          description: expenseData.description,
+          tax_amount: expenseData.tax_amount,
+          payment_reference: expenseData.payment_reference,
+          receipt_number: expenseData.receipt_number,
+          expense_date: expenseData.expense_date,
+          notes: expenseData.notes,
+        },
+      }
+      if (teamType && teamId) {
+        const key = teamType.toLowerCase()
+        payload[key] = teamId
+      }
+      await api.post(
+        "expenses/expenses/create_with_employee_attachment/",
+        payload,
+        { headers: { "Content-Type": "application/json" } },
       )
-      fd.append("company", "1")
-      await dispatch(createExpense(fd))
       toast.success("Expense added!")
       setOpenAdd(false)
       setExpenseData(blankExpense)
+      setSelectedEmployeeId(currentEmployeeId)
       dispatch(fetchExpenseSummary())
       dispatch(fetchExpenses())
     } catch (err) {
-      toast.error(err.message || "Failed to add expense")
+      console.error(err)
+      toast.error(
+        err.response?.data?.message || err.message || "Failed to add expense",
+      )
     } finally {
       setLoading({ ...loading, add: false })
     }
@@ -561,105 +579,29 @@ const Expenses = () => {
     setLoading({ ...loading, delete: true })
     try {
       // await dispatch(deleteExpense(parseInt(deleteData.id)))
-      await api.delete(`/expenses/${deleteData.id}/`)
+      await api.delete(`/expenses/delete/${deleteData.id}/`)
       toast.success("Expense deleted!")
       setOpenDelete(false)
       dispatch(fetchExpenseSummary())
       dispatch(fetchExpenses())
     } catch (err) {
-      toast.error(err.message || "Failed to delete")
+      console.error(err)
+      toast.error(err.response?.data?.error || err.message || "Failed to delete")
     } finally {
       setLoading({ ...loading, delete: false })
     }
   }
 
-  const handleApprove = async () => {
-    setLoading({ ...loading, approve: true })
-    try {
-      await dispatch(approveExpense(selectedExpense.id))
-      toast.success("Expense approved!")
-      setOpenApprove(false)
-      setOpenActions(null)
-      dispatch(fetchExpenses())
-    } catch (err) {
-      toast.error(err.message || "Failed to approve")
-    } finally {
-      setLoading({ ...loading, approve: false })
-    }
-  }
-
-  const handleReject = async () => {
-    if (!rejectionReason.trim()) {
-      toast.error("Rejection reason required")
-      return
-    }
-    setLoading({ ...loading, reject: true })
-    try {
-      await dispatch(
-        rejectExpense({
-          id: selectedExpense.id,
-          rejection_reason: rejectionReason,
-        }),
-      )
-      toast.success("Expense rejected")
-      setOpenReject(false)
-      setRejectionReason("")
-      setOpenActions(null)
-      dispatch(fetchExpenses())
-    } catch (err) {
-      toast.error(err.message || "Failed to reject")
-    } finally {
-      setLoading({ ...loading, reject: false })
-    }
-  }
-
-  const handleMarkPaid = async () => {
-    setLoading({ ...loading, markPaid: true })
-    try {
-      await dispatch(markExpenseAsPaid(selectedExpense.id))
-      toast.success("Marked as paid!")
-      setOpenMarkPaid(false)
-      setOpenActions(null)
-      dispatch(fetchExpenses())
-    } catch (err) {
-      toast.error(err.message || "Failed")
-    } finally {
-      setLoading({ ...loading, markPaid: false })
-    }
-  }
-
-  const handleAttach = async () => {
-    if (!attachData.employeeId || !attachData.deductionAmount) {
-      toast.error("Select employee and enter amount")
-      return
-    }
-    setLoading({ ...loading, attach: true })
-    try {
-      await dispatch(
-        attachExpenseToEmployee({
-          expenseId: parseInt(attachData.expenseId),
-          employeeId: parseInt(attachData.employeeId),
-          deductionAmount: parseFloat(attachData.deductionAmount),
-        }),
-      )
-      toast.success("Attached to employee!")
-      setOpenAttach(false)
-      setOpenActions(null)
-      setAttachData({
-        expenseId: "",
-        employeeId: "",
-        deductionAmount: "",
-        description: "",
-      })
-      dispatch(fetchExpenses())
-    } catch (err) {
-      toast.error(err.message || "Failed")
-    } finally {
-      setLoading({ ...loading, attach: false })
-    }
-  }
-
   const openEditFor = (exp) => {
+    // Allow edit only if current user attached it and status is not APPROVED
+    if (!isAttachedByCurrentUser(exp)) {
+      toast.error("You can only edit expenses you attached")
+      return
+    }
+    if (exp.status === "APPROVED") {
+      toast.error("Approved expenses cannot be edited")
+      return
+    }
     setUpdateData({
       id: exp.id,
       title: exp.title,
@@ -675,9 +617,12 @@ const Expenses = () => {
     setOpenActions(null)
   }
 
-  // ── Filtering ───────────────────────────────────────────────────────────
+  const canDelete = (exp) => {
+    return isAttachedByCurrentUser(exp) && exp.status !== "APPROVED"
+  }
+
   const statusTabs = ["ALL", "PENDING", "APPROVED", "PAID", "REJECTED"]
-  const filtered = expenses.filter((exp) => {
+  const filtered = filteredExpenses.filter((exp) => {
     const q = search.toLowerCase()
     const matchSearch =
       !q ||
@@ -695,18 +640,17 @@ const Expenses = () => {
     (s, e) => s + parseFloat(e.total_amount || 0),
     0,
   )
-
   const summaryStats = [
     {
       label: "Total",
-      value: `KES ${summary?.summary?.total_amount?.toLocaleString() || 0}`,
+      value: `KES ${totalFiltered.toLocaleString()}`,
       color: "text-blue-600",
       border: "border-blue-500",
       icon: "💰",
     },
     {
       label: "Count",
-      value: summary?.summary?.count || 0,
+      value: filtered.length,
       color: "text-green-600",
       border: "border-green-500",
       icon: "📋",
@@ -714,7 +658,7 @@ const Expenses = () => {
     {
       label: "Average",
       value: `KES ${Math.round(
-        summary?.summary?.average_amount || 0,
+        totalFiltered / (filtered.length || 1),
       ).toLocaleString()}`,
       color: "text-yellow-600",
       border: "border-yellow-500",
@@ -722,7 +666,7 @@ const Expenses = () => {
     },
     {
       label: "Pending",
-      value: summary?.summary?.pending_count || 0,
+      value: filtered.filter((e) => e.status === "PENDING").length,
       color: "text-red-600",
       border: "border-red-500",
       icon: "⏳",
@@ -740,22 +684,19 @@ const Expenses = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 flex flex-col font-sans">
       <ToastContainer position="top-center" />
       <Navbar
-        headerMessage="Expenses"
-        headerText="Track and manage company expenses"
+        headerMessage="My Expenses"
+        headerText="View and manage your expenses"
       />
-
       <main className="flex-grow m-2 p-1 pb-24 space-y-4">
-        {/* ── Header ── */}
         <div className="bg-white p-4 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-1">
-            <span>💸</span> Expense Management
+            <span>💸</span> Employee Expenses
           </h2>
           <p className="text-sm text-gray-500">
-            Track, approve and manage all company expenses
+            {currentEmployee?.first_name} {currentEmployee?.last_name} — you can
+            see expenses from your sales team
           </p>
         </div>
-
-        {/* ── Stats ── */}
         <div className="grid grid-cols-2 gap-3">
           {summaryStats.map((s) => (
             <div
@@ -772,8 +713,6 @@ const Expenses = () => {
             </div>
           ))}
         </div>
-
-        {/* ── Quick actions ── */}
         <div className="flex gap-2">
           <button
             onClick={() => setOpenAdd(true)}
@@ -781,37 +720,41 @@ const Expenses = () => {
           >
             <Icon.Plus /> Add Expense
           </button>
-          <button
-            onClick={() => {
-              const fuelCat = categories.find((c) => c.code === "FUEL")
-              setExpenseData({
-                ...blankExpense,
-                expense_type: "VEHICLE",
-                title: "Fuel Expense",
-                category: fuelCat?.id?.toString() || "",
-              })
-              setOpenAdd(true)
-            }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-blue-500 text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-50 transition"
-          >
-            <Icon.Fuel /> Quick Fuel
-          </button>
-          <button
-            onClick={() => {
-              setExpenseData({
-                ...blankExpense,
-                expense_type: "SHOP",
-                title: "Shop Maintenance",
-              })
-              setOpenAdd(true)
-            }}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-green-500 text-green-600 rounded-lg font-semibold text-sm hover:bg-green-50 transition"
-          >
-            <Icon.Shop /> Shop
-          </button>
+          {!forcedExpenseType && (
+            <>
+              <button
+                onClick={() => {
+                  const fuelCat = categories.find((c) => c.code === "FUEL")
+                  setExpenseData({
+                    ...blankExpense,
+                    expense_type: "VEHICLE",
+                    title: "Fuel Expense",
+                    category: fuelCat?.id?.toString() || "",
+                  })
+                  setOpenAdd(true)
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-blue-500 text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-50 transition"
+              >
+                <Icon.Fuel /> Quick Fuel
+              </button>
+              <button
+                onClick={() => {
+                  setExpenseData({
+                    ...blankExpense,
+                    expense_type: "SHOP",
+                    title: "Shop Maintenance",
+                  })
+                  setOpenAdd(true)
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 border-2 border-green-500 text-green-600 rounded-lg font-semibold text-sm hover:bg-green-50 transition"
+              >
+                <Icon.Shop /> Shop
+              </button>
+            </>
+          )}
         </div>
 
-        {/* ── Search & filter ── */}
+        {/* Search & filters */}
         <div className="bg-white p-4 rounded-lg shadow-md">
           <div className="flex gap-2 mb-3">
             <div className="relative flex-1">
@@ -837,14 +780,12 @@ const Expenses = () => {
               <Icon.Filter />
             </button>
           </div>
-
-          {/* Status tabs */}
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
             {statusTabs.map((tab) => {
               const count =
                 tab === "ALL"
-                  ? expenses.length
-                  : expenses.filter((e) => e.status === tab).length
+                  ? filteredExpenses.length
+                  : filteredExpenses.filter((e) => e.status === tab).length
               return (
                 <button
                   key={tab}
@@ -877,8 +818,6 @@ const Expenses = () => {
               )
             })}
           </div>
-
-          {/* Advanced filters */}
           {showFilters && (
             <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
               <SelectInput
@@ -936,7 +875,6 @@ const Expenses = () => {
           )}
         </div>
 
-        {/* ── Results info ── */}
         <div className="flex items-center justify-between px-1">
           <p className="text-sm text-gray-600">
             <span className="font-semibold">{filtered.length}</span> expenses ·
@@ -944,7 +882,7 @@ const Expenses = () => {
           </p>
         </div>
 
-        {/* ── Expense cards ── */}
+        {/* Expense cards */}
         {filtered.length === 0 ? (
           <div className="bg-white p-12 rounded-lg shadow-md text-center">
             <div className="text-6xl mb-4">📋</div>
@@ -977,16 +915,14 @@ const Expenses = () => {
                 }`}
               >
                 <div className="p-4">
-                  {/* Card header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className="text-sm font-bold text-gray-800">
                           {exp.title}
                         </h3>
-                        {/* Attachment details */}
                         {exp.employee_attachments?.length > 0 && (
-                          <div className="flex flex-col gap-1 mt-1">
+                          <div className="flex flex-col gap-1">
                             <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-bold inline-flex items-center gap-1 w-fit">
                               👤 {exp.employee_attachments.length}
                             </span>
@@ -1019,8 +955,6 @@ const Expenses = () => {
                       <Icon.Dots />
                     </button>
                   </div>
-
-                  {/* Card body */}
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div className="bg-gray-50 rounded-lg p-2.5">
                       <p className="text-xs text-gray-500 mb-0.5">Amount</p>
@@ -1049,8 +983,6 @@ const Expenses = () => {
                       </p>
                     </div>
                   </div>
-
-                  {/* Location chips */}
                   {(exp.shop_name ||
                     exp.store_name ||
                     exp.vehicle_name ||
@@ -1078,88 +1010,41 @@ const Expenses = () => {
                       )}
                     </div>
                   )}
-
                   {exp.description && (
                     <p className="text-xs text-gray-500 mb-3 line-clamp-2">
                       {exp.description}
                     </p>
                   )}
-
-                  {/* Actions panel */}
                   {openActions === exp.id && (
                     <div className="pt-3 border-t border-gray-100">
                       <p className="text-xs text-gray-400 font-semibold mb-2">
                         ACTIONS
                       </p>
                       <div className="flex gap-2 flex-wrap">
-                        <button
-                          onClick={() => openEditFor(exp)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition"
-                        >
-                          <Icon.Edit /> Edit
-                        </button>
-                        {exp.status === "PENDING" && (
-                          <>
+                        {isAttachedByCurrentUser(exp) &&
+                          exp.status !== "APPROVED" && (
                             <button
-                              onClick={() => {
-                                setSelectedExpense(exp)
-                                setOpenApprove(true)
-                                setOpenActions(null)
-                              }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-semibold hover:bg-green-100 transition"
+                              onClick={() => openEditFor(exp)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition"
                             >
-                              <Icon.Check /> Approve
+                              <Icon.Edit /> Edit
                             </button>
-                            <button
-                              onClick={() => {
-                                setSelectedExpense(exp)
-                                setOpenReject(true)
-                                setOpenActions(null)
-                              }}
-                              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition"
-                            >
-                              <Icon.Warning /> Reject
-                            </button>
-                          </>
-                        )}
-                        {exp.status === "APPROVED" && (
+                          )}
+                        {canDelete(exp) && (
                           <button
                             onClick={() => {
-                              setSelectedExpense(exp)
-                              setOpenMarkPaid(true)
+                              setDeleteData({
+                                id: exp.id.toString(),
+                                title: exp.title,
+                              })
+                              setOpenDelete(true)
                               setOpenActions(null)
                             }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-100 transition"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition"
                           >
-                            <Icon.Payment /> Mark Paid
+                            <Icon.Trash /> Delete
                           </button>
                         )}
-                        <button
-                          onClick={() => {
-                            setAttachData({
-                              ...attachData,
-                              expenseId: exp.id.toString(),
-                            })
-                            setOpenAttach(true)
-                            setOpenActions(null)
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-semibold hover:bg-purple-100 transition"
-                        >
-                          <Icon.Person /> Attach
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeleteData({
-                              id: exp.id.toString(),
-                              title: exp.title,
-                            })
-                            setOpenDelete(true)
-                            setOpenActions(null)
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition"
-                        >
-                          <Icon.Trash /> Delete
-                        </button>
                       </div>
                     </div>
                   )}
@@ -1169,35 +1054,30 @@ const Expenses = () => {
           </div>
         )}
       </main>
-
-      {/* ── FAB ── */}
       <button
         onClick={() => setOpenAdd(true)}
         className="fixed bottom-20 right-4 z-40 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
       >
         <Icon.Plus />
       </button>
-
       <footer className="text-white mt-4">
-        <AdminsFooter />
+        <EmployeeFooter />
       </footer>
 
-      {/* ══ ADD DRAWER ══ */}
+      {/* ADD DRAWER (unchanged) */}
       <Drawer
         open={openAdd}
         onClose={() => {
           setOpenAdd(false)
           setExpenseData(blankExpense)
+          setSelectedEmployeeId(currentEmployeeId)
         }}
         title="Add New Expense"
         titleColor="bg-blue-600"
         footer={
           <>
             <button
-              onClick={() => {
-                setOpenAdd(false)
-                setExpenseData(blankExpense)
-              }}
+              onClick={() => setOpenAdd(false)}
               className="flex-1 py-2.5 border-2 border-gray-300 rounded-lg text-gray-600 font-semibold text-sm hover:bg-gray-50 transition"
             >
               Cancel
@@ -1225,29 +1105,37 @@ const Expenses = () => {
             }
             required
           />
-          <SelectInput
-            label="Expense Type *"
-            value={expenseData.expense_type}
-            onChange={(e) =>
-              setExpenseData({ ...expenseData, expense_type: e.target.value })
-            }
-          >
-            {[
-              "VEHICLE",
-              "MOTORBIKE",
-              "SHOP",
-              "OFFICE",
-              "STAFF",
-              "UTILITY",
-              "MARKETING",
-              "MAINTENANCE",
-              "OTHER",
-            ].map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </SelectInput>
+          {!forcedExpenseType ? (
+            <SelectInput
+              label="Expense Type *"
+              value={expenseData.expense_type}
+              onChange={(e) =>
+                setExpenseData({ ...expenseData, expense_type: e.target.value })
+              }
+            >
+              {[
+                "VEHICLE",
+                "MOTORBIKE",
+                "SHOP",
+                "OFFICE",
+                "STAFF",
+                "UTILITY",
+                "MARKETING",
+                "MAINTENANCE",
+                "OTHER",
+              ].map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </SelectInput>
+          ) : (
+            <input
+              type="hidden"
+              name="expense_type"
+              value={forcedExpenseType}
+            />
+          )}
           <SelectInput
             label="Category *"
             value={expenseData.category}
@@ -1275,6 +1163,23 @@ const Expenses = () => {
                 {s.name}
               </option>
             ))}
+          </SelectInput>
+          <SelectInput
+            label="Attach to Employee *"
+            value={selectedEmployeeId || ""}
+            onChange={(e) => setSelectedEmployeeId(parseInt(e.target.value))}
+          >
+            <option value={currentEmployeeId}>
+              Self (me) - {currentEmployee?.first_name}{" "}
+              {currentEmployee?.last_name}
+            </option>
+            {availableEmployees
+              .filter((emp) => emp.user !== currentEmployeeId)
+              .map((emp) => (
+                <option key={emp.user} value={emp.user}>
+                  {emp.first_name} {emp.last_name}
+                </option>
+              ))}
           </SelectInput>
           <Input
             label="Amount (KES) *"
@@ -1356,7 +1261,7 @@ const Expenses = () => {
         </div>
       </Drawer>
 
-      {/* ══ UPDATE DRAWER ══ */}
+      {/* UPDATE DRAWER (unchanged) */}
       <Drawer
         open={openUpdate}
         onClose={() => setOpenUpdate(false)}
@@ -1476,72 +1381,7 @@ const Expenses = () => {
         </div>
       </Drawer>
 
-      {/* ══ ATTACH TO EMPLOYEE DRAWER ══ */}
-      <Drawer
-        open={openAttach}
-        onClose={() => setOpenAttach(false)}
-        title="Attach to Employee"
-        titleColor="bg-purple-600"
-        footer={
-          <>
-            <button
-              onClick={() => setOpenAttach(false)}
-              className="flex-1 py-2.5 border-2 border-gray-300 rounded-lg text-gray-600 font-semibold text-sm hover:bg-gray-50 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAttach}
-              disabled={loading.attach}
-              className="flex-1 py-2.5 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 transition flex items-center justify-center disabled:opacity-60"
-            >
-              {loading.attach ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                "Attach"
-              )}
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4 mt-1">
-          <p className="text-sm text-gray-500">
-            Attach this expense to an employee for salary deduction.
-          </p>
-          <SelectInput
-            label="Select Employee *"
-            value={attachData.employeeId}
-            onChange={(e) =>
-              setAttachData({ ...attachData, employeeId: e.target.value })
-            }
-          >
-            <option value="">Choose an employee</option>
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.first_name} {e.last_name}
-              </option>
-            ))}
-          </SelectInput>
-          <Input
-            label="Deduction Amount (KES) *"
-            type="number"
-            value={attachData.deductionAmount}
-            onChange={(e) =>
-              setAttachData({ ...attachData, deductionAmount: e.target.value })
-            }
-          />
-          <Textarea
-            label="Description (Optional)"
-            rows={3}
-            value={attachData.description}
-            onChange={(e) =>
-              setAttachData({ ...attachData, description: e.target.value })
-            }
-          />
-        </div>
-      </Drawer>
-
-      {/* ══ CONFIRM DIALOGS ══ */}
+      {/* DELETE CONFIRMATION */}
       <ConfirmDialog
         open={openDelete}
         onClose={() => setOpenDelete(false)}
@@ -1553,73 +1393,8 @@ const Expenses = () => {
         confirmLabel="Delete"
         confirmColor="bg-red-600 hover:bg-red-700"
       />
-
-      <ConfirmDialog
-        open={openApprove}
-        onClose={() => setOpenApprove(false)}
-        title="Approve Expense"
-        titleColor="bg-green-600"
-        message={`Approve "${selectedExpense?.title}"?`}
-        onConfirm={handleApprove}
-        loading={loading.approve}
-        confirmLabel="Approve"
-        confirmColor="bg-green-600 hover:bg-green-700"
-      >
-        <div className="bg-green-50 rounded-lg p-3 mb-2">
-          <p className="text-sm font-semibold text-green-700">
-            Amount: KES{" "}
-            {selectedExpense
-              ? parseFloat(selectedExpense.total_amount).toLocaleString()
-              : 0}
-          </p>
-        </div>
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        open={openReject}
-        onClose={() => {
-          setOpenReject(false)
-          setRejectionReason("")
-        }}
-        title="Reject Expense"
-        titleColor="bg-red-600"
-        message={`Reject "${selectedExpense?.title}"?`}
-        onConfirm={handleReject}
-        loading={loading.reject}
-        confirmLabel="Reject"
-        confirmColor="bg-red-600 hover:bg-red-700"
-      >
-        <Textarea
-          label="Rejection Reason *"
-          rows={3}
-          value={rejectionReason}
-          onChange={(e) => setRejectionReason(e.target.value)}
-          placeholder="Provide a reason..."
-        />
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        open={openMarkPaid}
-        onClose={() => setOpenMarkPaid(false)}
-        title="Mark as Paid"
-        titleColor="bg-blue-600"
-        message={`Mark "${selectedExpense?.title}" as paid?`}
-        onConfirm={handleMarkPaid}
-        loading={loading.markPaid}
-        confirmLabel="Mark Paid"
-        confirmColor="bg-blue-600 hover:bg-blue-700"
-      >
-        <div className="bg-blue-50 rounded-lg p-3 mb-2">
-          <p className="text-sm font-semibold text-blue-700">
-            Amount: KES{" "}
-            {selectedExpense
-              ? parseFloat(selectedExpense.total_amount).toLocaleString()
-              : 0}
-          </p>
-        </div>
-      </ConfirmDialog>
     </div>
   )
 }
 
-export default Expenses
+export default EmployeeExpenses

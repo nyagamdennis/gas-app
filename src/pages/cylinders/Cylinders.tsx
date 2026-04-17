@@ -57,8 +57,7 @@ const Cylinders = () => {
     dispatch(fetchSalesTeamShops())
     dispatch(fetchSalesTeamVehicle())
     setLoading(false)
-  }, [dispatch])
-
+  }, [dispatch, businessId])
   // Close all modals
   const closeAllModals = () => {
     setShowStockModal(false)
