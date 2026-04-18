@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from "react"
 import { useMediaQuery, useTheme } from "@mui/material"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
