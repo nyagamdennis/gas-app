@@ -3004,7 +3004,12 @@ const TeamsSales = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-grow p-4 pb-48 prevent-overflow max-w-screen">
+      {/* <main className="flex-grow p-4 pb-24 prevent-overflow max-w-screen"> */}
+      <main
+        className={`flex-grow p-4 pb-24 prevent-overflow max-w-screen ${
+          isMobile ? "pb-32" : ""
+        }`}
+      >
         {/* Date Changing Overlay */}
         {dateChanging && (
           <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 flex items-center justify-center">
@@ -3503,7 +3508,9 @@ const TeamsSales = () => {
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-gray-600">Total Debt</p>
                       <p className="text-lg font-bold text-red-600">
-                        <FormattedAmount amount={statistics?.total_debt_remaining || 0} />
+                        <FormattedAmount
+                          amount={statistics?.total_debt_remaining || 0}
+                        />
                       </p>
                     </div>
                   </div>
@@ -3578,7 +3585,7 @@ const TeamsSales = () => {
                   onReconcile={performCashReconciliation}
                   onAssignShortage={handleAssignCashShortage}
                   isFinalized={isFinalized}
-                  isReconciling ={isReconciling}
+                  isReconciling={isReconciling}
                   mobile={true}
                 />
                 <MpesaVerification
@@ -5134,7 +5141,6 @@ const TeamsSales = () => {
                   </div>
                 </>
               )}
-
 
               <div className="flex justify-end space-x-2">
                 <button

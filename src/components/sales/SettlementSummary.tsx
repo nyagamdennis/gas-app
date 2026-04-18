@@ -33,16 +33,16 @@ const SettlementSummary = ({
 
   const variance = expectedTotal - netBalance
 
- const cashStatus =
-   cashVerification.missingCash === 0
-     ? "balanced"
-     : cashVerification.missingCash > 0
-     ? "shortage"
-     : "excess"
- const mpesaStatus =
-   mpesaVerification.unverifiedPayments.length === 0 ? "verified" : "unverified"
-
-
+  const cashStatus =
+    cashVerification.missingCash === 0
+      ? "balanced"
+      : cashVerification.missingCash > 0
+      ? "shortage"
+      : "excess"
+  const mpesaStatus =
+    mpesaVerification.unverifiedPayments.length === 0
+      ? "verified"
+      : "unverified"
 
   const getCashStatusColor = () => {
     switch (cashStatus) {
@@ -69,7 +69,11 @@ const SettlementSummary = ({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div
+      className={`bg-white rounded-xl shadow-sm border p-6 ${
+        mobile ? "mb-20" : ""
+      }`}
+    >
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold text-gray-800 flex items-center">
           <AssignmentTurnedIn className="mr-2 text-green-600" />
@@ -294,16 +298,16 @@ const SettlementSummary = ({
               Once finalized, no further changes can be made to this day's data.
             </div>
             <button
-      onClick={onFinalize}
-      disabled={!canFinalizeByReconciliation}
-      className={`px-4 py-2 rounded-lg text-sm font-medium ${
-        canFinalizeByReconciliation
-          ? "bg-green-600 text-white hover:bg-green-700"
-          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-      }`}
-    >
-      Finalize Settlement
-    </button>
+              onClick={onFinalize}
+              disabled={!canFinalizeByReconciliation}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                canFinalizeByReconciliation
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Finalize Settlement
+            </button>
           </div>
         </div>
       )}
