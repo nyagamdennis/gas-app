@@ -370,6 +370,7 @@ const StoreCylinders = () => {
   const handleUpdateCylinderData = async (id: string) => {
     const storeData = selectedGasCylinder || {}
     const stockId = storeId
+    const storesId = selectedGasCylinder?.id
 
     const formData = {
       store_id: stockId,
@@ -394,7 +395,7 @@ const StoreCylinders = () => {
     }
     try {
       await dispatch(
-        updateThisStoreCylinders({ stockId, dat: formData }),
+        updateThisStoreCylinders({ storesId, dat: formData }),
       ).unwrap()
       toast.success("Cylinder updated successfully.")
       setOpenUpdateCylinderData(false)

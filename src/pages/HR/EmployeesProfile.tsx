@@ -147,6 +147,9 @@ const Employee = () => {
   const [vehicleRole, setVehicleRole] = useState("DRIVER")
   // New state for shop and store assignment role
   const [assignmentRole, setAssignmentRole] = useState("")
+
+  const [verifyingEmail, setVerifyingEmail] = useState(false)
+  const [verifyingPhone, setVerifyingPhone] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [realData, setRealData] = useState({
     stores: [],
@@ -1071,6 +1074,69 @@ const Employee = () => {
     setRealData(formattedData)
   }, [allStores, allShops, allVehicles])
 
+
+
+  const handleVerifyEmail = async (employee) => {
+    setVerifyingEmail(true)
+    try {
+      await verifyEmployeeEmail(employee.id)
+      // Update local employee data
+      setSelectedEmployee((prev) => ({ ...prev, email_verified: true }))
+      // Optionally refresh the employee list
+      toast.success(
+        `Email verified for ${employee.first_name} ${employee.last_name}`,
+      )
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to verify email")
+    } finally {
+      setVerifyingEmail(false)
+    }
+  }
+
+  const handleUnverifyEmail = async (employee) => {
+    setVerifyingEmail(true)
+    try {
+      await unverifyEmployeeEmail(employee.id)
+      setSelectedEmployee((prev) => ({ ...prev, email_verified: false }))
+      toast.success(
+        `Email unverified for ${employee.first_name} ${employee.last_name}`,
+      )
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unverify email")
+    } finally {
+      setVerifyingEmail(false)
+    }
+  }
+
+  const handleVerifyPhone = async (employee) => {
+    setVerifyingPhone(true)
+    try {
+      await verifyEmployeePhone(employee.id)
+      setSelectedEmployee((prev) => ({ ...prev, phone_verified: true }))
+      toast.success(
+        `Phone verified for ${employee.first_name} ${employee.last_name}`,
+      )
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to verify phone")
+    } finally {
+      setVerifyingPhone(false)
+    }
+  }
+
+  const handleUnverifyPhone = async (employee) => {
+    setVerifyingPhone(true)
+    try {
+      await unverifyEmployeePhone(employee.id)
+      setSelectedEmployee((prev) => ({ ...prev, phone_verified: false }))
+      toast.success(
+        `Phone unverified for ${employee.first_name} ${employee.last_name}`,
+      )
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to unverify phone")
+    } finally {
+      setVerifyingPhone(false)
+    }
+  }
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
       <Navbar
@@ -1416,10 +1482,35 @@ const Employee = () => {
 
                 {selectedEmployee.email && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-xs text-gray-600 mb-1">Email</p>
-                    <p className="font-semibold text-gray-800">
-                      {selectedEmployee.email}
-                    </p>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Email</p>
+                        <p className="font-semibold text-gray-800">
+                          {selectedEmployee.email}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedEmployee.email_verified ? (
+                          <button
+                            onClick={() =>
+                              handleUnverifyEmail(selectedEmployee)
+                            }
+                            disabled={verifyingEmail}
+                            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition disabled:opacity-50"
+                          >
+                            {verifyingEmail ? "..." : "Unverify"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleVerifyEmail(selectedEmployee)}
+                            disabled={verifyingEmail}
+                            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition disabled:opacity-50"
+                          >
+                            {verifyingEmail ? "..." : "Verify"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         selectedEmployee.email_verified
@@ -1436,13 +1527,48 @@ const Employee = () => {
 
                 {selectedEmployee.phone_number && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="text-xs text-gray-600 mb-1">Phone</p>
-                    <p className="font-semibold text-gray-800">
-                      {selectedEmployee.phone_number}
-                    </p>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Phone</p>
+                        <p className="font-semibold text-gray-800">
+                          {selectedEmployee.phone_number}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedEmployee.phone_verified ? (
+                          <button
+                            onClick={() =>
+                              handleUnverifyPhone(selectedEmployee)
+                            }
+                            disabled={verifyingPhone}
+                            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition disabled:opacity-50"
+                          >
+                            {verifyingPhone ? "..." : "Unverify"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleVerifyPhone(selectedEmployee)}
+                            disabled={verifyingPhone}
+                            className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition disabled:opacity-50"
+                          >
+                            {verifyingPhone ? "..." : "Verify"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        selectedEmployee.phone_verified
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
+                      {selectedEmployee.phone_verified
+                        ? "Verified"
+                        : "Not Verified"}
+                    </span>
                   </div>
                 )}
-
                 {selectedEmployee.status && (
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <p className="text-xs text-gray-600 mb-1">Status</p>

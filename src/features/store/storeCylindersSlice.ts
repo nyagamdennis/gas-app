@@ -132,15 +132,15 @@ export const updateStoreCylinders = createAsyncThunk<
 
 export const updateThisStoreCylinders = createAsyncThunk<
   { message: string; stock: storeCylinders; updated: any },
-  { stockId: number; dat: any },
+  { storesId: number; dat: any },
   {}
->("storeCylinders/updateThisStoreCylinders", async ({ stockId, dat }) => {
+>("storeCylinders/updateThisStoreCylinders", async ({ storesId, dat }) => {
   console.log("Updating store cylinder stock:", dat)
   const response = await api.patch<{
     message: string
     stock: storeCylinders
     updated: any
-  }>(`/inventory/store-cylinders/${stockId}/update/`, dat)
+  }>(`/inventory/store-cylinders/${storesId}/update/`, dat)
   console.log("Update response:", response.data)
   return response.data
 })

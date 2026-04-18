@@ -411,7 +411,10 @@ const CylinderSales = () => {
     return availableCylinders.filter(
       (cylinder) => !selectedIds.includes(cylinder.id),
     )
+    // alert('exchange cylinder id is ', selectedIds)
   }, [availableCylinders, cylinderProducts])
+
+    // console.log('cylinder exchaged with ', cylinderExchanged, 'exchanged cylinders ', exchangeCylinders)
 
   // Clear exchange selection if the chosen cylinder is no longer available (e.g., after adding a new cylinder product)
   useEffect(() => {
@@ -422,6 +425,7 @@ const CylinderSales = () => {
       setCylinderExchanged("")
     }
   }, [exchangeCylinders, cylinderExchanged])
+
 
   // Reset exchange state when sales type changes away from refill
   useEffect(() => {
@@ -539,6 +543,7 @@ const CylinderSales = () => {
       ),
     )
   }
+  console.log('selected cylinder ', cylinderProducts)
 
   const handleAddCylinderProduct = () => {
     setCylinderProducts([
@@ -795,6 +800,7 @@ const CylinderSales = () => {
 
   // Form submission - include BOTH location name and coordinates
   // Form submission - include BOTH location name and coordinates
+
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
@@ -836,6 +842,7 @@ const CylinderSales = () => {
       exchangeCylinderId =
         selectedExchangeCylinder?.cylinder_type_id || Number(cylinderExchanged)
     }
+
 
     const formData: any = {
       company_id: businessId,
@@ -884,13 +891,14 @@ const CylinderSales = () => {
         }
 
         // Add exchange fields if enabled
-        if (exchangedWithLocal) {
+        if (exchangedWithLocal && cylinderExchanged) {
+          const exchangeCyl = availableCylinders.find(
+            (c) => c.id === Number(cylinderExchanged),
+          )
           cylinderItem.exchanged_with_local = true
-          cylinderItem.cylinder_exchanged_with = cylinderExchanged
-            ? Number(cylinderExchanged)
-            : null
+          cylinderItem.cylinder_exchanged_with =
+            exchangeCyl?.cylinder_type_id || null
         }
-
         return cylinderItem
       }),
       // cylinder_items: [
@@ -1042,7 +1050,6 @@ const CylinderSales = () => {
       formData.store = teamId
     }
 
-    console.log("Form data to submit:", formData)
 
     try {
       const result = await dispatch(recordSales(formData)).unwrap()
