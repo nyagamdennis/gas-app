@@ -3004,7 +3004,7 @@ const TeamsSales = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-grow p-4 pb-24 prevent-overflow max-w-screen">
+      <main className="flex-grow p-4 pb-48 prevent-overflow max-w-screen">
         {/* Date Changing Overlay */}
         {dateChanging && (
           <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-40 flex items-center justify-center">
@@ -5135,7 +5135,6 @@ const TeamsSales = () => {
                 </>
               )}
 
-              <div>ddd</div>
 
               <div className="flex justify-end space-x-2">
                 <button

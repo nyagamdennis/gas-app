@@ -29,9 +29,6 @@ import {
 import { PiChartLineUpFill } from "react-icons/pi"
 import { RiExchangeDollarFill } from "react-icons/ri"
 import Box from "@mui/material/Box"
-import { LineChart } from "@mui/x-charts/LineChart"
-import { PieChart } from "@mui/x-charts/PieChart"
-import { BarChart } from "@mui/x-charts/BarChart"
 import AdminsFooter from "../components/AdminsFooter"
 import computeDayOverDayDebtChange from "../utils/debtUtils"
 import {
@@ -110,6 +107,22 @@ import {
 } from "@mui/icons-material"
 import RealTimeIndicator from "../components/sales/RealTimeIndicator"
 import api from "../../utils/api"
+
+// Recharts imports
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ReTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+  Tooltip as PieTooltip,
+} from "recharts"
 
 // Custom responsive hook
 const useResponsive = () => {
@@ -207,15 +220,20 @@ const Dashboard = () => {
   const revenueChartData = revenueByDate.map((item) => item.total)
   const expenseChartData = expensesByDate.map((item) => item.total)
 
-  // Sales distribution for pie chart (from real data)
+  // Prepare data for recharts
+  const lineChartData = revenueByDate.map((item, index) => ({
+    period: chartLabels[index] || new Date(item.period).toLocaleDateString(),
+    revenue: item.total,
+    expenses: expensesByDate[index]?.total || 0,
+  }))
+
+  const totalSalesValue = retailRevenue + wholesaleRevenue
   const salesDistribution = [
-    { label: "Retail", value: retailRevenue, color: blue[500] },
-    { label: "Wholesale", value: wholesaleRevenue, color: green[500] },
-    // { label: "Refill", value: refillRevenue, color: orange[500] },
-    // { label: "Complete", value: completeRevenue, color: purple[500] },
+    { name: "Retail", value: retailRevenue, color: blue[500] },
+    { name: "Wholesale", value: wholesaleRevenue, color: green[500] },
   ].filter((item) => item.value > 0)
 
-  // Mock data that we keep for now (you can replace with real endpoints)
+  // Mock data (keep as is)
   const topProducts = [
     { name: "Gas Cylinder 15kg", sales: 245, revenue: 1225000, growth: 12.5 },
     { name: "Cooking Gas 6kg", sales: 189, revenue: 567000, growth: 8.2 },
@@ -299,7 +317,6 @@ const Dashboard = () => {
     fetchDashboardStats()
   }, [fetchDashboardStats])
 
-  // Auto-refresh every 30 seconds if enabled
   useEffect(() => {
     if (!autoRefresh) return
     const interval = setInterval(() => {
@@ -308,11 +325,8 @@ const Dashboard = () => {
     return () => clearInterval(interval)
   }, [autoRefresh, fetchDashboardStats])
 
-  // Helper to get debt change (using existing utility)
-  const uncleared_debtors = [] // This would come from a separate debtors slice if needed
+  const uncleared_debtors = []
   const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
-
-  // Calculate completion rate from recentTransactions (mock)
   const completionRate =
     recentTransactions.length > 0
       ? (recentTransactions.filter((t) => t.status === "Completed").length /
@@ -320,7 +334,7 @@ const Dashboard = () => {
         100
       : 0
 
-  // Stat Card Component
+  // Stat Card Component (unchanged)
   const StatCard = ({
     title,
     value,
@@ -396,7 +410,7 @@ const Dashboard = () => {
     </Paper>
   )
 
-  // Mobile Navigation Tabs
+  // Mobile Navigation Tabs (unchanged)
   const MobileNavTabs = () => (
     <div className="sticky top-0 z-10 bg-white border-b">
       <div className="flex overflow-x-auto scrollbar-hide">
@@ -417,7 +431,7 @@ const Dashboard = () => {
     </div>
   )
 
-  // Floating Action Button Menu
+  // Floating Action Button Menu (unchanged)
   const FloatingMenu = () => {
     const [anchorEl, setAnchorEl] = useState(null)
 
@@ -484,7 +498,7 @@ const Dashboard = () => {
     )
   }
 
-  // Mobile slider settings
+  // Slider settings (unchanged)
   const mobileSliderSettings = {
     dots: true,
     arrows: false,
@@ -543,6 +557,7 @@ const Dashboard = () => {
       case "financial":
         return (
           <>
+            {/* Financial Trends Line Chart */}
             <Paper elevation={2} className="p-4 rounded-2xl mb-4">
               <Typography
                 variant="h6"
@@ -551,58 +566,88 @@ const Dashboard = () => {
                 <FaChartLine className="mr-2 text-blue-500" />
                 Financial Trends
               </Typography>
-              <Box sx={{ width: "100%", height: 250 }}>
-                <LineChart
-                  series={[
-                    {
-                      data: revenueChartData,
-                      label: "Revenue",
-                      color: green[500],
-                      curve: "natural",
-                    },
-                    {
-                      data: expenseChartData,
-                      label: "Expenses",
-                      color: red[500],
-                      curve: "natural",
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      scaleType: "point",
-                      data: chartLabels,
-                    },
-                  ]}
-                  height={220}
-                  margin={{ top: 10, bottom: 20, left: 30, right: 10 }}
-                />
-              </Box>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={lineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                  <YAxis tickFormatter={(value) => `KSh ${value / 1000}k`} />
+                  <ReTooltip
+                    formatter={(value) => `KSh ${value.toLocaleString()}`}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke={green[500]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke={red[500]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </Paper>
 
+            {/* Pie Chart - Sales Breakdown */}
             <Paper elevation={2} className="p-4 rounded-2xl">
               <Typography
                 variant="h6"
-                className="font-bold mb-4 flex items-center"
+                className="font-bold mb-2 flex items-center"
               >
                 <FaChartPie className="mr-2 text-green-500" />
                 Sales Breakdown
               </Typography>
-              <div className="flex justify-center">
-                <PieChart
-                  series={[
-                    {
-                      data: salesDistribution.map((item) => ({
-                        label: item.label,
-                        value: item.value,
-                      })),
-                      innerRadius: 30,
-                      outerRadius: 80,
-                    },
-                  ]}
-                  height={220}
-                  width={300}
-                />
-              </div>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                className="block mb-4 text-center"
+              >
+                Total Sales: <CurrencyConvert price={totalSalesValue} />
+              </Typography>
+              <ResponsiveContainer width="100%" height={280}>
+                <RePieChart>
+                  <Pie
+                    data={salesDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
+                    }
+                    labelLine={false}
+                  >
+                    {salesDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <PieTooltip
+                    formatter={(value) => `KSh ${value.toLocaleString()}`}
+                  />
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    formatter={(value, entry, index) => {
+                      const item = salesDistribution[index]
+                      const percent = (
+                        (item.value / totalSalesValue) *
+                        100
+                      ).toFixed(1)
+                      return `${
+                        item.name
+                      } (${percent}%) – KSh ${item.value.toLocaleString()}`
+                    }}
+                  />
+                </RePieChart>
+              </ResponsiveContainer>
             </Paper>
           </>
         )
@@ -617,51 +662,43 @@ const Dashboard = () => {
               <Inventory className="mr-2 text-blue-500" />
               Top Products
             </Typography>
-            <List>
+            <div className="space-y-3">
               {topProducts.map((product, index) => (
-                <div key={index}>
-                  <ListItem className="px-0 py-3">
-                    <ListItemIcon>
+                <div key={index} className="bg-gray-50 p-3 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-2">
                       <Avatar
                         sx={{
                           bgcolor: blue[100],
                           color: blue[600],
-                          width: 36,
-                          height: 36,
+                          width: 32,
+                          height: 32,
+                          fontSize: "0.875rem",
                         }}
                       >
                         {index + 1}
                       </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={
-                        <Typography
-                          variant="body2"
-                          className="font-medium truncate"
-                        >
-                          {product.name}
-                        </Typography>
-                      }
-                      secondary={
-                        <div className="flex justify-between items-center mt-1">
-                          <Typography variant="caption" color="text.secondary">
-                            {product.sales} units
-                          </Typography>
-                          <Chip
-                            label={`${product.growth > 0 ? "+" : ""}${
-                              product.growth
-                            }%`}
-                            size="small"
-                            color={product.growth > 0 ? "success" : "error"}
-                          />
-                        </div>
-                      }
+                      <Typography variant="body1" className="font-medium">
+                        {product.name}
+                      </Typography>
+                    </div>
+                    <Chip
+                      label={`${product.growth > 0 ? "+" : ""}${
+                        product.growth
+                      }%`}
+                      size="small"
+                      color={product.growth > 0 ? "success" : "error"}
                     />
-                  </ListItem>
-                  {index < topProducts.length - 1 && <Divider />}
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600 pl-10">
+                    <span>{product.sales} units</span>
+                    <span className="font-semibold">
+                      <CurrencyConvert price={product.revenue} />
+                    </span>
+                  </div>
                 </div>
               ))}
-            </List>
+            </div>
           </Paper>
         )
 
@@ -675,38 +712,43 @@ const Dashboard = () => {
               <People className="mr-2 text-green-500" />
               Team Performance
             </Typography>
-            {salesTeamPerformance.map((team, index) => (
-              <div key={index} className="mb-4 last:mb-0">
-                <div className="flex justify-between items-center mb-1">
-                  <Typography variant="body2" className="font-medium">
-                    {team.name}
-                  </Typography>
-                  <Typography variant="body2" className="font-bold">
-                    {team.efficiency}%
-                  </Typography>
+            <div className="space-y-5">
+              {salesTeamPerformance.map((team, index) => (
+                <div key={index} className="bg-gray-50 p-3 rounded-xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <Typography variant="body1" className="font-bold">
+                      {team.name}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      className="font-bold text-green-600"
+                    >
+                      {team.efficiency}%
+                    </Typography>
+                  </div>
+                  <LinearProgress
+                    variant="determinate"
+                    value={team.efficiency}
+                    color={
+                      team.efficiency > 85
+                        ? "success"
+                        : team.efficiency > 70
+                        ? "warning"
+                        : "error"
+                    }
+                    className="h-2 rounded-full mb-2"
+                  />
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>
+                      Target: <CurrencyConvert price={team.target} />
+                    </span>
+                    <span>
+                      Achieved: <CurrencyConvert price={team.achieved} />
+                    </span>
+                  </div>
                 </div>
-                <LinearProgress
-                  variant="determinate"
-                  value={team.efficiency}
-                  color={
-                    team.efficiency > 85
-                      ? "success"
-                      : team.efficiency > 70
-                      ? "warning"
-                      : "error"
-                  }
-                  className="h-2 rounded-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>
-                    Target: <CurrencyConvert price={team.target} />
-                  </span>
-                  <span>
-                    Achieved: <CurrencyConvert price={team.achieved} />
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </Paper>
         )
 
@@ -832,7 +874,7 @@ const Dashboard = () => {
               </Grid>
             </Grid>
 
-            {/* Main Chart */}
+            {/* Performance Overview Line Chart */}
             <Paper elevation={2} className="p-4 rounded-2xl mb-6">
               <Typography
                 variant="h6"
@@ -841,35 +883,34 @@ const Dashboard = () => {
                 <ShowChart className="mr-2 text-blue-500" />
                 Performance Overview
               </Typography>
-              <Box sx={{ width: "100%", height: 250 }}>
-                <LineChart
-                  series={[
-                    {
-                      data: revenueChartData,
-                      label: "Revenue",
-                      color: green[500],
-                      curve: "natural",
-                    },
-                    {
-                      data: expenseChartData,
-                      label: "Expenses",
-                      color: red[500],
-                      curve: "natural",
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      scaleType: "point",
-                      data: chartLabels,
-                    },
-                  ]}
-                  height={220}
-                  margin={{ top: 10, bottom: 20, left: 30, right: 10 }}
-                />
-              </Box>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={lineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                  <YAxis tickFormatter={(value) => `KSh ${value / 1000}k`} />
+                  <ReTooltip
+                    formatter={(value) => `KSh ${value.toLocaleString()}`}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke={green[500]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke={red[500]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </Paper>
 
-            {/* Recent Transactions */}
+            {/* Recent Transactions - Mobile Optimized */}
             <Paper elevation={2} className="p-4 rounded-2xl mb-6">
               <div className="flex justify-between items-center mb-4">
                 <Typography
@@ -886,16 +927,15 @@ const Dashboard = () => {
                   <MdMoreHoriz />
                 </IconButton>
               </div>
-              <List className="space-y-2">
+              <div className="space-y-3">
                 {recentTransactions.slice(0, 3).map((transaction) => (
-                  <Paper
+                  <div
                     key={transaction.id}
-                    elevation={0}
-                    className="p-3 rounded-lg bg-gray-50"
+                    className="bg-gray-50 p-4 rounded-xl border border-gray-100"
                   >
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <Typography variant="body2" className="font-medium">
+                        <Typography variant="subtitle1" className="font-bold">
                           {transaction.customer}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -903,7 +943,10 @@ const Dashboard = () => {
                         </Typography>
                       </div>
                       <div className="text-right">
-                        <Typography variant="body2" className="font-bold">
+                        <Typography
+                          variant="subtitle1"
+                          className="font-bold text-blue-600"
+                        >
                           <CurrencyConvert price={transaction.amount} />
                         </Typography>
                         <Chip
@@ -918,9 +961,9 @@ const Dashboard = () => {
                         />
                       </div>
                     </div>
-                  </Paper>
+                  </div>
                 ))}
-              </List>
+              </div>
             </Paper>
           </>
         )
@@ -1043,41 +1086,33 @@ const Dashboard = () => {
                 <ShowChart className="mr-2 text-blue-500" />
                 Financial Performance
               </Typography>
-              <Box sx={{ width: "100%", height: 300 }}>
-                <LineChart
-                  series={[
-                    {
-                      data: revenueChartData,
-                      label: "Revenue",
-                      color: green[500],
-                      curve: "natural",
-                      area: true,
-                    },
-                    {
-                      data: expenseChartData,
-                      label: "Expenses",
-                      color: red[500],
-                      curve: "natural",
-                      area: true,
-                    },
-                  ]}
-                  xAxis={[
-                    {
-                      scaleType: "point",
-                      data: chartLabels,
-                      label: "Period",
-                    },
-                  ]}
-                  yAxis={[
-                    {
-                      label: "Amount (Ksh)",
-                      width: 60,
-                    },
-                  ]}
-                  height={260}
-                  margin={{ top: 20, bottom: 40, left: 60, right: 20 }}
-                />
-              </Box>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={lineChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="period" />
+                  <YAxis tickFormatter={(value) => `KSh ${value / 1000}k`} />
+                  <ReTooltip
+                    formatter={(value) => `KSh ${value.toLocaleString()}`}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke={green[500]}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="expenses"
+                    stroke={red[500]}
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </Paper>
           </Grid>
 
@@ -1085,34 +1120,62 @@ const Dashboard = () => {
             <Paper elevation={2} className="p-4 rounded-2xl h-full">
               <Typography
                 variant="h6"
-                className="font-bold mb-4 flex items-center"
+                className="font-bold mb-2 flex items-center"
               >
                 <PieChartIcon className="mr-2 text-green-500" />
                 Sales Breakdown
               </Typography>
-              <div className="flex justify-center">
-                <PieChart
-                  series={[
-                    {
-                      data: salesDistribution.map((item) => ({
-                        label: item.label,
-                        value: item.value,
-                      })),
-                      innerRadius: 40,
-                      outerRadius: 100,
-                      paddingAngle: 2,
-                      cornerRadius: 4,
-                    },
-                  ]}
-                  height={260}
-                  width={isTablet ? 300 : 350}
-                />
-              </div>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                className="mb-4 text-center"
+              >
+                Total Sales: <CurrencyConvert price={totalSalesValue} />
+              </Typography>
+              <ResponsiveContainer width="100%" height={320}>
+                <RePieChart>
+                  <Pie
+                    data={salesDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) =>
+                      `${name}: ${(percent * 100).toFixed(1)}%`
+                    }
+                    labelLine={true}
+                  >
+                    {salesDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <PieTooltip
+                    formatter={(value) => `KSh ${value.toLocaleString()}`}
+                  />
+                  <Legend
+                    layout="vertical"
+                    verticalAlign="middle"
+                    align="right"
+                    formatter={(value, entry, index) => {
+                      const item = salesDistribution[index]
+                      const percent = (
+                        (item.value / totalSalesValue) *
+                        100
+                      ).toFixed(1)
+                      return `${
+                        item.name
+                      } – ${percent}% (KSh ${item.value.toLocaleString()})`
+                    }}
+                  />
+                </RePieChart>
+              </ResponsiveContainer>
             </Paper>
           </Grid>
         </Grid>
 
-        {/* Bottom Section */}
+        {/* Bottom Section (unchanged) */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Paper elevation={2} className="p-4 rounded-2xl h-full">
@@ -1269,10 +1332,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 touch-manipulation">
-      {/* Back to top anchor */}
       <div id="back-to-top-anchor" />
-
-      {/* Real-time Indicator */}
       <div className="prevent-overflow">
         <RealTimeIndicator
           enabled={autoRefresh}
@@ -1281,12 +1341,10 @@ const Dashboard = () => {
           onToggle={() => setAutoRefresh(!autoRefresh)}
         />
       </div>
-
       <Navbar
         headerMessage={"ERP Dashboard"}
         headerText={"Real-time insights for your business"}
       />
-
       {isMobile ? (
         <>
           <MobileNavTabs />
@@ -1295,17 +1353,12 @@ const Dashboard = () => {
       ) : (
         renderDesktopView()
       )}
-
-      {/* Floating Action Button for Mobile */}
       {isMobile && <FloatingMenu />}
-
-      {/* Scroll to Top Button */}
       <ScrollTop>
         <Fab color="primary" size="small" aria-label="scroll back to top">
           <KeyboardArrowUp />
         </Fab>
       </ScrollTop>
-
       <footer className="mt-8">
         <AdminsFooter />
       </footer>
