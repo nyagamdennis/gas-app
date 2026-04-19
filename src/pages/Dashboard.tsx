@@ -1,103 +1,24 @@
 // @ts-nocheck
-import { useMediaQuery, useTheme } from "@mui/material"
 import React, { useEffect, useState, useCallback } from "react"
-import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useNavigate } from "react-router-dom"
-import planStatus from "../features/planStatus/planStatus"
-import Navbar from "../components/ui/mobile/admin/Navbar"
+import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import Slider from "react-slick"
-import CurrencyConvert from "../components/CurrencyConvert"
-import TrendingUpIcon from "@mui/icons-material/TrendingUp"
-import TrendingDownIcon from "@mui/icons-material/TrendingDown"
+import "slick-carousel/slick/slick.css"
+import "slick-carousel/slick/slick-theme.css"
+import { FaDollarSign, FaChartLine, FaChartPie } from "react-icons/fa"
 import { GiExpense, GiProfit } from "react-icons/gi"
 import { FcDebt } from "react-icons/fc"
-import {
-  FaDollarSign,
-  FaUsers,
-  FaShoppingCart,
-  FaBoxes,
-  FaChartLine,
-  FaChartPie,
-  FaChartBar,
-} from "react-icons/fa"
-import {
-  MdAttachMoney,
-  MdTrendingUp,
-  MdTrendingDown,
-  MdMoreHoriz,
-} from "react-icons/md"
 import { PiChartLineUpFill } from "react-icons/pi"
 import { RiExchangeDollarFill } from "react-icons/ri"
-import Box from "@mui/material/Box"
-import AdminsFooter from "../components/AdminsFooter"
-import computeDayOverDayDebtChange from "../utils/debtUtils"
-import {
-  fetchDebtors,
-  selectAllDebtors,
-} from "../features/debtors/debtorsSlice"
-import { IoTrendingDown } from "react-icons/io5"
-import {
-  fetchAllExpenses,
-  fetchExpenses,
-  selectAllExpenses,
-} from "../features/expenses/expensesSlice"
-import {
-  fetchAnalysis,
-  selectAllAnalysis,
-} from "../features/analysis/analysisSlice"
-import {
-  Card,
-  CardContent,
-  Grid,
-  Typography,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Tooltip,
-  Drawer,
-  Menu,
-  MenuItem,
-  Fab,
-  useScrollTrigger,
-  Zoom,
-  CircularProgress,
-  Alert,
-} from "@mui/material"
-import {
-  blue,
-  green,
-  red,
-  orange,
-  purple,
-  deepPurple,
-  cyan,
-} from "@mui/material/colors"
+import { MdMoreHoriz } from "react-icons/md"
 import {
   TrendingUp,
   TrendingDown,
   People,
   Inventory,
-  LocalShipping,
-  Store,
   ShowChart,
   PieChart as PieChartIcon,
-  BarChart as BarChartIcon,
-  Assessment,
-  MonetizationOn,
-  Paid,
   Receipt,
   FilterList,
   Refresh,
@@ -105,7 +26,13 @@ import {
   Menu as MenuIcon,
   KeyboardArrowUp,
 } from "@mui/icons-material"
+
+import Navbar from "../components/ui/mobile/admin/Navbar"
+import AdminsFooter from "../components/AdminsFooter"
+import CurrencyConvert from "../components/CurrencyConvert"
 import RealTimeIndicator from "../components/sales/RealTimeIndicator"
+import planStatus from "../features/planStatus/planStatus"
+import computeDayOverDayDebtChange from "../utils/debtUtils"
 import api from "../../utils/api"
 
 // Recharts imports
@@ -126,71 +53,43 @@ import {
 
 // Custom responsive hook
 const useResponsive = () => {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"))
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"))
-
-  return { isMobile, isTablet, isDesktop }
-}
-
-// Scroll to top component
-function ScrollTop(props) {
-  const { children } = props
-  const trigger = useScrollTrigger({
-    disableHysteresis: true,
-    threshold: 100,
-  })
-
-  const handleClick = (event) => {
-    const anchor = (event.target.ownerDocument || document).querySelector(
-      "#back-to-top-anchor",
-    )
-    if (anchor) {
-      anchor.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      })
-    }
-  }
-
-  return (
-    <Zoom in={trigger}>
-      <div
-        onClick={handleClick}
-        role="presentation"
-        style={{ position: "fixed", bottom: 80, right: 16, zIndex: 1000 }}
-      >
-        {children}
-      </div>
-    </Zoom>
-  )
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+  return { isMobile, isTablet: false, isDesktop: !isMobile }
 }
 
 const Dashboard = () => {
-  const theme = useTheme()
-  const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { isMobile, isTablet, isDesktop } = useResponsive()
+  const { isMobile } = useResponsive()
   const { isPro, isTrial, isExpired } = planStatus()
 
   // State for API data
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [statsData, setStatsData] = useState(null)
-  const [timeRange, setTimeRange] = useState("week") // daily, week, month, year
+  const [timeRange, setTimeRange] = useState("week")
   const [teamFilter, setTeamFilter] = useState({ type: null, id: null })
 
-  // Advanced Features
-  const [batchMode, setBatchMode] = useState(false)
-  const [selectedBatchItems, setSelectedBatchItems] = useState([])
-  const [lastUpdated, setLastUpdated] = useState(null)
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
-  const [dataVersion, setDataVersion] = useState(0)
+  // Team filter UI state
+  const [selectedTeamType, setSelectedTeamType] = useState("")
+  const [selectedTeamId, setSelectedTeamId] = useState("")
+  const [teamsList, setTeamsList] = useState([])
+  const [loadingTeams, setLoadingTeams] = useState(false)
 
-  const [menuAnchor, setMenuAnchor] = useState(null)
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  // Additional data states
+  const [latestTransactions, setLatestTransactions] = useState([])
+  const [teamPerformance, setTeamPerformance] = useState([])
+  const [loadingTransactions, setLoadingTransactions] = useState(false)
+  const [loadingPerformance, setLoadingPerformance] = useState(false)
+
+  // Advanced Features
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [dataVersion, setDataVersion] = useState(0)
   const [activeView, setActiveView] = useState("overview")
 
   // Derived values from API data
@@ -202,25 +101,15 @@ const Dashboard = () => {
 
   const retailRevenue = statsData?.revenue?.retail || 0
   const wholesaleRevenue = statsData?.revenue?.wholesale || 0
-  const refillRevenue = statsData?.cylinder_sales?.refill || 0
-  const completeRevenue = statsData?.cylinder_sales?.complete || 0
-
   const averageSale = statsData?.revenue?.average_sale || 0
   const totalOutstandingDebt = statsData?.debt_analysis?.total_outstanding || 0
-  const totalOverdueDebt = statsData?.debt_analysis?.total_overdue || 0
-  const totalCollectedDebt =
-    statsData?.debt_analysis?.total_collected_lifetime || 0
 
-  // For chart data (by date)
+  // Chart data
   const revenueByDate = statsData?.revenue?.by_date || []
   const expensesByDate = statsData?.expenses?.by_date || []
   const chartLabels = revenueByDate.map((item) =>
     new Date(item.period).toLocaleDateString(undefined, { weekday: "short" }),
   )
-  const revenueChartData = revenueByDate.map((item) => item.total)
-  const expenseChartData = expensesByDate.map((item) => item.total)
-
-  // Prepare data for recharts
   const lineChartData = revenueByDate.map((item, index) => ({
     period: chartLabels[index] || new Date(item.period).toLocaleDateString(),
     revenue: item.total,
@@ -229,11 +118,11 @@ const Dashboard = () => {
 
   const totalSalesValue = retailRevenue + wholesaleRevenue
   const salesDistribution = [
-    { name: "Retail", value: retailRevenue, color: blue[500] },
-    { name: "Wholesale", value: wholesaleRevenue, color: green[500] },
+    { name: "Retail", value: retailRevenue, color: "#3b82f6" },
+    { name: "Wholesale", value: wholesaleRevenue, color: "#10b981" },
   ].filter((item) => item.value > 0)
 
-  // Mock data (keep as is)
+  // Mock data for top products (still mock)
   const topProducts = [
     { name: "Gas Cylinder 15kg", sales: 245, revenue: 1225000, growth: 12.5 },
     { name: "Cooking Gas 6kg", sales: 189, revenue: 567000, growth: 8.2 },
@@ -242,57 +131,7 @@ const Dashboard = () => {
     { name: "CO2 Cylinder", sales: 76, revenue: 1520000, growth: -2.1 },
   ]
 
-  const recentTransactions = [
-    {
-      id: 1,
-      customer: "John Doe",
-      amount: 50000,
-      type: "Sale",
-      date: "2024-01-15",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      customer: "Jane Smith",
-      amount: 75000,
-      type: "Sale",
-      date: "2024-01-14",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      customer: "ABC Restaurant",
-      amount: 250000,
-      type: "Wholesale",
-      date: "2024-01-14",
-      status: "Pending",
-    },
-    {
-      id: 4,
-      customer: "XYZ Hospital",
-      amount: 180000,
-      type: "Sale",
-      date: "2024-01-13",
-      status: "Completed",
-    },
-    {
-      id: 5,
-      customer: "Mike Johnson",
-      amount: 35000,
-      type: "Refill",
-      date: "2024-01-13",
-      status: "Completed",
-    },
-  ]
-
-  const salesTeamPerformance = [
-    { name: "Team A", target: 1000000, achieved: 850000, efficiency: 85 },
-    { name: "Team B", target: 800000, achieved: 720000, efficiency: 90 },
-    { name: "Team C", target: 1200000, achieved: 950000, efficiency: 79 },
-    { name: "Team D", target: 900000, achieved: 810000, efficiency: 90 },
-  ]
-
-  // Fetch dashboard statistics from API
+  // Fetch dashboard statistics
   const fetchDashboardStats = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -302,7 +141,7 @@ const Dashboard = () => {
         params.team_type = teamFilter.type
         params.team_id = teamFilter.id
       }
-      const response = await api.get("/dashbaord/dashboard/stats/", { params })
+      const response = await api.get("/dashboard/dashboard/stats/", { params })
       setStatsData(response.data)
       setLastUpdated(new Date().toLocaleTimeString())
     } catch (err) {
@@ -313,107 +152,173 @@ const Dashboard = () => {
     }
   }, [timeRange, teamFilter])
 
+  // Fetch latest transactions
+  const fetchLatestTransactions = useCallback(async () => {
+    setLoadingTransactions(true)
+    try {
+      const params = { limit: 5 }
+      if (teamFilter.type && teamFilter.id) {
+        params.team_type = teamFilter.type
+        params.team_id = teamFilter.id
+      }
+      const response = await api.get("/dashboard/sales/latest-transactions/", {
+        params,
+      })
+      setLatestTransactions(response.data.transactions || [])
+    } catch (err) {
+      console.error("Failed to fetch latest transactions:", err)
+    } finally {
+      setLoadingTransactions(false)
+    }
+  }, [teamFilter])
+
+  // Fetch team performance
+  const fetchTeamPerformance = useCallback(async () => {
+    setLoadingPerformance(true)
+    try {
+      const params = { period: timeRange }
+      if (teamFilter.type && teamFilter.id) {
+        params.team_type = teamFilter.type
+        params.team_id = teamFilter.id
+      }
+      const response = await api.get("/dashboard/sales/team-performance/", {
+        params,
+      })
+      setTeamPerformance(response.data.teams || [])
+    } catch (err) {
+      console.error("Failed to fetch team performance:", err)
+    } finally {
+      setLoadingPerformance(false)
+    }
+  }, [timeRange, teamFilter])
+
+  // Fetch teams when team type changes
+  useEffect(() => {
+    if (!selectedTeamType) {
+      setTeamsList([])
+      setSelectedTeamId("")
+      return
+    }
+    const fetchTeams = async () => {
+      setLoadingTeams(true)
+      try {
+        let endpoint = ""
+        if (selectedTeamType === "SHOP") endpoint = "/shop/"
+        else if (selectedTeamType === "STORE") endpoint = "/store/"
+        else if (selectedTeamType === "VEHICLE") endpoint = "/vehicle/"
+        const response = await api.get(endpoint)
+        let teams = response.data.results || response.data || []
+        setTeamsList(teams)
+      } catch (error) {
+        console.error("Failed to fetch teams:", error)
+        toast.error("Failed to load teams")
+        setTeamsList([])
+      } finally {
+        setLoadingTeams(false)
+      }
+    }
+    fetchTeams()
+  }, [selectedTeamType])
+
+  const handleTeamFilterChange = (type, id) => {
+    setSelectedTeamType(type)
+    setSelectedTeamId(id)
+    setTeamFilter({ type: type || null, id: id || null })
+  }
+
+  const clearTeamFilter = () => {
+    setSelectedTeamType("")
+    setSelectedTeamId("")
+    setTeamFilter({ type: null, id: null })
+  }
+
   useEffect(() => {
     fetchDashboardStats()
-  }, [fetchDashboardStats])
+    fetchLatestTransactions()
+    fetchTeamPerformance()
+  }, [fetchDashboardStats, fetchLatestTransactions, fetchTeamPerformance])
 
   useEffect(() => {
     if (!autoRefresh) return
     const interval = setInterval(() => {
       fetchDashboardStats()
+      fetchLatestTransactions()
+      fetchTeamPerformance()
     }, 30000)
     return () => clearInterval(interval)
-  }, [autoRefresh, fetchDashboardStats])
+  }, [
+    autoRefresh,
+    fetchDashboardStats,
+    fetchLatestTransactions,
+    fetchTeamPerformance,
+  ])
 
-  const uncleared_debtors = []
-  const debtChange = computeDayOverDayDebtChange(uncleared_debtors)
+  const debtChange = computeDayOverDayDebtChange([])
   const completionRate =
-    recentTransactions.length > 0
-      ? (recentTransactions.filter((t) => t.status === "Completed").length /
-          recentTransactions.length) *
+    latestTransactions.length > 0
+      ? (latestTransactions.filter((t) => t.payment_status === "PAID").length /
+          latestTransactions.length) *
         100
       : 0
 
-  // Stat Card Component (unchanged)
+  // Stat Card Component (pure Tailwind)
   const StatCard = ({
     title,
     value,
-    icon,
+    icon: Icon,
     color,
     change,
     subtitle,
-    onClick,
     isCurrency = true,
   }) => (
-    <Paper
-      elevation={2}
-      className="p-3 rounded-xl transition-all active:scale-[0.98] touch-manipulation"
-      onClick={onClick}
-      sx={{
-        cursor: onClick ? "pointer" : "default",
-        "&:active": {
-          transform: "scale(0.98)",
-        },
-      }}
-    >
+    <div className="bg-white rounded-xl shadow-md p-4 transition-all hover:shadow-lg">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            className="font-medium block mb-1"
-          >
-            {title}
-          </Typography>
-          <Typography variant="h6" className="font-bold truncate">
+          <p className="text-xs text-gray-500 font-medium mb-1">{title}</p>
+          <p className="text-xl font-bold text-gray-800">
             {isCurrency ? <CurrencyConvert price={value} /> : value}
-          </Typography>
+          </p>
           {change !== undefined && (
             <div className="flex items-center mt-2">
               {change > 0 ? (
-                <TrendingUp className="text-green-500 mr-1" fontSize="small" />
+                <TrendingUp
+                  className="text-green-500 mr-1"
+                  style={{ fontSize: "1rem" }}
+                />
               ) : (
-                <TrendingDown className="text-red-500 mr-1" fontSize="small" />
+                <TrendingDown
+                  className="text-red-500 mr-1"
+                  style={{ fontSize: "1rem" }}
+                />
               )}
-              <Typography
-                variant="caption"
-                className={`font-medium ${
+              <span
+                className={`text-xs font-medium ${
                   change > 0 ? "text-green-600" : "text-red-600"
                 }`}
               >
                 {change > 0 ? "+" : ""}
                 {change}%
-              </Typography>
+              </span>
               {subtitle && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  className="ml-2 truncate"
-                >
-                  {subtitle}
-                </Typography>
+                <span className="text-xs text-gray-400 ml-2">{subtitle}</span>
               )}
             </div>
           )}
         </div>
-        <Avatar
-          sx={{
-            bgcolor: `${color}15`,
-            color: color,
-            width: isMobile ? 36 : 44,
-            height: isMobile ? 36 : 44,
-          }}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: `${color}15`, color }}
         >
-          {icon}
-        </Avatar>
+          <Icon style={{ fontSize: "1.25rem" }} />
+        </div>
       </div>
-    </Paper>
+    </div>
   )
 
-  // Mobile Navigation Tabs (unchanged)
+  // Mobile Navigation Tabs
   const MobileNavTabs = () => (
     <div className="sticky top-0 z-10 bg-white border-b">
-      <div className="flex overflow-x-auto scrollbar-hide">
+      <div className="flex overflow-x-auto no-scrollbar">
         {["overview", "financial", "products", "teams"].map((tab) => (
           <button
             key={tab}
@@ -431,125 +336,32 @@ const Dashboard = () => {
     </div>
   )
 
-  // Floating Action Button Menu (unchanged)
-  const FloatingMenu = () => {
-    const [anchorEl, setAnchorEl] = useState(null)
-
-    const handleClick = (event) => {
-      setAnchorEl(event.currentTarget)
-    }
-
-    const handleClose = () => {
-      setAnchorEl(null)
-    }
-
-    const actions = [
-      {
-        icon: <Refresh />,
-        label: "Refresh Data",
-        action: () => fetchDashboardStats(),
-      },
-      { icon: <Download />, label: "Export Report", action: () => {} },
-      { icon: <FilterList />, label: "Filter View", action: () => {} },
-    ]
-
-    return (
-      <>
-        <Fab
-          color="primary"
-          aria-label="add"
-          onClick={handleClick}
-          sx={{
-            position: "fixed",
-            bottom: 16,
-            right: 16,
-            zIndex: 1000,
-          }}
-        >
-          <MenuIcon />
-        </Fab>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-          anchorOrigin={{
-            vertical: "top",
-            horizontal: "left",
-          }}
-          transformOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
-          }}
-        >
-          {actions.map((action) => (
-            <MenuItem
-              key={action.label}
-              onClick={() => {
-                action.action()
-                handleClose()
-              }}
-            >
-              <ListItemIcon>{action.icon}</ListItemIcon>
-              <ListItemText>{action.label}</ListItemText>
-            </MenuItem>
-          ))}
-        </Menu>
-      </>
-    )
-  }
-
-  // Slider settings (unchanged)
-  const mobileSliderSettings = {
+  // Slider settings
+  const sliderSettings = {
     dots: true,
     arrows: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 1.2,
+    slidesToShow: isMobile ? 1.2 : 4,
     slidesToScroll: 1,
-    centerMode: true,
-    centerPadding: "20px",
+    centerMode: isMobile,
+    centerPadding: isMobile ? "20px" : "0",
   }
 
-  const tabletSliderSettings = {
-    dots: true,
-    arrows: false,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 2.2,
-    slidesToScroll: 1,
-    centerMode: true,
-    centerPadding: "20px",
-  }
-
-  const desktopSliderSettings = {
-    dots: false,
-    arrows: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-  }
-
-  const getSliderSettings = () => {
-    if (isMobile) return mobileSliderSettings
-    if (isTablet) return tabletSliderSettings
-    return desktopSliderSettings
-  }
-
-  // Render content based on active view (mobile)
+  // Mobile content
   const renderMobileContent = () => {
     if (loading) {
       return (
-        <div className="flex justify-center items-center py-20">
-          <CircularProgress />
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       )
     }
     if (error) {
       return (
-        <Alert severity="error" className="m-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
           {error}
-        </Alert>
+        </div>
       )
     }
 
@@ -557,15 +369,10 @@ const Dashboard = () => {
       case "financial":
         return (
           <>
-            {/* Financial Trends Line Chart */}
-            <Paper elevation={2} className="p-4 rounded-2xl mb-4">
-              <Typography
-                variant="h6"
-                className="font-bold mb-4 flex items-center"
-              >
-                <FaChartLine className="mr-2 text-blue-500" />
-                Financial Trends
-              </Typography>
+            <div className="bg-white rounded-xl shadow-md p-4 mb-4">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+                <FaChartLine className="mr-2 text-blue-500" /> Financial Trends
+              </h3>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={lineChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -578,37 +385,27 @@ const Dashboard = () => {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke={green[500]}
+                    stroke="#10b981"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="expenses"
-                    stroke={red[500]}
+                    stroke="#ef4444"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </Paper>
-
-            {/* Pie Chart - Sales Breakdown */}
-            <Paper elevation={2} className="p-4 rounded-2xl">
-              <Typography
-                variant="h6"
-                className="font-bold mb-2 flex items-center"
-              >
-                <FaChartPie className="mr-2 text-green-500" />
-                Sales Breakdown
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                className="block mb-4 text-center"
-              >
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <h3 className="font-bold text-gray-800 mb-2 flex items-center">
+                <FaChartPie className="mr-2 text-green-500" /> Sales Breakdown
+              </h3>
+              <p className="text-xs text-gray-500 text-center mb-4">
                 Total Sales: <CurrencyConvert price={totalSalesValue} />
-              </Typography>
+              </p>
               <ResponsiveContainer width="100%" height={280}>
                 <RePieChart>
                   <Pie
@@ -624,8 +421,8 @@ const Dashboard = () => {
                     }
                     labelLine={false}
                   >
-                    {salesDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {salesDistribution.map((entry, idx) => (
+                      <Cell key={`cell-${idx}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <PieTooltip
@@ -648,47 +445,35 @@ const Dashboard = () => {
                   />
                 </RePieChart>
               </ResponsiveContainer>
-            </Paper>
+            </div>
           </>
         )
-
       case "products":
         return (
-          <Paper elevation={2} className="p-4 rounded-2xl">
-            <Typography
-              variant="h6"
-              className="font-bold mb-4 flex items-center"
-            >
-              <Inventory className="mr-2 text-blue-500" />
-              Top Products
-            </Typography>
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <Inventory className="mr-2 text-blue-500" /> Top Products
+            </h3>
             <div className="space-y-3">
-              {topProducts.map((product, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-xl">
+              {topProducts.map((product, idx) => (
+                <div key={idx} className="bg-gray-50 p-3 rounded-xl">
                   <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-2">
-                      <Avatar
-                        sx={{
-                          bgcolor: blue[100],
-                          color: blue[600],
-                          width: 32,
-                          height: 32,
-                          fontSize: "0.875rem",
-                        }}
-                      >
-                        {index + 1}
-                      </Avatar>
-                      <Typography variant="body1" className="font-medium">
-                        {product.name}
-                      </Typography>
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
+                        {idx + 1}
+                      </div>
+                      <span className="font-medium">{product.name}</span>
                     </div>
-                    <Chip
-                      label={`${product.growth > 0 ? "+" : ""}${
-                        product.growth
-                      }%`}
-                      size="small"
-                      color={product.growth > 0 ? "success" : "error"}
-                    />
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        product.growth > 0
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {product.growth > 0 ? "+" : ""}
+                      {product.growth}%
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-600 pl-10">
                     <span>{product.sales} units</span>
@@ -699,70 +484,72 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-          </Paper>
+          </div>
         )
-
       case "teams":
         return (
-          <Paper elevation={2} className="p-4 rounded-2xl">
-            <Typography
-              variant="h6"
-              className="font-bold mb-4 flex items-center"
-            >
-              <People className="mr-2 text-green-500" />
-              Team Performance
-            </Typography>
-            <div className="space-y-5">
-              {salesTeamPerformance.map((team, index) => (
-                <div key={index} className="bg-gray-50 p-3 rounded-xl">
-                  <div className="flex justify-between items-center mb-2">
-                    <Typography variant="body1" className="font-bold">
-                      {team.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      className="font-bold text-green-600"
-                    >
-                      {team.efficiency}%
-                    </Typography>
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <People className="mr-2 text-green-500" /> Team Performance
+            </h3>
+            {loadingPerformance ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-20 bg-gray-100 animate-pulse rounded-xl"
+                  ></div>
+                ))}
+              </div>
+            ) : teamPerformance.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No team performance data available
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {teamPerformance.map((team, idx) => (
+                  <div key={idx} className="bg-gray-50 p-3 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold">{team.name}</span>
+                      <span className="font-bold text-green-600">
+                        <CurrencyConvert price={team.total_sales} />
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            (team.total_sales / (team.total_sales + 100000)) *
+                              100,
+                          )}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>{team.sales_count} sales</span>
+                      <span>
+                        Avg: <CurrencyConvert price={team.average_sale} />
+                      </span>
+                    </div>
                   </div>
-                  <LinearProgress
-                    variant="determinate"
-                    value={team.efficiency}
-                    color={
-                      team.efficiency > 85
-                        ? "success"
-                        : team.efficiency > 70
-                        ? "warning"
-                        : "error"
-                    }
-                    className="h-2 rounded-full mb-2"
-                  />
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>
-                      Target: <CurrencyConvert price={team.target} />
-                    </span>
-                    <span>
-                      Achieved: <CurrencyConvert price={team.achieved} />
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Paper>
+                ))}
+              </div>
+            )}
+          </div>
         )
-
       default: // overview
         return (
           <>
-            {/* Time Range Selector - Mobile Optimized */}
+            {/* Time range & team filter */}
             <div className="mb-4">
-              <div className="flex overflow-x-auto scrollbar-hide pb-2">
+              <div className="flex overflow-x-auto no-scrollbar pb-2 gap-2">
                 {["day", "week", "month", "year"].map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
-                    className={`flex-shrink-0 px-4 py-2 mx-1 text-sm font-medium rounded-full transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition ${
                       timeRange === range
                         ? "bg-blue-500 text-white shadow"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -772,61 +559,100 @@ const Dashboard = () => {
                   </button>
                 ))}
               </div>
+              <div className="flex flex-wrap gap-2 items-center mt-2">
+                <select
+                  className="flex-1 px-3 py-2 border rounded-lg text-sm bg-white"
+                  value={selectedTeamType}
+                  onChange={(e) => handleTeamFilterChange(e.target.value, "")}
+                >
+                  <option value="">All Teams</option>
+                  <option value="SHOP">Shop</option>
+                  <option value="STORE">Store</option>
+                  <option value="VEHICLE">Vehicle</option>
+                </select>
+                {selectedTeamType && (
+                  <select
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm bg-white"
+                    value={selectedTeamId}
+                    onChange={(e) =>
+                      handleTeamFilterChange(selectedTeamType, e.target.value)
+                    }
+                    disabled={loadingTeams}
+                  >
+                    <option value="">
+                      Select {selectedTeamType.toLowerCase()}
+                    </option>
+                    {teamsList.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name || team.number_plate || `ID: ${team.id}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {(selectedTeamType || selectedTeamId) && (
+                  <button
+                    onClick={clearTeamFilter}
+                    className="px-3 py-2 text-sm text-red-600"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* KPI Cards Slider */}
             <div className="mb-6">
-              <Slider {...getSliderSettings()}>
+              <Slider {...sliderSettings}>
                 {[
                   {
                     title: "Revenue",
                     value: totalRevenue,
-                    icon: <FaDollarSign />,
-                    color: green[600],
+                    icon: FaDollarSign,
+                    color: "#10b981",
                     change: 12.5,
                     subtitle: "vs last period",
                   },
                   {
                     title: "Profit",
                     value: totalProfit,
-                    icon: <GiProfit />,
-                    color: blue[600],
+                    icon: GiProfit,
+                    color: "#3b82f6",
                     change: 10.5,
                     subtitle: "vs last period",
                   },
                   {
                     title: "Expenses",
                     value: totalExpenses,
-                    icon: <GiExpense />,
-                    color: red[600],
+                    icon: GiExpense,
+                    color: "#ef4444",
                     change: -5.2,
                     subtitle: "vs last period",
                   },
                   {
                     title: "Outstanding Debt",
                     value: totalOutstandingDebt,
-                    icon: <FcDebt />,
-                    color: orange[600],
+                    icon: FcDebt,
+                    color: "#f97316",
                     change: debtChange.changePercent || 0,
                     subtitle: "vs yesterday",
                   },
                   {
                     title: "Margin",
                     value: profitMargin,
-                    icon: <PiChartLineUpFill />,
-                    color: purple[600],
+                    icon: PiChartLineUpFill,
+                    color: "#8b5cf6",
                     subtitle: `${profitMargin}%`,
                     isCurrency: false,
                   },
                   {
                     title: "Avg. Sale",
                     value: averageSale,
-                    icon: <RiExchangeDollarFill />,
-                    color: deepPurple[600],
+                    icon: RiExchangeDollarFill,
+                    color: "#6366f1",
                     subtitle: "per transaction",
                   },
-                ].map((stat, index) => (
-                  <div key={index} className="px-1">
+                ].map((stat, idx) => (
+                  <div key={idx} className="px-1">
                     <StatCard {...stat} />
                   </div>
                 ))}
@@ -834,55 +660,34 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Stats Grid */}
-            <Grid container spacing={2} className="mb-6">
-              <Grid item xs={6}>
-                <Paper elevation={2} className="p-3 rounded-xl text-center">
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    className="block"
-                  >
-                    Completion Rate
-                  </Typography>
-                  <Typography variant="h5" className="font-bold my-2">
-                    {completionRate.toFixed(0)}%
-                  </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={completionRate}
-                    color="success"
-                    className="h-1 rounded-full"
-                  />
-                </Paper>
-              </Grid>
-              <Grid item xs={6}>
-                <Paper elevation={2} className="p-3 rounded-xl text-center">
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    className="block"
-                  >
-                    Active Debtors
-                  </Typography>
-                  <Typography variant="h5" className="font-bold my-2">
-                    {uncleared_debtors.length}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Total: <CurrencyConvert price={totalOutstandingDebt} />
-                  </Typography>
-                </Paper>
-              </Grid>
-            </Grid>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="bg-white rounded-xl shadow-md p-3 text-center">
+                <p className="text-xs text-gray-500">Completion Rate</p>
+                <p className="text-2xl font-bold my-2">
+                  {completionRate.toFixed(0)}%
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-1">
+                  <div
+                    className="bg-green-500 h-1 rounded-full"
+                    style={{ width: `${completionRate}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl shadow-md p-3 text-center">
+                <p className="text-xs text-gray-500">Active Debtors</p>
+                <p className="text-2xl font-bold my-2">0</p>
+                <p className="text-xs text-gray-500">
+                  Total: <CurrencyConvert price={totalOutstandingDebt} />
+                </p>
+              </div>
+            </div>
 
-            {/* Performance Overview Line Chart */}
-            <Paper elevation={2} className="p-4 rounded-2xl mb-6">
-              <Typography
-                variant="h6"
-                className="font-bold mb-4 flex items-center"
-              >
-                <ShowChart className="mr-2 text-blue-500" />
-                Performance Overview
-              </Typography>
+            {/* Performance Line Chart */}
+            <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+                <ShowChart className="mr-2 text-blue-500" /> Performance
+                Overview
+              </h3>
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={lineChartData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -895,443 +700,421 @@ const Dashboard = () => {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke={green[500]}
+                    stroke="#10b981"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="expenses"
-                    stroke={red[500]}
+                    stroke="#ef4444"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </Paper>
+            </div>
 
-            {/* Recent Transactions - Mobile Optimized */}
-            <Paper elevation={2} className="p-4 rounded-2xl mb-6">
+            {/* Recent Transactions */}
+            <div className="bg-white rounded-xl shadow-md p-4">
               <div className="flex justify-between items-center mb-4">
-                <Typography
-                  variant="h6"
-                  className="font-bold flex items-center"
-                >
-                  <Receipt className="mr-2 text-purple-500" />
-                  Recent Transactions
-                </Typography>
-                <IconButton
-                  size="small"
+                <h3 className="font-bold flex items-center">
+                  <Receipt className="mr-2 text-purple-500" /> Recent
+                  Transactions
+                </h3>
+                <button
                   onClick={() => navigate("/transactions")}
+                  className="text-gray-500"
                 >
-                  <MdMoreHoriz />
-                </IconButton>
+                  <MdMoreHoriz size={20} />
+                </button>
               </div>
-              <div className="space-y-3">
-                {recentTransactions.slice(0, 3).map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="bg-gray-50 p-4 rounded-xl border border-gray-100"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <Typography variant="subtitle1" className="font-bold">
-                          {transaction.customer}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {transaction.date} • {transaction.type}
-                        </Typography>
-                      </div>
-                      <div className="text-right">
-                        <Typography
-                          variant="subtitle1"
-                          className="font-bold text-blue-600"
-                        >
-                          <CurrencyConvert price={transaction.amount} />
-                        </Typography>
-                        <Chip
-                          label={transaction.status}
-                          size="small"
-                          color={
-                            transaction.status === "Completed"
-                              ? "success"
-                              : "warning"
-                          }
-                          className="mt-1"
-                        />
+              {loadingTransactions ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 bg-gray-100 animate-pulse rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              ) : latestTransactions.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No recent transactions
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {latestTransactions.slice(0, 3).map((tx) => (
+                    <div
+                      key={tx.id}
+                      className="bg-gray-50 p-4 rounded-xl border border-gray-100"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-bold">{tx.customer_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(tx.created_at).toLocaleDateString()} •{" "}
+                            {tx.location_name || "Unknown"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-600">
+                            <CurrencyConvert price={tx.total_amount} />
+                          </p>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              tx.payment_status === "PAID"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
+                          >
+                            {tx.payment_status}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Paper>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )
     }
   }
 
-  // Desktop/Tablet View
+  // Desktop view (simplified, similar structure but with grid)
   const renderDesktopView = () => {
-    if (loading) {
+    if (loading)
       return (
-        <div className="flex justify-center items-center h-96">
-          <CircularProgress size={60} />
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       )
-    }
-    if (error) {
-      return <Alert severity="error">{error}</Alert>
-    }
+    if (error)
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          {error}
+        </div>
+      )
 
     return (
-      <div className="p-4 md:p-6">
+      <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <Typography variant="h4" className="font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-gray-800">
             Dashboard Overview
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Welcome back! Here's what's happening with your business.
-          </Typography>
+          </h1>
+          <p className="text-gray-500">Real-time insights for your business</p>
         </div>
 
-        {/* Time Range Selector */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {["day", "week", "month", "year"].map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-                timeRange === range
-                  ? "bg-blue-500 text-white shadow"
-                  : "bg-white text-gray-600 hover:bg-gray-100 border"
-              }`}
+        {/* Time Range & Team Filter */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex gap-2">
+            {["day", "week", "month", "year"].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                  timeRange === range
+                    ? "bg-blue-500 text-white shadow"
+                    : "bg-white text-gray-600 hover:bg-gray-100 border"
+                }`}
+              >
+                {range.charAt(0).toUpperCase() + range.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <select
+              className="px-3 py-1.5 border rounded-lg text-sm bg-white"
+              value={selectedTeamType}
+              onChange={(e) => handleTeamFilterChange(e.target.value, "")}
             >
-              {range.charAt(0).toUpperCase() + range.slice(1)}
-            </button>
-          ))}
+              <option value="">All Teams</option>
+              <option value="SHOP">Shop</option>
+              <option value="STORE">Store</option>
+              <option value="VEHICLE">Vehicle</option>
+            </select>
+            {selectedTeamType && (
+              <select
+                className="px-3 py-1.5 border rounded-lg text-sm bg-white"
+                value={selectedTeamId}
+                onChange={(e) =>
+                  handleTeamFilterChange(selectedTeamType, e.target.value)
+                }
+                disabled={loadingTeams}
+              >
+                <option value="">
+                  Select {selectedTeamType.toLowerCase()}
+                </option>
+                {teamsList.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name || team.number_plate || `ID: ${team.id}`}
+                  </option>
+                ))}
+              </select>
+            )}
+            {(selectedTeamType || selectedTeamId) && (
+              <button
+                onClick={clearTeamFilter}
+                className="text-red-600 text-sm"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {/* KPI Grid */}
-        <Grid container spacing={2} className="mb-6">
-          {[
-            {
-              title: "Total Revenue",
-              value: totalRevenue,
-              icon: <FaDollarSign />,
-              color: green[600],
-              change: 12.5,
-              subtitle: "vs last period",
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-            {
-              title: "Total Profit",
-              value: totalProfit,
-              icon: <GiProfit />,
-              color: blue[600],
-              change: 10.5,
-              subtitle: "vs last period",
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-            {
-              title: "Total Expenses",
-              value: totalExpenses,
-              icon: <GiExpense />,
-              color: red[600],
-              change: -5.2,
-              subtitle: "vs last period",
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-            {
-              title: "Outstanding Debt",
-              value: totalOutstandingDebt,
-              icon: <FcDebt />,
-              color: orange[600],
-              change: debtChange.changePercent || 0,
-              subtitle: "vs yesterday",
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-            {
-              title: "Profit Margin",
-              value: profitMargin,
-              icon: <PiChartLineUpFill />,
-              color: purple[600],
-              subtitle: `${profitMargin}%`,
-              isCurrency: false,
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-            {
-              title: "Avg. Transaction",
-              value: averageSale,
-              icon: <RiExchangeDollarFill />,
-              color: deepPurple[600],
-              subtitle: "per sale",
-              cols: { xs: 12, sm: 6, md: 4, lg: 2 },
-            },
-          ].map((stat, index) => (
-            <Grid item {...stat.cols} key={index}>
-              <StatCard {...stat} />
-            </Grid>
-          ))}
-        </Grid>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
+          <StatCard
+            title="Total Revenue"
+            value={totalRevenue}
+            icon={FaDollarSign}
+            color="#10b981"
+            change={12.5}
+            subtitle="vs last period"
+          />
+          <StatCard
+            title="Total Profit"
+            value={totalProfit}
+            icon={GiProfit}
+            color="#3b82f6"
+            change={10.5}
+            subtitle="vs last period"
+          />
+          <StatCard
+            title="Total Expenses"
+            value={totalExpenses}
+            icon={GiExpense}
+            color="#ef4444"
+            change={-5.2}
+            subtitle="vs last period"
+          />
+          <StatCard
+            title="Outstanding Debt"
+            value={totalOutstandingDebt}
+            icon={FcDebt}
+            color="#f97316"
+            change={debtChange.changePercent || 0}
+            subtitle="vs yesterday"
+          />
+          <StatCard
+            title="Profit Margin"
+            value={profitMargin}
+            icon={PiChartLineUpFill}
+            color="#8b5cf6"
+            isCurrency={false}
+            subtitle={`${profitMargin}%`}
+          />
+          <StatCard
+            title="Avg. Transaction"
+            value={averageSale}
+            icon={RiExchangeDollarFill}
+            color="#6366f1"
+            subtitle="per sale"
+          />
+        </div>
 
-        {/* Charts Section */}
-        <Grid container spacing={3} className="mb-6">
-          <Grid item xs={12} lg={8}>
-            <Paper elevation={2} className="p-4 rounded-2xl h-full">
-              <Typography
-                variant="h6"
-                className="font-bold mb-4 flex items-center"
-              >
-                <ShowChart className="mr-2 text-blue-500" />
-                Financial Performance
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={lineChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="period" />
-                  <YAxis tickFormatter={(value) => `KSh ${value / 1000}k`} />
-                  <ReTooltip
-                    formatter={(value) => `KSh ${value.toLocaleString()}`}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke={green[500]}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="expenses"
-                    stroke={red[500]}
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <ShowChart className="mr-2 text-blue-500" /> Financial Performance
+            </h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={lineChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" />
+                <YAxis tickFormatter={(value) => `KSh ${value / 1000}k`} />
+                <ReTooltip
+                  formatter={(value) => `KSh ${value.toLocaleString()}`}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expenses"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-2 flex items-center">
+              <PieChartIcon className="mr-2 text-green-500" /> Sales Breakdown
+            </h3>
+            <p className="text-sm text-gray-500 text-center mb-4">
+              Total Sales: <CurrencyConvert price={totalSalesValue} />
+            </p>
+            <ResponsiveContainer width="100%" height={320}>
+              <RePieChart>
+                <Pie
+                  data={salesDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={110}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(1)}%`
+                  }
+                  labelLine
+                >
+                  {salesDistribution.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <PieTooltip
+                  formatter={(value) => `KSh ${value.toLocaleString()}`}
+                />
+                <Legend
+                  layout="vertical"
+                  verticalAlign="middle"
+                  align="right"
+                  formatter={(value, entry, index) => {
+                    const item = salesDistribution[index]
+                    const percent = (
+                      (item.value / totalSalesValue) *
+                      100
+                    ).toFixed(1)
+                    return `${
+                      item.name
+                    } – ${percent}% (KSh ${item.value.toLocaleString()})`
+                  }}
+                />
+              </RePieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-          <Grid item xs={12} lg={4}>
-            <Paper elevation={2} className="p-4 rounded-2xl h-full">
-              <Typography
-                variant="h6"
-                className="font-bold mb-2 flex items-center"
-              >
-                <PieChartIcon className="mr-2 text-green-500" />
-                Sales Breakdown
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                className="mb-4 text-center"
-              >
-                Total Sales: <CurrencyConvert price={totalSalesValue} />
-              </Typography>
-              <ResponsiveContainer width="100%" height={320}>
-                <RePieChart>
-                  <Pie
-                    data={salesDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(1)}%`
-                    }
-                    labelLine={true}
+        {/* Bottom Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+              <Inventory className="mr-2 text-blue-500" /> Top Products
+            </h3>
+            <div className="divide-y">
+              {topProducts.map((product, idx) => (
+                <div
+                  key={idx}
+                  className="py-3 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
+                      {idx + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {product.sales} units •{" "}
+                        <CurrencyConvert price={product.revenue} />
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      product.growth > 0
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
                   >
-                    {salesDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <PieTooltip
-                    formatter={(value) => `KSh ${value.toLocaleString()}`}
-                  />
-                  <Legend
-                    layout="vertical"
-                    verticalAlign="middle"
-                    align="right"
-                    formatter={(value, entry, index) => {
-                      const item = salesDistribution[index]
-                      const percent = (
-                        (item.value / totalSalesValue) *
-                        100
-                      ).toFixed(1)
-                      return `${
-                        item.name
-                      } – ${percent}% (KSh ${item.value.toLocaleString()})`
-                    }}
-                  />
-                </RePieChart>
-              </ResponsiveContainer>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Bottom Section (unchanged) */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Paper elevation={2} className="p-4 rounded-2xl h-full">
-              <Typography
-                variant="h6"
-                className="font-bold mb-4 flex items-center"
+                    {product.growth > 0 ? "+" : ""}
+                    {product.growth}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl shadow-md p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold flex items-center">
+                <Receipt className="mr-2 text-purple-500" /> Recent Transactions
+              </h3>
+              <button
+                onClick={() => navigate("/transactions")}
+                className="text-gray-500"
               >
-                <Inventory className="mr-2 text-blue-500" />
-                Top Products
-              </Typography>
-              <List>
-                {topProducts.map((product, index) => (
-                  <div key={index}>
-                    <ListItem className="px-0 py-3">
-                      <ListItemIcon>
-                        <Avatar
-                          sx={{
-                            bgcolor: blue[100],
-                            color: blue[600],
-                            width: 36,
-                            height: 36,
-                          }}
-                        >
-                          {index + 1}
-                        </Avatar>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" className="font-medium">
-                            {product.name}
-                          </Typography>
-                        }
-                        secondary={
-                          <div className="flex justify-between items-center mt-1">
-                            <div>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {product.sales} units
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                className="ml-2"
-                                color="text.secondary"
-                              >
-                                • <CurrencyConvert price={product.revenue} />
-                              </Typography>
-                            </div>
-                            <Chip
-                              label={`${product.growth > 0 ? "+" : ""}${
-                                product.growth
-                              }%`}
-                              size="small"
-                              color={product.growth > 0 ? "success" : "error"}
-                            />
-                          </div>
-                        }
-                      />
-                    </ListItem>
-                    {index < topProducts.length - 1 && <Divider />}
-                  </div>
-                ))}
-              </List>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Paper elevation={2} className="p-4 rounded-2xl h-full">
-              <div className="flex justify-between items-center mb-4">
-                <Typography
-                  variant="h6"
-                  className="font-bold flex items-center"
-                >
-                  <Receipt className="mr-2 text-purple-500" />
-                  Recent Transactions
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => navigate("/transactions")}
-                >
-                  <MdMoreHoriz />
-                </IconButton>
+                <MdMoreHoriz size={20} />
+              </button>
+            </div>
+            {loadingTransactions ? (
+              <div className="space-y-2">
+                {Array(4)
+                  .fill()
+                  .map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-16 bg-gray-100 animate-pulse rounded-lg"
+                    ></div>
+                  ))}
               </div>
-              <List>
-                {recentTransactions.map((transaction) => (
-                  <div key={transaction.id}>
-                    <ListItem className="px-0 py-2">
-                      <ListItemIcon>
-                        <Avatar
-                          sx={{
-                            bgcolor:
-                              transaction.type === "Sale"
-                                ? green[100]
-                                : transaction.type === "Wholesale"
-                                ? blue[100]
-                                : orange[100],
-                            color:
-                              transaction.type === "Sale"
-                                ? green[600]
-                                : transaction.type === "Wholesale"
-                                ? blue[600]
-                                : orange[600],
-                            width: 32,
-                            height: 32,
-                          }}
-                        >
-                          {transaction.type.charAt(0)}
-                        </Avatar>
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" className="font-medium">
-                            {transaction.customer}
-                          </Typography>
-                        }
-                        secondary={
-                          <div className="flex justify-between">
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {transaction.date}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              className="font-medium"
-                            >
-                              <CurrencyConvert price={transaction.amount} />
-                            </Typography>
-                          </div>
-                        }
-                      />
-                      <Chip
-                        label={transaction.status}
-                        size="small"
-                        color={
-                          transaction.status === "Completed"
-                            ? "success"
-                            : "warning"
-                        }
-                      />
-                    </ListItem>
-                    <Divider />
+            ) : latestTransactions.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No recent transactions
+              </p>
+            ) : (
+              <div className="divide-y">
+                {latestTransactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          tx.payment_status === "PAID"
+                            ? "bg-green-100 text-green-600"
+                            : "bg-orange-100 text-orange-600"
+                        }`}
+                      >
+                        {tx.customer_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium">{tx.customer_name}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(tx.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">
+                        <CurrencyConvert price={tx.total_amount} />
+                      </p>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          tx.payment_status === "PAID"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {tx.payment_status}
+                      </span>
+                    </div>
                   </div>
                 ))}
-              </List>
-            </Paper>
-          </Grid>
-        </Grid>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 touch-manipulation">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0]">
+      <ToastContainer />
       <div id="back-to-top-anchor" />
       <div className="prevent-overflow">
         <RealTimeIndicator
@@ -1342,27 +1125,43 @@ const Dashboard = () => {
         />
       </div>
       <Navbar
-        headerMessage={"ERP Dashboard"}
-        headerText={"Real-time insights for your business"}
+        headerMessage="ERP Dashboard"
+        headerText="Real-time insights for your business"
       />
+
       {isMobile ? (
         <>
           <MobileNavTabs />
-          <main className="m-2 p-1 pb-20">{renderMobileContent()}</main>
+          <main className="flex-grow p-4 pb-20">{renderMobileContent()}</main>
         </>
       ) : (
-        renderDesktopView()
+        <main className="flex-grow">{renderDesktopView()}</main>
       )}
-      {isMobile && <FloatingMenu />}
-      <ScrollTop>
-        <Fab color="primary" size="small" aria-label="scroll back to top">
-          <KeyboardArrowUp />
-        </Fab>
-      </ScrollTop>
+
+      <ScrollTop />
       <footer className="mt-8">
         <AdminsFooter />
       </footer>
     </div>
+  )
+}
+
+// ScrollToTop component (simple)
+const ScrollTop = () => {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const toggle = () => setVisible(window.scrollY > 300)
+    window.addEventListener("scroll", toggle)
+    return () => window.removeEventListener("scroll", toggle)
+  }, [])
+  if (!visible) return null
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      className="fixed bottom-20 right-4 z-40 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition"
+    >
+      <KeyboardArrowUp />
+    </button>
   )
 }
 
