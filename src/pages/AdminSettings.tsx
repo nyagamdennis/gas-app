@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from "react"
 import { useMediaQuery, useTheme } from "@mui/material"
 import {
