@@ -1,63 +1,64 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from 'react'
 import { useMediaQuery, useTheme } from "@mui/material"
-import AdminsFooter from "../../components/AdminsFooter"
-import Navbar from "../../components/ui/mobile/admin/Navbar"
-import api from "../../../utils/api"
-import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
+import AdminsFooter from '../../components/AdminsFooter'
+import RealTimeIndicator from '../../components/sales/RealTimeIndicator'
+import Navbar from '../../components/ui/mobile/admin/Navbar'
+import api from '../../../utils/api'
 
-const ShopCylinderMovements = () => {
-  const theme = useTheme()
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
-
-  const getTodayDateString = () => {
-    const today = new Date()
-    return today.toISOString().split("T")[0]
-  }
-
-  const [selectedDate, setSelectedDate] = useState(getTodayDateString())
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [refillData, setRefillData] = useState(null) // new state
-
-  // Advanced Features
-  const [batchMode, setBatchMode] = useState(false)
-  const [selectedBatchItems, setSelectedBatchItems] = useState([])
-  const [lastUpdated, setLastUpdated] = useState(null)
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
-  const [dataVersion, setDataVersion] = useState(0)
-
-  useEffect(() => {
-    const fetchRefills = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const response = await api.get(`/inventory/reports/movements/shops/`, {
-          params: { start_date: selectedDate, end_date: selectedDate },
-        })
-        console.log("Refill data for", selectedDate, ":", response.data)
-        setRefillData(response.data) // store data
-      } catch (err) {
-        console.error("Failed to fetch refills:", err)
-        setError(
-          err.response?.data?.detail || err.message || "An error occurred",
-        )
-        setRefillData(null)
-      } finally {
-        setLoading(false)
+const VehicleCylinderMovements = () => {
+     const theme = useTheme()
+      const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+    
+      const getTodayDateString = () => {
+        const today = new Date()
+        return today.toISOString().split("T")[0]
       }
-    }
+    
+      const [selectedDate, setSelectedDate] = useState(getTodayDateString())
+      const [loading, setLoading] = useState(false)
+      const [error, setError] = useState(null)
+      const [refillData, setRefillData] = useState(null) // new state
+    
+      // Advanced Features
+      const [batchMode, setBatchMode] = useState(false)
+      const [selectedBatchItems, setSelectedBatchItems] = useState([])
+      const [lastUpdated, setLastUpdated] = useState(null)
+      const [autoRefresh, setAutoRefresh] = useState(false)
+      const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+      const [dataVersion, setDataVersion] = useState(0)
+    
+      useEffect(() => {
+        const fetchRefills = async () => {
+          setLoading(true)
+          setError(null)
+          try {
+            const response = await api.get(`/inventory/reports/movements/vehicles/`, {
+              params: { start_date: selectedDate, end_date: selectedDate },
+            })
+            console.log("Refill data for", selectedDate, ":", response.data)
+            setRefillData(response.data) // store data
+          } catch (err) {
+            console.error("Failed to fetch refills:", err)
+            setError(
+              err.response?.data?.detail || err.message || "An error occurred",
+            )
+            setRefillData(null)
+          } finally {
+            setLoading(false)
+          }
+        }
+    
+        fetchRefills()
+      }, [selectedDate])
+    
+      // Helper to format time (HH:MM)
+      const formatTime = (timeString) => {
+        if (!timeString) return ""
+        return timeString.substring(0, 5) // "08:12"
+      }
+      
 
-    fetchRefills()
-  }, [selectedDate])
-
-  // Helper to format time (HH:MM)
-  const formatTime = (timeString) => {
-    if (!timeString) return ""
-    return timeString.substring(0, 5) // "08:12"
-  }
-  
   return (
     <div>
       {isMobile ? (
@@ -66,15 +67,15 @@ const ShopCylinderMovements = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
-{/* Real-time Indicator */}
-            <div className="prevent-overflow">
-              <RealTimeIndicator
-                enabled={autoRefresh}
-                lastUpdated={lastUpdated}
-                dataVersion={dataVersion}
-                onToggle={() => setAutoRefresh(!autoRefresh)}
-              />
-            </div>
+          {/* Real-time Indicator */}
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <main className="flex-grow m-2 p-1">
             {/* Date picker */}
             <div className="bg-white rounded-lg shadow p-4 mb-4">
@@ -199,4 +200,4 @@ const ShopCylinderMovements = () => {
   )
 }
 
-export default ShopCylinderMovements
+export default VehicleCylinderMovements

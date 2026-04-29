@@ -21,69 +21,120 @@ const initialState: SalesTeamState = {
   error: null,
 }
 
-export const fetchSalesTeamShops = createAsyncThunk<SalesTeam[]>(
-  "salesTeam/fetchSalesTeamShops",
-  async () => {
+export const fetchSalesTeamShops = createAsyncThunk<
+  SalesTeam[],
+  void,
+  { rejectValue: string }
+>("salesTeam/fetchSalesTeamShops", async (_, { rejectWithValue }) => {
+  try {
     const response = await api.get(`/shop/`)
-    return response.data; // Corrected the return statement
-  },
-);
+    return response.data
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      return rejectWithValue(
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to fetch shops",
+      )
+    }
+    return rejectWithValue("Failed to fetch shops. Please try again.")
+  }
+})
 
-export const deleteSalesTeam = createAsyncThunk(
-  "deleteSalesTeam/salesTeam",
-  async (id: string) => {
-    // const response = await axios.delete(`${apiUrl}/getsalesteam/${id}/`,{
-    //   headers: {
-    //     Authorization: `Bearer ${Cookies.get("accessToken")}`,
-    //   },
-    // })
+export const deleteSalesTeam = createAsyncThunk<
+  any,
+  string,
+  { rejectValue: string }
+>("deleteSalesTeam/salesTeam", async (id: string, { rejectWithValue }) => {
+  try {
     const response = await api.delete(`/shop/shops/${id}/`)
     return response.data
-  },
-)
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      return rejectWithValue(
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to delete shop",
+      )
+    }
+    return rejectWithValue("Failed to delete shop. Please try again.")
+  }
+})
 
-export const updateSalesTeam = createAsyncThunk(
-  "updateSalesTeam/salesTeam",
-  async ({ id, name }: { id: string; name: string }) => {
+export const updateSalesTeam = createAsyncThunk<
+  any,
+  { id: string; name: string },
+  { rejectValue: string }
+>("updateSalesTeam/salesTeam", async ({ id, name }, { rejectWithValue }) => {
+  try {
     const formData = new FormData()
     formData.append("name", name)
-    // const response = await axios.patch(`${apiUrl}/getsalesteam/${id}/`, formData, {
-    //   headers: {
-    //     "Content-Type": "multipart/form-data",
-    //   },
-    // })
     const response = await api.patch(`/shop/shops/${id}/`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     })
     return response.data
-  },
-)
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      return rejectWithValue(
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to update shop",
+      )
+    }
+    return rejectWithValue("Failed to update shop. Please try again.")
+  }
+})
 
 interface AddSalesTeamParams {
   name: string
   teamType: string
 }
 
-export const addSalesTeam = createAsyncThunk(
+export const addSalesTeam = createAsyncThunk<any, any, { rejectValue: string }>(
   "addSalesTeam/addSalesTeam",
-  async (Data) => {
-    const response = await api.post("/shop/", Data);
-    return response.data
+  async (Data, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/shop/", Data)
+      return response.data
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(
+          error.response.data.detail ||
+            error.response.data.message ||
+            "Failed to add shop",
+        )
+      }
+      return rejectWithValue("Failed to add shop. Please try again.")
+    }
   },
 )
 
-export const changeSalesTeamMember = createAsyncThunk(
+export const changeSalesTeamMember = createAsyncThunk<
+  any,
+  { userId: string; teamsId: string },
+  { rejectValue: string }
+>(
   "changeSalesTeamMember/salesTeam",
-  async ({ userId, teamsId }: { userId: string; teamsId: string }) => {
-    const formData = new FormData()
-    formData.append("employeeId", userId)
-    formData.append("teamId", teamsId)
-    console.log("submited data ", userId)
-    // const response = await axios.post(`${apiUrl}/users/transfer/`, formData)
-    const response = await api.post("/users/transfer/", formData);
-    return response.data
+  async ({ userId, teamsId }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData()
+      formData.append("employeeId", userId)
+      formData.append("teamId", teamsId)
+      console.log("submited data ", userId)
+      const response = await api.post("/users/transfer/", formData)
+      return response.data
+    } catch (error: any) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(
+          error.response.data.detail ||
+            error.response.data.message ||
+            "Failed to change team member",
+        )
+      }
+      return rejectWithValue("Failed to change team member. Please try again.")
+    }
   },
 )
 
@@ -102,7 +153,10 @@ const salesTeamSlice = createSlice({
       })
       .addCase(fetchSalesTeamShops.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to fetch salesTeam"
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to fetch shops"
       })
       .addCase(changeSalesTeamMember.pending, (state) => {
         state.status = "loading"
@@ -113,7 +167,10 @@ const salesTeamSlice = createSlice({
       })
       .addCase(changeSalesTeamMember.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to change salesTeam"
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to change team member"
       })
       .addCase(addSalesTeam.pending, (state, action) => {
         state.status = "loading"
@@ -122,11 +179,13 @@ const salesTeamSlice = createSlice({
         state.status = "succeeded"
         // state.salesTeam.push(action.payload)
         state.salesTeam.unshift(action.payload.shop)
-       
       })
       .addCase(addSalesTeam.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to add shop"
       })
 
       .addCase(deleteSalesTeam.pending, (state) => {
@@ -137,17 +196,17 @@ const salesTeamSlice = createSlice({
         state.salesTeam = state.salesTeam.filter(
           (salesTeam) => salesTeam.id !== action.meta.arg,
         )
-      }
-      )
+      })
       .addCase(deleteSalesTeam.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
-      }
-      )
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to delete shop"
+      })
       .addCase(updateSalesTeam.pending, (state) => {
         state.status = "loading"
-      }
-      )
+      })
       .addCase(updateSalesTeam.fulfilled, (state, action) => {
         state.status = "succeeded"
         const index = state.salesTeam.findIndex(
@@ -156,13 +215,14 @@ const salesTeamSlice = createSlice({
         if (index !== -1) {
           state.salesTeam[index] = action.payload.shop
         }
-      }
-      )
+      })
       .addCase(updateSalesTeam.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
-      }
-      )
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to update shop"
+      })
   },
 })
 

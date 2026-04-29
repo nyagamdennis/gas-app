@@ -8,7 +8,7 @@ import {
 } from "../features/employees/myProfileSlice"
 import defaultProfile from "../components/media/default.png"
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew"
-import { logout, selectUserRole } from "../features/auths/authSlice"
+import { exportedUserData, logout, selectUserData, selectUserRole } from "../features/auths/authSlice"
 import AdminsFooter from "../components/AdminsFooter"
 import EmployeeFooter from "../components/ui/EmployeeFooter"
 import EmployeeNav from "../components/ui/EmployeeNav"
@@ -30,6 +30,8 @@ import ConnectWithoutContactIcon from "@mui/icons-material/ConnectWithoutContact
 import SettingsIcon from "@mui/icons-material/Settings"
 import FactCheckIcon from "@mui/icons-material/FactCheck"
 import { selectEmployeeTeam } from "../features/employees/employeesTeamSlice"
+import SmartToyIcon from "@mui/icons-material/SmartToy"
+import ReceiptIcon from "@mui/icons-material/Receipt"
 import {
   CreditCard,
   DeliveryDiningSharp,
@@ -52,6 +54,7 @@ const EmployeeHomePage = () => {
   const assignmentData = myTeamData?.[0]
   const userId = assignmentData?.user
   const shopId = assignmentData?.assigned_to?.shop_id
+  const storeId = assignmentData?.assigned_to?.store_id
   const teamType = assignmentData?.assigned_to?.type
   const teamName = assignmentData?.assigned_to?.name
 
@@ -109,7 +112,8 @@ const EmployeeHomePage = () => {
   const matches = useMediaQuery("(min-width:600px)")
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
   const userRole = useAppSelector(selectUserRole)
-  console.log("User Role:", userRole)
+  
+
 
   const handleLogOut = () => {
     dispatch(logout())
@@ -171,7 +175,7 @@ const EmployeeHomePage = () => {
     //   bg: "from-green-50 to-green-100",
     //   text: "text-green-700",
     // },
-    
+
     // {
     //   to: "/salesteamcylinders",
     //   title: "Cylinders",
@@ -179,6 +183,101 @@ const EmployeeHomePage = () => {
     //   bg: "from-green-50 to-green-100",
     //   text: "text-green-700",
     // },
+  ]
+
+  const managerTiles = [
+ 
+    {
+      to: "/dashboard",
+      icon: <DashboardIcon className="text-blue-600" fontSize="large" />,
+      title: "Dashboard",
+      bg: "from-blue-50 to-blue-100",
+      text: "text-blue-700",
+    },
+    {
+      to: "/thecylinders",
+      icon: <GasMeterIcon className="text-green-600" fontSize="large" />,
+      title: "Cylinders",
+      bg: "from-green-50 to-green-100",
+      text: "text-green-700",
+    },
+    {
+      to: "/store/otherproducts",
+      icon: <MicrowaveIcon className="text-yellow-600" fontSize="large" />,
+      title: "Products",
+      bg: "from-yellow-50 to-yellow-100",
+      text: "text-yellow-700",
+    },
+    {
+      to: "/hr",
+      icon: <SensorOccupiedIcon className="text-purple-600" fontSize="large" />,
+      title: "HR",
+      bg: "from-purple-50 to-purple-100",
+      text: "text-purple-700",
+    },
+    {
+      to: "/createteam",
+      icon: <PeopleAltIcon className="text-pink-600" fontSize="large" />,
+      title: "Teams",
+      bg: "from-pink-50 to-pink-100",
+      text: "text-pink-700",
+    },
+    {
+      to: "/admins/salesdata",
+      icon: <BusinessCenterIcon className="text-red-600" fontSize="large" />,
+      title: "Sales",
+      bg: "from-red-50 to-red-100",
+      text: "text-red-700",
+    },
+    {
+      to: "/admins/customers",
+      icon: <Diversity1Icon className="text-teal-600" fontSize="large" />,
+      title: "Customers",
+      bg: "from-teal-50 to-teal-100",
+      text: "text-teal-700",
+    },
+    {
+      to: "/admin/expenses",
+      icon: <CreditScoreIcon className="text-indigo-600" fontSize="large" />,
+      title: "Expenses",
+      bg: "from-indigo-50 to-indigo-100",
+      text: "text-indigo-700",
+    },
+    {
+      to: "/admins/prediction",
+      icon: <SmartToyIcon className="text-violet-600" fontSize="large" />,
+      title: "AI Tools",
+      bg: "from-violet-50 to-violet-100",
+      text: "text-violet-700",
+    },
+    {
+      to: "/admin/reachout",
+      icon: <ConnectWithoutContactIcon className="text-cyan-600" fontSize="large" />,
+      title: "Reach Out",
+      bg: "from-cyan-50 to-cyan-100",
+      text: "text-cyan-700",
+    },
+    {
+      to: "/admin/deliveries",
+      icon: <TwoWheelerIcon className="text-emerald-600" fontSize="large" />,
+      title: "Deliveries",
+      bg: "from-emerald-50 to-emerald-100",
+      text: "text-emerald-700",
+    },
+    {
+      to: "/admin/settings",
+      icon: <SettingsIcon className="text-amber-600" fontSize="large" />,
+      title: "Settings",
+      bg: "from-amber-50 to-amber-100",
+      text: "text-amber-700",
+    },
+    {
+      to: "/admin/receipts",
+      icon: <ReceiptIcon className="text-sky-600" fontSize="large" />,
+      title: "Receipts",
+      bg: "from-sky-50 to-sky-100",
+      text: "text-sky-700",
+    },
   ]
 
   const salesTiles = [
@@ -246,11 +345,19 @@ const EmployeeHomePage = () => {
 
   const storeTiles = [
     {
-      to: "/salesteamcylinders",
+      // to: "/employee/products/stock/team/${storeId}/${teamName}",
+      to: `/employee/cylinders/stock/team/${storeId}/${teamName}`,
       title: "Cylinders",
       icon: <GasMeterIcon className="text-green-600" fontSize="large" />,
       bg: "from-green-50 to-green-100",
       text: "text-green-700",
+    },
+    {
+      to: `/employee/products/stock/team/${storeId}/${teamName}`,
+      title: "Products",
+      icon: <MicrowaveIcon className="text-yellow-600" fontSize="large" />,
+      bg: "from-yellow-50 to-yellow-100",
+      text: "text-yellow-700",
     },
     {
       to: "/store",
@@ -264,6 +371,8 @@ const EmployeeHomePage = () => {
   // Pick tiles based on role
   const getTilesForRole = () => {
     switch (userRole) {
+      case "MANAGER":
+        return managerTiles
       case "DELIVERY_GUY":
       case "TRUCK_DRIVER":
       case "CONDUCTOR":

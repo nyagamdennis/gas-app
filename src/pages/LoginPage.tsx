@@ -31,7 +31,7 @@ const LoginPage = () => {
   const email_or_phone = email
 
   // 🔥 Define role arrays
-  const adminRoles = ["SUPER_ADMIN", "COMPANY_ADMIN"]
+  const adminRoles = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER"]
   const employeeRoles = [
     "SHOP_ATTENDANT",
     "DELIVERY_GUY",

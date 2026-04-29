@@ -1415,10 +1415,11 @@ const TeamsSales = () => {
         setError(null)
         // toast.success("Data loaded successfully")
       } catch (error) {
-        toast.error("Failed to load data")
+        const errorMessage = error?.detail || error?.message || "Failed to load data"
+        toast.error(errorMessage)
         setError({
-          message: "Failed to load data",
-          details: error.message || "Please check your connection",
+          message: errorMessage,
+          details: error?.detail || error?.message || "Please check your connection",
         })
       } finally {
         if (isDateChange) setDateChanging(false)
@@ -2344,10 +2345,14 @@ const TeamsSales = () => {
           // Load initial data
           await loadDataForDate(startDate, false, true)
         } catch (error) {
+          // Extract error details from API response
+          const errorMessage = error?.detail || error?.message || "Failed to initialize"
+          const errorDetails = error?.detail || error?.message || "Please refresh the page"
           setError({
-            message: "Failed to initialize",
-            details: error.message || "Please refresh the page",
+            message: errorMessage,
+            details: errorDetails,
           })
+          toast.error(errorMessage)
           setInitialLoading(false)
         }
       } else {

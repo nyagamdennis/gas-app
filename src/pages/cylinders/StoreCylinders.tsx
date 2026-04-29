@@ -72,7 +72,9 @@ const StoreCylinders = () => {
   const storeCylinderWeight = useAppSelector(selectAllCylindersWeight)
 
   const store = useAppSelector(selectAllStore)
+
   const fetchingStoreStatus = useAppSelector(getStoreCylindersStatus)
+  const storeStatus = useAppSelector(getStoreStatus)
   const fetchingStoreError = useAppSelector(getStoreError)
   const [loadingAssign, setLoadingAssign] = useState(false)
   const [openUpdateCylinderData, setOpenUpdateCylinderData] =
@@ -204,6 +206,13 @@ const StoreCylinders = () => {
     }
   }, [businessId, dispatch])
 
+  // Show error notification when fetchStore fails
+  useEffect(() => {
+    if (storeStatus === "failed" && fetchingStoreError) {
+      toast.error(fetchingStoreError)
+    }
+  }, [storeStatus, fetchingStoreError])
+
   useEffect(() => {
     if (urlStoreId) {
       // If ID is in URL, use it immediately
@@ -331,8 +340,8 @@ const StoreCylinders = () => {
       console.error("Error deleting cylinder:", error)
       setIsDeleting(false)
       const apiError =
+        error?.detail ||
         error?.error ||
-        errorDeletingCylinder ||
         error?.message ||
         "An error occurred, try again."
       toast.error(apiError)
@@ -358,6 +367,7 @@ const StoreCylinders = () => {
     } catch (error: any) {
       console.error("Error deleting cylinder:", error)
       const apiError =
+        error?.detail ||
         error?.error ||
         error?.message ||
         "An error occurred while deleting the cylinder."
@@ -400,10 +410,12 @@ const StoreCylinders = () => {
       toast.success("Cylinder updated successfully.")
       setOpenUpdateCylinderData(false)
       setDialogOpenAgain(false)
-    } catch (error) {
-      toast.error(
-        "An error occurred while updating the cylinder. Please try again.",
-      )
+    } catch (error: any) {
+      const apiError =
+        error?.detail ||
+        error?.message ||
+        "An error occurred while updating the cylinder. Please try again."
+      toast.error(apiError)
       console.error("Update error:", error)
     }
   }
@@ -420,9 +432,13 @@ const StoreCylinders = () => {
       setIsUpdating(false)
       toast.success("Cylinder name updated successfully.")
       setDialogOpen(false)
-    } catch (error) {
+    } catch (error: any) {
       setIsUpdating(false)
-      toast.error("An error occurred while updating the cylinder name.")
+      const apiError =
+        error?.detail ||
+        error?.message ||
+        "An error occurred while updating the cylinder name."
+      toast.error(apiError)
     }
   }
 
@@ -439,9 +455,12 @@ const StoreCylinders = () => {
       setAddingNewWeight(false)
     } catch (error: any) {
       setAddingNewWeight(false)
-      toast.error(
-        error.message || error.toString() || "Failed to add new brand",
-      )
+      const apiError =
+        error?.detail ||
+        error?.message ||
+        error.toString() ||
+        "Failed to add new weight"
+      toast.error(apiError)
     }
   }
 
@@ -486,7 +505,12 @@ const StoreCylinders = () => {
       toast.success("Cylinder recorded successfully!")
     } catch (error: any) {
       setAddingNewCylinder(false)
-      toast.error(error.message || error.toString() || "Failed to add cylinder")
+      const apiError =
+        error?.detail ||
+        error?.message ||
+        error.toString() ||
+        "Failed to add cylinder"
+      toast.error(apiError)
     }
   }
 
@@ -724,7 +748,8 @@ const StoreCylinders = () => {
                 <div className="text-center p-12 bg-red-50 rounded-lg shadow-md">
                   <div className="text-6xl mb-4">⚠️</div>
                   <p className="text-red-500 font-medium text-lg">
-                    Failed to load cylinder data. Please try again later.
+                    {fetchingStoreError ||
+                      "Failed to load cylinder data. Please try again later."}
                   </p>
                 </div>
               )}

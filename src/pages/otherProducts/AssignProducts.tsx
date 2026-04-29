@@ -57,8 +57,14 @@ const AssignProducts = () => {
   const fetchingStoreStatus = useAppSelector(getStoreStatus)
   const store = useAppSelector(selectAllStore)
   const allSalesTeamShops = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
   const fetchingSalesteamStatus = useAppSelector(getSalesTeamStatus)
+
+  
+    const allSalesVehicles = allSalesVehicle.filter(
+      (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+    )
+
 
   const [showSummary, setShowSummary] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState(null)

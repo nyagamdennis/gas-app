@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
-import { logout } from "../features/auths/authSlice"
+import { exportedUserData, logout, selectUserRole } from "../features/auths/authSlice"
 import AdminsFooter from "../components/AdminsFooter"
 import AdminNav from "../components/ui/AdminNav"
 import {
@@ -41,6 +41,7 @@ import {
 } from "../features/plans/planStatusSlice"
 import { ReceiptIcon } from "lucide-react"
 import RealTimeIndicator from "../components/sales/RealTimeIndicator"
+import { selectEmployeeTeam } from "../features/employees/employeesTeamSlice"
 
 // ─── Plan badge config ─────────────────────────────────────────────────────────
 // Maps plan_code from backend to display config
@@ -209,7 +210,7 @@ const mobileMenuItems = [
     color: "from-sky-500 to-sky-600",
     textColor: "text-sky-700",
     bgColor: "bg-sky-50",
-  }
+  },
 ]
 
 const desktopMenuItems = [
@@ -388,16 +389,21 @@ const AdminHome = () => {
     dispatch(fetchBusiness())
   }, [dispatch])
 
+  const userRole = useAppSelector(selectUserRole)
+  console.log("User Role:", userRole)
+  const myTeamData = useAppSelector(selectEmployeeTeam)
+  console.log("My Team Data:", myTeamData)
+    const userDat = useAppSelector(exportedUserData)
+    const userEmail = userDat?.email
+    console.log("User Data from Auth Slice in EmployeeHomePage:", userDat)
 
-
-    // Advanced Features
-    const [batchMode, setBatchMode] = useState(false)
-    const [selectedBatchItems, setSelectedBatchItems] = useState([])
-    const [lastUpdated, setLastUpdated] = useState(null)
-    const [autoRefresh, setAutoRefresh] = useState(false)
-    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
-    const [dataVersion, setDataVersion] = useState(0)
-  
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
   return (
     <div>
@@ -424,10 +430,13 @@ const AdminHome = () => {
               Welcome Back! 👋
             </h1>
             <p className="text-sm text-gray-600 mb-3">
-              {businessName || "Your Business"}
+              {userRole === "admin"
+                ? `${businessName || "Your Business"} Dashboard`
+                : `${userEmail || "User"}`}
+              {/* {businessName || "Your Business"} */}
             </p>
             {/* ✅ Plan badge — reads from Redux */}
-            <PlanBadge size="sm" />
+            {userRole === "admin" && <PlanBadge size="sm" />}
           </div>
 
           <main className="flex-grow m-2 p-1">

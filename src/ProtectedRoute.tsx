@@ -21,6 +21,7 @@ type UserRole =
   | "TRUCK_DRIVER"
   | "CONDUCTOR"
   | "SALES_PERSON"
+  | "MANAGER"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -48,8 +49,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         subscriptionPlan: null,
       },
   )
-
-  
 
   console.log("🔍 ProtectedRoute Debug:", {
     isAuthenticated,
@@ -104,7 +103,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     "SALES_PERSON",
   ]
 
-  const adminRoles: UserRole[] = ["SUPER_ADMIN", "COMPANY_ADMIN"]
+  const adminRoles: UserRole[] = ["SUPER_ADMIN", "COMPANY_ADMIN", "MANAGER"]
 
   // 🎯 Step 3: Determine allowed roles for this route
   let allowedRoles: UserRole[] | null = null
@@ -138,21 +137,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // 🛑 Step 5: Admin-specific restrictions
   const isAdmin = adminRoles.includes(userRole as UserRole)
+  const isCompanyAdmin = ["SUPER_ADMIN", "COMPANY_ADMIN"].includes(
+    userRole as UserRole,
+  )
 
   // if (isAdmin && !businessId && location.pathname !== "/settings") {
   //   return <Navigate to="/settings" replace />
   // }
 
-  if (isAdmin && !subscriptionPlan && location.pathname !== "/subscribe") {
+  // Subscription checks only for COMPANY_ADMIN and SUPER_ADMIN, not for MANAGER
+  if (
+    isCompanyAdmin &&
+    !subscriptionPlan &&
+    location.pathname !== "/subscribe"
+  ) {
     return <Navigate to="/subscribe" replace />
   }
 
-  if (isAdmin && !businessId && subscriptionPlan && location.pathname !== "/settings") {
+  if (
+    isCompanyAdmin &&
+    !businessId &&
+    subscriptionPlan &&
+    location.pathname !== "/settings"
+  ) {
     return <Navigate to="/settings" replace />
   }
 
   if (
-    isAdmin &&
+    isCompanyAdmin &&
     businessId &&
     (!subscriptionPlan || isExpired) &&
     location.pathname !== "/subscribe" &&

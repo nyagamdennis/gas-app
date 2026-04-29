@@ -3,8 +3,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import api from "../../../utils/api"
 
-
-
 interface Assigns {
   id: string
   name: number
@@ -26,48 +24,88 @@ const initialState: AssignsState = {
 
 export const fetchAssignedCylinders = createAsyncThunk(
   "assignedCylinders/fetchAssignedCylinders",
-  async (salesTeamId) => {
-  
-    const response = await api.get("/print-assigned-cylinders/", {params : {sales_team: salesTeamId}})
-    return response.data
+  async (salesTeamId, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/print-assigned-cylinders/", {
+        params: { sales_team: salesTeamId },
+      })
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail ||
+          error.message ||
+          "Failed to fetch assigned cylinders",
+      )
+    }
   },
 )
 
 export const assignShopCylinders = createAsyncThunk(
   "assignShopCylinders/assignShopCylinders",
-  async (payload) => {
-    const response = await api.post("/inventory/transfer/cylinders/", payload)
-    // transfer/cylinders/
-    console.log("Response from assignShopCylinders:", response.data)
-    return response.data
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/inventory/transfer/cylinders/", payload)
+      console.log("Response from assignShopCylinders:", response.data)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail ||
+          error.message ||
+          "Failed to assign shop cylinders",
+      )
+    }
   },
 )
 
 export const assignShopBulkCylinders = createAsyncThunk(
   "assignShopBulkCylinders/assignShopBulkCylinders",
-  async (payload) => {
-    const response = await api.post("/inventory/transfer/cylinders/bulk/", payload)
-    // transfer/cylinders/
-    console.log("Response from assignShopBulkCylinders:", response.data)
-    return response.data
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await api.post(
+        "/inventory/transfer/cylinders/bulk/",
+        payload,
+      )
+      console.log("Response from assignShopBulkCylinders:", response.data)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail ||
+          error.message ||
+          "Failed to assign bulk cylinders",
+      )
+    }
   },
 )
 
 export const assignVehicleCylinders = createAsyncThunk(
   "assignVehicleCylinders/assignVehicleCylinders",
-  async (payload) => {
-    const response = await api.post("/assign-cylinders/", payload)
-    return response.data
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await api.post("/assign-cylinders/", payload)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail ||
+          error.message ||
+          "Failed to assign vehicle cylinders",
+      )
+    }
   },
 )
 
-
 export const assignedCylindersUpdate = createAsyncThunk(
   "assignedCylinders/assignedCylindersUpdate",
-  async (payload) => {
-  
-    const response = await api.put("/assign-update-cylinders/", payload)
-    return response.data
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await api.put("/assign-update-cylinders/", payload)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail ||
+          error.message ||
+          "Failed to update assigned cylinders",
+      )
+    }
   },
 )
 
@@ -87,7 +125,7 @@ const assignsSlice = createSlice({
       })
       .addCase(assignShopCylinders.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error = action.payload || action.error.message
       })
       .addCase(assignShopBulkCylinders.pending, (state, action) => {
         state.status = "loading"
@@ -98,7 +136,7 @@ const assignsSlice = createSlice({
       })
       .addCase(assignShopBulkCylinders.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error = action.payload || action.error.message
       })
       .addCase(assignVehicleCylinders.pending, (state, action) => {
         state.status = "loading"
@@ -109,7 +147,7 @@ const assignsSlice = createSlice({
       })
       .addCase(assignVehicleCylinders.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error = action.payload || action.error.message
       })
       .addCase(fetchAssignedCylinders.pending, (state) => {
         state.status = "loading"
@@ -120,7 +158,7 @@ const assignsSlice = createSlice({
       })
       .addCase(fetchAssignedCylinders.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error = action.payload || action.error.message
       })
       .addCase(assignedCylindersUpdate.pending, (state) => {
         state.status = "loading"
@@ -136,7 +174,7 @@ const assignsSlice = createSlice({
       })
       .addCase(assignedCylindersUpdate.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message
+        state.error = action.payload || action.error.message
       })
   },
 })

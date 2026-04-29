@@ -25,6 +25,8 @@ import {
 import { fetchStore, selectAllStore } from "../../features/store/storeSlice"
 import api from "../../../utils/api"
 import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
+import { selectEmployeeTeam } from "../../features/employees/employeesTeamSlice"
+import { selectUserData, selectUserRole } from "../../features/auths/authSlice"
 
 // Role options with icons
 const ROLE_OPTIONS = [
@@ -55,6 +57,7 @@ const ROLE_OPTIONS = [
     icon: "💼",
     category: "shop",
   },
+  { value: "MANAGER", label: "Manager", icon: "👔", category: "management" },
 ]
 
 // Assignment type options
@@ -103,6 +106,7 @@ const getTeamTypeDisplay = (type) => {
 
 // Helper function to check if employee is truly assigned
 const isEmployeeAssigned = (employee) => {
+  if (employee.role === "MANAGER") return false
   if (!employee.assigned_to) return false
   // Check if assigned_to has valid data (not null values)
   const { name, type } = employee.assigned_to
@@ -121,6 +125,19 @@ const Employee = () => {
     employeeLimit,
     planName,
   } = planStatus()
+
+  const myTeamData = useAppSelector(selectEmployeeTeam)
+  const assignmentData = myTeamData?.[0]
+  const userId = assignmentData?.user
+  console.log("userId ", userId)
+
+  const userRole = useAppSelector(selectUserRole)
+  console.log("User Role:", userRole)
+  console.log("User Role:", userRole)
+
+  const userDataa = useAppSelector(selectUserData)
+  console.log("User Data from Auth Slice:", userDataa?.user_id)
+  const managerId = userDataa?.user_id
 
   // Advanced Features
   const [batchMode, setBatchMode] = useState(false)
@@ -275,7 +292,13 @@ const Employee = () => {
     return roleOption || { label: role, icon: "👤" }
   }
 
-  const filteredEmployees = allEmployees.filter((employee) => {
+  // If user is a manager, exclude managers from the list; otherwise show all employees
+  const employeeList =
+    userRole === "MANAGER"
+      ? allEmployees.filter((emp) => emp.role !== "MANAGER")
+      : allEmployees
+
+  const filteredEmployees = employeeList.filter((employee) => {
     const matchesSearch =
       searchQuery === "" ||
       employee.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -301,6 +324,10 @@ const Employee = () => {
   }
 
   const handleStartAssignment = (employee) => {
+    if (employee.role === "MANAGER") {
+      toast.error("Managers cannot be assigned to any shop, store, or vehicle.")
+      return
+    }
     setSelectedForAssignment(employee)
     setAssignmentStep(1)
     setAssignmentType("")
@@ -961,7 +988,15 @@ const Employee = () => {
   // Render assignment information for an employee
   const renderAssignmentInfo = (employee) => {
     const isAssigned = isEmployeeAssigned(employee)
-
+    if (employee.role === "MANAGER") {
+      return (
+        <div className="mt-2">
+          <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+            👔 Manager - No team assignment
+          </span>
+        </div>
+      )
+    }
     if (!isAssigned) {
       return (
         <div className="mt-2">
@@ -1023,6 +1058,50 @@ const Employee = () => {
       })
     }
   }
+  const handleMakeManager = async (employee) => {
+    if (
+      window.confirm(
+        `Are you sure you want to make ${employee.first_name} ${employee.last_name} a Manager? This will remove any existing assignment.`,
+      )
+    ) {
+      try {
+        await api.post(`employees/employee/${employee.id}/manage/`, {
+          role: "MANAGER",
+          assigned_to: null,
+        })
+        toast.success(
+          `${employee.first_name} ${employee.last_name} is now a Manager.`,
+        )
+        dispatch(fetchEmployees({ businessId }))
+      } catch (error) {
+        toast.error(
+          "Failed to update role: " +
+            (error.response?.data?.detail || error.message),
+        )
+      }
+    }
+  }
+
+  const handleRemoveManager = async (employee) => {
+    if (
+      window.confirm(
+        `Remove manager status from ${employee.first_name} ${employee.last_name}? They will become a Shop Attendant with no assignment.`,
+      )
+    ) {
+      try {
+        await api.patch(`employees/employee/${employee.id}/manage/`)
+        toast.success(
+          `${employee.first_name} ${employee.last_name} is no longer a Manager.`,
+        )
+        dispatch(fetchEmployees({ businessId }))
+      } catch (error) {
+        toast.error(
+          "Failed to remove manager status: " +
+            (error.response?.data?.detail || error.message),
+        )
+      }
+    }
+  }
 
   // Calculate statistics
   const assignedCount = allEmployees.filter(isEmployeeAssigned).length
@@ -1073,8 +1152,6 @@ const Employee = () => {
     }
     setRealData(formattedData)
   }, [allStores, allShops, allVehicles])
-
-
 
   const handleVerifyEmail = async (employee) => {
     setVerifyingEmail(true)
@@ -1137,6 +1214,7 @@ const Employee = () => {
       setVerifyingPhone(false)
     }
   }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
       <Navbar
@@ -1299,11 +1377,29 @@ const Employee = () => {
                   <div
                     key={employee.id}
                     className={`border-2 rounded-lg p-4 hover:shadow-md transition ${
-                      isAssigned
+                      employee.role === "MANAGER"
+                        ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-300"
+                        : isAssigned
                         ? "bg-gradient-to-r from-green-50 to-blue-50 border-green-200"
                         : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
                     }`}
                   >
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-800 text-lg">
+                        {employee.first_name} {employee.last_name}
+                      </h3>
+                      {employee.role === "MANAGER" && (
+                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                          👔 Manager
+                        </span>
+                      )}
+                      {isAssigned && !employee.role === "MANAGER" && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                          Assigned
+                        </span>
+                      )}
+                    </div>
+
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3 flex-1">
                         <div className="relative">
@@ -1367,6 +1463,71 @@ const Employee = () => {
                       </div>
 
                       <div className="flex flex-col gap-2">
+                        {employee.role !== "MANAGER" && (
+                          <button
+                            onClick={() => handleStartAssignment(employee)}
+                            className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                              isAssigned
+                                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                                : "bg-green-500 hover:bg-green-600 text-white"
+                            }`}
+                          >
+                            {isAssigned ? "Change Team" : "Assign"}
+                          </button>
+                        )}
+
+                        {employee.role !== "MANAGER" ? (
+                          <button
+                            onClick={() => handleMakeManager(employee)}
+                            className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition"
+                          >
+                            Make Manager
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRemoveManager(employee)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition"
+                          >
+                            Remove Manager Status
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() =>
+                            navigate(`/admins/employees/${employee.id}`)
+                          }
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition"
+                        >
+                          Manage
+                        </button>
+
+                        <button
+                          onClick={() => handleViewEmployee(employee)}
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded-lg text-sm font-semibold transition"
+                        >
+                          View
+                        </button>
+
+                        {!employee.email_verified && (
+                          <button
+                            onClick={() =>
+                              handleResendInvite(employee.id, employee.email)
+                            }
+                            disabled={resendingIds.has(employee.id)}
+                            className="px-3 py-1 rounded-lg text-sm font-semibold transition bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            {resendingIds.has(employee.id) ? (
+                              <CircularProgress
+                                size={16}
+                                style={{ color: "white" }}
+                              />
+                            ) : (
+                              "Resend Invite"
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      {/* <div className="flex flex-col gap-2">
                         <button
                           onClick={() => handleStartAssignment(employee)}
                           className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
@@ -1413,7 +1574,7 @@ const Employee = () => {
                             )}
                           </button>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 )

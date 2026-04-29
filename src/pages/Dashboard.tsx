@@ -20,10 +20,7 @@ import {
   ShowChart,
   PieChart as PieChartIcon,
   Receipt,
-  FilterList,
   Refresh,
-  Download,
-  Menu as MenuIcon,
   KeyboardArrowUp,
 } from "@mui/icons-material"
 
@@ -39,6 +36,8 @@ import api from "../../utils/api"
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -72,13 +71,6 @@ const Dashboard = () => {
   const [error, setError] = useState(null)
   const [statsData, setStatsData] = useState(null)
   const [timeRange, setTimeRange] = useState("week")
-  const [teamFilter, setTeamFilter] = useState({ type: null, id: null })
-
-  // Team filter UI state
-  const [selectedTeamType, setSelectedTeamType] = useState("")
-  const [selectedTeamId, setSelectedTeamId] = useState("")
-  const [teamsList, setTeamsList] = useState([])
-  const [loadingTeams, setLoadingTeams] = useState(false)
 
   // Additional data states
   const [latestTransactions, setLatestTransactions] = useState([])
@@ -86,11 +78,50 @@ const Dashboard = () => {
   const [loadingTransactions, setLoadingTransactions] = useState(false)
   const [loadingPerformance, setLoadingPerformance] = useState(false)
 
+  // Top cylinders
+  const [topCylinders, setTopCylinders] = useState([])
+  const [loadingTopCylinders, setLoadingTopCylinders] = useState(false)
+
+  // Performance tab local state
+  const [perfTeamType, setPerfTeamType] = useState("")
+  const [perfTeamId, setPerfTeamId] = useState("")
+  const [perfTeamsList, setPerfTeamsList] = useState([])
+  const [perfLoadingTeams, setPerfLoadingTeams] = useState(false)
+
+  // Comparison graph state
+  const [comparisonPeriod, setComparisonPeriod] = useState("week")
+  const [comparisonTeamType, setComparisonTeamType] = useState("SHOP")
+  const [comparisonChartData, setComparisonChartData] = useState([])
+  const [comparisonChartType, setComparisonChartType] = useState("line") // "line" or "bar"
+  const [loadingComparison, setLoadingComparison] = useState(false)
+
   // Advanced Features
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const [dataVersion, setDataVersion] = useState(0)
   const [activeView, setActiveView] = useState("overview")
+
+  // Helper to generate consistent colors for teams
+  const getTeamColor = (teamName) => {
+    const colors = [
+      "#3b82f6",
+      "#10b981",
+      "#ef4444",
+      "#f59e0b",
+      "#8b5cf6",
+      "#ec4899",
+      "#06b6d4",
+      "#84cc16",
+      "#f97316",
+      "#6366f1",
+    ]
+    let hash = 0
+    for (let i = 0; i < teamName.length; i++) {
+      hash = (hash << 5) - hash + teamName.charCodeAt(i)
+      hash |= 0
+    }
+    return colors[Math.abs(hash) % colors.length]
+  }
 
   // Derived values from API data
   const totalRevenue = statsData?.revenue?.total || 0
@@ -122,25 +153,12 @@ const Dashboard = () => {
     { name: "Wholesale", value: wholesaleRevenue, color: "#10b981" },
   ].filter((item) => item.value > 0)
 
-  // Mock data for top products (still mock)
-  const topProducts = [
-    { name: "Gas Cylinder 15kg", sales: 245, revenue: 1225000, growth: 12.5 },
-    { name: "Cooking Gas 6kg", sales: 189, revenue: 567000, growth: 8.2 },
-    { name: "Industrial Gas", sales: 134, revenue: 4020000, growth: 15.7 },
-    { name: "Medical Oxygen", sales: 98, revenue: 2940000, growth: 5.3 },
-    { name: "CO2 Cylinder", sales: 76, revenue: 1520000, growth: -2.1 },
-  ]
-
-  // Fetch dashboard statistics
+  // Fetch dashboard statistics (company-wide, no team filter)
   const fetchDashboardStats = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const params = { period: timeRange }
-      if (teamFilter.type && teamFilter.id) {
-        params.team_type = teamFilter.type
-        params.team_id = teamFilter.id
-      }
       const response = await api.get("/dashboard/dashboard/stats/", { params })
       setStatsData(response.data)
       setLastUpdated(new Date().toLocaleTimeString())
@@ -150,17 +168,13 @@ const Dashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [timeRange, teamFilter])
+  }, [timeRange])
 
-  // Fetch latest transactions
+  // Fetch latest transactions (company-wide, no team filter)
   const fetchLatestTransactions = useCallback(async () => {
     setLoadingTransactions(true)
     try {
       const params = { limit: 5 }
-      if (teamFilter.type && teamFilter.id) {
-        params.team_type = teamFilter.type
-        params.team_id = teamFilter.id
-      }
       const response = await api.get("/dashboard/sales/latest-transactions/", {
         params,
       })
@@ -170,16 +184,18 @@ const Dashboard = () => {
     } finally {
       setLoadingTransactions(false)
     }
-  }, [teamFilter])
+  }, [])
 
-  // Fetch team performance
-  const fetchTeamPerformance = useCallback(async () => {
+  // Fetch team performance (for the performance tab)
+  const fetchTeamPerformanceData = useCallback(async () => {
     setLoadingPerformance(true)
     try {
       const params = { period: timeRange }
-      if (teamFilter.type && teamFilter.id) {
-        params.team_type = teamFilter.type
-        params.team_id = teamFilter.id
+      if (perfTeamType && perfTeamId) {
+        params.team_type = perfTeamType
+        params.team_id = perfTeamId
+      } else if (perfTeamType) {
+        params.team_type = perfTeamType
       }
       const response = await api.get("/dashboard/sales/team-performance/", {
         params,
@@ -190,68 +206,146 @@ const Dashboard = () => {
     } finally {
       setLoadingPerformance(false)
     }
-  }, [timeRange, teamFilter])
+  }, [timeRange, perfTeamType, perfTeamId])
 
-  // Fetch teams when team type changes
+  // Fetch list of teams for a given type (for dropdown)
   useEffect(() => {
-    if (!selectedTeamType) {
-      setTeamsList([])
-      setSelectedTeamId("")
+    if (!perfTeamType) {
+      setPerfTeamsList([])
+      setPerfTeamId("")
       return
     }
     const fetchTeams = async () => {
-      setLoadingTeams(true)
+      setPerfLoadingTeams(true)
       try {
         let endpoint = ""
-        if (selectedTeamType === "SHOP") endpoint = "/shop/"
-        else if (selectedTeamType === "STORE") endpoint = "/store/"
-        else if (selectedTeamType === "VEHICLE") endpoint = "/vehicle/"
+        if (perfTeamType === "SHOP") endpoint = "/shop/"
+        else if (perfTeamType === "STORE") endpoint = "/store/"
+        else if (perfTeamType === "VEHICLE") endpoint = "/vehicle/"
         const response = await api.get(endpoint)
         let teams = response.data.results || response.data || []
-        setTeamsList(teams)
+        setPerfTeamsList(teams)
       } catch (error) {
         console.error("Failed to fetch teams:", error)
         toast.error("Failed to load teams")
-        setTeamsList([])
+        setPerfTeamsList([])
       } finally {
-        setLoadingTeams(false)
+        setPerfLoadingTeams(false)
       }
     }
     fetchTeams()
-  }, [selectedTeamType])
+  }, [perfTeamType])
 
-  const handleTeamFilterChange = (type, id) => {
-    setSelectedTeamType(type)
-    setSelectedTeamId(id)
-    setTeamFilter({ type: type || null, id: id || null })
-  }
+  // Fetch comparison graph data
+  const fetchComparisonData = useCallback(async () => {
+    if (!comparisonTeamType) return
+    setLoadingComparison(true)
+    try {
+      let endpoint = ""
+      if (comparisonTeamType === "SHOP") endpoint = "/shop/"
+      else if (comparisonTeamType === "STORE") endpoint = "/store/"
+      else if (comparisonTeamType === "VEHICLE") endpoint = "/vehicle/"
+      const teamsRes = await api.get(endpoint)
+      const teams = teamsRes.data.results || teamsRes.data || []
 
-  const clearTeamFilter = () => {
-    setSelectedTeamType("")
-    setSelectedTeamId("")
-    setTeamFilter({ type: null, id: null })
-  }
+      const seriesPromises = teams.map(async (team) => {
+        const params = {
+          period: comparisonPeriod,
+          team_type: comparisonTeamType,
+          team_id: team.id,
+        }
+        const res = await api.get("/dashboard/sales/team-performance/", {
+          params,
+        })
+        const teamData = res.data.teams?.[0]
+        if (teamData && teamData.time_series) {
+          return {
+            name: teamData.name,
+            data: teamData.time_series.map((point) => ({
+              period: new Date(point.period).toLocaleDateString(),
+              sales: point.total,
+            })),
+          }
+        }
+        return null
+      })
 
+      const results = await Promise.all(seriesPromises)
+      const validResults = results.filter((r) => r && r.data.length > 0)
+
+      const allPeriods = new Set()
+      validResults.forEach((team) => {
+        team.data.forEach((point) => allPeriods.add(point.period))
+      })
+      const sortedPeriods = Array.from(allPeriods).sort(
+        (a, b) => new Date(a) - new Date(b),
+      )
+
+      const chartData = sortedPeriods.map((period) => {
+        const point = { period }
+        validResults.forEach((team) => {
+          const teamPoint = team.data.find((p) => p.period === period)
+          point[team.name] = teamPoint ? teamPoint.sales : 0
+        })
+        return point
+      })
+
+      setComparisonChartData(chartData)
+    } catch (err) {
+      console.error("Failed to fetch comparison data:", err)
+      toast.error("Could not load team comparison chart")
+    } finally {
+      setLoadingComparison(false)
+    }
+  }, [comparisonTeamType, comparisonPeriod])
+
+  // Fetch top cylinders
+  const fetchTopCylinders = useCallback(async () => {
+    setLoadingTopCylinders(true)
+    try {
+      const response = await api.get("/dashboard/sales/top-cylinders/")
+      setTopCylinders(response.data.top_cylinders || [])
+    } catch (err) {
+      
+      console.error("Failed to fetch top cylinders:", err)
+    } finally {
+      setLoadingTopCylinders(false)
+    }
+  }, [])
+
+  // Initial data loading
   useEffect(() => {
     fetchDashboardStats()
     fetchLatestTransactions()
-    fetchTeamPerformance()
-  }, [fetchDashboardStats, fetchLatestTransactions, fetchTeamPerformance])
+    fetchTeamPerformanceData()
+    fetchTopCylinders()
+  }, [
+    fetchDashboardStats,
+    fetchLatestTransactions,
+    fetchTeamPerformanceData,
+    fetchTopCylinders,
+  ])
 
+  // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return
     const interval = setInterval(() => {
       fetchDashboardStats()
       fetchLatestTransactions()
-      fetchTeamPerformance()
+      fetchTeamPerformanceData()
     }, 30000)
     return () => clearInterval(interval)
   }, [
     autoRefresh,
     fetchDashboardStats,
     fetchLatestTransactions,
-    fetchTeamPerformance,
+    fetchTeamPerformanceData,
   ])
+
+  // Fetch comparison data when filters change
+  useEffect(() => {
+    fetchComparisonData()
+  }, [fetchComparisonData])
 
   const debtChange = computeDayOverDayDebtChange([])
   const completionRate =
@@ -261,7 +355,7 @@ const Dashboard = () => {
         100
       : 0
 
-  // Stat Card Component (pure Tailwind)
+  // Stat Card Component
   const StatCard = ({
     title,
     value,
@@ -455,94 +549,244 @@ const Dashboard = () => {
               <Inventory className="mr-2 text-blue-500" /> Top Products
             </h3>
             <div className="space-y-3">
-              {topProducts.map((product, idx) => (
-                <div key={idx} className="bg-gray-50 p-3 rounded-xl">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
-                        {idx + 1}
-                      </div>
-                      <span className="font-medium">{product.name}</span>
-                    </div>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        product.growth > 0
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {product.growth > 0 ? "+" : ""}
-                      {product.growth}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-600 pl-10">
-                    <span>{product.sales} units</span>
-                    <span className="font-semibold">
-                      <CurrencyConvert price={product.revenue} />
-                    </span>
-                  </div>
+              {loadingTopCylinders ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div
+                      key={i}
+                      className="h-16 bg-gray-100 animate-pulse rounded-lg"
+                    ></div>
+                  ))}
                 </div>
-              ))}
+              ) : topCylinders.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No cylinder sales data
+                </p>
+              ) : (
+                topCylinders.map((cylinder, idx) => (
+                  <div key={cylinder.id} className="bg-gray-50 p-3 rounded-xl">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
+                          {idx + 1}
+                        </div>
+                        <span className="font-medium">{cylinder.name}</span>
+                      </div>
+                      <span className="font-semibold text-green-600">
+                        {cylinder.total_quantity_sold} units
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )
       case "teams":
         return (
-          <div className="bg-white rounded-xl shadow-md p-4">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center">
-              <People className="mr-2 text-green-500" /> Team Performance
-            </h3>
-            {loadingPerformance ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-20 bg-gray-100 animate-pulse rounded-xl"
-                  ></div>
-                ))}
+          <div className="space-y-6">
+            {/* Team list section */}
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+                <People className="mr-2 text-green-500" /> Team Performance
+              </h3>
+
+              <div className="flex flex-wrap gap-3 mb-4">
+                <select
+                  className="px-3 py-2 border rounded-lg text-sm bg-white"
+                  value={perfTeamType}
+                  onChange={(e) => {
+                    setPerfTeamType(e.target.value)
+                    setPerfTeamId("")
+                  }}
+                >
+                  <option value="">All Teams</option>
+                  <option value="SHOP">Shops</option>
+                  <option value="STORE">Stores</option>
+                  <option value="VEHICLE">Vehicles</option>
+                </select>
+
+                {perfTeamType && (
+                  <select
+                    className="px-3 py-2 border rounded-lg text-sm bg-white"
+                    value={perfTeamId}
+                    onChange={(e) => setPerfTeamId(e.target.value)}
+                    disabled={perfLoadingTeams}
+                  >
+                    <option value="">All {perfTeamType.toLowerCase()}s</option>
+                    {perfTeamsList.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name || team.number_plate || `ID: ${team.id}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
-            ) : teamPerformance.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                No team performance data available
-              </p>
-            ) : (
-              <div className="space-y-5">
-                {teamPerformance.map((team, idx) => (
-                  <div key={idx} className="bg-gray-50 p-3 rounded-xl">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-bold">{team.name}</span>
-                      <span className="font-bold text-green-600">
-                        <CurrencyConvert price={team.total_sales} />
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (team.total_sales / (team.total_sales + 100000)) *
+
+              {loadingPerformance ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-20 bg-gray-100 animate-pulse rounded-xl"
+                    ></div>
+                  ))}
+                </div>
+              ) : teamPerformance.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No team performance data available
+                </p>
+              ) : (
+                <div className="space-y-5">
+                  {teamPerformance.map((team, idx) => (
+                    <div key={idx} className="bg-gray-50 p-3 rounded-xl">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold">{team.name}</span>
+                        <span className="font-bold text-green-600">
+                          <CurrencyConvert price={team.total_sales} />
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full"
+                          style={{
+                            width: `${Math.min(
                               100,
-                          )}%`,
-                        }}
-                      ></div>
+                              (team.total_sales / (team.total_sales + 100000)) *
+                                100,
+                            )}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>{team.sales_count} sales</span>
+                        <span>
+                          Avg: <CurrencyConvert price={team.average_sale} />
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-xs text-gray-600">
-                      <span>{team.sales_count} sales</span>
-                      <span>
-                        Avg: <CurrencyConvert price={team.average_sale} />
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Comparison graph section */}
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+                <ShowChart className="mr-2 text-blue-500" /> Team Sales
+                Comparison
+              </h3>
+
+              <div className="flex flex-wrap gap-3 mb-4">
+                <select
+                  className="px-3 py-2 border rounded-lg text-sm bg-white"
+                  value={comparisonTeamType}
+                  onChange={(e) => setComparisonTeamType(e.target.value)}
+                >
+                  <option value="SHOP">Shops</option>
+                  <option value="STORE">Stores</option>
+                  <option value="VEHICLE">Vehicles</option>
+                </select>
+
+                <select
+                  className="px-3 py-2 border rounded-lg text-sm bg-white"
+                  value={comparisonPeriod}
+                  onChange={(e) => setComparisonPeriod(e.target.value)}
+                >
+                  <option value="day">Daily</option>
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                  <option value="year">Yearly</option>
+                </select>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setComparisonChartType("line")}
+                    className={`px-3 py-2 text-sm rounded-lg transition ${
+                      comparisonChartType === "line"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Line Chart
+                  </button>
+                  <button
+                    onClick={() => setComparisonChartType("bar")}
+                    className={`px-3 py-2 text-sm rounded-lg transition ${
+                      comparisonChartType === "bar"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Bar Chart
+                  </button>
+                </div>
               </div>
-            )}
+
+              {loadingComparison ? (
+                <div className="h-64 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : comparisonChartData.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  No comparison data available
+                </p>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  {comparisonChartType === "line" ? (
+                    <LineChart data={comparisonChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis
+                        tickFormatter={(value) => `KSh ${value / 1000}k`}
+                      />
+                      <ReTooltip
+                        formatter={(value) => `KSh ${value.toLocaleString()}`}
+                      />
+                      <Legend />
+                      {Object.keys(comparisonChartData[0] || {})
+                        .filter((key) => key !== "period")
+                        .map((teamName) => (
+                          <Line
+                            key={teamName}
+                            type="monotone"
+                            dataKey={teamName}
+                            stroke={getTeamColor(teamName)}
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                          />
+                        ))}
+                    </LineChart>
+                  ) : (
+                    <BarChart data={comparisonChartData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis
+                        tickFormatter={(value) => `KSh ${value / 1000}k`}
+                      />
+                      <ReTooltip
+                        formatter={(value) => `KSh ${value.toLocaleString()}`}
+                      />
+                      <Legend />
+                      {Object.keys(comparisonChartData[0] || {})
+                        .filter((key) => key !== "period")
+                        .map((teamName) => (
+                          <Bar
+                            key={teamName}
+                            dataKey={teamName}
+                            fill={getTeamColor(teamName)}
+                          />
+                        ))}
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         )
       default: // overview
         return (
           <>
-            {/* Time range & team filter */}
             <div className="mb-4">
               <div className="flex overflow-x-auto no-scrollbar pb-2 gap-2">
                 {["day", "week", "month", "year"].map((range) => (
@@ -559,48 +803,8 @@ const Dashboard = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-2 items-center mt-2">
-                <select
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm bg-white"
-                  value={selectedTeamType}
-                  onChange={(e) => handleTeamFilterChange(e.target.value, "")}
-                >
-                  <option value="">All Teams</option>
-                  <option value="SHOP">Shop</option>
-                  <option value="STORE">Store</option>
-                  <option value="VEHICLE">Vehicle</option>
-                </select>
-                {selectedTeamType && (
-                  <select
-                    className="flex-1 px-3 py-2 border rounded-lg text-sm bg-white"
-                    value={selectedTeamId}
-                    onChange={(e) =>
-                      handleTeamFilterChange(selectedTeamType, e.target.value)
-                    }
-                    disabled={loadingTeams}
-                  >
-                    <option value="">
-                      Select {selectedTeamType.toLowerCase()}
-                    </option>
-                    {teamsList.map((team) => (
-                      <option key={team.id} value={team.id}>
-                        {team.name || team.number_plate || `ID: ${team.id}`}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {(selectedTeamType || selectedTeamId) && (
-                  <button
-                    onClick={clearTeamFilter}
-                    className="px-3 py-2 text-sm text-red-600"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
             </div>
 
-            {/* KPI Cards Slider */}
             <div className="mb-6">
               <Slider {...sliderSettings}>
                 {[
@@ -659,7 +863,6 @@ const Dashboard = () => {
               </Slider>
             </div>
 
-            {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div className="bg-white rounded-xl shadow-md p-3 text-center">
                 <p className="text-xs text-gray-500">Completion Rate</p>
@@ -682,7 +885,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Performance Line Chart */}
             <div className="bg-white rounded-xl shadow-md p-4 mb-6">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center">
                 <ShowChart className="mr-2 text-blue-500" /> Performance
@@ -715,7 +917,6 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
 
-            {/* Recent Transactions */}
             <div className="bg-white rounded-xl shadow-md p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold flex items-center">
@@ -782,7 +983,7 @@ const Dashboard = () => {
     }
   }
 
-  // Desktop view (simplified, similar structure but with grid)
+  // Desktop view
   const renderDesktopView = () => {
     if (loading)
       return (
@@ -799,7 +1000,6 @@ const Dashboard = () => {
 
     return (
       <div className="p-6 max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800">
             Dashboard Overview
@@ -807,65 +1007,22 @@ const Dashboard = () => {
           <p className="text-gray-500">Real-time insights for your business</p>
         </div>
 
-        {/* Time Range & Team Filter */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex gap-2">
-            {["day", "week", "month", "year"].map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`px-4 py-2 text-sm font-medium rounded-full transition ${
-                  timeRange === range
-                    ? "bg-blue-500 text-white shadow"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border"
-                }`}
-              >
-                {range.charAt(0).toUpperCase() + range.slice(1)}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
-            <select
-              className="px-3 py-1.5 border rounded-lg text-sm bg-white"
-              value={selectedTeamType}
-              onChange={(e) => handleTeamFilterChange(e.target.value, "")}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {["day", "week", "month", "year"].map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition ${
+                timeRange === range
+                  ? "bg-blue-500 text-white shadow"
+                  : "bg-white text-gray-600 hover:bg-gray-100 border"
+              }`}
             >
-              <option value="">All Teams</option>
-              <option value="SHOP">Shop</option>
-              <option value="STORE">Store</option>
-              <option value="VEHICLE">Vehicle</option>
-            </select>
-            {selectedTeamType && (
-              <select
-                className="px-3 py-1.5 border rounded-lg text-sm bg-white"
-                value={selectedTeamId}
-                onChange={(e) =>
-                  handleTeamFilterChange(selectedTeamType, e.target.value)
-                }
-                disabled={loadingTeams}
-              >
-                <option value="">
-                  Select {selectedTeamType.toLowerCase()}
-                </option>
-                {teamsList.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name || team.number_plate || `ID: ${team.id}`}
-                  </option>
-                ))}
-              </select>
-            )}
-            {(selectedTeamType || selectedTeamId) && (
-              <button
-                onClick={clearTeamFilter}
-                className="text-red-600 text-sm"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+              {range.charAt(0).toUpperCase() + range.slice(1)}
+            </button>
+          ))}
         </div>
 
-        {/* KPI Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
           <StatCard
             title="Total Revenue"
@@ -916,7 +1073,6 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-4">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center">
@@ -999,42 +1155,36 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Bottom Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-md p-4">
             <h3 className="font-bold text-gray-800 mb-4 flex items-center">
               <Inventory className="mr-2 text-blue-500" /> Top Products
             </h3>
             <div className="divide-y">
-              {topProducts.map((product, idx) => (
-                <div
-                  key={idx}
-                  className="py-3 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
-                      {idx + 1}
-                    </div>
-                    <div>
-                      <p className="font-medium">{product.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {product.sales} units •{" "}
-                        <CurrencyConvert price={product.revenue} />
-                      </p>
+              {topCylinders.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">
+                  No cylinder sales data
+                </p>
+              ) : (
+                topCylinders.map((cylinder, idx) => (
+                  <div
+                    key={cylinder.id}
+                    className="py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-bold">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium">{cylinder.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {cylinder.total_quantity_sold} units
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      product.growth > 0
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {product.growth > 0 ? "+" : ""}
-                    {product.growth}%
-                  </span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
           <div className="bg-white rounded-xl shadow-md p-4">
@@ -1146,7 +1296,7 @@ const Dashboard = () => {
   )
 }
 
-// ScrollToTop component (simple)
+// ScrollToTop component
 const ScrollTop = () => {
   const [visible, setVisible] = useState(false)
   useEffect(() => {

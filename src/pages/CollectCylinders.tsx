@@ -32,7 +32,11 @@ const CollectCylinders = () => {
   const navigate = useNavigate()
 
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+   const allSalesVehicle = allSalesVehicles.filter(
+     (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+   )
+
   const store = useAppSelector(selectAllStore)
   const employees = useAppSelector(selectAllEmployees)
   const [selectedTeam, setSelectedTeam] = useState(null)

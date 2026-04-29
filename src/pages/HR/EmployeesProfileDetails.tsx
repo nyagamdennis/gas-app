@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { useNavigate, useParams, Link } from "react-router-dom"
 import { toast, ToastContainer } from "react-toastify"
+import axios from "axios"
 import CircularProgress from "@mui/material/CircularProgress"
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import {
@@ -28,6 +29,9 @@ import {
   DialogTitle,
   TextField,
   Button,
+  Switch,
+  FormControlLabel,
+  Divider,
 } from "@mui/material"
 import {
   CheckCircle,
@@ -51,6 +55,8 @@ import {
   EventAvailable,
   Edit,
   Refresh,
+  Save,
+  Security,
 } from "@mui/icons-material"
 
 import Navbar from "../../components/ui/mobile/admin/Navbar"
@@ -75,6 +81,7 @@ import {
   clearReactivationStatus,
 } from "../../features/employees/singleEmployeeSlice"
 import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
+import api from "../../../utils/api"
 
 // Helper function to get team type display
 const getTeamTypeDisplay = (type) => {
@@ -114,6 +121,68 @@ const getRoleIcon = (role) => {
   }
 }
 
+// ---- Permission Groups Definition ----
+const PERMISSION_GROUPS = [
+  {
+    group: "Core Operations",
+    permissions: [
+      { key: "can_perform_sales", label: "Perform Sales" },
+      { key: "can_manage_inventory", label: "Manage Inventory" },
+      { key: "can_manage_delivery", label: "Manage Delivery" },
+      { key: "can_manage_products", label: "Manage Products (CRUD)" },
+      { key: "can_edit_pricing", label: "Edit Pricing" },
+      {key: "can_manage_customers", label: 'Manage Customers'}
+    ],
+  },
+  {
+    group: "Cylinder Management",
+    permissions: [
+      { key: "can_perform_refill", label: "Perform Cylinder Refill" },
+      { key: "can_repair", label: "Repair Cylinders" },
+      { key: "can_write_off", label: "Write Off Cylinders" },
+      { key: "can_collect_cylinders", label: "Collect Empty Cylinders" },
+      { key: "can_transfer_cylinders", label: "Transfer Cylinders" },
+    ],
+  },
+  {
+    group: "Reporting & Dashboard",
+    permissions: [
+      { key: "can_view_reports", label: "View Reports" },
+      { key: "can_view_dashboard", label: "View Dashboard" },
+      { key: "can_view_sales_reports", label: "View Sales Reports" },
+      { key: "can_manage_sales_reports", label: "Manage Sales Reports" },
+    ],
+  },
+  {
+    group: "Team & HR",
+    permissions: [
+      { key: "can_manage_employees", label: "Manage Employees" },
+      { key: "can_manage_leaves", label: "Manage Leave Requests" },
+      { key: "can_mark_attendance", label: "Mark Attendance" },
+      { key: "can_view_employee_history", label: "View Employee History" },
+      { key: "can_manage_expenses", label: "Manage Expenses" },
+    ],
+  },
+  {
+    group: "Locations & Assets",
+    permissions: [
+      { key: "can_manage_shop", label: "Manage Shops" },
+      { key: "can_manage_store", label: "Manage Stores" },
+      { key: "can_manage_vehicle", label: "Manage Vehicles" },
+    ],
+  },
+  {
+    group: "Strategic",
+    permissions: [
+      { key: "can_manage_ai", label: "Use AI Features" },
+      {
+        key: "can_make_managerial_decisions",
+        label: "Make Managerial Decisions",
+      },
+    ],
+  },
+]
+
 const EmployeesProfileDetails = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -128,16 +197,21 @@ const EmployeesProfileDetails = () => {
   const leaveData = useAppSelector(selectLeaveData)
   const leaveStatus = useAppSelector(selectLeaveStatus)
 
+  // Get current logged-in user (only used for API auth, not for conditional rendering)
+  const currentUser = useAppSelector((state) => state.auth.user)
+
+  // 👇 Check if the viewed employee is a manager/admin (editing allowed)
+  const isViewingManager =
+    employee?.user_role === "MANAGER" || employee?.user_role === "ADMIN"
 
   // Advanced Features
-    const [batchMode, setBatchMode] = useState(false)
-    const [selectedBatchItems, setSelectedBatchItems] = useState([])
-    const [lastUpdated, setLastUpdated] = useState(null)
-    const [autoRefresh, setAutoRefresh] = useState(false)
-    const [realTimeEnabled, setRealTimeEnabled] = useState(false)
-    const [dataVersion, setDataVersion] = useState(0)
-  
-    
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
+
   // Local state
   const [activeTab, setActiveTab] = useState(0)
   const [terminateDialogOpen, setTerminateDialogOpen] = useState(false)
@@ -152,6 +226,75 @@ const EmployeesProfileDetails = () => {
   const [reactivationData, setReactivationData] = useState({
     reactivation_reason: "",
   })
+
+  // Permissions editing state
+  const [editablePermissions, setEditablePermissions] = useState({})
+  const [permissionsSaving, setPermissionsSaving] = useState(false)
+  const [permissionChangeReason, setPermissionChangeReason] = useState("admin update") // default reason for permission changes
+
+  // Load permissions into editable state when employee data changes (always load, but editing only when isViewingManager)
+  useEffect(() => {
+    if (employee) {
+      const perms = {}
+      PERMISSION_GROUPS.forEach((group) => {
+        group.permissions.forEach((p) => {
+          if (employee[p.key] !== undefined) {
+            perms[p.key] = employee[p.key]
+          } else {
+            perms[p.key] = false // default to false if missing
+          }
+        })
+      })
+      setEditablePermissions(perms)
+    }
+  }, [employee])
+
+  // Handlers for permission toggles (only used when editing is allowed)
+  const handlePermissionToggle = (permKey) => (event) => {
+    if (!isViewingManager) return
+    setEditablePermissions((prev) => ({
+      ...prev,
+      [permKey]: event.target.checked,
+    }))
+  }
+
+  const handleSavePermissions = async () => {
+    if (!id || !isViewingManager || !permissionChangeReason.trim()) {
+      toast.error("Please provide a reason for the permission change")
+      return
+    }
+    setPermissionsSaving(true)
+    try {
+      // Format payload according to API specifications
+      const payload = {
+        employee_id: id,
+        permissions: editablePermissions,
+        reason: permissionChangeReason,
+      }
+
+      // Direct API call to update employee permissions
+      const response = await api.post(
+        `/employees/employee/permissions/`,
+        payload,
+      )
+      if (response.status === 200) {
+        toast.success("Permissions updated successfully")
+        setPermissionChangeReason("") // Clear reason after successful update
+        dispatch(fetchSingleEmployee(id)) // refresh data
+      } else {
+        throw new Error("Failed to update permissions")
+      }
+    } catch (error) {
+      console.error("Failed to update permissions:", error)
+      toast.error(
+        error.response?.data?.detail ||
+          error.response?.data?.message ||
+          "Failed to update permissions",
+      )
+    } finally {
+      setPermissionsSaving(false)
+    }
+  }
 
   useEffect(() => {
     if (id) {
@@ -347,13 +490,13 @@ const EmployeesProfileDetails = () => {
           headerText="Employee not found"
         />
         <div className="prevent-overflow">
-                  <RealTimeIndicator
-                    enabled={autoRefresh}
-                    lastUpdated={lastUpdated}
-                    dataVersion={dataVersion}
-                    onToggle={() => setAutoRefresh(!autoRefresh)}
-                  />
-                </div>
+          <RealTimeIndicator
+            enabled={autoRefresh}
+            lastUpdated={lastUpdated}
+            dataVersion={dataVersion}
+            onToggle={() => setAutoRefresh(!autoRefresh)}
+          />
+        </div>
         <main className="flex-grow flex flex-col items-center justify-center p-4">
           <div className="text-center py-12">
             <div className="text-6xl mb-4 opacity-30">😞</div>
@@ -377,12 +520,19 @@ const EmployeesProfileDetails = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f1f5f9] to-[#e2e8f0] text-gray-800 font-sans">
-      {/* Header */}
       <Navbar
         headerMessage="Employee Details"
         headerText="View and manage employee information"
       />
       <ToastContainer />
+      <div className="prevent-overflow">
+        <RealTimeIndicator
+          enabled={autoRefresh}
+          lastUpdated={lastUpdated}
+          dataVersion={dataVersion}
+          onToggle={() => setAutoRefresh(!autoRefresh)}
+        />
+      </div>
 
       <main className="flex-grow m-2 p-1 mb-20">
         {/* Back Button */}
@@ -580,7 +730,7 @@ const EmployeesProfileDetails = () => {
         <div className="space-y-4">
           {activeTab === 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Personal Information */}
+              {/* Personal Information - Left Column */}
               <div className="bg-white rounded-lg shadow-md p-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <Badge /> Personal Information
@@ -639,51 +789,108 @@ const EmployeesProfileDetails = () => {
                 </div>
               </div>
 
-              {/* Permissions & Status */}
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Work /> Permissions & Status
-                </h3>
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  {employee.can_perform_sales && (
-                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Can Perform Sales
-                    </span>
+              {/* Right Column: Permissions & Assignment Cards */}
+              <div className="space-y-4">
+                {/* Permissions Card (Always visible) */}
+                <div className="bg-white rounded-lg shadow-md p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                      <Security /> Permissions & Status
+                    </h3>
+                    {isViewingManager && (
+                      <button
+                        onClick={handleSavePermissions}
+                        disabled={
+                          permissionsSaving || !permissionChangeReason.trim()
+                        }
+                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        {permissionsSaving ? (
+                          <CircularProgress size={20} color="inherit" />
+                        ) : (
+                          <>
+                            <Save fontSize="small" /> Save Permissions
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {isViewingManager && (
+                    <div className="mb-4">
+                      <TextField
+                        label="Reason for Permission Change"
+                        type="text"
+                        fullWidth
+                        size="small"
+                        required
+                        value={permissionChangeReason}
+                        onChange={(e) =>
+                          setPermissionChangeReason(e.target.value)
+                        }
+                        placeholder="e.g., Updated role responsibilities, New project assignment, etc."
+                        variant="outlined"
+                      />
+                    </div>
                   )}
-                  {employee.can_manage_inventory && (
-                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Can Manage Inventory
-                    </span>
-                  )}
-                  {employee.can_manage_delivery && (
-                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Can Manage Delivery
-                    </span>
-                  )}
-                  {employee.can_view_reports && (
-                    <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      Can View Reports
-                    </span>
-                  )}
+
+                  <div className="space-y-5 max-h-[500px] overflow-y-auto pr-1">
+                    {PERMISSION_GROUPS.map((group, idx) => (
+                      <div key={idx}>
+                        <Typography
+                          variant="subtitle2"
+                          className="font-semibold text-gray-700 mb-2"
+                        >
+                          {group.group}
+                        </Typography>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {group.permissions.map((perm) => (
+                            <FormControlLabel
+                              key={perm.key}
+                              control={
+                                <Switch
+                                  checked={
+                                    editablePermissions[perm.key] || false
+                                  }
+                                  onChange={handlePermissionToggle(perm.key)}
+                                  color="primary"
+                                  size="small"
+                                  disabled={!isViewingManager}
+                                />
+                              }
+                              label={
+                                <span className="text-sm text-gray-700">
+                                  {perm.label}
+                                </span>
+                              }
+                            />
+                          ))}
+                        </div>
+                        {idx < PERMISSION_GROUPS.length - 1 && (
+                          <Divider className="my-3" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Current Assignment */}
+                {/* Assignment Card (only if employee has an assignment) */}
                 {employee.assigned_to && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Current Assignment
-                    </p>
+                  <div className="bg-white rounded-lg shadow-md p-4">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Work /> Current Assignment
+                    </h3>
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xl">
-                          {getTeamTypeDisplay(employee.assigned_to.type).icon}
+                          {getTeamTypeDisplay(employee?.assigned_to?.type).icon}
                         </span>
                         <div>
                           <p className="font-bold text-gray-800">
-                            {employee.assigned_to.name}
+                            {employee?.assigned_to?.name}
                           </p>
                           <p className="text-sm text-gray-600">
-                            Type: {employee.assigned_to.type}
+                            Type: {employee?.assigned_to?.type}
                           </p>
                         </div>
                       </div>
@@ -700,7 +907,7 @@ const EmployeesProfileDetails = () => {
                 )}
               </div>
 
-              {/* Recent Attendance Summary */}
+              {/* Recent Attendance Summary - Full Width */}
               <div className="md:col-span-2 bg-white rounded-lg shadow-md p-4">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <TrendingUp /> Recent Attendance (Last 30 Days)
@@ -754,7 +961,6 @@ const EmployeesProfileDetails = () => {
                 </div>
               ) : attendanceData ? (
                 <>
-                  {/* Statistics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                       <div className="text-2xl font-bold text-blue-600">
@@ -784,7 +990,6 @@ const EmployeesProfileDetails = () => {
                     </div>
                   </div>
 
-                  {/* Attendance Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
@@ -866,7 +1071,6 @@ const EmployeesProfileDetails = () => {
                 </div>
               ) : leaveData ? (
                 <>
-                  {/* Statistics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                     <div className="bg-gray-50 p-4 rounded-lg text-center">
                       <div className="text-2xl font-bold text-blue-600">
@@ -896,7 +1100,6 @@ const EmployeesProfileDetails = () => {
                     </div>
                   </div>
 
-                  {/* Leave Table */}
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
@@ -968,7 +1171,6 @@ const EmployeesProfileDetails = () => {
                 Assignment History
               </h3>
 
-              {/* Assignment Table */}
               <div className="overflow-x-auto mb-6">
                 <table className="w-full border-collapse">
                   <thead>
@@ -1045,7 +1247,6 @@ const EmployeesProfileDetails = () => {
                 </table>
               </div>
 
-              {/* Transfer History */}
               {employee.transfer_history &&
                 employee.transfer_history.length > 0 && (
                   <div>

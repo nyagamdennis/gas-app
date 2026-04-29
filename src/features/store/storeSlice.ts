@@ -5,8 +5,6 @@ import api from "../../../utils/api"
 
 type Status = "idle" | "loading" | "succeeded" | "failed"
 
-
-
 interface Location {
   id: number
   name: string
@@ -41,13 +39,25 @@ const initialState: storeState = {
   currentStore: null,
 }
 
-export const fetchStore = createAsyncThunk<store[], { businessId: string }, {}>(
-  "store/fetchStore",
-  async ({ businessId }) => {
+export const fetchStore = createAsyncThunk<
+  store[],
+  { businessId: string },
+  { rejectValue: string }
+>("store/fetchStore", async ({ businessId }, { rejectWithValue }) => {
+  try {
     const response = await api.get<store[]>(`/store/`)
     return response.data
-  },
-)
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      return rejectWithValue(
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to fetch stores",
+      )
+    }
+    return rejectWithValue("Failed to fetch stores. Please try again.")
+  }
+})
 
 export const addStore = createAsyncThunk<
   Stores, // The type of the returned data
@@ -63,7 +73,11 @@ export const addStore = createAsyncThunk<
     return response.data // Return the newly added vehicle
   } catch (error: any) {
     if (error.response && error.response.data) {
-      return rejectWithValue(error.response.data.message) // Return API error message
+      return rejectWithValue(
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to add store",
+      ) // Return API error message
     }
     return rejectWithValue("Failed to add store. Please try again.")
   }
@@ -81,7 +95,9 @@ export const deleteStore = createAsyncThunk<
   } catch (error: any) {
     if (error.response && error.response.data) {
       return rejectWithValue(
-        error.response.data.message || "Failed to delete store",
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to delete store",
       )
     }
     return rejectWithValue("Failed to delete store. Please try again.")
@@ -102,7 +118,10 @@ export const updateStore = createAsyncThunk<
   { rejectValue: string }
 >("store/updateStore", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await api.patch<StoreResponse>(`/store/stores/${id}/`, data)
+    const response = await api.patch<StoreResponse>(
+      `/store/stores/${id}/`,
+      data,
+    )
     return response.data // Returns { message: "...", store: {...} }
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -114,7 +133,9 @@ export const updateStore = createAsyncThunk<
         return rejectWithValue(errorMessages)
       }
       return rejectWithValue(
-        error.response.data.message || "Failed to update store",
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to update store",
       )
     }
     return rejectWithValue("Failed to update store. Please try again.")
@@ -133,7 +154,9 @@ export const fetchStoreById = createAsyncThunk<
   } catch (error: any) {
     if (error.response && error.response.data) {
       return rejectWithValue(
-        error.response.data.message || "Failed to fetch store",
+        error.response.data.detail ||
+          error.response.data.message ||
+          "Failed to fetch store",
       )
     }
     return rejectWithValue("Failed to fetch store. Please try again.")
@@ -165,7 +188,10 @@ const storeSlice = createSlice({
       })
       .addCase(fetchStore.rejected, (state, action) => {
         state.status = "failed"
-        state.error = action.error.message || "Failed to fetch products"
+        state.error =
+          (action.payload as string) ||
+          action.error.message ||
+          "Failed to fetch stores"
       })
       .addCase(addStore.pending, (state) => {
         state.status = "loading"
@@ -211,9 +237,7 @@ const storeSlice = createSlice({
       })
       .addCase(deleteStore.fulfilled, (state, action) => {
         state.status = "succeeded"
-        state.store = state.store.filter(
-          (store) => store.id !== action.payload,
-        )
+        state.store = state.store.filter((store) => store.id !== action.payload)
         if (state.currentStore?.id === action.payload) {
           state.currentStore = null
         }
@@ -251,7 +275,6 @@ const storeSlice = createSlice({
 
 export const { setCurrentStore, clearStoreError, resetStoreStatus } =
   storeSlice.actions
-
 
 export const selectAllStore = (state: { store: storeState }) =>
   state.store.store

@@ -34,6 +34,7 @@ const AfterAssign = () => {
   const [receiptData, setReceiptData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [downloadingPDF, setDownloadingPDF] = useState(false)
+  const [sharingPDF, setSharingPDF] = useState(false) // <-- new state
 
   console.log("Receipt Number:", receipt_number)
 
@@ -56,7 +57,6 @@ const AfterAssign = () => {
   const handlePrint = () => {
     if (!receiptData) return
 
-    
     if (window.AndroidBridge && window.AndroidBridge.printText) {
       const currentDate = new Date(
         receiptData.transfer_date,
@@ -131,7 +131,6 @@ const AfterAssign = () => {
         },
       )
 
-      // Create a blob URL and trigger download
       const blob = new Blob([response.data], { type: "application/pdf" })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
@@ -148,6 +147,64 @@ const AfterAssign = () => {
       setDownloadingPDF(false)
     }
   }
+
+  // ---------- NEW: Share PDF via Web Share API ----------
+  const handleSharePDF = async () => {
+    if (!receiptData) return
+
+    setSharingPDF(true)
+    try {
+      // Fetch the PDF blob
+      const response = await api.get(
+        `/inventory/receipts/${receipt_number.id}/pdf/`,
+        {
+          responseType: "blob",
+        },
+      )
+
+      const blob = new Blob([response.data], { type: "application/pdf" })
+      const file = new File(
+        [blob],
+        `Receipt_${receiptData.receipt_number}.pdf`,
+        {
+          type: "application/pdf",
+        },
+      )
+
+      // Check if Web Share API is supported and can share a file
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          title: "Transfer Receipt",
+          text: `Receipt #${receiptData.receipt_number} from ${receiptData.from_location_name} to ${receiptData.to_location_name}`,
+          files: [file],
+        })
+        console.log("PDF shared successfully")
+      } else {
+        // Fallback to download
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `Receipt_${receiptData.receipt_number}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        alert("Sharing not supported on this browser. PDF downloaded instead.")
+      }
+    } catch (error) {
+      console.error("Error sharing PDF:", error)
+      if (error.name !== "AbortError") {
+        alert("Failed to share PDF. Please try again.")
+      }
+    } finally {
+      setSharingPDF(false)
+    }
+  }
+  // -------------------------------------------------------
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -411,6 +468,31 @@ const AfterAssign = () => {
                       "📥 Download PDF"
                     )}
                   </button>
+
+                  {/* NEW: Share PDF button */}
+                  <button
+                    className={`w-full px-6 py-3 rounded-lg shadow-lg font-semibold transition-all duration-200 ${
+                      sharingPDF
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 active:scale-95"
+                    }`}
+                    onClick={handleSharePDF}
+                    disabled={sharingPDF}
+                  >
+                    {sharingPDF ? (
+                      <span className="flex items-center justify-center">
+                        <CircularProgress
+                          size={20}
+                          className="mr-2"
+                          style={{ color: "white" }}
+                        />
+                        Sharing...
+                      </span>
+                    ) : (
+                      "📤 Share PDF (WhatsApp / Email)"
+                    )}
+                  </button>
+
                   <button
                     className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold hover:from-blue-600 hover:to-blue-700 active:scale-95 transition-all duration-200"
                     onClick={handlePrint}
@@ -418,35 +500,7 @@ const AfterAssign = () => {
                     🖨️ Print
                   </button>
 
-                  {/* <button
-                    className={`w-full px-6 py-3 rounded-lg shadow-lg font-semibold transition-all duration-200 ${
-                      savingReciept
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 active:scale-95"
-                    }`}
-                    onClick={handleSaveReceipt}
-                    disabled={savingReciept}
-                  >
-                    {savingReciept ? (
-                      <span className="flex items-center justify-center">
-                        <CircularProgress
-                          size={20}
-                          className="mr-2"
-                          style={{ color: "white" }}
-                        />
-                        Saving...
-                      </span>
-                    ) : (
-                      "💾 Save Receipt"
-                    )}
-                  </button> */}
-
-                  {/* <button
-                    className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg shadow-lg font-semibold hover:from-yellow-600 hover:to-yellow-700 active:scale-95 transition-all duration-200"
-                    onClick={handleNavigateToEdit}
-                  >
-                    ✏️ Edit Assignment
-                  </button> */}
+                  {/* Other buttons (Save, Edit) remain commented as before */}
                 </div>
               </div>
             ) : (

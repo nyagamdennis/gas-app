@@ -57,9 +57,20 @@ const ProductsActions = () => {
 
   const allSalesTeam = useAppSelector(selectAllSalesTeamShops)
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+
+
+
+    const allSalesVehicle = allSalesVehicles.filter(
+      (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+    )
+
+
+
 
   const [selectedTeam, setSelectedTeam] = useState(null)
+
+
 
   useEffect(() => {
     if (businessId) {

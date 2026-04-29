@@ -117,14 +117,14 @@ const TeamsCylindersVehicle = () => {
             headerText={"Manage your operations with style and clarity"}
           />
           {/* Real-time Indicator */}
-                      <div className="prevent-overflow">
-                        <RealTimeIndicator
-                          enabled={autoRefresh}
-                          lastUpdated={lastUpdated}
-                          dataVersion={dataVersion}
-                          onToggle={() => setAutoRefresh(!autoRefresh)}
-                        />
-                      </div>
+          <div className="prevent-overflow">
+            <RealTimeIndicator
+              enabled={autoRefresh}
+              lastUpdated={lastUpdated}
+              dataVersion={dataVersion}
+              onToggle={() => setAutoRefresh(!autoRefresh)}
+            />
+          </div>
           <main className="flex-grow m-2 p-1">
             {/* Header Section */}
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg mb-4">

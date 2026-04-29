@@ -62,7 +62,12 @@ const AssignCylinders = () => {
   const storeCylinderWeight = useAppSelector(selectAllCylindersWeight)
 
   const allSalesTeamShops = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+
+  const allSalesVehicles = allSalesVehicle.filter(
+    (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+  )
+
   const fetchingSalesteamStatus = useAppSelector(getSalesTeamStatus)
   const store = useAppSelector(selectAllStore)
   const fetchingStoreStatus = useAppSelector(getStoreStatus)
@@ -73,7 +78,6 @@ const AssignCylinders = () => {
   const [activeTab, setActiveTab] = useState("shops")
   const [storeId, setStoreId] = useState("")
   const [storeName, setStoreName] = useState("")
-  // console.log("Selected Store Name:", storeName)
   const [assignments, setAssignments] = useState([])
   const [loadingAssign, setLoadingAssign] = useState(false)
   const [showSummary, setShowSummary] = useState(false)
@@ -222,7 +226,7 @@ const AssignCylinders = () => {
         },
       })
     } catch (error: any) {
-      toast.error("Failed to transfer cylinders. Please try again.")
+      toast.error(error?.message || "Failed to transfer cylinders. Please try again.")
       // console.error("Bulk cylinder assignment error:", error)
 
       // Handle specific error types
@@ -236,12 +240,13 @@ const AssignCylinders = () => {
       } else if (error?.message) {
         toast.error(error.message)
       } else {
-        toast.error("Failed to transfer cylinders. Please try again.")
+        // toast.error("Failed to transfer cylinders. Please try again.")
       }
     } finally {
       setLoadingAssign(false)
     }
   }
+
 
   const validateBulkPayload = (payload: any): string[] => {
     const errors: string[] = []

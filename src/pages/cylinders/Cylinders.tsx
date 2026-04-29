@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useMediaQuery, useTheme } from "@mui/material"
+import { toast, ToastContainer } from "react-toastify"
 import Navbar from "../../components/ui/mobile/admin/Navbar"
 import { useAppDispatch, useAppSelector } from "../../app/hooks"
 import { useNavigate } from "react-router-dom"
@@ -9,11 +10,15 @@ import planStatus from "../../features/planStatus/planStatus"
 import {
   fetchSalesTeamShops,
   selectAllSalesTeamShops,
+  getSalesTeamStatus,
+  getDebtorsError as getShopsError,
 } from "../../features/salesTeam/salesTeamSlice"
 import AdminsFooter from "../../components/AdminsFooter"
 import {
   fetchSalesTeamVehicle,
   selectAllSalesTeamVehicle,
+  getSalesTeamVehicleStatus,
+  getDebtorsError as getVehicleError,
 } from "../../features/salesTeam/salesTeamVehicleSlice"
 import Skeleton from "@mui/material/Skeleton"
 import RealTimeIndicator from "../../components/sales/RealTimeIndicator"
@@ -42,8 +47,11 @@ const Cylinders = () => {
   const [showMovementsModal, setShowMovementsModal] = useState(false)
 
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
-
+  const allTheSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+  const shopsStatus = useAppSelector(getSalesTeamStatus)
+  const shopsError = useAppSelector(getShopsError)
+  const vehiclesStatus = useAppSelector(getSalesTeamVehicleStatus)
+  const vehiclesError = useAppSelector(getVehicleError)
   // Advanced Features
   const [batchMode, setBatchMode] = useState(false)
   const [selectedBatchItems, setSelectedBatchItems] = useState([])
@@ -51,13 +59,35 @@ const Cylinders = () => {
   const [autoRefresh, setAutoRefresh] = useState(false)
   const [realTimeEnabled, setRealTimeEnabled] = useState(false)
   const [dataVersion, setDataVersion] = useState(0)
+  const [shownShopsError, setShownShopsError] = useState(false)
+  const [shownVehiclesError, setShownVehiclesError] = useState(false)
+
+  const allSalesVehicle = allTheSalesVehicle.filter(
+    (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+  )
 
   useEffect(() => {
-    setLoading(true)
     dispatch(fetchSalesTeamShops())
     dispatch(fetchSalesTeamVehicle())
-    setLoading(false)
   }, [dispatch, businessId])
+
+  // Handle shops error
+  useEffect(() => {
+    console.log("Shops error changed:", shopsError)
+    if (shopsError) {
+      console.log("Displaying shops error toast:", shopsError)
+      toast.error(shopsError)
+    }
+  }, [shopsError])
+
+  // Handle vehicles error
+  useEffect(() => {
+    console.log("Vehicles error changed:", vehiclesError)
+    if (vehiclesError) {
+      console.log("Displaying vehicles error toast:", vehiclesError)
+      toast.error(vehiclesError)
+    }
+  }, [vehiclesError])
   // Close all modals
   const closeAllModals = () => {
     setShowStockModal(false)
@@ -187,6 +217,7 @@ const Cylinders = () => {
             headerMessage={"ERP"}
             headerText={"Manage your operations with style and clarity"}
           />
+          <ToastContainer />
           <main className="flex-grow m-2 p-1">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-center mb-2 text-gray-800">
@@ -463,7 +494,7 @@ const Cylinders = () => {
                   Choose a shop from the list below
                 </p>
 
-                {loading ? (
+                {loading || shopsStatus === "loading" ? (
                   <div className="flex-1 overflow-y-auto space-y-3">
                     {[...Array(3)].map((_, index) => (
                       <Skeleton
@@ -534,7 +565,7 @@ const Cylinders = () => {
                   Choose a vehicle from the list below
                 </p>
 
-                {loading ? (
+                {loading || vehiclesStatus === "loading" ? (
                   <div className="flex-1 overflow-y-auto space-y-3">
                     {[...Array(3)].map((_, index) => (
                       <Skeleton

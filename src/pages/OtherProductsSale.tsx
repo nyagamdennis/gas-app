@@ -1,15 +1,15 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../app/hooks";
+import React, { useEffect, useState } from "react"
+import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { useMediaQuery, useTheme } from "@mui/material"
 
-import { Link, useNavigate, useParams } from "react-router-dom";
-import defaultProfile from "../components/media/default.png";
-import EmployeeNav from "../components/ui/EmployeeNav";
-import EmployeeFooter from "../components/ui/EmployeeFooter";
-import AdminsFooter from "../components/AdminsFooter";
-import Navbar from "../components/ui/mobile/employees/Navbar";
-import planStatus from "../features/planStatus/planStatus";
+import { Link, useNavigate, useParams } from "react-router-dom"
+import defaultProfile from "../components/media/default.png"
+import EmployeeNav from "../components/ui/EmployeeNav"
+import EmployeeFooter from "../components/ui/EmployeeFooter"
+import AdminsFooter from "../components/AdminsFooter"
+import Navbar from "../components/ui/mobile/employees/Navbar"
+import planStatus from "../features/planStatus/planStatus"
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp"
 import LocalMallIcon from "@mui/icons-material/LocalMall"
@@ -20,168 +20,180 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday"
 import UpdateIcon from "@mui/icons-material/Update"
 import StorefrontIcon from "@mui/icons-material/Storefront"
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale"
-import api from "../../utils/api";
+import api from "../../utils/api"
+import { selectEmployeeTeam } from "../features/employees/employeesTeamSlice"
 
 const OtherProductsSale = () => {
- const theme = useTheme()
- const dispatch = useAppDispatch()
- const navigate = useNavigate()
- const {
-   isPro,
-   isTrial,
-   isExpired,
-   businessName,
-   businessId,
-   businessLogo,
-   subscriptionPlan,
-   employeeLimit,
-   planName,
- } = planStatus()
+  const theme = useTheme()
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+  const {
+    isPro,
+    isTrial,
+    isExpired,
+    businessName,
+    businessId,
+    businessLogo,
+    subscriptionPlan,
+    employeeLimit,
+    planName,
+  } = planStatus()
 
- const [assignedProducts, setAssignedProducts] = useState([])
- const [loading, setLoading] = useState(true)
- const [showStacked, setShowStacked] = useState(false)
- const [expandedRows, setExpandedRows] = useState({})
+  const [assignedProducts, setAssignedProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showStacked, setShowStacked] = useState(false)
+  const [expandedRows, setExpandedRows] = useState({})
 
- const matches = useMediaQuery("(min-width:600px)")
- const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
- const idParams = useParams()
- const shopId = idParams.id
- const shopName = idParams.name ? decodeURIComponent(idParams.name) : ""
+  const matches = useMediaQuery("(min-width:600px)")
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"))
+  const idParams = useParams()
+  const shopId = idParams.id
+  const shopName = idParams.name ? decodeURIComponent(idParams.name) : ""
 
- // Advanced Features
- const [batchMode, setBatchMode] = useState(false)
- const [selectedBatchItems, setSelectedBatchItems] = useState([])
- const [lastUpdated, setLastUpdated] = useState(null)
- const [autoRefresh, setAutoRefresh] = useState(false)
- const [realTimeEnabled, setRealTimeEnabled] = useState(false)
- const [dataVersion, setDataVersion] = useState(0)
+  // Advanced Features
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedBatchItems, setSelectedBatchItems] = useState([])
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [realTimeEnabled, setRealTimeEnabled] = useState(false)
+  const [dataVersion, setDataVersion] = useState(0)
 
- useEffect(() => {
-   if (shopId) {
-     api
-       .get(`/inventory/shops/${shopId}/products/`)
-       .then((response) => {
-         console.log("Assigned products data:", response.data)
-         setAssignedProducts(response.data)
-       })
-       .catch((error) =>
-         console.error("Error fetching assigned products:", error),
-       )
-       .finally(() => {
-         setLoading(false)
-       })
-   }
- }, [shopId])
+  const myTeamData = useAppSelector(selectEmployeeTeam)
 
- const toggleRowExpansion = (productId) => {
-   setExpandedRows((prev) => ({
-     ...prev,
-     [productId]: !prev[productId],
-   }))
- }
+  // Extract user assignment data
+  const assignmentData = myTeamData?.[0]
+  const userId = assignmentData?.user
+  //  const shopId = assignmentData?.assigned_to?.shop_id
+  const storeId = assignmentData?.assigned_to?.store_id
+  const teamType = assignmentData?.assigned_to?.type
+  const teamName = assignmentData?.assigned_to?.name
 
- // Helper function to get price value - handles both number and object
- const getProductPrice = (prices) => {
-   if (!prices) return 0
+  console.log("assignment data ", assignmentData)
+  useEffect(() => {
+    if (shopId) {
+      api
+        .get(`/inventory/shops/${shopId}/products/`)
+        .then((response) => {
+          console.log("Assigned products data:", response.data)
+          setAssignedProducts(response.data)
+        })
+        .catch((error) =>
+          console.error("Error fetching assigned products:", error),
+        )
+        .finally(() => {
+          setLoading(false)
+        })
+    }
+  }, [shopId])
 
-   // If prices is a number, return it
-   if (typeof prices === "number") return prices
+  const toggleRowExpansion = (productId) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [productId]: !prev[productId],
+    }))
+  }
 
-   // If prices is an object, try to get retail price first, then wholesale
-   if (typeof prices === "object") {
-     return (
-       prices.retail_sales_price ||
-       prices.whole_sales_price ||
-       prices.product_buying_price ||
-       0
-     )
-   }
+  // Helper function to get price value - handles both number and object
+  const getProductPrice = (prices) => {
+    if (!prices) return 0
 
-   return 0
- }
+    // If prices is a number, return it
+    if (typeof prices === "number") return prices
 
- // Calculate totals
- const calculateTotals = () => {
-   return assignedProducts.reduce(
-     (acc, product) => {
-       const quantity = product.quantity || 0
-       const price = getProductPrice(product.product?.prices)
+    // If prices is an object, try to get retail price first, then wholesale
+    if (typeof prices === "object") {
+      return (
+        prices.retail_sales_price ||
+        prices.whole_sales_price ||
+        prices.product_buying_price ||
+        0
+      )
+    }
 
-       acc.totalQuantity += quantity
-       acc.totalSpoiled += product.spoiled_product_quantity || 0
-       acc.totalValue += quantity * price
-       return acc
-     },
-     {
-       totalQuantity: 0,
-       totalSpoiled: 0,
-       totalValue: 0,
-     },
-   )
- }
+    return 0
+  }
 
- const totals = assignedProducts.length > 0 ? calculateTotals() : null
+  // Calculate totals
+  const calculateTotals = () => {
+    return assignedProducts.reduce(
+      (acc, product) => {
+        const quantity = product.quantity || 0
+        const price = getProductPrice(product.product?.prices)
 
- // Group products by category or type
- const groupByProductType = () => {
-   const grouped = {}
-   assignedProducts.forEach((product) => {
-     const productName = product.product?.name || "Uncategorized"
-     if (!grouped[productName]) {
-       grouped[productName] = []
-     }
-     grouped[productName].push(product)
-   })
-   return grouped
- }
+        acc.totalQuantity += quantity
+        acc.totalSpoiled += product.spoiled_product_quantity || 0
+        acc.totalValue += quantity * price
+        return acc
+      },
+      {
+        totalQuantity: 0,
+        totalSpoiled: 0,
+        totalValue: 0,
+      },
+    )
+  }
 
- const groupedProducts = assignedProducts.length > 0 ? groupByProductType() : {}
+  const totals = assignedProducts.length > 0 ? calculateTotals() : null
 
- // Format date
- const formatDate = (dateString) => {
-   if (!dateString) return "N/A"
-   try {
-     const date = new Date(dateString)
-     return date.toLocaleDateString("en-US", {
-       year: "numeric",
-       month: "short",
-       day: "numeric",
-     })
-   } catch (error) {
-     return "Invalid Date"
-   }
- }
+  // Group products by category or type
+  const groupByProductType = () => {
+    const grouped = {}
+    assignedProducts.forEach((product) => {
+      const productName = product.product?.name || "Uncategorized"
+      if (!grouped[productName]) {
+        grouped[productName] = []
+      }
+      grouped[productName].push(product)
+    })
+    return grouped
+  }
 
- // Format price object for display
- const formatPriceObject = (prices) => {
-   if (!prices) return "N/A"
+  const groupedProducts =
+    assignedProducts.length > 0 ? groupByProductType() : {}
 
-   if (typeof prices === "number") {
-     return `KSh ${prices.toLocaleString()}`
-   }
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    } catch (error) {
+      return "Invalid Date"
+    }
+  }
 
-   if (typeof prices === "object") {
-     const priceList = []
-     if (prices.retail_sales_price)
-       priceList.push(
-         `Retail: KSh ${prices.retail_sales_price.toLocaleString()}`,
-       )
-     if (prices.whole_sales_price)
-       priceList.push(
-         `Wholesale: KSh ${prices.whole_sales_price.toLocaleString()}`,
-       )
-    //  if (prices.product_buying_price)
-    //    priceList.push(
-    //      `Cost: KSh ${prices.product_buying_price.toLocaleString()}`,
-    //    )
+  // Format price object for display
+  const formatPriceObject = (prices) => {
+    if (!prices) return "N/A"
 
-     return priceList.join(" | ")
-   }
+    if (typeof prices === "number") {
+      return `KSh ${prices.toLocaleString()}`
+    }
 
-   return "N/A"
- }
+    if (typeof prices === "object") {
+      const priceList = []
+      if (prices.retail_sales_price)
+        priceList.push(
+          `Retail: KSh ${prices.retail_sales_price.toLocaleString()}`,
+        )
+      if (prices.whole_sales_price)
+        priceList.push(
+          `Wholesale: KSh ${prices.whole_sales_price.toLocaleString()}`,
+        )
+      //  if (prices.product_buying_price)
+      //    priceList.push(
+      //      `Cost: KSh ${prices.product_buying_price.toLocaleString()}`,
+      //    )
 
+      return priceList.join(" | ")
+    }
+
+    return "N/A"
+  }
 
   return (
     <div>
@@ -599,20 +611,40 @@ const OtherProductsSale = () => {
                 ) : (
                   <div className="bg-white rounded-lg shadow-md p-12 text-center">
                     <div className="text-6xl mb-4 opacity-30">📦</div>
-                    <p className="text-gray-500 text-lg mb-2">
-                      No products assigned yet
-                    </p>
-                    <p className="text-gray-400 text-sm">
-                      Add products to this shop to see inventory information
-                    </p>
-                    <button
-                      onClick={() =>
-                        navigate(`/inventory/add-products/${shopId}`)
-                      }
-                      className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition"
-                    >
-                      Add Products
-                    </button>
+                    {assignmentData ? (
+                      <>
+                        <p className="text-gray-500 text-lg mb-2">
+                          No products available yet
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Request products from your admin to see inventory
+                          information
+                        </p>
+                        <button
+                          disabled
+                          className="mt-4 px-6 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed"
+                        >
+                          Awaiting Admin Assignment
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-gray-500 text-lg mb-2">
+                          No products assigned yet
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Add products to this shop to see inventory information
+                        </p>
+                        <button
+                          onClick={() =>
+                            navigate(`/inventory/add-products/${shopId}`)
+                          }
+                          className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition"
+                        >
+                          Add Products
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </>
@@ -642,6 +674,6 @@ const OtherProductsSale = () => {
       )}
     </div>
   )
-};
+}
 
-export default OtherProductsSale;
+export default OtherProductsSale

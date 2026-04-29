@@ -414,7 +414,7 @@ const CylinderSales = () => {
     // alert('exchange cylinder id is ', selectedIds)
   }, [availableCylinders, cylinderProducts])
 
-    // console.log('cylinder exchaged with ', cylinderExchanged, 'exchanged cylinders ', exchangeCylinders)
+  // console.log('cylinder exchaged with ', cylinderExchanged, 'exchanged cylinders ', exchangeCylinders)
 
   // Clear exchange selection if the chosen cylinder is no longer available (e.g., after adding a new cylinder product)
   useEffect(() => {
@@ -425,7 +425,6 @@ const CylinderSales = () => {
       setCylinderExchanged("")
     }
   }, [exchangeCylinders, cylinderExchanged])
-
 
   // Reset exchange state when sales type changes away from refill
   useEffect(() => {
@@ -543,7 +542,7 @@ const CylinderSales = () => {
       ),
     )
   }
-  console.log('selected cylinder ', cylinderProducts)
+  console.log("selected cylinder ", cylinderProducts)
 
   const handleAddCylinderProduct = () => {
     setCylinderProducts([
@@ -843,7 +842,6 @@ const CylinderSales = () => {
         selectedExchangeCylinder?.cylinder_type_id || Number(cylinderExchanged)
     }
 
-
     const formData: any = {
       company_id: businessId,
       customer_details: {
@@ -855,7 +853,7 @@ const CylinderSales = () => {
             coordinates: {
               latitude: locationCoordinates.latitude,
               longitude: locationCoordinates.longitude,
-             
+
               accuracy: locationCoordinates.accuracy,
               address: locationCoordinates.address,
               timestamp: lastLocationUpdate,
@@ -1050,7 +1048,6 @@ const CylinderSales = () => {
       formData.store = teamId
     }
 
-
     try {
       const result = await dispatch(recordSales(formData)).unwrap()
       toast.success(`🎉 ${salesType} sale recorded successfully!`)
@@ -1064,8 +1061,6 @@ const CylinderSales = () => {
       setShowSummary(false)
     }
   }
-
- 
 
   // Update the distributeMpesaAmounts function to be called explicitly when needed
   const distributeMpesaAmounts = (depositCount) => {

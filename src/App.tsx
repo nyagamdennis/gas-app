@@ -130,6 +130,8 @@ import OutSource from "./pages/employeePages/OutSource"
 import SalesPersonDelivery from "./pages/employeePages/SalesPersonDelivery"
 import MyDeliveries from "./pages/employeePages/MyDeliveries"
 import RecordSales from "./pages/employeePages/Sales/RecordSales"
+import EmployeeStoreCylinders from "./pages/employeePages/EmployeeStoreCylinders"
+import VehicleCylinderMovements from "./pages/cylinders/VehicleCylinderMovements"
 
 // fetchEmployeesTeam
 
@@ -222,6 +224,15 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_admin">
                 <ShopCylinderMovements />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/cylinders/movements/vehicles"
+            element={
+              <ProtectedRoute requiredRole="is_admin">
+                <VehicleCylinderMovements />
               </ProtectedRoute>
             }
           />
@@ -463,6 +474,15 @@ function App() {
             element={
               <ProtectedRoute requiredRole="is_employee">
                 <EmployeeCylinders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/employee/cylinders/stock/team/:id/:name"
+            element={
+              <ProtectedRoute requiredRole="is_employee">
+                <EmployeeStoreCylinders />
               </ProtectedRoute>
             }
           />

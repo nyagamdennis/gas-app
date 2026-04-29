@@ -35,7 +35,10 @@ const CollectOtherProducts = () => {
   const navigate = useNavigate()
   const store = useAppSelector(selectAllStore)
   const allSalesShop = useAppSelector(selectAllSalesTeamShops)
-  const allSalesVehicle = useAppSelector(selectAllSalesTeamVehicle)
+  const allSalesVehicles = useAppSelector(selectAllSalesTeamVehicle)
+
+
+   
   const employees = useAppSelector(selectAllEmployees)
   const [selectedDestinationStore, setSelectedDestinationStore] = useState(null)
   const [showStacked, setShowStacked] = useState<boolean>(false)
@@ -77,6 +80,10 @@ const CollectOtherProducts = () => {
     employeeLimit,
     planName,
   } = planStatus()
+
+   const allSalesVehicle = allSalesVehicles.filter(
+     (vehicle) => vehicle.type_of_vehicle === "VEHICLE",
+   )
 
   useEffect(() => {
     if (businessId) {

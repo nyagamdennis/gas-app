@@ -51,8 +51,7 @@ const employeesTeamSlice = createSlice({
         state.error = action.error.message || "Failed to fetch employees"
       })
 
-      
-      
+        
   },
 })
 
@@ -69,4 +68,4 @@ export const getEmployeesTeamError = (state: { employeesTeam: EmployeesTeamsStat
 
 
 
-export default employeesTeamSlice.reducer
+export default employeesTeamSlice.reducer;
