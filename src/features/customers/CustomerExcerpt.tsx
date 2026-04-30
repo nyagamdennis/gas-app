@@ -38,9 +38,11 @@ import {
   ErrorOutline,
   AddCircleOutline,
   RemoveCircleOutline,
+ 
 } from "@mui/icons-material"
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome"
-
+import CloseIcon from "@mui/icons-material/Close"
+import WarningIcon from "@mui/icons-material/Warning"
 import {
   getSendSmsError,
   getSendSmsStatus,
@@ -78,6 +80,7 @@ const CustomerExcerpt = ({
   const location = locations.find((l) => l.id === customer.location)
   const phoneStr = customer?.phone?.toString()
   const debt = customer.debt_summary
+  const [showPrediction, setShowPrediction] = useState(false)
 
   const [depositModalOpen, setDepositModalOpen] = useState(false)
   const [cashAmount, setCashAmount] = useState("")
@@ -102,6 +105,84 @@ const CustomerExcerpt = ({
   const sendStatus = useAppSelector(getSendSmsStatus)
   const balance = useAppSelector(getSmsBalanceStatus)
   const sendSmsError = useAppSelector(getSendSmsError)
+
+  const getPrediction = () => {
+    // Filter sales that have cylinder items
+    const cylinderSales = salesHistory.filter(
+      (s) => s.cylinder_items?.length > 0,
+    )
+    if (cylinderSales.length < 3) {
+      return {
+        sufficient: false,
+        message:
+          "At least 3 cylinder purchases are required for AI prediction.",
+      }
+    }
+
+    const sorted = [...cylinderSales].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at),
+    )
+
+    // Calculate average days between purchases
+    let totalGap = 0
+    for (let i = 1; i < sorted.length; i++) {
+      const diff =
+        new Date(sorted[i].created_at) - new Date(sorted[i - 1].created_at)
+      totalGap += diff / (1000 * 60 * 60 * 24)
+    }
+    const avgGap = totalGap / (sorted.length - 1)
+    const lastDate = new Date(sorted[sorted.length - 1].created_at)
+    const nextDate = new Date(lastDate.getTime() + avgGap * 24 * 60 * 60 * 1000)
+
+    // Count cylinder types (weight) occurrence and average quantity
+    const cylinderCounts: Record<string, number> = {}
+    const cylinderQuantities: Record<string, number[]> = {}
+    sorted.forEach((sale) => {
+      sale.cylinder_items.forEach((item) => {
+        const weight = item.cylinder?.weight || item.weight || "unknown"
+        cylinderCounts[weight] = (cylinderCounts[weight] || 0) + 1
+        if (!cylinderQuantities[weight]) cylinderQuantities[weight] = []
+        cylinderQuantities[weight].push(item.quantity)
+      })
+    })
+
+    // Most common cylinder weight
+    let mostCommonWeight = Object.keys(cylinderCounts).reduce(
+      (a, b) => (cylinderCounts[a] > cylinderCounts[b] ? a : b),
+      "",
+    )
+    // Average quantity for that weight
+    const avgQuantity =
+      cylinderQuantities[mostCommonWeight]?.reduce((a, b) => a + b, 0) /
+        cylinderQuantities[mostCommonWeight]?.length || 1
+
+    // Confidence score: based on consistency of intervals (lower std deviation => higher confidence)
+    let gaps = []
+    for (let i = 1; i < sorted.length; i++) {
+      gaps.push(
+        (new Date(sorted[i].created_at) - new Date(sorted[i - 1].created_at)) /
+          (1000 * 60 * 60 * 24),
+      )
+    }
+    const avgGapCalc = gaps.reduce((a, b) => a + b, 0) / gaps.length
+    const variance =
+      gaps.reduce((a, b) => a + Math.pow(b - avgGapCalc, 2), 0) / gaps.length
+    const stdDev = Math.sqrt(variance)
+    // Confidence: higher when stdDev is low relative to avg gap (max 95%)
+    let confidence = Math.max(
+      0,
+      Math.min(95, Math.round(100 - (stdDev / avgGapCalc) * 30)),
+    )
+
+    return {
+      sufficient: true,
+      nextDate: nextDate.toISOString().split("T")[0],
+      cylinders: [
+        { weight: mostCommonWeight, quantity: Math.round(avgQuantity) },
+      ],
+      confidence,
+    }
+  }
 
   const paginate = (data, page) =>
     data.slice((page - 1) * itemsPerPage, page * itemsPerPage)
@@ -335,8 +416,9 @@ const CustomerExcerpt = ({
                 <History className="w-5 h-5" />
               </button>
               <button
+                onClick={() => setShowPrediction(true)}
                 className="bg-white/90 hover:bg-white text-blue-700 rounded-full p-2 transition-colors"
-                title="Add Note"
+                title="Ai Prediction"
               >
                 <AutoAwesomeIcon className="w-5 h-5" />
               </button>
@@ -689,6 +771,120 @@ const CustomerExcerpt = ({
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+        {showPrediction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full shadow-xl overflow-hidden">
+              <div className="p-5">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <AutoAwesomeIcon className="w-5 h-5 text-purple-500" />
+                    AI Purchase Prediction
+                  </h3>
+                  <button
+                    onClick={() => setShowPrediction(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <CloseIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {(() => {
+                  const prediction = getPrediction()
+                  if (!prediction.sufficient) {
+                    return (
+                      <div className="text-center py-8">
+                        <WarningIcon className="w-16 h-16 text-yellow-500 mx-auto mb-3" />
+                        <p className="text-gray-700 font-medium">
+                          {prediction.message}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Current cylinder purchases:{" "}
+                          {
+                            salesHistory.filter(
+                              (s) => s.cylinder_items?.length > 0,
+                            ).length
+                          }
+                        </p>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="space-y-4">
+                      <div className="bg-purple-50 rounded-lg p-4 text-center">
+                        <p className="text-sm text-purple-700 font-semibold">
+                          Next Predicted Purchase Date
+                        </p>
+                        <p className="text-2xl font-bold text-purple-800">
+                          {new Date(prediction.nextDate).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold text-gray-700 mb-2">
+                          Predicted Cylinder(s)
+                        </p>
+                        <div className="space-y-2">
+                          {prediction.cylinders.map((cyl, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between bg-gray-50 p-3 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2">
+                                <LocalGasStationIcon className="w-5 h-5 text-blue-500" />
+                                <span className="font-medium">
+                                  {cyl.weight} kg Cylinder
+                                </span>
+                              </div>
+                              <span className="text-gray-700">
+                                Quantity: {cyl.quantity}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center border-t pt-3">
+                        <span className="text-sm text-gray-600">
+                          Confidence Score
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-purple-600 h-full rounded-full"
+                              style={{ width: `${prediction.confidence}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-bold text-purple-700">
+                            {prediction.confidence}%
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-gray-400 text-center mt-2">
+                        Based on{" "}
+                        {
+                          salesHistory.filter(
+                            (s) => s.cylinder_items?.length > 0,
+                          ).length
+                        }{" "}
+                        previous cylinder purchases
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => setShowPrediction(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>

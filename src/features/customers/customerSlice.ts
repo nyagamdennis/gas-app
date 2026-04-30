@@ -62,7 +62,7 @@ export const addCustomer = createAsyncThunk<
   { rejectValue: string }
 >("customers/addCustomer", async (formData, { rejectWithValue }) => {
   try {
-    const response = await api.post("/customer/", formData)
+    const response = await api.post("/customers/create/", formData)
     return response.data
   } catch (error: any) {
     if (error.response && error.response.data) {
